@@ -1,0 +1,10 @@
+/target
+/work
+/.settings
+/.classpath
+/.project
+/local-repo
+/tmp
+/local-repo.zip
+/bin
+
