@@ -1,0 +1,195 @@
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.jenkins-ci.plugins</groupId>
+		<artifactId>plugin</artifactId> 
+		<!-- which version of Jenkins is this plugin built against? -->
+		<version>1.466</version>
+		<relativePath></relativePath>
+	</parent>
+
+	<groupId>com.blackducksoftware.integration</groupId>
+	<artifactId>hub-jenkins</artifactId>
+	<!-- !!! Also update the url below on release !!! -->
+	<version>1.2.0-SNAPSHOT</version> 
+	<packaging>hpi</packaging>
+	<name>Black Duck Hub Plug-In for Jenkins</name>
+	<description>Runs iScan in Jenkins build</description>
+	<inceptionYear>2014</inceptionYear>
+	
+	<url>https://customerhubblackducksoftware.force.com/login?inst=6&amp;startURL=%2Farticles%2FBlack_Duck_Tools%2FCode-Center-Jenkins-Plug-in&amp;retURL=%2Fapex%2FThe_Exchange&amp;popup=false</url>
+	<scm>
+		<url>http://stash.blackducksoftware.com/scm/int-hub/int-hub-jenkins.git</url>
+	</scm>
+	<issueManagement>
+		<url>https://jira.blackducksoftware.com/browse/IJH/?selectedTab=com.atlassian.jira.jira-projects-plugin:issues-panel</url>
+	</issueManagement>
+	
+	<licenses>
+		<license>
+			<name>Black Duck Commercial License</name>
+			<url>http://www.blackducksoftware.com/</url>
+			<distribution>manual</distribution>
+			<comments>Use of this plugin is governed by the license under which you use Black Duck Software Code Center (TM)</comments>
+		</license>
+	</licenses>
+	<organization>
+		<name>Black Duck Software, Inc.</name>
+		<url>http://www.blackducksoftware.com/</url>
+	</organization>
+	<developers>
+		<developer>
+			<id>kkandler</id>
+			<name>Kaj Kandler</name>
+			<email>kkandler@blackducksoftware.com</email>
+			<url>https://www.ohloh.net/accounts/KajKandler</url>
+			<organization>Black Duck Software, Inc.</organization>
+			<organizationUrl>http://www.blackducksoftware.com/</organizationUrl>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+			<timezone>-5</timezone>
+		</developer>
+		<developer>
+			<id>jrichard</id>
+			<name>James Richard</name>
+			<email>jrichard@blackducksoftware.com</email>
+			<!-- url>https://www.ohloh.net/accounts/JamesRichard</url -->
+			<organization>Black Duck Software, Inc.</organization>
+			<organizationUrl>http://www.blackducksoftware.com/</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<timezone>-5</timezone>
+		</developer>
+	</developers>
+	<contributors>
+	</contributors>
+
+	<!-- get every artifact through repo.jenkins-ci.org, which proxies all the 
+		artifacts that we need -->
+	<repositories>
+		<repository>
+			<id>repo.jenkins-ci.org</id>
+			<url>http://repo.jenkins-ci.org/public/</url>
+		</repository>
+		<!-- Need the integration repo before the other protex repos in order 
+			to pull Java 6 over Java 7 compiled versions (and to not get the CXF-bundle 
+			via blackduck-cxf-utilities) -->
+		<repository>
+			<id>integration</id>
+			<name>integrations</name>
+			<url>http://lame:8081/artifactory/integration</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>lame.blackducksoftware.com</id>
+			<name>product-protex</name>
+			<url>http://lame.blackducksoftware.com:8081/artifactory/product-protex</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<!-- repository> <id>bd-staging</id> <name>blackduck-staging-repos</name> 
+			<url>http://lame:8081/artifactory/blackduck-staging-repos</url> --><!-- releases> <enabled>true</enabled> <updatePolicy>always</updatePolicy> 
+			</releases> <snapshots> <enabled>false</enabled> <updatePolicy>always</updatePolicy> 
+			</snapshots --> <!-- </repository -->
+		<!-- repository> --><!-- temporary repo to get to sdk client stuff until the corporate artifactory 
+			carries those --><!-- <id>proserv-temp</id> <url>http://proserv-nexus:8080/nexus/content/repositories/thirdparty</url> 
+			</repository -->
+	</repositories>
+
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>repo.jenkins-ci.org</id>
+			<url>http://repo.jenkins-ci.org/public/</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<cxf.version>2.4.3</cxf.version>
+		<codecenter.api.version>6.5.0.1</codecenter.api.version>
+		<bds.cxf.utilities.version>1.1.1</bds.cxf.utilities.version>
+	</properties>
+	
+	<dependencies>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<configuration>
+					<classpathContainers>
+						<classpathContainer>
+							org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6
+						</classpathContainer>
+					</classpathContainers>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.jenkins-ci.tools</groupId>
+				<artifactId>maven-hpi-plugin</artifactId>
+				<version>1.95</version>
+				<configuration>
+					<pluginFirstClassLoader>false</pluginFirstClassLoader>
+				</configuration>
+				<dependencies>
+					<dependency> <!-- overwrite the xalan version for the plugin, otherwise SdkFaults result 
+							in a method not found exception on XPathContext.init() in the Eclipse hpi:run 
+							only, seems to work fine in regular Jenkins environments -->
+						<!-- FIXME - put this into a profile that can only be called in Eclipse 
+							run situations, also re-examine the above classloader config -->
+						<groupId>xalan</groupId>
+						<artifactId>xalan</artifactId>
+						<version>2.7.1</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.1</version>
+					<configuration>
+						<!-- put your configurations here -->
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.16</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-eclipse-plugin</artifactId>
+					<configuration>
+						<classpathContainers>
+							<classpathContainer>
+								org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6
+							</classpathContainer>
+						</classpathContainers>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>
