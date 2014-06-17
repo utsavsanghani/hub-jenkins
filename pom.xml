@@ -19,7 +19,7 @@
 	<description>Runs iScan in Jenkins build</description>
 	<inceptionYear>2014</inceptionYear>
 	
-	<url>https://customerhubblackducksoftware.force.com/login?inst=6&amp;startURL=%2Farticles%2FBlack_Duck_Tools%2FCode-Center-Jenkins-Plug-in&amp;retURL=%2Fapex%2FThe_Exchange&amp;popup=false</url>
+	<url>https://customerhubblackducksoftware.force.com/apex/The_Exchange?sfdc.tabName=01r60000000QMbg</url>
 	<scm>
 		<url>http://stash.blackducksoftware.com/scm/int-hub/int-hub-jenkins.git</url>
 	</scm>
