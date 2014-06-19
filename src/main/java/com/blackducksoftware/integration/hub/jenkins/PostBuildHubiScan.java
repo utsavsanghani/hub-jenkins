@@ -62,6 +62,10 @@ public class PostBuildHubiScan extends Recorder {
                 IScanInstallation iScan = iScanTools[0];
                 File iScanScript = new File(iScan.getHome() + "/bin/scan.cli.sh");
 
+                if (!iScanScript.exists()) {
+                    throw new IScanToolMissingException("Could not find the script file to execute.");
+                }
+
             } catch (Exception e) {
                 // have to rethrow exception as IOException or InterruptedException
                 throw new IOException(e);
