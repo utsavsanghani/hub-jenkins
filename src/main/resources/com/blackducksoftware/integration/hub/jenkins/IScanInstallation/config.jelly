@@ -1,10 +1,10 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
 	
-	<f:entry title="${%Name}" field="name">
+	<f:entry title="${%Name}" field="iScanName">
     	<f:textbox/>
   	</f:entry>
 
-  	<f:entry title="${%HomeDirectory}" field="home">
+  	<f:entry title="${%HomeDirectory}" field="iScanHome">
       	<f:textbox />
   	</f:entry>
 	

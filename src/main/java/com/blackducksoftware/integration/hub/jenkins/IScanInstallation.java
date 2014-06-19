@@ -34,9 +34,9 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
     }
 
     @Extension
-    public static final class Descriptor extends ToolDescriptor<IScanInstallation> {
+    public static final class IScanDescriptor extends ToolDescriptor<IScanInstallation> {
 
-        public Descriptor() {
+        public IScanDescriptor() {
             setInstallations();
             load();
         }
