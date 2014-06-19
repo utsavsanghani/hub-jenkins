@@ -1,0 +1,16 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+	<!-- This jelly script is used for per-project configuration. See global.jelly 
+		for a general discussion about jelly script. -->
+		
+<f:block>
+	<f:repeatable var="scans" items="${instance.scans}" add="${%AddScan}" minimum="1">
+		<table style="width:100%" id="hubBlackDuckTable">
+				<f:entry title="${%ScanTarget}" field="scanTarget">
+              		<f:textbox value="${scans.getScanTarget()}"/>
+            	</f:entry>
+      	</table>
+      	<f:repeatableDeleteButton value="${%DeleteScan}"/>
+	</f:repeatable>
+</f:block>
+</j:jelly>
