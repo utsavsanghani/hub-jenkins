@@ -84,6 +84,8 @@ public class PostBuildHubiScan extends Recorder {
 
         private HubServerInfo hubServerInfo;
 
+        // private IScanInstallationInfo iScanInfo;
+
         /**
          * @return the hubServerInfo
          */
@@ -95,9 +97,24 @@ public class PostBuildHubiScan extends Recorder {
          * @param hubServerInfo
          *            the hubServerInfo to set
          */
-        public void setCodeCenterServerInfo(HubServerInfo hubServerInfo) {
+        public void setHubServerInfo(HubServerInfo hubServerInfo) {
             this.hubServerInfo = hubServerInfo;
         }
+
+        // /**
+        // * @return the iScanInfo
+        // */
+        // public IScanInstallationInfo getIScanInfo() {
+        // return iScanInfo;
+        // }
+        //
+        // /**
+        // * @param iScanInfo
+        // * the iScanInfo to set
+        // */
+        // public void setIScanInfo(IScanInstallationInfo iScanInfo) {
+        // this.iScanInfo = iScanInfo;
+        // }
 
         /**
          * In order to load the persisted global configuration, you have to call
@@ -241,9 +258,11 @@ public class PostBuildHubiScan extends Recorder {
                 throws Descriptor.FormException {
             // To persist global configuration information,
             // set that to properties and call save().
-
             hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID),
                     formData.getLong(FORM_TIMEOUT));
+
+            // iScanInfo = new
+            // IScanInstallationInfo(formData.getJSONObject("IScanInstallation").getString("toolLocation"));
 
             // ^Can also use req.bindJSON(this, formData);
             // (easier when there are many fields; need set* methods for this,
@@ -251,6 +270,12 @@ public class PostBuildHubiScan extends Recorder {
             save();
             return super.configure(req, formData);
         }
+
+        // public String getIScanToolLocation() {
+        // return (iScanInfo == null ? "" : (iScanInfo
+        // .getToolLocation() == null ? "" : iScanInfo
+        // .getToolLocation()));
+        // }
 
         public String getServerUrl() {
             return (hubServerInfo == null ? "" : (hubServerInfo

@@ -12,18 +12,18 @@
     so it should be straightforward to find them.
   -->
   
-  <f:section title="Black Duck Hub">
-	<f:entry title="Server URL" field="serverUrl"
+  <f:section title="${%GlobalSectionTitle}">
+	<f:entry title="${%ServerURL}" field="serverUrl"
       description="Provide the Url for your Black Duck Hub Server">
         <f:textbox field="serverUrl" value="${descriptor.serverUrl}"/>
     </f:entry>
-    <f:entry title="Credentials" field="credentialsId" >
+    <f:entry title="${%Credentials}" field="credentialsId" >
     	<c:select/>
     </f:entry>
-    <f:validateButton title="Test Connection" progress="Testing..."
+    <f:validateButton title="${%TestConnection}" progress="Testing..."
          method="testConnection" with="serverUrl,credentialsId" />
     <f:advanced>
-      <f:entry title="Connection Timeout" field="timeout" description="in seconds" >
+      <f:entry title="${%ConnectionTimeout}" field="timeout" description="in seconds" >
           <f:textbox clazz="number" field="timeout" value="${descriptor.timeout}" default="${descriptor.defaultTimeout}"/>
       </f:entry>
     </f:advanced>
