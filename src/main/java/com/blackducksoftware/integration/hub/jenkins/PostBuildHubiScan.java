@@ -63,10 +63,18 @@ public class PostBuildHubiScan extends Recorder {
                 File iScanScript = new File(iScan.getHome() + "/bin/scan.cli.sh");
 
                 if (!iScanScript.exists()) {
+                    listener.getLogger().println("[ERROR] : " + iScanScript.getCanonicalPath());
                     throw new IScanToolMissingException("Could not find the script file to execute.");
                 }
 
-            } catch (Exception e) {
+                for (IScanJobs scanJob : scans) {
+                    File target = new File(scanJob.getScanTarget());
+                    if (!target.exists()) {
+                        throw new IOException("scan target could not be found : " + scanJob.getScanTarget());
+                    }
+                }
+
+            } catch (IScanToolMissingException e) {
                 // have to rethrow exception as IOException or InterruptedException
                 throw new IOException(e);
             }

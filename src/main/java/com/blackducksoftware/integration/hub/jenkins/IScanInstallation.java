@@ -4,6 +4,7 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.EnvironmentSpecific;
 import hudson.model.TaskListener;
+import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.slaves.NodeSpecific;
 import hudson.tools.ToolDescriptor;
@@ -33,6 +34,11 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
         return new IScanInstallation(getName(), translateFor(node, log), getProperties().toList());
     }
 
+    @Override
+    public IScanDescriptor getDescriptor() {
+        return (IScanDescriptor) super.getDescriptor();
+    }
+
     @Extension
     public static final class IScanDescriptor extends ToolDescriptor<IScanInstallation> {
 
@@ -49,6 +55,13 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
         @Override
         public IScanInstallation newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             return (IScanInstallation) super.newInstance(req, formData.getJSONObject("IScanInstallation"));
+        }
+
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject formData)
+                throws Descriptor.FormException {
+            save();
+            return super.configure(req, formData);
         }
     }
 }
