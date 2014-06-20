@@ -8,8 +8,12 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Recorder;
 import hudson.tools.ToolDescriptor;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -70,8 +74,34 @@ public class PostBuildHubiScan extends Recorder {
                 for (IScanJobs scanJob : scans) {
                     File target = new File(scanJob.getScanTarget());
                     if (!target.exists()) {
-                        throw new IOException("scan target could not be found : " + scanJob.getScanTarget());
+                        throw new IOException("Scan target could not be found : " + scanJob.getScanTarget());
                     }
+
+                    String[] cmd = { iScanScript.getCanonicalPath(), "--host", getDescriptor().getServerUrl(), "--username",
+                            getDescriptor().getHubServerInfo().getUsername(), "--password", getDescriptor().getHubServerInfo().getPassword(),
+                            target.getCanonicalPath() };
+                    // This is picking up the wrong java installation for some reason
+                    Process p = Runtime.getRuntime().exec(cmd);
+                    String line;
+
+                    BufferedReader error = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                    while ((line = error.readLine()) != null) {
+                        listener.getLogger().println(line);
+                    }
+                    error.close();
+
+                    BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                    while ((line = input.readLine()) != null) {
+                        listener.getLogger().println(line);
+                    }
+
+                    input.close();
+
+                    OutputStream outputStream = p.getOutputStream();
+                    PrintStream printStream = new PrintStream(outputStream);
+                    printStream.println();
+                    printStream.flush();
+                    printStream.close();
                 }
 
             } catch (IScanToolMissingException e) {
