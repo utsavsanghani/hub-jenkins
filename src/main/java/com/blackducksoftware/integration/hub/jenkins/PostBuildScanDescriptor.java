@@ -20,11 +20,13 @@ import java.util.List;
 
 import javax.servlet.ServletException;
 
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import com.blackducksoftware.integration.hub.jenkins.IScanInstallation.IScanDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -56,13 +58,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final String FORM_CREDENTIALSID = "credentialsId";
 
-    // private static final String FORM_JAVAID = "javaId";
-
     private HubServerInfo hubServerInfo;
-
-    // private String javaName;
-
-    // private IScanInstallationInfo iScanInfo;
 
     /**
      * @return the hubServerInfo
@@ -78,21 +74,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public void setHubServerInfo(HubServerInfo hubServerInfo) {
         this.hubServerInfo = hubServerInfo;
     }
-
-    // /**
-    // * @return the iScanInfo
-    // */
-    // public IScanInstallationInfo getIScanInfo() {
-    // return iScanInfo;
-    // }
-    //
-    // /**
-    // * @param iScanInfo
-    // * the iScanInfo to set
-    // */
-    // public void setIScanInfo(IScanInstallationInfo iScanInfo) {
-    // this.iScanInfo = iScanInfo;
-    // }
 
     /**
      * In order to load the persisted global configuration, you have to call
@@ -113,16 +94,17 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
     }
 
-    // public ListBoxModel doFillJavaIdItems() {
-    // ListBoxModel items = new ListBoxModel();
-    // Jenkins jenkins = Jenkins.getInstance();
-    // JDK.DescriptorImpl jdkDescriptor = (DescriptorImpl) jenkins.getDescriptorByName("JDK.DescriptorImpl");
-    // JDK[] jdkInstallations = jdkDescriptor.getInstallations();
-    // for (JDK jdk : jdkInstallations) {
-    // items.add(jdk.getName());
-    // }
-    // return items;
-    // }
+    public ListBoxModel doFillIScanNameItems() {
+        ListBoxModel items = new ListBoxModel();
+        Jenkins jenkins = Jenkins.getInstance();
+        IScanDescriptor iScanDescriptor = jenkins.getDescriptorByType(IScanDescriptor.class);
+
+        IScanInstallation[] iScanInstallations = iScanDescriptor.getInstallations();
+        for (IScanInstallation iScan : iScanInstallations) {
+            items.add(iScan.getName());
+        }
+        return items;
+    }
 
     /**
      * Performs on-the-fly validation of the form field 'serverUrl'.
@@ -249,11 +231,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         // set that to properties and call save().
         hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID),
                 formData.getLong(FORM_TIMEOUT));
-
-        // javaName = formData.getString(FORM_JAVAID);
-        // iScanInfo = new
-        // IScanInstallationInfo(formData.getJSONObject("IScanInstallation").getString("toolLocation"));
-
         // ^Can also use req.bindJSON(this, formData);
         // (easier when there are many fields; need set* methods for this,
         // like setUseFrench)
@@ -285,12 +262,4 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public String getCredentialsId() {
         return (hubServerInfo == null ? "" : (hubServerInfo.getCredentialsId() == null ? "" : hubServerInfo.getCredentialsId()));
     }
-
-    // public String getJavaName() {
-    // return javaName;
-    // }
-    //
-    // public void setJavaName(String java) {
-    // javaName = java;
-    // }
 }

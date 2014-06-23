@@ -19,19 +19,31 @@ import java.io.PrintStream;
 import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
 
 public class PostBuildHubiScan extends Recorder {
 
     private IScanJobs[] scans;
 
+    private String iScanName;
+
     @DataBoundConstructor
-    public PostBuildHubiScan(IScanJobs[] scans) {
+    public PostBuildHubiScan(IScanJobs[] scans, String iScanName) {
         this.scans = scans;
+        this.iScanName = iScanName;
     }
 
     public IScanJobs[] getScans() {
         return scans;
+    }
+
+    public String getiScanName() {
+        return iScanName;
+    }
+
+    public void setiScanName(String iScanName) {
+        this.iScanName = iScanName;
     }
 
     // http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
@@ -57,16 +69,19 @@ public class PostBuildHubiScan extends Recorder {
 
                 ToolDescriptor<IScanInstallation> iScanDescriptor = (ToolDescriptor<IScanInstallation>) build.getDescriptorByName(IScanInstallation.class
                         .getSimpleName());
-
                 iScanTools = iScanDescriptor.getInstallations();
-                // FIXME do this in the configuration of the job, have the User choose which one to use
-                // Use the first installation for now
-
                 if (iScanTools[0] == null) {
                     throw new IScanToolMissingException("Could not find an iScan Installation to use.");
                 }
-                IScanInstallation iScan = iScanTools[0];
-                File iScanScript = new File(iScan.getHome() + "/bin/scan.cli.sh");
+                if (scans.length == 0) {
+                    throw new HubConfigurationException("Could not find any targets to scan.");
+                }
+                File iScanScript = null;
+                for (IScanInstallation iScan : iScanTools) {
+                    if (iScan.getName().equals(getiScanName())) {
+                        iScanScript = new File(iScan.getHome() + "/bin/scan.cli.sh");
+                    }
+                }
 
                 if (!iScanScript.exists()) {
                     listener.getLogger().println("[ERROR] : Script doesn't exist : " + iScanScript.getCanonicalPath());
@@ -91,14 +106,14 @@ public class PostBuildHubiScan extends Recorder {
                     } else {
                         listener.getLogger().println("[DEBUG] : Target does exist : " + target.getCanonicalPath());
                     }
-
+                    // Use a substring of the host url because the http:// is not currently needed in the definition.
                     ProcessBuilder pb = new ProcessBuilder(iScanScript.getCanonicalPath(),
                             "--host", "\"" + getDescriptor().getServerUrl().substring(7) + "\""
                             , "--username", "\"" + getDescriptor().getHubServerInfo().getUsername() + "\""
                             , "--password", "\"" + getDescriptor().getHubServerInfo().getPassword() + "\""
                             , target.getCanonicalPath());
 
-                    listener.getLogger().println("[DEBUG] : THIS IS THE JAVA HOME TO BE USED : " + javaHome);
+                    listener.getLogger().println("[DEBUG] : Using this java installation : " + javaHome);
                     pb.environment().put("JAVA_HOME", javaHome);
 
                     for (String cmd : pb.command()) {
@@ -130,6 +145,9 @@ public class PostBuildHubiScan extends Recorder {
                 }
 
             } catch (IScanToolMissingException e) {
+                // have to rethrow exception as IOException or InterruptedException
+                throw new IOException(e);
+            } catch (HubConfigurationException e) {
                 // have to rethrow exception as IOException or InterruptedException
                 throw new IOException(e);
             }

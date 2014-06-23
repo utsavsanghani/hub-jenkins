@@ -2,6 +2,10 @@
 	<!-- This jelly script is used for per-project configuration. See global.jelly 
 		for a general discussion about jelly script. -->
 		
+		
+<f:entry field="iScanName" title="Choose iScan Installation">
+	<f:select />
+</f:entry>		
 <f:block>
 	<f:repeatable var="scans" items="${instance.scans}" add="${%AddScan}" minimum="1">
 		<table style="width:100%" id="hubBlackDuckTable">
