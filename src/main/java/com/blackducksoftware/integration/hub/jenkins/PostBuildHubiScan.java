@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
@@ -46,7 +47,7 @@ public class PostBuildHubiScan extends Recorder {
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher,
             BuildListener listener) throws InterruptedException, IOException {
-        String buildLog = build.getLog();
+
         Result result = build.getResult();
         if (result.equals(Result.SUCCESS)) {
             try {
@@ -76,6 +77,12 @@ public class PostBuildHubiScan extends Recorder {
 
                 EnvVars envVars = new EnvVars();
                 envVars = build.getEnvironment(listener);
+                String javaHome = null;
+                javaHome = build.getProject().getJDK().getHome();
+                if (StringUtils.isEmpty(javaHome)) {
+                    // In case the user did not select a java installation, set to the environment variable JAVA_HOME
+                    javaHome = envVars.get("JAVA_HOME");
+                }
 
                 for (IScanJobs scanJob : scans) {
                     File target = new File(scanJob.getScanTarget());
@@ -86,14 +93,13 @@ public class PostBuildHubiScan extends Recorder {
                     }
 
                     ProcessBuilder pb = new ProcessBuilder(iScanScript.getCanonicalPath(),
-                            "--host", "\"" + getDescriptor().getServerUrl() + "\""
+                            "--host", "\"" + getDescriptor().getServerUrl().substring(7) + "\""
                             , "--username", "\"" + getDescriptor().getHubServerInfo().getUsername() + "\""
                             , "--password", "\"" + getDescriptor().getHubServerInfo().getPassword() + "\""
                             , target.getCanonicalPath());
 
-                    // FIXME User should decide which java installation to use, since Jenkins allows the user to define
-                    // multiple installations.
-                    pb.environment().put("JAVA_HOME", envVars.get("JAVA_HOME"));
+                    listener.getLogger().println("[DEBUG] : THIS IS THE JAVA HOME TO BE USED : " + javaHome);
+                    pb.environment().put("JAVA_HOME", javaHome);
 
                     for (String cmd : pb.command()) {
                         listener.getLogger().println(cmd);

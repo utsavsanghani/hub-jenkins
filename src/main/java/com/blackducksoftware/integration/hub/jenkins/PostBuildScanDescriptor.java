@@ -56,7 +56,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final String FORM_CREDENTIALSID = "credentialsId";
 
+    // private static final String FORM_JAVAID = "javaId";
+
     private HubServerInfo hubServerInfo;
+
+    // private String javaName;
 
     // private IScanInstallationInfo iScanInfo;
 
@@ -108,6 +112,17 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return new StandardListBoxModel().withEmptySelection().withMatching(CREDENTIALS_MATCHER,
                 CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
     }
+
+    // public ListBoxModel doFillJavaIdItems() {
+    // ListBoxModel items = new ListBoxModel();
+    // Jenkins jenkins = Jenkins.getInstance();
+    // JDK.DescriptorImpl jdkDescriptor = (DescriptorImpl) jenkins.getDescriptorByName("JDK.DescriptorImpl");
+    // JDK[] jdkInstallations = jdkDescriptor.getInstallations();
+    // for (JDK jdk : jdkInstallations) {
+    // items.add(jdk.getName());
+    // }
+    // return items;
+    // }
 
     /**
      * Performs on-the-fly validation of the form field 'serverUrl'.
@@ -235,6 +250,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID),
                 formData.getLong(FORM_TIMEOUT));
 
+        // javaName = formData.getString(FORM_JAVAID);
         // iScanInfo = new
         // IScanInstallationInfo(formData.getJSONObject("IScanInstallation").getString("toolLocation"));
 
@@ -269,4 +285,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public String getCredentialsId() {
         return (hubServerInfo == null ? "" : (hubServerInfo.getCredentialsId() == null ? "" : hubServerInfo.getCredentialsId()));
     }
+
+    // public String getJavaName() {
+    // return javaName;
+    // }
+    //
+    // public void setJavaName(String java) {
+    // javaName = java;
+    // }
 }
