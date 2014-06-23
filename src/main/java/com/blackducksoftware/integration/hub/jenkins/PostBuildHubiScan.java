@@ -1,5 +1,6 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
+import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.Result;
@@ -57,7 +58,7 @@ public class PostBuildHubiScan extends Recorder {
                         .getSimpleName());
 
                 iScanTools = iScanDescriptor.getInstallations();
-                // TODO do this in the configuration of the job, have the User choose which one to use
+                // FIXME do this in the configuration of the job, have the User choose which one to use
                 // Use the first installation for now
 
                 if (iScanTools[0] == null) {
@@ -67,21 +68,39 @@ public class PostBuildHubiScan extends Recorder {
                 File iScanScript = new File(iScan.getHome() + "/bin/scan.cli.sh");
 
                 if (!iScanScript.exists()) {
-                    listener.getLogger().println("[ERROR] : " + iScanScript.getCanonicalPath());
+                    listener.getLogger().println("[ERROR] : Script doesn't exist : " + iScanScript.getCanonicalPath());
                     throw new IScanToolMissingException("Could not find the script file to execute.");
+                } else {
+                    listener.getLogger().println("[DEBUG] : Script does exist : " + iScanScript.getCanonicalPath());
                 }
+
+                EnvVars envVars = new EnvVars();
+                envVars = build.getEnvironment(listener);
 
                 for (IScanJobs scanJob : scans) {
                     File target = new File(scanJob.getScanTarget());
                     if (!target.exists()) {
                         throw new IOException("Scan target could not be found : " + scanJob.getScanTarget());
+                    } else {
+                        listener.getLogger().println("[DEBUG] : Target does exist : " + target.getCanonicalPath());
                     }
 
-                    String[] cmd = { iScanScript.getCanonicalPath(), "--host", getDescriptor().getServerUrl(), "--username",
-                            getDescriptor().getHubServerInfo().getUsername(), "--password", getDescriptor().getHubServerInfo().getPassword(),
-                            target.getCanonicalPath() };
+                    ProcessBuilder pb = new ProcessBuilder(iScanScript.getCanonicalPath(),
+                            "--host", "\"" + getDescriptor().getServerUrl() + "\""
+                            , "--username", "\"" + getDescriptor().getHubServerInfo().getUsername() + "\""
+                            , "--password", "\"" + getDescriptor().getHubServerInfo().getPassword() + "\""
+                            , target.getCanonicalPath());
+
+                    // FIXME User should decide which java installation to use, since Jenkins allows the user to define
+                    // multiple installations.
+                    pb.environment().put("JAVA_HOME", envVars.get("JAVA_HOME"));
+
+                    for (String cmd : pb.command()) {
+                        listener.getLogger().println(cmd);
+                    }
+
                     // This is picking up the wrong java installation for some reason
-                    Process p = Runtime.getRuntime().exec(cmd);
+                    Process p = pb.start();
                     String line;
 
                     BufferedReader error = new BufferedReader(new InputStreamReader(p.getErrorStream()));
