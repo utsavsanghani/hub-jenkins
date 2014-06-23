@@ -99,8 +99,11 @@ public class PostBuildHubiScan extends Recorder {
                     javaHome = envVars.get("JAVA_HOME");
                 }
 
+                String workingDirectory = build.getWorkspace().getRemote(); // This should work on master and slaves
                 for (IScanJobs scanJob : scans) {
-                    File target = new File(scanJob.getScanTarget());
+                    // This starts the filepath with the workspace, so only targets in the workspace should be
+                    // accessible
+                    File target = new File(workingDirectory + scanJob.getScanTarget());
                     if (!target.exists()) {
                         throw new IOException("Scan target could not be found : " + scanJob.getScanTarget());
                     } else {
