@@ -208,21 +208,23 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return Messages.HubBuildScan_getDisplayName();
     }
 
-    /**
-     * Performs on-the-fly validation of the scans targets
-     * 
-     * @param value
-     *            This parameter receives the value that the user has typed.
-     * @return
-     *         Indicates the outcome of the validation. This is sent to the browser.
-     */
-    public FormValidation doCheckScanTarget(@QueryParameter String value)
-            throws IOException, ServletException {
-        if (value.length() == 0) {
-            return FormValidation.error("Please set a target to scan");
-        }
-        return FormValidation.ok();
-    }
+    // TODO Do we need this validation? The default is the workspace of the job, which is always valid since the
+    // workspace gets created when the build starts
+    // /**
+    // * Performs on-the-fly validation of the scans targets
+    // *
+    // * @param value
+    // * This parameter receives the value that the user has typed.
+    // * @return
+    // * Indicates the outcome of the validation. This is sent to the browser.
+    // */
+    // public FormValidation doCheckScanTarget(@QueryParameter String value)
+    // throws IOException, ServletException {
+    // if (value.length() == 0) {
+    // return FormValidation.error("Please set a target to scan");
+    // }
+    // return FormValidation.ok();
+    // }
 
     @Override
     public boolean configure(StaplerRequest req, JSONObject formData)

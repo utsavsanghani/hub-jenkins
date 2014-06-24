@@ -81,7 +81,10 @@ public class PostBuildHubiScan extends Recorder {
                     throw new HubConfigurationException("Could not find any targets to scan.");
                 }
 
-                workingDirectory = build.getWorkspace().getRemote(); // This should work on master and slaves
+                // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any file
+                // even outside of the Jenkins directories
+                workingDirectory = build.getWorkspace().getRemote() + "/"; // This should work on master and slaves
+
                 javaHome = getJavaHome(build, listener);
 
                 File iScanScript = getIScanScript(iScanTools, listener);
