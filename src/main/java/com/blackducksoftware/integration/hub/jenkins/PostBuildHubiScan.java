@@ -21,6 +21,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
+import com.google.common.collect.ObjectArrays;
 
 public class PostBuildHubiScan extends Recorder {
 
@@ -85,7 +86,6 @@ public class PostBuildHubiScan extends Recorder {
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher,
             BuildListener listener) throws InterruptedException, IOException {
-
         Result result = build.getResult();
         if (result.equals(Result.SUCCESS)) {
             try {
@@ -98,33 +98,31 @@ public class PostBuildHubiScan extends Recorder {
                 iScanTools = iScanDescriptor.getInstallations();
                 if (validateConfiguration(iScanTools, getScans())) {
                     // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any
-                    // file
-                    // even outside of the Jenkins directories
+                    // file even outside of the Jenkins directories
                     setWorkingDirectory(build.getWorkspace().getRemote() + "/"); // This should work on master and
                                                                                  // slaves
-
                     setJavaHome(build, listener);
-
                     File iScanScript = getIScanScript(iScanTools, listener);
-
+                    String[] scanTargets = new String[getScans().length];
+                    int i = 0;
                     for (IScanJobs scanJob : getScans()) {
-                        runScan(listener, build, scanJob, iScanScript);
+                        scanTargets[i] = getWorkingDirectory() + scanJob.getScanTarget(); // Prefixes the targets with
+                                                                                          // the workspace directory
+                        i++;
                     }
+
+                    runScan(listener, build, iScanScript, scanTargets);
                 }
 
-            } catch (IScanToolMissingException e) {
-                build.setResult(Result.UNSTABLE);
-                // have to rethrow exception as IOException or InterruptedException
-                throw new IOException(e);
-            } catch (HubConfigurationException e) {
-                build.setResult(Result.UNSTABLE);
-                // have to rethrow exception as IOException or InterruptedException
-                throw new IOException(e);
+            } catch (Exception e) {
+                e.printStackTrace(listener.getLogger());
+                listener.error(e.getMessage());
+                result = Result.UNSTABLE;
             }
         } else {
             listener.getLogger().println("Build was not successful. Will not run Black Duck iScans.");
         }
-
+        build.setResult(result);
         return true;
     }
 
@@ -137,36 +135,35 @@ public class PostBuildHubiScan extends Recorder {
      *            BuildListener
      * @param build
      *            AbstractBuild
-     * @param scanJob
-     *            IScanJobs
      * @param iScanScript
      *            File
+     * @param scanTargets
+     *            String[]
      * 
      * @throws IOException
      */
-    public void runScan(BuildListener listener, AbstractBuild build, IScanJobs scanJob, File iScanScript) throws IOException {
+    public void runScan(BuildListener listener, AbstractBuild build, File iScanScript, String[] scanTargets) throws IOException {
         // This starts the filepath with the workspace, so only targets in the workspace should be
         // accessible
-        File target = new File(getWorkingDirectory() + scanJob.getScanTarget());
-        if (!target.exists()) {
-            build.setResult(Result.UNSTABLE);
-            throw new IOException("Scan target could not be found : " + scanJob.getScanTarget());
-        } else {
-            listener.getLogger().println("[DEBUG] : Target does exist : " + target.getCanonicalPath());
-        }
+
+        validateScanTargets(listener, scanTargets);
+
         // Use a substring of the host url because the http:// is not currently needed in the definition.
-        ProcessBuilder pb = new ProcessBuilder(iScanScript.getCanonicalPath(),
+        String[] cmdCreds = { iScanScript.getCanonicalPath(),
                 "--host", getDescriptor().getServerUrl().substring(7)
                 , "--username", getDescriptor().getHubServerInfo().getUsername()
-                , "--password", getDescriptor().getHubServerInfo().getPassword()
-                , target.getCanonicalPath());
+                , "--password", getDescriptor().getHubServerInfo().getPassword() };
+
+        String[] cmd = ObjectArrays.concat(cmdCreds, scanTargets, String.class);
+
+        ProcessBuilder pb = new ProcessBuilder(cmd);
         // target is in quotations in case there is a space in the path
 
         listener.getLogger().println("[DEBUG] : Using this java installation : " + getJavaHome());
         pb.environment().put("JAVA_HOME", getJavaHome());
 
-        for (String cmd : pb.command()) {
-            listener.getLogger().println(cmd);
+        for (String currentArg : pb.command()) {
+            listener.getLogger().println(currentArg);
         }
 
         // This is picking up the wrong java installation for some reason
@@ -277,6 +274,28 @@ public class PostBuildHubiScan extends Recorder {
             }
         }
         // No exceptions were thrown so return true
+        return true;
+    }
+
+    /**
+     * Validates that all scan targets exist
+     * 
+     * @param listener
+     *            BuildListener
+     * @param scanTargets
+     *            List<String>
+     * @return
+     * @throws IOException
+     */
+    public boolean validateScanTargets(BuildListener listener, String[] scanTargets) throws IOException {
+        for (String currTarget : scanTargets) {
+            File target = new File(currTarget);
+            if (!target.exists()) {
+                throw new IOException("Scan target could not be found : " + target.getCanonicalPath());
+            } else {
+                listener.getLogger().println("[DEBUG] : Target does exist : " + target.getCanonicalPath());
+            }
+        }
         return true;
     }
 }
