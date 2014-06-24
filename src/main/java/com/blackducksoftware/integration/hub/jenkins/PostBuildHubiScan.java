@@ -28,6 +28,10 @@ public class PostBuildHubiScan extends Recorder {
 
     private String iScanName;
 
+    private String workingDirectory;
+
+    private String javaHome;
+
     @DataBoundConstructor
     public PostBuildHubiScan(IScanJobs[] scans, String iScanName) {
         this.scans = scans;
@@ -76,81 +80,22 @@ public class PostBuildHubiScan extends Recorder {
                 if (scans.length == 0) {
                     throw new HubConfigurationException("Could not find any targets to scan.");
                 }
-                File iScanScript = null;
-                for (IScanInstallation iScan : iScanTools) {
-                    if (iScan.getName().equals(getiScanName())) {
-                        iScanScript = new File(iScan.getHome() + "/bin/scan.cli.sh");
-                    }
-                }
 
-                if (!iScanScript.exists()) {
-                    listener.getLogger().println("[ERROR] : Script doesn't exist : " + iScanScript.getCanonicalPath());
-                    throw new IScanToolMissingException("Could not find the script file to execute.");
-                } else {
-                    listener.getLogger().println("[DEBUG] : Script does exist : " + iScanScript.getCanonicalPath());
-                }
+                workingDirectory = build.getWorkspace().getRemote(); // This should work on master and slaves
+                javaHome = getJavaHome(build, listener);
 
-                EnvVars envVars = new EnvVars();
-                envVars = build.getEnvironment(listener);
-                String javaHome = null;
-                javaHome = build.getProject().getJDK().getHome();
-                if (StringUtils.isEmpty(javaHome)) {
-                    // In case the user did not select a java installation, set to the environment variable JAVA_HOME
-                    javaHome = envVars.get("JAVA_HOME");
-                }
+                File iScanScript = getIScanScript(iScanTools, listener);
 
-                String workingDirectory = build.getWorkspace().getRemote(); // This should work on master and slaves
                 for (IScanJobs scanJob : scans) {
-                    // This starts the filepath with the workspace, so only targets in the workspace should be
-                    // accessible
-                    File target = new File(workingDirectory + scanJob.getScanTarget());
-                    if (!target.exists()) {
-                        throw new IOException("Scan target could not be found : " + scanJob.getScanTarget());
-                    } else {
-                        listener.getLogger().println("[DEBUG] : Target does exist : " + target.getCanonicalPath());
-                    }
-                    // Use a substring of the host url because the http:// is not currently needed in the definition.
-                    ProcessBuilder pb = new ProcessBuilder(iScanScript.getCanonicalPath(),
-                            "--host", "\"" + getDescriptor().getServerUrl().substring(7) + "\""
-                            , "--username", "\"" + getDescriptor().getHubServerInfo().getUsername() + "\""
-                            , "--password", "\"" + getDescriptor().getHubServerInfo().getPassword() + "\""
-                            , target.getCanonicalPath());
-
-                    listener.getLogger().println("[DEBUG] : Using this java installation : " + javaHome);
-                    pb.environment().put("JAVA_HOME", javaHome);
-
-                    for (String cmd : pb.command()) {
-                        listener.getLogger().println(cmd);
-                    }
-
-                    // This is picking up the wrong java installation for some reason
-                    Process p = pb.start();
-                    String line;
-
-                    BufferedReader error = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-                    while ((line = error.readLine()) != null) {
-                        listener.getLogger().println(line);
-                    }
-                    error.close();
-
-                    BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                    while ((line = input.readLine()) != null) {
-                        listener.getLogger().println(line);
-                    }
-
-                    input.close();
-
-                    OutputStream outputStream = p.getOutputStream();
-                    PrintStream printStream = new PrintStream(outputStream);
-                    printStream.println();
-                    printStream.flush();
-                    printStream.close();
+                    runScan(listener, build, scanJob, iScanScript);
                 }
 
             } catch (IScanToolMissingException e) {
+                build.setResult(Result.UNSTABLE);
                 // have to rethrow exception as IOException or InterruptedException
                 throw new IOException(e);
             } catch (HubConfigurationException e) {
+                build.setResult(Result.UNSTABLE);
                 // have to rethrow exception as IOException or InterruptedException
                 throw new IOException(e);
             }
@@ -159,6 +104,81 @@ public class PostBuildHubiScan extends Recorder {
         }
 
         return true;
+    }
 
+    public void runScan(BuildListener listener, AbstractBuild build, IScanJobs scanJob, File iScanScript) throws IOException {
+        // This starts the filepath with the workspace, so only targets in the workspace should be
+        // accessible
+        File target = new File(workingDirectory + scanJob.getScanTarget());
+        if (!target.exists()) {
+            build.setResult(Result.UNSTABLE);
+            throw new IOException("Scan target could not be found : " + scanJob.getScanTarget());
+        } else {
+            listener.getLogger().println("[DEBUG] : Target does exist : " + target.getCanonicalPath());
+        }
+        // Use a substring of the host url because the http:// is not currently needed in the definition.
+        ProcessBuilder pb = new ProcessBuilder(iScanScript.getCanonicalPath(),
+                "--host", "\"" + getDescriptor().getServerUrl().substring(7) + "\""
+                , "--username", "\"" + getDescriptor().getHubServerInfo().getUsername() + "\""
+                , "--password", "\"" + getDescriptor().getHubServerInfo().getPassword() + "\""
+                , target.getCanonicalPath());
+
+        listener.getLogger().println("[DEBUG] : Using this java installation : " + javaHome);
+        pb.environment().put("JAVA_HOME", javaHome);
+
+        for (String cmd : pb.command()) {
+            listener.getLogger().println(cmd);
+        }
+
+        // This is picking up the wrong java installation for some reason
+        Process p = pb.start();
+        String line;
+
+        BufferedReader error = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        while ((line = error.readLine()) != null) {
+            listener.getLogger().println(line);
+        }
+        error.close();
+
+        BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        while ((line = input.readLine()) != null) {
+            listener.getLogger().println(line);
+        }
+
+        input.close();
+
+        OutputStream outputStream = p.getOutputStream();
+        PrintStream printStream = new PrintStream(outputStream);
+        printStream.println();
+        printStream.flush();
+        printStream.close();
+    }
+
+    public String getJavaHome(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
+        EnvVars envVars = new EnvVars();
+        envVars = build.getEnvironment(listener);
+        String javaHomeTemp = null;
+        javaHomeTemp = build.getProject().getJDK().getHome();
+        if (StringUtils.isEmpty(javaHome)) {
+            // In case the user did not select a java installation, set to the environment variable JAVA_HOME
+            javaHomeTemp = envVars.get("JAVA_HOME");
+        }
+        return javaHomeTemp;
+    }
+
+    public File getIScanScript(IScanInstallation[] iScanTools, BuildListener listener) throws IScanToolMissingException, IOException {
+        File iScanScript = null;
+        for (IScanInstallation iScan : iScanTools) {
+            if (iScan.getName().equals(getiScanName())) {
+                iScanScript = new File(iScan.getHome() + "/bin/scan.cli.sh");
+            }
+        }
+        if (!iScanScript.exists()) {
+            listener.getLogger().println("[ERROR] : Script doesn't exist : " + iScanScript.getCanonicalPath());
+            throw new IScanToolMissingException("Could not find the script file to execute.");
+        } else {
+            listener.getLogger().println("[DEBUG] : Script does exist : " + iScanScript.getCanonicalPath());
+        }
+        return iScanScript;
     }
 }
