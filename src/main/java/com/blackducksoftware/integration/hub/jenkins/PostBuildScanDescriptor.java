@@ -84,6 +84,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         load();
     }
 
+    /**
+     * Fills the Credential drop down list in the global config
+     * 
+     * @return
+     */
     public ListBoxModel doFillCredentialsIdItems() {
         // Code copied from
         // https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
@@ -94,6 +99,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
     }
 
+    /**
+     * Fills the iScan drop down list in the job config
+     * 
+     * @return
+     */
     public ListBoxModel doFillIScanNameItems() {
         ListBoxModel items = new ListBoxModel();
         Jenkins jenkins = Jenkins.getInstance();
@@ -146,6 +156,17 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return FormValidation.ok();
     }
 
+    /**
+     * Validates that the URL, Username, and Password are correct for connecting to the Hub Server.
+     * (DOES NOT WORK YET, Will return "OK" everytime)
+     * 
+     * @param serverUrl
+     *            String
+     * @param credentialsId
+     *            String
+     * @return FormValidation
+     * @throws ServletException
+     */
     public FormValidation doTestConnection(@QueryParameter("serverUrl") final String serverUrl,
             @QueryParameter("credentialsId") final String credentialsId)
             throws ServletException {
@@ -166,6 +187,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     }
                 }
             }
+            // TODO need to test the connection to the Hub server
+
             // CodeCenterFacade ccFacade = new CodeCenterFacade(serverUrl, credentialUserName, credentialPassword);
             // Jenkins jenkins = Jenkins.getInstance();
             // if (jenkins != null && jenkins.proxy != null) {

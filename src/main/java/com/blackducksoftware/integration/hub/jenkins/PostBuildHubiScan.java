@@ -50,6 +50,14 @@ public class PostBuildHubiScan extends Recorder {
         this.iScanName = iScanName;
     }
 
+    public String getWorkingDirectory() {
+        return workingDirectory;
+    }
+
+    public void setWorkingDirectory(String workingDirectory) {
+        this.workingDirectory = workingDirectory;
+    }
+
     // http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
@@ -60,6 +68,20 @@ public class PostBuildHubiScan extends Recorder {
         return (PostBuildScanDescriptor) super.getDescriptor();
     }
 
+    /**
+     * Overrides the Recorder perform method. This is the method that gets called by Jenkins to run as a Post Build
+     * Action
+     * 
+     * @param build
+     *            AbstractBuild
+     * @param launcher
+     *            Launcher
+     * @param listener
+     *            BuildListener
+     * 
+     * @throws IOException
+     * @throws InterruptedException
+     */
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher,
             BuildListener listener) throws InterruptedException, IOException {
@@ -74,23 +96,20 @@ public class PostBuildHubiScan extends Recorder {
                 ToolDescriptor<IScanInstallation> iScanDescriptor = (ToolDescriptor<IScanInstallation>) build.getDescriptorByName(IScanInstallation.class
                         .getSimpleName());
                 iScanTools = iScanDescriptor.getInstallations();
-                if (iScanTools[0] == null) {
-                    throw new IScanToolMissingException("Could not find an iScan Installation to use.");
-                }
-                if (scans.length == 0) {
-                    throw new HubConfigurationException("Could not find any targets to scan.");
-                }
+                if (validateConfiguration(iScanTools, getScans())) {
+                    // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any
+                    // file
+                    // even outside of the Jenkins directories
+                    setWorkingDirectory(build.getWorkspace().getRemote() + "/"); // This should work on master and
+                                                                                 // slaves
 
-                // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any file
-                // even outside of the Jenkins directories
-                workingDirectory = build.getWorkspace().getRemote() + "/"; // This should work on master and slaves
+                    setJavaHome(build, listener);
 
-                javaHome = getJavaHome(build, listener);
+                    File iScanScript = getIScanScript(iScanTools, listener);
 
-                File iScanScript = getIScanScript(iScanTools, listener);
-
-                for (IScanJobs scanJob : scans) {
-                    runScan(listener, build, scanJob, iScanScript);
+                    for (IScanJobs scanJob : getScans()) {
+                        runScan(listener, build, scanJob, iScanScript);
+                    }
                 }
 
             } catch (IScanToolMissingException e) {
@@ -109,10 +128,26 @@ public class PostBuildHubiScan extends Recorder {
         return true;
     }
 
+    /**
+     * Validates that the target of the scanJob exists, creates a ProcessBuilder to run the shellscript and passes in
+     * the necessarry arguments, sets the JAVA_HOME of the Process Builder to the one that the User chose, starts the
+     * process and prints out all stderr and stdout to the Console Output.
+     * 
+     * @param listener
+     *            BuildListener
+     * @param build
+     *            AbstractBuild
+     * @param scanJob
+     *            IScanJobs
+     * @param iScanScript
+     *            File
+     * 
+     * @throws IOException
+     */
     public void runScan(BuildListener listener, AbstractBuild build, IScanJobs scanJob, File iScanScript) throws IOException {
         // This starts the filepath with the workspace, so only targets in the workspace should be
         // accessible
-        File target = new File(workingDirectory + scanJob.getScanTarget());
+        File target = new File(getWorkingDirectory() + scanJob.getScanTarget());
         if (!target.exists()) {
             build.setResult(Result.UNSTABLE);
             throw new IOException("Scan target could not be found : " + scanJob.getScanTarget());
@@ -121,13 +156,14 @@ public class PostBuildHubiScan extends Recorder {
         }
         // Use a substring of the host url because the http:// is not currently needed in the definition.
         ProcessBuilder pb = new ProcessBuilder(iScanScript.getCanonicalPath(),
-                "--host", "\"" + getDescriptor().getServerUrl().substring(7) + "\""
-                , "--username", "\"" + getDescriptor().getHubServerInfo().getUsername() + "\""
-                , "--password", "\"" + getDescriptor().getHubServerInfo().getPassword() + "\""
+                "--host", getDescriptor().getServerUrl().substring(7)
+                , "--username", getDescriptor().getHubServerInfo().getUsername()
+                , "--password", getDescriptor().getHubServerInfo().getPassword()
                 , target.getCanonicalPath());
+        // target is in quotations in case there is a space in the path
 
-        listener.getLogger().println("[DEBUG] : Using this java installation : " + javaHome);
-        pb.environment().put("JAVA_HOME", javaHome);
+        listener.getLogger().println("[DEBUG] : Using this java installation : " + getJavaHome());
+        pb.environment().put("JAVA_HOME", getJavaHome());
 
         for (String cmd : pb.command()) {
             listener.getLogger().println(cmd);
@@ -157,18 +193,43 @@ public class PostBuildHubiScan extends Recorder {
         printStream.close();
     }
 
-    public String getJavaHome(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
+    public String getJavaHome() {
+        return javaHome;
+    }
+
+    /**
+     * Sets the Java Home that is to be used for running the Shell script
+     * 
+     * @param build
+     * @param listener
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public void setJavaHome(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
         EnvVars envVars = new EnvVars();
         envVars = build.getEnvironment(listener);
         String javaHomeTemp = null;
         javaHomeTemp = build.getProject().getJDK().getHome();
-        if (StringUtils.isEmpty(javaHome)) {
+        if (StringUtils.isEmpty(javaHomeTemp)) {
             // In case the user did not select a java installation, set to the environment variable JAVA_HOME
             javaHomeTemp = envVars.get("JAVA_HOME");
         }
-        return javaHomeTemp;
+        javaHome = javaHomeTemp;
     }
 
+    /**
+     * Looks through the iScanInstallations to find the one that the User chose, then looks for the scan.cli.sh in the
+     * bin folder of the directory defined by the Installation.
+     * It then checks that the File exists.
+     * 
+     * @param iScanTools
+     *            IScanInstallation[] User defined iScan installations
+     * @param listener
+     *            BuildListener
+     * @return File the scan.cli.sh
+     * @throws IScanToolMissingException
+     * @throws IOException
+     */
     public File getIScanScript(IScanInstallation[] iScanTools, BuildListener listener) throws IScanToolMissingException, IOException {
         File iScanScript = null;
         for (IScanInstallation iScan : iScanTools) {
@@ -183,5 +244,39 @@ public class PostBuildHubiScan extends Recorder {
             listener.getLogger().println("[DEBUG] : Script does exist : " + iScanScript.getCanonicalPath());
         }
         return iScanScript;
+    }
+
+    /**
+     * Validates that the Plugin is configured correctly. Checks that the User has defined an iScan tool, a Hub server
+     * URL, a Credential, and that there are at least one scan Target/Job defined in the Build
+     * 
+     * @param iScanTools
+     *            IScanInstallation[] User defined iScan installations
+     * @param scans
+     *            IScanJobs[] the iScan jobs defined in the Job config
+     * 
+     * @return True if everything is configured correctly
+     * 
+     * @throws IScanToolMissingException
+     * @throws HubConfigurationException
+     */
+    public boolean validateConfiguration(IScanInstallation[] iScanTools, IScanJobs[] scans) throws IScanToolMissingException, HubConfigurationException {
+        if (iScanTools[0] == null) {
+            throw new IScanToolMissingException("Could not find an iScan Installation to use.");
+        }
+        if (scans == null || scans.length == 0) {
+            throw new HubConfigurationException("Could not find any targets to scan.");
+        }
+        if (!getDescriptor().getHubServerInfo().isPluginConfigured()) {
+            // If plugin is not Configured, we try to find out what is missing.
+            if (StringUtils.isEmpty(getDescriptor().getHubServerInfo().getServerUrl())) {
+                throw new HubConfigurationException("Could not find any targets to scan.");
+            }
+            if (StringUtils.isEmpty(getDescriptor().getHubServerInfo().getCredentialsId())) {
+                throw new HubConfigurationException("Could not find any targets to scan.");
+            }
+        }
+        // No exceptions were thrown so return true
+        return true;
     }
 }
