@@ -1,0 +1,47 @@
+---------------------------------------
+---------------------------------------
+Data file: /Users/jrichard/Desktop/scan.cli-1.14.0-SNAPSHOT/lib/data/jrichardMac-adhgadgh-2014-06-16T173046.231-0400.json
+Result: IO_ERROR Failure
+Start time: Mon Jun 16 17:30:46 EDT 2014
+End time: Mon Jun 16 17:30:46 EDT 2014
+Scan result 
+  -->  Scan node count: 0
+  -->  Scan problem count: 0
+---------------------------------------
+ScanClientSettings: ScanClientSettings [commandLine=org.apache.commons.cli.CommandLine@11bf9757, fileUriSet=[file://jrichardMac/Users/jrichard/Desktop/scan.cli-1.14.0-SNAPSHOT/bin/sarhgdsfhdsfh/asgasgh/asdrgasdgasd/adhgadgh], dryRun=false, scheme=http, host=2m-internal.blackducksoftware.com, port=8080, serverContext=, username=sysadmin, password=<NOT SHOWN>]
+---------------------------------------
+ScanContainer
+ScanContainer-->ScanContainer: 
+  -->  ScanContainer{scanId=null, createdOn=2014-06-16T17:30:46.231-04:00, timeToScan=51, scannerVersion=1.14.0-SNAPSHOT, hostName=jrichardMac, ownerEntityKeyToken=SN#jrichardMac-adhgadgh, baseDir=/Users/jrichard/Desktop/scan.cli-1.14.0-SNAPSHOT/bin/sarhgdsfhdsfh/asgasgh/asdrgasdgasd/adhgadgh, scanProblem=ScanProblem{childProblem=false, scanError=com.blackducksoftware.scan.processor.api.ScanError@6ccc45d2, problem=Problem{exceptionType=java.nio.file.NoSuchFileException, message=/Users/jrichard/Desktop/scan.cli-1.14.0-SNAPSHOT/bin/sarhgdsfhdsfh/asgasgh/asdrgasdgasd/adhgadgh, stack=sun.nio.fs.UnixException.translateToIOException(UnixException.java:86)
+sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:102)
+sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:107)
+sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:144)
+java.nio.file.Files.readAttributes(Files.java:1684)
+java.nio.file.Files.size(Files.java:2273)
+com.blackducksoftware.scan.scanner.impl.ScanNodeVisitor.visit(ScanNodeVisitor.java:158)
+com.blackducksoftware.scan.scanner.impl.ScanNodeVisitor.visitLeaf(ScanNodeVisitor.java:141)
+com.blackducksoftware.scan.scanner.impl.ScanNodeVisitor.visitLeaf(ScanNodeVisitor.java:30)
+com.blackducksoftware.scan.scanner.impl.NodeWalker.walk(NodeWalker.java:119)
+com.blackducksoftware.scan.scanner.impl.NodeWalker.walk(NodeWalker.java:43)
+com.blackducksoftware.scan.scanner.client.ClientScanGatherer.read(ClientScanGatherer.java:121)
+com.blackducksoftware.scan.scanner.client.ClientScanGatherer.read(ClientScanGatherer.java:94)
+com.blackducksoftware.scan.cli.impl.ScanClient.executeSingleScan(ScanClient.java:231)
+com.blackducksoftware.scan.cli.impl.ScanClient.execute(ScanClient.java:181)
+com.blackducksoftware.scan.cli.tool.Tool.doExecution(Tool.java:131)
+com.blackducksoftware.scan.cli.tool.Tool.run(Tool.java:92)
+com.blackducksoftware.scan.cli.impl.ScanClient.runWithStatus(ScanClient.java:82)
+com.blackducksoftware.scan.cli.impl.ScanClient.main(ScanClient.java:75)
+sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+java.lang.reflect.Method.invoke(Method.java:606)
+com.simontuffs.onejar.Boot.run(Boot.java:313)
+com.simontuffs.onejar.Boot.main(Boot.java:161)
+, errorTime=1402954246278}}, scanProblemList.size()=0, scanNodeList.size()=0}
+ScanContainer-->ScanProblem: 
+ScanContainer-->ScanNodeList: 
+---------------------------------------
+Scan result: null
+---------------------------------------
+---------------------------------------

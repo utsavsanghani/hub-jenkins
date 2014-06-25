@@ -1,0 +1,35 @@
+---------------------------------------
+---------------------------------------
+Data file: /Users/jrichard/Desktop/scan.cli-1.14.0-SNAPSHOT/lib/data/jrichardMac-src-2014-06-16T171225.485-0400.json
+Result: SUCCESS
+Start time: Mon Jun 16 17:12:25 EDT 2014
+End time: Mon Jun 16 17:12:26 EDT 2014
+Scan result 
+  -->  Scan node count: 14
+  -->  Scan problem count: 0
+---------------------------------------
+ScanClientSettings: ScanClientSettings [commandLine=org.apache.commons.cli.CommandLine@5d9c2667, fileUriSet=[file://jrichardMac/Jenkins/Home/workspace/Jenkins%20Hub%20Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src], dryRun=false, scheme=http, host=2m-internal.blackducksoftware.com, port=8080, serverContext=, username=sysadmin, password=<NOT SHOWN>]
+---------------------------------------
+ScanContainer
+ScanContainer-->ScanContainer: 
+  -->  ScanContainer{scanId=null, createdOn=2014-06-16T17:12:25.485-04:00, timeToScan=65, scannerVersion=1.14.0-SNAPSHOT, hostName=jrichardMac, ownerEntityKeyToken=SN#jrichardMac-src, baseDir=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src, scanProblem=null, scanProblemList.size()=0, scanNodeList.size()=14}
+ScanContainer-->ScanProblem: 
+ScanContainer-->ScanNodeList: 
+  -->  ScanNode{id=0, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src, parentId=null, type=DIRECTORY, name=src, size=0, archiveUri=file:/Jenkins/Home/workspace/Jenkins%20Hub%20Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=1, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main, parentId=0, type=DIRECTORY, name=main, size=0, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=2, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main/java, parentId=1, type=DIRECTORY, name=java, size=0, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=3, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main/java/org, parentId=2, type=DIRECTORY, name=org, size=0, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=4, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main/java/org/sonatype, parentId=3, type=DIRECTORY, name=sonatype, size=0, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=5, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main/java/org/sonatype/mavenbook, parentId=4, type=DIRECTORY, name=mavenbook, size=0, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=6, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main/java/org/sonatype/mavenbook/web, parentId=5, type=DIRECTORY, name=web, size=0, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=7, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main/java/org/sonatype/mavenbook/web/SimpleServlet.java, parentId=6, type=FILE, name=SimpleServlet.java, size=439, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=8, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main/webapp, parentId=1, type=DIRECTORY, name=webapp, size=0, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=9, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main/webapp/index.jsp, parentId=8, type=FILE, name=index.jsp, size=52, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=10, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main/webapp/META-INF, parentId=8, type=DIRECTORY, name=META-INF, size=0, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=11, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main/webapp/META-INF/MANIFEST.MF, parentId=10, type=FILE, name=MANIFEST.MF, size=39, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=12, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main/webapp/WEB-INF, parentId=8, type=DIRECTORY, name=WEB-INF, size=0, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+  -->  ScanNode{id=13, path=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src/main/webapp/WEB-INF/web.xml, parentId=12, type=FILE, name=web.xml, size=476, archiveUri=null, clientSignatures.size=1, sha1=null, md5=null, modifiedOn=null, createdOn=null}
+---------------------------------------
+Scan result: Scan{id=95834436-221f-463f-8907-acc1b5d8dd5b, scannerVersion=1.14.0-SNAPSHOT, hostName=jrichardMac, ownerEntityKeyToken=SN#jrichardMac-src, baseDir=/Jenkins/Home/workspace/Jenkins Hub Integration/mvnexbook-examples-1.0/ch-simple-web/simple-webapp/src, createdOn=2014-06-16T21:12:25.485Z, lastModifiedOn=2014-06-16T21:12:24.997Z, timeToScan=65, createdByUserId=00000000-0000-0000-0001-000000000001}
+---------------------------------------
+---------------------------------------
