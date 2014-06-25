@@ -181,6 +181,8 @@ public class PostBuildHubiScan extends Recorder {
         PrintStream printOutStream = new PrintStream(outputStream);
         printOutStream.println();
         printOutStream.flush();
+        // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will handle
+        // closing it.
 
         // ProcessBuilder pb = new ProcessBuilder(cmd);
         //
