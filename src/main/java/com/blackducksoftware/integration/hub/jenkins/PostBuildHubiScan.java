@@ -184,38 +184,6 @@ public class PostBuildHubiScan extends Recorder {
         // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will handle
         // closing it.
 
-        // ProcessBuilder pb = new ProcessBuilder(cmd);
-        //
-        // listener.getLogger().println("[DEBUG] : Using this java installation : " + getJava().getName() + " : " +
-        // getJava().getHome());
-        // pb.environment().put("JAVA_HOME", getJava().getHome());
-        //
-        // // This is for debugging only, prints out the commands you have provided to the process builder
-        // // for (String currentArg : pb.command()) {
-        // // listener.getLogger().println(currentArg);
-        // // }
-        //
-        // Process p = pb.start();
-        // String line;
-        //
-        // BufferedReader error = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-        // while ((line = error.readLine()) != null) {
-        // listener.getLogger().println(line);
-        // }
-        // error.close();
-        //
-        // BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        // while ((line = input.readLine()) != null) {
-        // listener.getLogger().println(line);
-        // }
-        //
-        // input.close();
-        //
-        // OutputStream outputStream = p.getOutputStream();
-        // PrintStream printStream = new PrintStream(outputStream);
-        // printStream.println();
-        // printStream.flush();
-        // printStream.close();
     }
 
     public JDK getJava() {
