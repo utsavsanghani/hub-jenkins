@@ -50,15 +50,11 @@ public class PostBuildHubiScan extends Recorder {
         return iScanName;
     }
 
-    public void setiScanName(String iScanName) {
-        this.iScanName = iScanName;
-    }
-
     public String getWorkingDirectory() {
         return workingDirectory;
     }
 
-    public void setWorkingDirectory(String workingDirectory) {
+    private void setWorkingDirectory(String workingDirectory) {
         this.workingDirectory = workingDirectory;
     }
 
@@ -146,7 +142,7 @@ public class PostBuildHubiScan extends Recorder {
      * @throws HubConfigurationException
      * @throws InterruptedException
      */
-    public void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanScript, List<String> scanTargets) throws IOException,
+    private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanScript, List<String> scanTargets) throws IOException,
             HubConfigurationException, InterruptedException {
 
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
@@ -200,12 +196,13 @@ public class PostBuildHubiScan extends Recorder {
      * @throws IOException
      * @throws InterruptedException
      */
-    public void setJava(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
+    private void setJava(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
         EnvVars envVars = new EnvVars();
         envVars = build.getEnvironment(listener);
         JDK javaHomeTemp = null;
         javaHomeTemp = build.getProject().getJDK();
         if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
+            // Empty node name indicates master
             javaHomeTemp = build.getProject().getJDK();
         } else {
             javaHomeTemp = javaHomeTemp.forNode(build.getBuiltOn(), listener);
@@ -233,25 +230,29 @@ public class PostBuildHubiScan extends Recorder {
      * @throws IScanToolMissingException
      * @throws IOException
      * @throws InterruptedException
+     * @throws HubConfigurationException
      */
     public FilePath getIScanScript(IScanInstallation[] iScanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
-            InterruptedException {
+            InterruptedException, HubConfigurationException {
         File locationFile = null;
         FilePath iScanScript = null;
         for (IScanInstallation iScan : iScanTools) {
-            // TODO slave support
             if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
+                // Empty node name indicates master
                 listener.getLogger().println("[DEBUG] : master");
             } else {
                 listener.getLogger().println("[DEBUG] : " + build.getBuiltOn().getNodeName());
                 iScan = iScan.forNode(build.getBuiltOn(), listener);
             }
-
             if (iScan.getName().equals(getiScanName())) {
-
                 locationFile = new File(iScan.getHome() + "/bin/scan.cli.sh");
                 iScanScript = new FilePath(build.getBuiltOn().getChannel(), locationFile.getCanonicalPath());
             }
+        }
+        if (iScanScript == null) {
+            // Should not get here unless there are no iScan Installations defined
+            // But we check this just in case
+            throw new HubConfigurationException("You need to select which iScan installation to use.");
         }
         if (!iScanScript.exists()) {
             listener.getLogger().println("[ERROR] : Script doesn't exist : " + iScanScript.getRemote());
