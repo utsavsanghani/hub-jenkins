@@ -20,7 +20,7 @@ public class HubServerInfo implements Serializable {
 
     private String serverUrl;
 
-    private String credentialsId;
+    private String hubCredentialsId;
 
     private UsernamePasswordCredentialsImpl credential;
 
@@ -29,10 +29,10 @@ public class HubServerInfo implements Serializable {
     public HubServerInfo() {
     }
 
-    public HubServerInfo(String serverUrl, String credentialsId, long timeout) {
+    public HubServerInfo(String serverUrl, String hubCredentialsId, long timeout) {
         super();
         this.serverUrl = serverUrl;
-        this.credentialsId = credentialsId;
+        this.hubCredentialsId = hubCredentialsId;
         this.timeout = timeout;
     }
 
@@ -53,15 +53,15 @@ public class HubServerInfo implements Serializable {
     }
 
     public String getCredentialsId() {
-        return credentialsId;
+        return hubCredentialsId;
     }
 
     /**
-     * @param credentialsId
-     *            the credentialsId to set
+     * @param hubCredentialsId
+     *            the hubCredentialsId to set
      */
-    public void setCredentialsId(String credentialsId) {
-        this.credentialsId = credentialsId;
+    public void setCredentialsId(String hubCredentialsId) {
+        this.hubCredentialsId = hubCredentialsId;
     }
 
     public boolean isPluginConfigured() {
@@ -83,12 +83,12 @@ public class HubServerInfo implements Serializable {
     private UsernamePasswordCredentialsImpl getCredential() {
         // Only need to look up the credential when you first run a build or if the credential that the user wants to
         // use has changed.
-        if (credential == null || !credential.getId().equals(credentialsId)) {
+        if (credential == null || !credential.getId().equals(hubCredentialsId)) {
             AbstractProject<?, ?> project = null;
             List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class,
                     project, ACL.SYSTEM,
                     Collections.<DomainRequirement> emptyList());
-            IdMatcher matcher = new IdMatcher(credentialsId);
+            IdMatcher matcher = new IdMatcher(hubCredentialsId);
             for (StandardCredentials c : credentials) {
                 if (matcher.matches(c)) {
                     if (c instanceof UsernamePasswordCredentialsImpl) {
@@ -108,7 +108,7 @@ public class HubServerInfo implements Serializable {
      */
     @Override
     public String toString() {
-        return "HubServerInfo [serverUrl=" + serverUrl + ", credentialsId=" + credentialsId + ", credential=" + credential + ", timeout=" + timeout
+        return "HubServerInfo [serverUrl=" + serverUrl + ", hubCredentialsId=" + hubCredentialsId + ", credential=" + credential + ", timeout=" + timeout
                 + "]";
     }
 

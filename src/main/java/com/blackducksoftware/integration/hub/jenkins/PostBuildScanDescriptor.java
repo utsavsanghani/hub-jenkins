@@ -56,7 +56,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final long DEFAULT_TIMEOUT = 300;
 
-    private static final String FORM_CREDENTIALSID = "credentialsId";
+    private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
     private HubServerInfo hubServerInfo;
 
@@ -162,20 +162,20 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * 
      * @param serverUrl
      *            String
-     * @param credentialsId
+     * @param hubCredentialsId
      *            String
      * @return FormValidation
      * @throws ServletException
      */
     public FormValidation doTestConnection(@QueryParameter("serverUrl") final String serverUrl,
-            @QueryParameter("credentialsId") final String credentialsId)
+            @QueryParameter("hubCredentialsId") final String hubCredentialsId)
             throws ServletException {
         try {
             AbstractProject<?, ?> nullProject = null;
             List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class,
                     nullProject, ACL.SYSTEM,
                     Collections.<DomainRequirement> emptyList());
-            IdMatcher matcher = new IdMatcher(credentialsId);
+            IdMatcher matcher = new IdMatcher(hubCredentialsId);
             String credentialUserName = null;
             String credentialPassword = null;
             for (StandardCredentials c : credentials) {
