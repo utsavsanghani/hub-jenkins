@@ -118,6 +118,7 @@ public class PostBuildHubiScan extends Recorder {
         } else {
             listener.getLogger().println("Build was not successful. Will not run Black Duck iScans.");
         }
+        listener.getLogger().println("Finished running Black Duck iScans.");
         build.setResult(result);
         return true;
     }
@@ -200,7 +201,6 @@ public class PostBuildHubiScan extends Recorder {
         EnvVars envVars = new EnvVars();
         envVars = build.getEnvironment(listener);
         JDK javaHomeTemp = null;
-        javaHomeTemp = build.getProject().getJDK();
         if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
             // Empty node name indicates master
             javaHomeTemp = build.getProject().getJDK();
@@ -256,7 +256,7 @@ public class PostBuildHubiScan extends Recorder {
         }
         if (!iScanScript.exists()) {
             listener.getLogger().println("[ERROR] : Script doesn't exist : " + iScanScript.getRemote());
-            throw new IScanToolMissingException("Could not find the script file to execute.");
+            throw new IScanToolMissingException("Could not find the script file to execute at : '" + iScanScript.getRemote() + "'");
         } else {
             listener.getLogger().println(
                     "[DEBUG] : Using this iScan script at : " + iScanScript.getRemote());
@@ -279,7 +279,7 @@ public class PostBuildHubiScan extends Recorder {
      * @throws HubConfigurationException
      */
     public boolean validateConfiguration(IScanInstallation[] iScanTools, IScanJobs[] scans) throws IScanToolMissingException, HubConfigurationException {
-        if (iScanTools[0] == null) {
+        if (iScanTools == null || iScanTools.length == 0 || iScanTools[0] == null) {
             throw new IScanToolMissingException("Could not find an iScan Installation to use.");
         }
         if (scans == null || scans.length == 0) {
@@ -288,10 +288,10 @@ public class PostBuildHubiScan extends Recorder {
         if (!getDescriptor().getHubServerInfo().isPluginConfigured()) {
             // If plugin is not Configured, we try to find out what is missing.
             if (StringUtils.isEmpty(getDescriptor().getHubServerInfo().getServerUrl())) {
-                throw new HubConfigurationException("Could not find any targets to scan.");
+                throw new HubConfigurationException("No Hub URL was provided.");
             }
             if (StringUtils.isEmpty(getDescriptor().getHubServerInfo().getCredentialsId())) {
-                throw new HubConfigurationException("Could not find any targets to scan.");
+                throw new HubConfigurationException("No credentials could be found to connect to the Hub.");
             }
         }
         // No exceptions were thrown so return true
