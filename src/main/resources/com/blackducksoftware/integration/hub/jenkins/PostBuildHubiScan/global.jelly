@@ -17,7 +17,7 @@
       description="Provide the Url for your Black Duck Hub Server">
         <f:textbox field="serverUrl" value="${descriptor.serverUrl}"/>
     </f:entry>
-    <f:entry title="${%Credentials}" field="credentialsId" >
+    <f:entry title="${%Credentials}" field="hubCredentialsId" >
     	<c:select/>
     </f:entry>
     <f:validateButton title="${%TestConnection}" progress="Testing..."
