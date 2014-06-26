@@ -89,7 +89,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * 
      * @return
      */
-    public ListBoxModel doFillCredentialsIdItems() {
+    public ListBoxModel doFillHubCredentialsIdItems() {
         // Code copied from
         // https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
         CredentialsMatcher CREDENTIALS_MATCHER = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
