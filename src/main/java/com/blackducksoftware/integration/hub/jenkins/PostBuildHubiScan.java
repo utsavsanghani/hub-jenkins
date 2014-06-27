@@ -36,10 +36,20 @@ public class PostBuildHubiScan extends Recorder {
 
     private JDK java;
 
+    private static boolean TEST = false;
+
     @DataBoundConstructor
     public PostBuildHubiScan(IScanJobs[] scans, String iScanName) {
         this.scans = scans;
         this.iScanName = iScanName;
+    }
+
+    public static boolean isTEST() {
+        return TEST;
+    }
+
+    public static void setTEST(boolean tEST) {
+        TEST = tEST;
     }
 
     public IScanJobs[] getScans() {
@@ -160,6 +170,9 @@ public class PostBuildHubiScan extends Recorder {
         cmd.add(getDescriptor().getHubServerInfo().getUsername());
         cmd.add("--password");
         cmd.add(getDescriptor().getHubServerInfo().getPassword());
+        if (isTEST()) {
+            cmd.add("--dryRun");
+        }
         for (String target : scanTargets) {
             cmd.add(target);
         }
@@ -168,11 +181,14 @@ public class PostBuildHubiScan extends Recorder {
         // String[] cmd = ObjectArrays.concat(cmdCreds, scanTargets, String.class);
 
         ProcStarter ps = launcher.launch();
-
-        ps.envs(build.getEnvironment(listener));
-        ps.cmds(cmd);
-        ps.stdout(listener);
-        ps.join();
+        if (ps != null) {
+            ps.envs(build.getEnvironment(listener));
+            ps.cmds(cmd);
+            ps.stdout(listener);
+            ps.join();
+        } else {
+            listener.getLogger().println("[ERROR] : Could not find a ProcStarter to run the process!");
+        }
 
         OutputStream outputStream = ps.stdout();
         PrintStream printOutStream = new PrintStream(outputStream);
