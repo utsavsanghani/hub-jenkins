@@ -1,8 +1,8 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
 import hudson.model.FreeStyleBuild;
+import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
-import hudson.slaves.NodeProperty;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +20,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.IScanJobs;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.IScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.IScanInstallation.IScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubiScan;
@@ -76,6 +77,9 @@ public class IntegrationTests {
 
     @Test
     public void completeRunthroughAndScan() throws IOException, InterruptedException, ExecutionException {
+        // CodeCenterMavenReporter.DescriptorImpl reporterDescriptor = new CodeCenterMavenReporter.DescriptorImpl();
+        // Jenkins.getInstance().getExtensionList(Descriptor.class)
+        // .add(reporterDescriptor);
 
         FreeStyleProject project = j.jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
@@ -87,7 +91,7 @@ public class IntegrationTests {
         IScanDescriptor iScanDesc = new IScanDescriptor();
         iScanDesc.setInstallations(iScanInstallations);
 
-        j.jenkins.getDescriptorList(NodeProperty.class).add(iScanDesc);
+        j.jenkins.getExtensionList(Descriptor.class).add(iScanDesc);
 
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
@@ -98,12 +102,15 @@ public class IntegrationTests {
         serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         serverInfo.setCredentialsId(credential.getId());
 
-        IScanJobs oneScan = new IScanJobs(testWorkspace);
+        IScanJobs oneScan = new IScanJobs("");
         IScanJobs[] scans = new IScanJobs[1];
         scans[0] = oneScan;
 
+        PostBuildScanDescriptor scanDesc = new PostBuildScanDescriptor();
+        scanDesc.setHubServerInfo(serverInfo);
+        j.jenkins.getExtensionList(Descriptor.class).add(scanDesc);
+
         PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default");
-        pbScan.getDescriptor().setHubServerInfo(serverInfo);
 
         project.getPublishersList().add(pbScan);
 
