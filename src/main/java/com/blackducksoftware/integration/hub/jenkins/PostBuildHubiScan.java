@@ -48,6 +48,7 @@ public class PostBuildHubiScan extends Recorder {
         return TEST;
     }
 
+    // Set to true run the integration test without running the actual iScan.
     public static void setTEST(boolean tEST) {
         TEST = tEST;
     }
@@ -194,6 +195,8 @@ public class PostBuildHubiScan extends Recorder {
         PrintStream printOutStream = new PrintStream(outputStream);
         printOutStream.println();
         printOutStream.flush();
+        // TODO Check if iScan had and error
+
         // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will handle
         // closing it.
 

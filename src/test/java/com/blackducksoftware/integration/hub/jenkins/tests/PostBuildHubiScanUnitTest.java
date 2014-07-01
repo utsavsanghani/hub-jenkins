@@ -34,7 +34,7 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfiguration
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
 import com.google.common.base.Charsets;
 
-public class PostBuildHubiScanUnitTests {
+public class PostBuildHubiScanUnitTest {
 
     private static String VALID_CREDENTIAL = "Valid Credential Id";
 
@@ -59,7 +59,7 @@ public class PostBuildHubiScanUnitTests {
 
     @BeforeClass
     public static void init() {
-        basePath = IntegrationTests.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        basePath = IntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf("/target"));
         basePath = basePath + "/test-workspace";
         iScanInstallPath = basePath + "/scan.cli-1.14.0-SNAPSHOT";
