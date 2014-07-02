@@ -53,10 +53,25 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
      * @throws InterruptedException
      */
     public boolean getExists(VirtualChannel channel) throws IOException, InterruptedException {
-        File locationFile = new File(getHome() + "/bin/scan.cli.sh");
-        FilePath iScanScript = new FilePath(channel, locationFile.getCanonicalPath());
-        if (iScanScript.exists()) {
-            return true;
+        File homeFile = new File(getHome() + "/lib");
+        FilePath homeFilePath = new FilePath(channel, homeFile.getCanonicalPath());
+        if (homeFilePath.exists()) {
+            FilePath[] files = homeFilePath.list("scan.cli*.jar");
+            FilePath iScanScript = null;
+            if (files == null) {
+                return false;
+            } else {
+                for (FilePath file : files) {
+                    if (file.getName().contains("scan.cli")) {
+                        iScanScript = file;
+                    }
+                }
+            }
+            if (iScanScript.exists()) {
+                return true;
+            } else {
+                return false;
+            }
         } else {
             return false;
         }
@@ -72,10 +87,22 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
      * @throws IOException
      * @throws InterruptedException
      */
-    public FilePath getExecutable(VirtualChannel channel) throws IOException, InterruptedException {
-        File locationFile = new File(getHome() + "/bin/scan.cli.sh");
-        FilePath iScanScript = new FilePath(channel, locationFile.getCanonicalPath());
-        return iScanScript;
+    public FilePath getCLI(VirtualChannel channel) throws IOException, InterruptedException {
+        File homeFile = new File(getHome() + "/lib");
+        FilePath homeFilePath = new FilePath(channel, homeFile.getCanonicalPath());
+        if (homeFilePath.exists()) {
+
+            FilePath[] files = homeFilePath.list("scan.cli*.jar");
+            FilePath iScanScript = null;
+            for (FilePath file : files) {
+                if (file.getName().contains("scan.cli")) {
+                    iScanScript = file;
+                }
+            }
+            return iScanScript;
+        } else {
+            return null;
+        }
     }
 
     @Extension

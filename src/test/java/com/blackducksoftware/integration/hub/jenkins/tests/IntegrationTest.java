@@ -118,7 +118,7 @@ public class IntegrationTest {
 
         Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : master"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan script at : "));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
@@ -164,7 +164,7 @@ public class IntegrationTest {
 
         Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : master"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan script at : "));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
@@ -211,7 +211,7 @@ public class IntegrationTest {
 
         Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : master"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan script at : "));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));

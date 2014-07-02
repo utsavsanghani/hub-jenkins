@@ -37,6 +37,8 @@ import com.google.common.base.Charsets;
 
 public class PostBuildHubiScanUnitTest {
 
+    private static final String TEST_CLI_PATH = "/lib/scan.cli-1.14.0-SNAPSHOT-standalone.jar";
+
     private static String VALID_CREDENTIAL = "Valid Credential Id";
 
     private static String VALID_SERVERURL = "http://donald:8080";
@@ -131,11 +133,11 @@ public class PostBuildHubiScanUnitTest {
 
         PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default");
 
-        FilePath script = pbScan.getIScanScript(iScanInstallations, listener, mockBuild);
+        FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
         Assert.assertTrue(script.exists());
-        Assert.assertTrue(script.getRemote().equals(iScanInstallPath + "/bin/scan.cli.sh"));
+        Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
         Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : master"));
-        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Using this iScan script at : "));
+        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Using this iScan CLI at : "));
     }
 
     @Test
@@ -155,7 +157,7 @@ public class PostBuildHubiScanUnitTest {
         when(mockIScanInstall.getName()).thenReturn("default");
         when(mockIScanInstall.getHome()).thenReturn(iScanInstallPath);
         when(mockIScanInstall.forNode(Mockito.any(Node.class), Mockito.any(BuildListener.class))).thenReturn(mockIScanInstall);
-        when(mockIScanInstall.getExecutable(Mockito.any(VirtualChannel.class))).thenCallRealMethod();
+        when(mockIScanInstall.getCLI(Mockito.any(VirtualChannel.class))).thenCallRealMethod();
         when(mockIScanInstall.getExists(Mockito.any(VirtualChannel.class))).thenCallRealMethod();
         IScanInstallation[] iScanInstallations = new IScanInstallation[1];
         iScanInstallations[0] = mockIScanInstall;
@@ -164,11 +166,11 @@ public class PostBuildHubiScanUnitTest {
 
         PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default");
 
-        FilePath script = pbScan.getIScanScript(iScanInstallations, listener, mockBuild);
+        FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
         Assert.assertTrue(script.exists());
-        Assert.assertTrue(script.getRemote().equals(iScanInstallPath + "/bin/scan.cli.sh"));
+        Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
         Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : testSlave"));
-        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Using this iScan script at : "));
+        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Using this iScan CLI at : "));
     }
 
     @Test
@@ -183,9 +185,9 @@ public class PostBuildHubiScanUnitTest {
 
         PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default");
 
-        FilePath script = pbScan.getIScanScript(iScanInstallations, listener, null);
+        FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, null);
         Assert.assertTrue(script.exists());
-        Assert.assertTrue(script.getRemote().equals(iScanInstallPath + "/bin/scan.cli.sh"));
+        Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
     }
 
     @Test
@@ -194,7 +196,7 @@ public class PostBuildHubiScanUnitTest {
         // and with the script not existing
 
         exception.expect(IScanToolMissingException.class);
-        exception.expectMessage("Could not find the script file to execute at : '");
+        exception.expectMessage("Could not find the CLI file to execute at : '");
 
         AbstractBuild mockBuild = mock(AbstractBuild.class);
 
@@ -208,7 +210,7 @@ public class PostBuildHubiScanUnitTest {
         iScanInstallations[0] = iScanInstall;
 
         PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default");
-        pbScan.getIScanScript(iScanInstallations, listener, mockBuild);
+        pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
     }
 
     // validateConfiguration

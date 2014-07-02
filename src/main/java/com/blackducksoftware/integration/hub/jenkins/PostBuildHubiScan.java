@@ -112,7 +112,7 @@ public class PostBuildHubiScan extends Recorder {
                     setWorkingDirectory(build.getWorkspace().getRemote()); // This should work on master and
                                                                            // slaves
                     setJava(build, listener);
-                    FilePath iScanScript = getIScanScript(iScanTools, listener, build);
+                    FilePath iScanScript = getIScanCLI(iScanTools, listener, build);
                     List<String> scanTargets = new ArrayList<String>();
                     for (IScanJobs scanJob : getScans()) {
                         scanTargets.add(getWorkingDirectory() + "/" + scanJob.getScanTarget()); // Prefixes the targets
@@ -161,6 +161,9 @@ public class PostBuildHubiScan extends Recorder {
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
 
         List<String> cmd = new ArrayList<String>();
+        cmd.add(getJava().getHome() + "/bin/java");
+        cmd.add("-Done-jar.silent=true");
+        cmd.add("-jar");
         cmd.add(iScanScript.getRemote());
         cmd.add("--host");
         String host = getDescriptor().getServerUrl().substring(7);
@@ -255,7 +258,7 @@ public class PostBuildHubiScan extends Recorder {
      * @throws InterruptedException
      * @throws HubConfigurationException
      */
-    public FilePath getIScanScript(IScanInstallation[] iScanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
+    public FilePath getIScanCLI(IScanInstallation[] iScanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
             InterruptedException, HubConfigurationException {
         FilePath iScanScript = null;
         for (IScanInstallation iScan : iScanTools) {
@@ -268,13 +271,13 @@ public class PostBuildHubiScan extends Recorder {
                 iScan = iScan.forNode(node, listener);
             }
             if (iScan.getName().equals(getiScanName())) {
-                iScanScript = iScan.getExecutable(node.getChannel());
                 if (iScan.getExists(node.getChannel())) {
+                    iScanScript = iScan.getCLI(node.getChannel());
                     listener.getLogger().println(
-                            "[DEBUG] : Using this iScan script at : " + iScanScript.getRemote());
+                            "[DEBUG] : Using this iScan CLI at : " + iScanScript.getRemote());
                 } else {
-                    listener.getLogger().println("[ERROR] : Script doesn't exist : " + iScanScript.getRemote());
-                    throw new IScanToolMissingException("Could not find the script file to execute at : '" + iScanScript.getRemote() + "'");
+                    listener.getLogger().println("[ERROR] : Could not find the CLI file in : " + iScan.getHome());
+                    throw new IScanToolMissingException("Could not find the CLI file to execute at : '" + iScan.getHome() + "'");
                 }
             }
         }
