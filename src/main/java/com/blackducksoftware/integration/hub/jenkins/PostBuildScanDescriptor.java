@@ -120,13 +120,26 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return
      */
     public ListBoxModel doFillIScanNameItems() {
-        ListBoxModel items = new ListBoxModel();
-        Jenkins jenkins = Jenkins.getInstance();
-        IScanDescriptor iScanDescriptor = jenkins.getDescriptorByType(IScanDescriptor.class);
+        ClassLoader originalClassLoader = Thread.currentThread()
+                .getContextClassLoader();
+        boolean changed = false;
+        ListBoxModel items = null;
+        try {
 
-        IScanInstallation[] iScanInstallations = iScanDescriptor.getInstallations();
-        for (IScanInstallation iScan : iScanInstallations) {
-            items.add(iScan.getName());
+            items = new ListBoxModel();
+            Jenkins jenkins = Jenkins.getInstance();
+            IScanDescriptor iScanDescriptor = jenkins.getDescriptorByType(IScanDescriptor.class);
+
+            IScanInstallation[] iScanInstallations = iScanDescriptor.getInstallations();
+            for (IScanInstallation iScan : iScanInstallations) {
+                items.add(iScan.getName());
+            }
+
+        } finally {
+            if (changed) {
+                Thread.currentThread().setContextClassLoader(
+                        originalClassLoader);
+            }
         }
         return items;
     }

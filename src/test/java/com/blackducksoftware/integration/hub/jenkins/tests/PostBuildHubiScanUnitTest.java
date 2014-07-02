@@ -7,6 +7,7 @@ import hudson.model.BuildListener;
 import hudson.model.StreamBuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.Node;
+import hudson.remoting.VirtualChannel;
 import hudson.slaves.DumbSlave;
 
 import java.io.ByteArrayOutputStream;
@@ -154,6 +155,8 @@ public class PostBuildHubiScanUnitTest {
         when(mockIScanInstall.getName()).thenReturn("default");
         when(mockIScanInstall.getHome()).thenReturn(iScanInstallPath);
         when(mockIScanInstall.forNode(Mockito.any(Node.class), Mockito.any(BuildListener.class))).thenReturn(mockIScanInstall);
+        when(mockIScanInstall.getExecutable(Mockito.any(VirtualChannel.class))).thenCallRealMethod();
+        when(mockIScanInstall.getExists(Mockito.any(VirtualChannel.class))).thenCallRealMethod();
         IScanInstallation[] iScanInstallations = new IScanInstallation[1];
         iScanInstallations[0] = mockIScanInstall;
 
@@ -193,8 +196,7 @@ public class PostBuildHubiScanUnitTest {
         exception.expect(IScanToolMissingException.class);
         exception.expectMessage("Could not find the script file to execute at : '");
 
-        AbstractBuild mockBuild = mock(AbstractBuild.class, Mockito.RETURNS_DEEP_STUBS);
-        when(mockBuild.getBuiltOn().getNodeName()).thenReturn("");
+        AbstractBuild mockBuild = mock(AbstractBuild.class);
 
         DumbSlave slave = j.createSlave();
         slave.setNodeName("");

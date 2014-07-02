@@ -3,7 +3,7 @@
 		for a general discussion about jelly script. -->
 		
 		
-<f:entry field="iScanName" title="Choose iScan Installation">
+<f:entry field="iScanName" title="${%ScanInstallationsTitle}">
 	<f:select />
 </f:entry>		
 <f:block>

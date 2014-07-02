@@ -1,8 +1,11 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
+import hudson.EnvVars;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
+import hudson.model.JDK;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tools.ToolDescriptor;
 
 import java.io.IOException;
@@ -117,6 +120,7 @@ public class IntegrationTest {
         Assert.assertTrue(buildOutput.contains("[DEBUG] : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan script at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
         Assert.assertTrue(buildOutput.contains("Finished in"));
         Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
@@ -162,6 +166,7 @@ public class IntegrationTest {
         Assert.assertTrue(buildOutput.contains("[DEBUG] : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan script at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
         Assert.assertTrue(buildOutput.contains("ERROR:")); // TODO replace with new iScan error message
         Assert.assertTrue(buildOutput.contains("Finished in"));
@@ -208,10 +213,104 @@ public class IntegrationTest {
         Assert.assertTrue(buildOutput.contains("[DEBUG] : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan script at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
         Assert.assertTrue(buildOutput.contains("ERROR:")); // TODO replace with new iScan error message
         Assert.assertTrue(buildOutput.contains("Finished in"));
         Assert.assertTrue(buildOutput.contains("with status FAILURE"));
         Assert.assertTrue(buildOutput.contains("Finished running Black Duck iScans."));
+    }
+
+    @Test
+    public void setJDKUserSelectedNonExistent() throws IOException, InterruptedException, ExecutionException {
+        Jenkins jenkins = j.jenkins;
+
+        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
+
+        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
+        iScanDesc.setInstallations(iScanInstall);
+
+        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+        UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
+                testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+        store.addCredentials(Domain.global(), credential);
+
+        HubServerInfo serverInfo = new HubServerInfo();
+        serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+        serverInfo.setCredentialsId(credential.getId());
+
+        IScanJobs oneScan = new IScanJobs("");
+        IScanJobs[] scans = new IScanJobs[1];
+        scans[0] = oneScan;
+
+        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
+        scanDesc.setHubServerInfo(serverInfo);
+
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default");
+        pbScan.setTEST(true);
+
+        JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");
+
+        // build.getProject().getJDK(); Will return null if the jdk doesn't exist.
+
+        FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+        project.setCustomWorkspace(testWorkspace);
+        project.setJDK(nonexistentJDK);
+        project.getPublishersList().add(pbScan);
+
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+        String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+
+        Assert.assertTrue(buildOutput
+                .contains("com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException: Could not find the specified Java executable"));
+    }
+
+    @Test
+    public void setJDKEnvSelectedNonExistent() throws IOException, InterruptedException, ExecutionException {
+
+        Jenkins jenkins = j.jenkins;
+
+        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
+
+        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
+        iScanDesc.setInstallations(iScanInstall);
+
+        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+        UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
+                testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+        store.addCredentials(Domain.global(), credential);
+
+        HubServerInfo serverInfo = new HubServerInfo();
+        serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+        serverInfo.setCredentialsId(credential.getId());
+
+        IScanJobs oneScan = new IScanJobs("");
+        IScanJobs[] scans = new IScanJobs[1];
+        scans[0] = oneScan;
+
+        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
+        scanDesc.setHubServerInfo(serverInfo);
+
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default");
+        pbScan.setTEST(true);
+
+        JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");
+        // build.getProject().getJDK(); Will return null if the jdk doesn't exist.
+
+        EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
+        EnvVars envVars = prop.getEnvVars();
+        envVars.put("JAVA_HOME", "/assert/this/is/fake/path");
+        j.jenkins.getGlobalNodeProperties().add(prop);
+
+        FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+        project.setJDK(nonexistentJDK); // Will set the JDK to null if the JDK doesn't exist.
+        project.setCustomWorkspace(testWorkspace);
+        project.getPublishersList().add(pbScan);
+
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+        String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+
+        Assert.assertTrue(buildOutput
+                .contains("com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException: Could not find the specified Java executable"));
     }
 }

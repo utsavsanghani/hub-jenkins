@@ -2,15 +2,18 @@ package com.blackducksoftware.integration.hub.jenkins;
 
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.EnvironmentSpecific;
 import hudson.model.TaskListener;
 import hudson.model.Descriptor;
 import hudson.model.Node;
+import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeSpecific;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolProperty;
 import hudson.tools.ToolInstallation;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -37,6 +40,42 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
     @Override
     public IScanDescriptor getDescriptor() {
         return (IScanDescriptor) super.getDescriptor();
+    }
+
+    /**
+     * Checks if the executable exists
+     * 
+     * @param channel
+     *            VirtualChannel to find the executable on master or slave
+     * 
+     * @return true if executable is found, false otherwise
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public boolean getExists(VirtualChannel channel) throws IOException, InterruptedException {
+        File locationFile = new File(getHome() + "/bin/scan.cli.sh");
+        FilePath iScanScript = new FilePath(channel, locationFile.getCanonicalPath());
+        if (iScanScript.exists()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Returns the executable file of the installation
+     * 
+     * @param channel
+     *            VirtualChannel to find the executable on master or slave
+     * 
+     * @return FilePath
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public FilePath getExecutable(VirtualChannel channel) throws IOException, InterruptedException {
+        File locationFile = new File(getHome() + "/bin/scan.cli.sh");
+        FilePath iScanScript = new FilePath(channel, locationFile.getCanonicalPath());
+        return iScanScript;
     }
 
     @Extension

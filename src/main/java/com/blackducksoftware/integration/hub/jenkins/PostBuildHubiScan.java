@@ -8,6 +8,7 @@ import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.JDK;
+import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Recorder;
@@ -44,12 +45,12 @@ public class PostBuildHubiScan extends Recorder {
         this.iScanName = iScanName;
     }
 
-    public static boolean isTEST() {
+    public boolean isTEST() {
         return TEST;
     }
 
     // Set to true run the integration test without running the actual iScan.
-    public static void setTEST(boolean tEST) {
+    public void setTEST(boolean tEST) {
         TEST = tEST;
     }
 
@@ -158,15 +159,13 @@ public class PostBuildHubiScan extends Recorder {
             HubConfigurationException, InterruptedException {
 
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
-        // Use a substring of the host url because the http:// is not currently needed in the definition.
-        // String[] cmdCreds = { iScanScript.getRemote(),
-        // "--host", getDescriptor().getServerUrl().substring(7)
-        // , "--username", getDescriptor().getHubServerInfo().getUsername()
-        // , "--password", getDescriptor().getHubServerInfo().getPassword() };
+
         List<String> cmd = new ArrayList<String>();
         cmd.add(iScanScript.getRemote());
         cmd.add("--host");
-        cmd.add(getDescriptor().getServerUrl().substring(7));
+        String host = getDescriptor().getServerUrl().substring(7);
+        cmd.add(host);
+        listener.getLogger().println("[DEBUG] : Using this Hub Url : '" + host + "'");
         cmd.add("--username");
         cmd.add(getDescriptor().getHubServerInfo().getUsername());
         cmd.add("--password");
@@ -179,7 +178,6 @@ public class PostBuildHubiScan extends Recorder {
         }
         listener.getLogger().println("[DEBUG] : Using this java installation : " + getJava().getName() + " : " +
                 getJava().getHome());
-        // String[] cmd = ObjectArrays.concat(cmdCreds, scanTargets, String.class);
 
         ProcStarter ps = launcher.launch();
         if (ps != null) {
@@ -215,8 +213,9 @@ public class PostBuildHubiScan extends Recorder {
      *            BuildListener
      * @throws IOException
      * @throws InterruptedException
+     * @throws HubConfigurationException
      */
-    private void setJava(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
+    private void setJava(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException, HubConfigurationException {
         EnvVars envVars = new EnvVars();
         envVars = build.getEnvironment(listener);
         JDK javaHomeTemp = null;
@@ -229,6 +228,11 @@ public class PostBuildHubiScan extends Recorder {
         if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
             // In case the user did not select a java installation, set to the environment variable JAVA_HOME
             javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
+        }
+        File javaExecFile = new File(javaHomeTemp.getHome() + "/bin/java");
+        FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), javaExecFile.getCanonicalPath());
+        if (!javaExec.exists()) {
+            throw new HubConfigurationException("Could not find the specified Java executable");
         }
         java = javaHomeTemp;
     }
@@ -253,32 +257,31 @@ public class PostBuildHubiScan extends Recorder {
      */
     public FilePath getIScanScript(IScanInstallation[] iScanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
             InterruptedException, HubConfigurationException {
-        File locationFile = null;
         FilePath iScanScript = null;
         for (IScanInstallation iScan : iScanTools) {
-            if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
+            Node node = build.getBuiltOn();
+            if (StringUtils.isEmpty(node.getNodeName())) {
                 // Empty node name indicates master
                 listener.getLogger().println("[DEBUG] : master");
             } else {
-                listener.getLogger().println("[DEBUG] : " + build.getBuiltOn().getNodeName());
-                iScan = iScan.forNode(build.getBuiltOn(), listener);
+                listener.getLogger().println("[DEBUG] : " + node.getNodeName());
+                iScan = iScan.forNode(node, listener);
             }
             if (iScan.getName().equals(getiScanName())) {
-                locationFile = new File(iScan.getHome() + "/bin/scan.cli.sh");
-                iScanScript = new FilePath(build.getBuiltOn().getChannel(), locationFile.getCanonicalPath());
+                iScanScript = iScan.getExecutable(node.getChannel());
+                if (iScan.getExists(node.getChannel())) {
+                    listener.getLogger().println(
+                            "[DEBUG] : Using this iScan script at : " + iScanScript.getRemote());
+                } else {
+                    listener.getLogger().println("[ERROR] : Script doesn't exist : " + iScanScript.getRemote());
+                    throw new IScanToolMissingException("Could not find the script file to execute at : '" + iScanScript.getRemote() + "'");
+                }
             }
         }
         if (iScanScript == null) {
             // Should not get here unless there are no iScan Installations defined
             // But we check this just in case
             throw new HubConfigurationException("You need to select which iScan installation to use.");
-        }
-        if (!iScanScript.exists()) {
-            listener.getLogger().println("[ERROR] : Script doesn't exist : " + iScanScript.getRemote());
-            throw new IScanToolMissingException("Could not find the script file to execute at : '" + iScanScript.getRemote() + "'");
-        } else {
-            listener.getLogger().println(
-                    "[DEBUG] : Using this iScan script at : " + iScanScript.getRemote());
         }
         return iScanScript;
     }
