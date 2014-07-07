@@ -164,6 +164,7 @@ public class PostBuildHubiScan extends Recorder {
         cmd.add(getJava().getHome() + "/bin/java");
         cmd.add("-Done-jar.silent=true");
         cmd.add("-jar");
+        cmd.add("-Xmx2048m");
         cmd.add(iScanScript.getRemote());
         cmd.add("--host");
         String host = getDescriptor().getServerUrl().substring(7);
