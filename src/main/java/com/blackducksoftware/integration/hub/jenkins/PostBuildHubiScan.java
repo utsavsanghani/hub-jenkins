@@ -33,6 +33,10 @@ public class PostBuildHubiScan extends Recorder {
 
     private String iScanName;
 
+    private String hubProjectName;
+
+    private String hubProjectRelease;
+
     private String workingDirectory;
 
     private JDK java;
@@ -40,9 +44,11 @@ public class PostBuildHubiScan extends Recorder {
     private static boolean TEST = false;
 
     @DataBoundConstructor
-    public PostBuildHubiScan(IScanJobs[] scans, String iScanName) {
+    public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease) {
         this.scans = scans;
         this.iScanName = iScanName;
+        this.hubProjectName = hubProjectName;
+        this.hubProjectRelease = hubProjectRelease;
     }
 
     public boolean isTEST() {
@@ -52,6 +58,14 @@ public class PostBuildHubiScan extends Recorder {
     // Set to true run the integration test without running the actual iScan.
     public void setTEST(boolean tEST) {
         TEST = tEST;
+    }
+
+    public String getHubProjectRelease() {
+        return hubProjectRelease;
+    }
+
+    public String getHubProjectName() {
+        return hubProjectName;
     }
 
     public IScanJobs[] getScans() {

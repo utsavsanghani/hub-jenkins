@@ -74,6 +74,7 @@
 	<repositories>
 		<repository>
 			<id>repo.jenkins-ci.org</id>
+			<name>jenkins</name>
 			<url>http://repo.jenkins-ci.org/public/</url>
 		</repository>
 		<!-- Need the integration repo before the other protex repos in order 
@@ -91,14 +92,25 @@
 			</snapshots>
 		</repository>
 		<repository>
-			<id>lame.blackducksoftware.com</id>
-			<name>product-protex</name>
-			<url>http://lame.blackducksoftware.com:8081/artifactory/product-protex</url>
+			<id>hub</id>
+			<name>hub</name>
+			<url>http://lame.blackducksoftware.com:8081/artifactory/simple/bds-suite-repo</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
 			<snapshots>
-				<enabled>false</enabled>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>third party libs</id>
+			<name>bds-approved-thirdparty-libs</name>
+			<url>http://lame.blackducksoftware.com:8081/artifactory/simple/bds-approved-thirdparty-libs/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
 			</snapshots>
 		</repository>
 		<!-- repository> <id>bd-staging</id> <name>blackduck-staging-repos</name> 
