@@ -349,7 +349,9 @@ public class PostBuildHubiScan extends Recorder {
             } else {
                 target = new FilePath(locationFile);
             }
-            if (!target.getRemote().equals(getWorkingDirectory()) && !target.getRemote().contains(getWorkingDirectory())) {
+            String workingDirectory = getWorkingDirectory();
+            if (target.length() <= workingDirectory.length()
+                    && !workingDirectory.equals(target.getRemote()) && !target.getRemote().contains(workingDirectory)) {
                 throw new HubConfigurationException("Can not scan targets outside of the workspace.");
             }
 

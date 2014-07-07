@@ -106,9 +106,10 @@ public class PostBuildHubiScanUnitTest {
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("Can not scan targets outside of the workspace.");
         File createdFolder = folder.newFolder("newfolder");
+        File testWorkspace = folder.newFolder("workspace");
         File createdFile = folder.newFile("myfilefile.txt");
         PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class, Mockito.CALLS_REAL_METHODS);
-        when(mockpbScan.getWorkingDirectory()).thenReturn("/tmp");
+        when(mockpbScan.getWorkingDirectory()).thenReturn(testWorkspace.getCanonicalPath());
         String[] scanTargets = { createdFolder.getCanonicalPath(), createdFile.getCanonicalPath() };
         mockpbScan.validateScanTargets(listener, null, Arrays.asList(scanTargets));
     }

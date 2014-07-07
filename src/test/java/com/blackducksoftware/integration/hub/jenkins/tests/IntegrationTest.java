@@ -115,7 +115,7 @@ public class IntegrationTest {
 
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-
+        System.out.println(buildOutput);
         Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
@@ -161,7 +161,7 @@ public class IntegrationTest {
 
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-
+        System.out.println(buildOutput);
         Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
@@ -208,7 +208,7 @@ public class IntegrationTest {
 
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-
+        System.out.println(buildOutput);
         Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
@@ -261,6 +261,7 @@ public class IntegrationTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
 
+        System.out.println(buildOutput);
         Assert.assertTrue(buildOutput
                 .contains("com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException: Could not find the specified Java executable"));
     }
@@ -309,7 +310,7 @@ public class IntegrationTest {
 
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-
+        System.out.println(buildOutput);
         Assert.assertTrue(buildOutput
                 .contains("com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException: Could not find the specified Java executable"));
     }
