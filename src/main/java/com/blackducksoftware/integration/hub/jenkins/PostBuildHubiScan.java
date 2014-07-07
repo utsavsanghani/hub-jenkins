@@ -245,6 +245,7 @@ public class PostBuildHubiScan extends Recorder {
         }
         if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
             // In case the user did not select a java installation, set to the environment variable JAVA_HOME
+            listener.getLogger().println("Could not find the specified Java installation, checking the JAVA_HOME variable.");
             javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
         }
         File javaExecFile = new File(javaHomeTemp.getHome() + "/bin/java");

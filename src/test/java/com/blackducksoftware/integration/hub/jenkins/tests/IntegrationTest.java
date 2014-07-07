@@ -263,7 +263,7 @@ public class IntegrationTest {
 
         System.out.println(buildOutput);
         Assert.assertTrue(buildOutput
-                .contains("com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException: Could not find the specified Java executable"));
+                .contains("Could not find the specified Java installation, checking the JAVA_HOME variable."));
     }
 
     @Test
