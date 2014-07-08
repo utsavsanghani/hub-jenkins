@@ -14,6 +14,22 @@ public class Messages {
     private final static ResourceBundleHolder holder = ResourceBundleHolder.get(Messages.class);
 
     /**
+     * There was an error connecting to the server. Error code: {0}
+     * 
+     */
+    public static String HubBuildScan_getErrorConnectingTo_0_(Object arg1) {
+        return holder.format("HubBuildScan_getErrorConnectingTo_0_", arg1);
+    }
+
+    /**
+     * There was an error connecting to the server. Error code: {0}
+     * 
+     */
+    public static Localizable _HubBuildScan_getErrorConnectingTo_0_(Object arg1) {
+        return new Localizable(holder, "HubBuildScan_getErrorConnectingTo_0_", arg1);
+    }
+
+    /**
      * Please fill in the Hub credentials in the global settings!
      * 
      */
@@ -27,6 +43,22 @@ public class Messages {
      */
     public static Localizable _HubBuildScan_getPleaseFillInGlobalCCCredentials() {
         return new Localizable(holder, "HubBuildScan_getPleaseFillInGlobalCCCredentials");
+    }
+
+    /**
+     * Credentials are not valid for: {0}
+     * 
+     */
+    public static String HubBuildScan_getCredentialsInValidFor_0_(Object arg1) {
+        return holder.format("HubBuildScan_getCredentialsInValidFor_0_", arg1);
+    }
+
+    /**
+     * Credentials are not valid for: {0}
+     * 
+     */
+    public static Localizable _HubBuildScan_getCredentialsInValidFor_0_(Object arg1) {
+        return new Localizable(holder, "HubBuildScan_getCredentialsInValidFor_0_", arg1);
     }
 
     /**

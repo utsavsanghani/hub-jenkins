@@ -10,7 +10,9 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -217,9 +219,25 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     }
                 }
             }
-            // TODO make sure that a connection to the Hub server can be made using the given credentials
 
-            return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
+            URL url = new URL(serverUrl + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoOutput(true);
+            connection.setInstanceFollowRedirects(false);
+            connection.setRequestMethod("POST");
+
+            OutputStream os = connection.getOutputStream();
+            os.flush();
+
+            int response = connection.getResponseCode();
+            connection.disconnect();
+            if (response == 200 || response == 204 || response == 202) {
+                return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
+            } else if (response == 401) {
+                return FormValidation.error(Messages.HubBuildScan_getCredentialsInValidFor_0_(serverUrl));
+            } else {
+                return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(response));
+            }
 
         } catch (Exception e) {
             if (e.getCause() != null && e.getCause().getCause() != null) {
