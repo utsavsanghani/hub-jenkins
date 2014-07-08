@@ -196,8 +196,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @throws ServletException
      */
     public FormValidation doTestConnection(@QueryParameter("serverUrl") final String serverUrl,
-            @QueryParameter("hubCredentialsId") final String hubCredentialsId)
-            throws ServletException {
+            @QueryParameter("hubCredentialsId") final String hubCredentialsId) {
+        ClassLoader originalClassLoader = Thread.currentThread()
+                .getContextClassLoader();
+        boolean changed = false;
         try {
             AbstractProject<?, ?> nullProject = null;
             List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class,
@@ -215,20 +217,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     }
                 }
             }
-            // TODO need to test the connection to the Hub server
+            // TODO make sure that a connection to the Hub server can be made using the given credentials
 
-            // CodeCenterFacade ccFacade = new CodeCenterFacade(serverUrl, credentialUserName, credentialPassword);
-            // Jenkins jenkins = Jenkins.getInstance();
-            // if (jenkins != null && jenkins.proxy != null) {
-            // if (!getMatchingNoProxyHostPatterns(serverUrl, jenkins)) {
-            // if (!StringUtils.isEmpty(jenkins.proxy.name) && jenkins.proxy.port != 0) {
-            // CodeCenterServerProxyV6_5_0_IntegrationX ccServerProxy = ccFacade.getServerProxy();
-            // ccServerProxy.setProxyServer(jenkins.proxy.name, jenkins.proxy.port, ProxyServerType.HTTP, true);
-            // }
-            // }
-            // }
-            // ccFacade.validate();
             return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
+
         } catch (Exception e) {
             if (e.getCause() != null && e.getCause().getCause() != null) {
                 e.printStackTrace();
@@ -239,6 +231,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 return FormValidation.error(e.toString());
             }
 
+        } finally {
+            if (changed) {
+                Thread.currentThread().setContextClassLoader(
+                        originalClassLoader);
+            }
         }
 
     }
