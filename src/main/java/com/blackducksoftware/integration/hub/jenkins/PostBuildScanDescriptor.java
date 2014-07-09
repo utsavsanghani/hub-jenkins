@@ -10,8 +10,8 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -25,10 +25,12 @@ import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
+import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import com.blackducksoftware.integration.hub.jenkins.IScanInstallation.IScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -60,7 +62,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
+    private static final String COOKIES_HEADER = "Set-Cookie";
+
+    private static java.net.CookieManager myCookieManager = new java.net.CookieManager();
+
     private HubServerInfo hubServerInfo;
+
+    private String projectId;
 
     /**
      * @return the hubServerInfo
@@ -75,6 +83,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      */
     public void setHubServerInfo(HubServerInfo hubServerInfo) {
         this.hubServerInfo = hubServerInfo;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
     /**
@@ -187,7 +203,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     /**
-     * Performs on-the-fly validation of the form field 'serverUrl'.
+     * Performs on-the-fly validation of the form field 'hubProjectName'. Checks to see if there is already a project in
+     * the Hub with this name.
      * 
      * @param value
      *            This parameter receives the value that the user has typed.
@@ -200,35 +217,113 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     .getContextClassLoader();
             boolean changed = false;
             try {
-                AbstractProject<?, ?> nullProject = null;
-                List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class,
-                        nullProject, ACL.SYSTEM,
-                        Collections.<DomainRequirement> emptyList());
-                IdMatcher matcher = new IdMatcher(getHubServerInfo().getCredentialsId());
+                if (StringUtils.isEmpty(getServerUrl())) {
+                    return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
+                }
+                if (StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
+                    return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
+                }
+
                 String credentialUserName = null;
                 String credentialPassword = null;
-                for (StandardCredentials c : credentials) {
-                    if (matcher.matches(c)) {
-                        if (c instanceof UsernamePasswordCredentialsImpl) {
-                            UsernamePasswordCredentialsImpl credential = (UsernamePasswordCredentialsImpl) c;
-                            credentialUserName = credential.getUsername().trim();
-                            credentialPassword = credential.getPassword().getPlainText().trim();
-                        }
-                    }
-                }
-                // TODO Check if any projects exist with the name provided
 
-                // URL url = new URL(getServerUrl() + "/api/v1/projects");
-                // HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                // // String userpass = credentialUserName + ":" + credentialPassword;
-                // // String basicAuth = "Basic " + new String(new Base64().encode(userpass.getBytes()));
-                // // connection.setRequestProperty("Authorization", basicAuth);
-                // Permission perm = connection.getPermission();
-                // // Object projectList = connection.getContent();
-                //
-                // connection.disconnect();
-                //
-                // return FormValidation.error(perm.getClass().getSimpleName());
+                UsernamePasswordCredentialsImpl credential = getCredentials(getHubServerInfo().getCredentialsId());
+                credentialUserName = credential.getUsername();
+                credentialPassword = credential.getPassword().getPlainText();
+
+                getConnectionCookie(getServerUrl(), credentialUserName, credentialPassword);
+
+                // TODO This api call is currently unsupported, still WIP
+                URL url = new URL(getServerUrl() + "/api/v1/projects/name/" + value);
+
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestProperty("Cookie", StringUtils.join(myCookieManager.getCookieStore().getCookies().toArray(), ","));
+                connection.setRequestMethod("GET");
+                connection.connect();
+
+                Object project = connection.getContent();
+                // Fairly certain if the project exists we will get the Object with the project back, if it doesn't it
+                // should throw an exception.
+
+                // TODO setProjectId(project.getId());
+
+                connection.disconnect();
+
+                // TODO return Project With this name exists or not
+                return FormValidation.error(project.getClass().getSimpleName());
+
+            } catch (Exception e) {
+                if (e.getCause() != null && e.getCause().getCause() != null) {
+                    e.printStackTrace();
+                    return FormValidation.error(e.getCause().getCause().toString());
+                } else if (e.getCause() != null) {
+                    return FormValidation.error(e.getCause().toString());
+                } else {
+                    return FormValidation.error(e.toString());
+                }
+
+            } finally {
+                if (changed) {
+                    Thread.currentThread().setContextClassLoader(
+                            originalClassLoader);
+                }
+            }
+        }
+        return FormValidation.ok();
+    }
+
+    /**
+     * Performs on-the-fly validation of the form field 'hubProjectRelease'. Checks to see if there is already a project
+     * in the Hub with this name.
+     * 
+     * @param value
+     *            This parameter receives the value that the user has typed.
+     * @return Indicates the outcome of the validation. This is sent to the
+     *         browser.
+     */
+    public FormValidation doCheckHubProjectRelease(@QueryParameter("hubProjectRelease") final String value) throws IOException, ServletException {
+        if (value.length() > 0) {
+            ClassLoader originalClassLoader = Thread.currentThread()
+                    .getContextClassLoader();
+            boolean changed = false;
+            try {
+                if (StringUtils.isEmpty(getServerUrl())) {
+                    return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
+                }
+                if (StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
+                    return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
+                }
+
+                String credentialUserName = null;
+                String credentialPassword = null;
+
+                UsernamePasswordCredentialsImpl credential = getCredentials(getHubServerInfo().getCredentialsId());
+                credentialUserName = credential.getUsername();
+                credentialPassword = credential.getPassword().getPlainText();
+
+                getConnectionCookie(getServerUrl(), credentialUserName, credentialPassword);
+
+                // TODO This api call is currently unsupported, still WIP
+                URL url = new URL(getServerUrl() + "/api/v1/projects/" + getProjectId() + "/releases");
+
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestProperty("Cookie", StringUtils.join(myCookieManager.getCookieStore().getCookies().toArray(), ","));
+                connection.setRequestMethod("GET");
+                connection.connect();
+
+                Object releasesForCurrProject = connection.getContent();
+                connection.disconnect();
+
+                // for(Release release : releasesForCurrProject){
+                // if(release.getVersion().getVersionString().equals(value)){
+                // //This release exists for this project
+                // } else{
+                // //This release doesn't exist for this project
+                // }
+                // }
+
+                // TODO return if this release exists for the current project or not
+                return FormValidation.error(releasesForCurrProject.getClass().getSimpleName());
 
             } catch (Exception e) {
                 if (e.getCause() != null && e.getCause().getCause() != null) {
@@ -267,22 +362,19 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 .getContextClassLoader();
         boolean changed = false;
         try {
-            AbstractProject<?, ?> nullProject = null;
-            List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class,
-                    nullProject, ACL.SYSTEM,
-                    Collections.<DomainRequirement> emptyList());
-            IdMatcher matcher = new IdMatcher(hubCredentialsId);
+            if (StringUtils.isEmpty(serverUrl)) {
+                return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
+            }
+            if (StringUtils.isEmpty(hubCredentialsId)) {
+                return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
+            }
+
             String credentialUserName = null;
             String credentialPassword = null;
-            for (StandardCredentials c : credentials) {
-                if (matcher.matches(c)) {
-                    if (c instanceof UsernamePasswordCredentialsImpl) {
-                        UsernamePasswordCredentialsImpl credential = (UsernamePasswordCredentialsImpl) c;
-                        credentialUserName = credential.getUsername();
-                        credentialPassword = credential.getPassword().getPlainText();
-                    }
-                }
-            }
+
+            UsernamePasswordCredentialsImpl credential = getCredentials(hubCredentialsId);
+            credentialUserName = credential.getUsername();
+            credentialPassword = credential.getPassword().getPlainText();
 
             URL url = new URL(serverUrl + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -290,12 +382,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             connection.setInstanceFollowRedirects(false);
             connection.setRequestMethod("POST");
 
-            OutputStream os = connection.getOutputStream();
-            os.flush();
-
             int response = connection.getResponseCode();
             connection.disconnect();
             if (response == 200 || response == 204 || response == 202) {
+                String cookie = connection.getHeaderField("Set-Cookie");
+                if (!StringUtils.isEmpty(cookie)) {
+                    myCookieManager.getCookieStore().add(null, HttpCookie.parse(cookie).get(0));
+                }
                 return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
             } else if (response == 401) {
                 return FormValidation.error(Messages.HubBuildScan_getCredentialsInValidFor_0_(serverUrl));
@@ -320,6 +413,65 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             }
         }
 
+    }
+
+    /**
+     * Gets the cookie for the Authorized connection to the Hub server.
+     * 
+     * @param serverUrl
+     *            String the Url for the Hub server
+     * @param credentialUserName
+     *            String the Username for the Hub server
+     * @param credentialPassword
+     *            String the Password for the Hub server
+     * @throws IOException
+     * @throws BDRestException
+     */
+    private void getConnectionCookie(String serverUrl, String credentialUserName, String credentialPassword) throws IOException, BDRestException {
+
+        URL url = new URL(serverUrl + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setDoOutput(true);
+        connection.setInstanceFollowRedirects(false);
+        connection.setRequestMethod("POST");
+        int response = connection.getResponseCode();
+        if (response == 200 || response == 204 || response == 202) {
+            String cookie = connection.getHeaderField(COOKIES_HEADER);
+            if (!StringUtils.isEmpty(cookie)) {
+                myCookieManager.getCookieStore().add(null, HttpCookie.parse(cookie).get(0));
+            }
+            connection.disconnect();
+        } else {
+            connection.disconnect();
+            throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(response));
+        }
+    }
+
+    /**
+     * Retrieves the Username and Password that matches the credentialsId that you have provided.
+     * 
+     * @param hubCredentialsId
+     *            String the Credential Id that you want to use to find the matching Username and Password for
+     * @return UsernamePasswordCredentialsImpl or NULL if the Credentials could not be found, there are no credentials
+     *         stored, or the credentials that were
+     *         chosen are not a Username and Password
+     */
+    private UsernamePasswordCredentialsImpl getCredentials(String hubCredentialsId) {
+        AbstractProject<?, ?> nullProject = null;
+        List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class,
+                nullProject, ACL.SYSTEM,
+                Collections.<DomainRequirement> emptyList());
+        IdMatcher matcher = new IdMatcher(hubCredentialsId);
+        for (StandardCredentials c : credentials) {
+            if (matcher.matches(c)) {
+                if (c instanceof UsernamePasswordCredentialsImpl) {
+                    UsernamePasswordCredentialsImpl credential = (UsernamePasswordCredentialsImpl) c;
+                    return credential;
+                }
+            }
+        }
+        // Could not find the matching credentials
+        return null;
     }
 
     @Override

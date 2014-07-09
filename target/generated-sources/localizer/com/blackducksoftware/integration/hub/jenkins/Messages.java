@@ -205,4 +205,20 @@ public class Messages {
         return new Localizable(holder, "HubBuildScan_getDisplayName");
     }
 
+    /**
+     * User needs to specify which credentials to use.
+     * 
+     */
+    public static String HubBuildScan_getCredentialsNotFound() {
+        return holder.format("HubBuildScan_getCredentialsNotFound");
+    }
+
+    /**
+     * User needs to specify which credentials to use.
+     * 
+     */
+    public static Localizable _HubBuildScan_getCredentialsNotFound() {
+        return new Localizable(holder, "HubBuildScan_getCredentialsNotFound");
+    }
+
 }
