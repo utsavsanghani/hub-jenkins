@@ -187,8 +187,72 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     /**
+     * Performs on-the-fly validation of the form field 'serverUrl'.
+     * 
+     * @param value
+     *            This parameter receives the value that the user has typed.
+     * @return Indicates the outcome of the validation. This is sent to the
+     *         browser.
+     */
+    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String value) throws IOException, ServletException {
+        if (value.length() > 0) {
+            ClassLoader originalClassLoader = Thread.currentThread()
+                    .getContextClassLoader();
+            boolean changed = false;
+            try {
+                AbstractProject<?, ?> nullProject = null;
+                List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class,
+                        nullProject, ACL.SYSTEM,
+                        Collections.<DomainRequirement> emptyList());
+                IdMatcher matcher = new IdMatcher(getHubServerInfo().getCredentialsId());
+                String credentialUserName = null;
+                String credentialPassword = null;
+                for (StandardCredentials c : credentials) {
+                    if (matcher.matches(c)) {
+                        if (c instanceof UsernamePasswordCredentialsImpl) {
+                            UsernamePasswordCredentialsImpl credential = (UsernamePasswordCredentialsImpl) c;
+                            credentialUserName = credential.getUsername().trim();
+                            credentialPassword = credential.getPassword().getPlainText().trim();
+                        }
+                    }
+                }
+                // TODO Check if any projects exist with the name provided
+
+                // URL url = new URL(getServerUrl() + "/api/v1/projects");
+                // HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                // // String userpass = credentialUserName + ":" + credentialPassword;
+                // // String basicAuth = "Basic " + new String(new Base64().encode(userpass.getBytes()));
+                // // connection.setRequestProperty("Authorization", basicAuth);
+                // Permission perm = connection.getPermission();
+                // // Object projectList = connection.getContent();
+                //
+                // connection.disconnect();
+                //
+                // return FormValidation.error(perm.getClass().getSimpleName());
+
+            } catch (Exception e) {
+                if (e.getCause() != null && e.getCause().getCause() != null) {
+                    e.printStackTrace();
+                    return FormValidation.error(e.getCause().getCause().toString());
+                } else if (e.getCause() != null) {
+                    return FormValidation.error(e.getCause().toString());
+                } else {
+                    return FormValidation.error(e.toString());
+                }
+
+            } finally {
+                if (changed) {
+                    Thread.currentThread().setContextClassLoader(
+                            originalClassLoader);
+                }
+            }
+        }
+        return FormValidation.ok();
+    }
+
+    /**
      * Validates that the URL, Username, and Password are correct for connecting to the Hub Server.
-     * (DOES NOT WORK YET, Will return "OK" everytime)
+     * 
      * 
      * @param serverUrl
      *            String

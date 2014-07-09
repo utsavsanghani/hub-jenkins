@@ -3,7 +3,7 @@
 		for a general discussion about jelly script. -->
 		
 <f:entry field="hubProjectName" title="${%ProjectNameTitle}">
-	<f:textbox value="${instance.getHubProjectName()}"/>>
+	<f:textbox value="${instance.getHubProjectName()}"/>
 </f:entry>
 <f:entry field="hubProjectRelease" title="${%ProjectReleaseTitle}">
 	<f:textbox value="${instance.getHubProjectRelease()}"/>
