@@ -10,6 +10,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
@@ -21,6 +22,9 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.ServletException;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
 
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -29,6 +33,10 @@ import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import com.blackducksoftware.central.api.Project;
+import com.blackducksoftware.central.api.Release;
+import com.blackducksoftware.central.impl.ReleaseApi;
+import com.blackducksoftware.core.rest.ListHolder;
 import com.blackducksoftware.integration.hub.jenkins.IScanInstallation.IScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
@@ -206,13 +214,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * Performs on-the-fly validation of the form field 'hubProjectName'. Checks to see if there is already a project in
      * the Hub with this name.
      * 
-     * @param value
+     * @param hubProjectName
      *            This parameter receives the value that the user has typed.
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String value) throws IOException, ServletException {
-        if (value.length() > 0) {
+    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName) throws IOException, ServletException {
+        if (hubProjectName.length() > 0) {
             ClassLoader originalClassLoader = Thread.currentThread()
                     .getContextClassLoader();
             boolean changed = false;
@@ -234,7 +242,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 getConnectionCookie(getServerUrl(), credentialUserName, credentialPassword);
 
                 // TODO This api call is currently unsupported, still WIP
-                URL url = new URL(getServerUrl() + "/api/v1/projects/name/" + value);
+                URL url = new URL(getServerUrl() + "/api/v1/projects/name/" + hubProjectName);
 
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestProperty("Cookie", StringUtils.join(myCookieManager.getCookieStore().getCookies().toArray(), ","));
@@ -242,6 +250,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 connection.connect();
 
                 Object project = connection.getContent();
+                Project p = (Project) project;
                 // Fairly certain if the project exists we will get the Object with the project back, if it doesn't it
                 // should throw an exception.
 
@@ -281,8 +290,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckHubProjectRelease(@QueryParameter("hubProjectRelease") final String value) throws IOException, ServletException {
-        if (value.length() > 0) {
+    public FormValidation doCheckHubProjectRelease(@QueryParameter("hubProjectRelease") final String hubProjectRelease,
+            @QueryParameter("hubProjectName") final String hubProjectName) throws IOException, ServletException {
+        if (hubProjectRelease.length() > 0) {
             ClassLoader originalClassLoader = Thread.currentThread()
                     .getContextClassLoader();
             boolean changed = false;
@@ -304,26 +314,36 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 getConnectionCookie(getServerUrl(), credentialUserName, credentialPassword);
 
                 // TODO This api call is currently unsupported, still WIP
-                URL url = new URL(getServerUrl() + "/api/v1/projects/" + getProjectId() + "/releases");
+                // URL url = new URL(getServerUrl() + "/api/v1/projects/" + getProjectId() + "/releases");
+                URL url = new URL(getServerUrl() + "/api/v1/projects/" + hubProjectName + "/releases");
 
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestProperty("Cookie", StringUtils.join(myCookieManager.getCookieStore().getCookies().toArray(), ","));
                 connection.setRequestMethod("GET");
                 connection.connect();
+                JAXBContext jc = JAXBContext.newInstance(ReleaseApi.class, ListHolder.class, Release.class);
+                Unmarshaller unmarshaller = jc.createUnmarshaller();
+                // unmarshaller.setProperty("eclipselink.media-type", MEDIA_TYPE);
+                // unmarshaller.setProperty("eclipselink.json.include-root", false);
+                InputStream xml = connection.getInputStream();
+                List<ListHolder> releases = (List<ListHolder>) unmarshaller.unmarshal(new StreamSource(xml), ListHolder.class).getValue();
 
                 Object releasesForCurrProject = connection.getContent();
+
                 connection.disconnect();
-
-                // for(Release release : releasesForCurrProject){
-                // if(release.getVersion().getVersionString().equals(value)){
-                // //This release exists for this project
-                // } else{
-                // //This release doesn't exist for this project
-                // }
-                // }
-
-                // TODO return if this release exists for the current project or not
                 return FormValidation.error(releasesForCurrProject.getClass().getSimpleName());
+                // for (Release release : releasesForCurrProject.getItems()) {
+                // if (release.getVersion().toString().equals(hubProjectRelease)) {
+                // // This release exists for this project
+                // return FormValidation.ok("Release exists");
+                // } else {
+                // // This release doesn't exist for this project
+                // return FormValidation.ok("Release doesn't exist");
+                // }
+                // }
+                //
+                // // TODO return if this release exists for the current project or not
+                // return FormValidation.error(releasesForCurrProject.getClass().getSimpleName());
 
             } catch (Exception e) {
                 if (e.getCause() != null && e.getCause().getCause() != null) {

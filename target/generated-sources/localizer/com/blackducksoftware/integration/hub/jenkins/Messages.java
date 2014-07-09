@@ -14,7 +14,7 @@ public class Messages {
     private final static ResourceBundleHolder holder = ResourceBundleHolder.get(Messages.class);
 
     /**
-     * There was an error connecting to the server. Error code: {0}
+     * Could not connect to the Hub server with the Given Url and credentials. Error Code:  {0}
      * 
      */
     public static String HubBuildScan_getErrorConnectingTo_0_(Object arg1) {
@@ -22,7 +22,7 @@ public class Messages {
     }
 
     /**
-     * There was an error connecting to the server. Error code: {0}
+     * Could not connect to the Hub server with the Given Url and credentials. Error Code:  {0}
      * 
      */
     public static Localizable _HubBuildScan_getErrorConnectingTo_0_(Object arg1) {

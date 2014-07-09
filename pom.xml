@@ -113,6 +113,17 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
+		<repository>
+			<id>bds local snapshots</id>
+			<name>bds-snapshot-local</name>
+			<url>http://lame.blackducksoftware.com:8081/artifactory/simple/bds-snapshot-local/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
 		<!-- repository> <id>bd-staging</id> <name>blackduck-staging-repos</name> 
 			<url>http://lame:8081/artifactory/blackduck-staging-repos</url> --><!-- releases> <enabled>true</enabled> <updatePolicy>always</updatePolicy> 
 			</releases> <snapshots> <enabled>false</enabled> <updatePolicy>always</updatePolicy> 
@@ -138,6 +149,11 @@
 	</properties>
 	
 	<dependencies>
+		<dependency>
+			<groupId>com.blackducksoftware.hub</groupId>
+  			<artifactId>central.main</artifactId>
+  			<version>1.14.0-SNAPSHOT</version>
+  		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-all</artifactId>
@@ -202,7 +218,7 @@
 			<plugin>
 				<groupId>org.jenkins-ci.tools</groupId>
 				<artifactId>maven-hpi-plugin</artifactId>
-				<version>1.95</version>
+				<version>1.106</version>
 				<configuration>
 					<pluginFirstClassLoader>false</pluginFirstClassLoader>
 				</configuration>
