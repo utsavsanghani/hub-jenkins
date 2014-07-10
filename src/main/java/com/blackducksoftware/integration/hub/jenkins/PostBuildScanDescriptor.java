@@ -9,22 +9,21 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
 import java.io.Serializable;
-import java.net.HttpCookie;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.servlet.ServletException;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.stream.StreamSource;
 
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -32,13 +31,15 @@ import net.sf.json.JSONObject;
 import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.restlet.Response;
+import org.restlet.data.Cookie;
+import org.restlet.data.CookieSetting;
+import org.restlet.data.Method;
+import org.restlet.representation.EmptyRepresentation;
+import org.restlet.resource.ClientResource;
+import org.restlet.util.Series;
 
-import com.blackducksoftware.central.api.Project;
-import com.blackducksoftware.central.api.Release;
-import com.blackducksoftware.central.impl.ReleaseApi;
-import com.blackducksoftware.core.rest.ListHolder;
 import com.blackducksoftware.integration.hub.jenkins.IScanInstallation.IScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -48,6 +49,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.cloudbees.plugins.credentials.matchers.IdMatcher;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Descriptor for {@link CodeCenterBuildWrapper}. Used as a singleton. The
@@ -70,13 +72,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
-    private static final String COOKIES_HEADER = "Set-Cookie";
-
-    private static java.net.CookieManager myCookieManager = new java.net.CookieManager();
-
     private HubServerInfo hubServerInfo;
 
     private String projectId;
+
+    private Series<Cookie> cookies;
 
     /**
      * @return the hubServerInfo
@@ -94,7 +94,26 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     public String getProjectId() {
-        return projectId;
+        if (projectId != null) {
+            return projectId;
+        } else {
+            // TODO When we get this api
+            // String url = getServerUrl() + "/api/v1/projects/name/" + hubProjectName;
+            // ClientResource resource = new ClientResource(url);
+            // resource.getRequest().setCookies(cookies);
+            // resource.setMethod(Method.GET);
+            // resource.get();
+            // int responseCode = resource.getResponse().getStatus().getCode();
+            //
+            // if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+            //
+            // Response resp = resource.getResponse();
+            // get project Id from the response
+            // }
+
+            return projectId;
+        }
+
     }
 
     public void setProjectId(String projectId) {
@@ -231,36 +250,76 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 if (StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
                     return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
                 }
-
                 String credentialUserName = null;
                 String credentialPassword = null;
 
                 UsernamePasswordCredentialsImpl credential = getCredentials(getHubServerInfo().getCredentialsId());
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
+                setCookies(getServerUrl(), credentialUserName, credentialPassword);
+                Series<Cookie> cookies = getCookies();
 
-                getConnectionCookie(getServerUrl(), credentialUserName, credentialPassword);
+                // TODO This api call is currently unsupported, still WIP. THIS SHOULD be used INSTEAD OF the search
+                // String url = getServerUrl() + "/api/v1/projects/name/" + hubProjectName;
 
-                // TODO This api call is currently unsupported, still WIP
-                URL url = new URL(getServerUrl() + "/api/v1/projects/name/" + hubProjectName);
+                String url = getServerUrl() + "/api/v1/search/PROJECT?q=" + hubProjectName;
+                ClientResource resource = new ClientResource(url);
 
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestProperty("Cookie", StringUtils.join(myCookieManager.getCookieStore().getCookies().toArray(), ","));
-                connection.setRequestMethod("GET");
-                connection.connect();
+                resource.getRequest().setCookies(cookies);
+                resource.setMethod(Method.GET);
+                resource.get();
+                int responseCode = resource.getResponse().getStatus().getCode();
 
-                Object project = connection.getContent();
-                Project p = (Project) project;
-                // Fairly certain if the project exists we will get the Object with the project back, if it doesn't it
-                // should throw an exception.
+                if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+                    Response resp = resource.getResponse();
+                    Reader reader = resp.getEntity().getReader();
+                    BufferedReader bufReader = new BufferedReader(reader);
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = bufReader.readLine()) != null) {
+                        sb.append(line + "\n");
+                    }
+                    byte[] mapData = sb.toString().getBytes();
 
-                // TODO setProjectId(project.getId());
+                    HashMap<String, Object> responseMap = new HashMap<String, Object>();
+                    // Create HashMap from the Rest response
+                    ObjectMapper responseMapper = new ObjectMapper();
+                    responseMap = responseMapper.readValue(mapData, HashMap.class);
+                    if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
+                        ArrayList<LinkedHashMap> projectPotentialMatches = (ArrayList<LinkedHashMap>) responseMap.get("hits");
+                        StringBuilder projectMatches = new StringBuilder();
+                        // More than one match found
+                        if (projectPotentialMatches.size() > 1) {
+                            for (LinkedHashMap project : projectPotentialMatches) {
+                                LinkedHashMap projectFields = (LinkedHashMap) project.get("fields");
 
-                connection.disconnect();
+                                // All of the fields are ArrayLists with the value at the first position
+                                setProjectId(null);
+                                if (projectMatches.length() > 0) {
+                                    projectMatches.append(", " + (String) ((ArrayList) projectFields.get("name")).get(0));
+                                } else {
+                                    projectMatches.append((String) ((ArrayList) projectFields.get("name")).get(0));
+                                }
+                            }
+                            // Found matches to the project name, print server Url and all the matches for this name
+                            // that were found
+                            return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getServerUrl(), projectMatches.toString()));
 
-                // TODO return Project With this name exists or not
-                return FormValidation.error(project.getClass().getSimpleName());
+                        } else if (projectPotentialMatches.size() == 1) {
+                            // Single match was found
+                            LinkedHashMap projectFields = (LinkedHashMap) projectPotentialMatches.get(0).get("fields");
 
+                            // All of the fields are ArrayLists with the value at the first position
+                            setProjectId((String) ((ArrayList) projectFields.get("uuid")).get(0));
+                            return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
+                        }
+                    } else {
+                        setProjectId(null);
+                        return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getServerUrl()));
+                    }
+                } else {
+                    return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+                }
             } catch (Exception e) {
                 if (e.getCause() != null && e.getCause().getCause() != null) {
                     e.printStackTrace();
@@ -290,9 +349,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckHubProjectRelease(@QueryParameter("hubProjectRelease") final String hubProjectRelease,
-            @QueryParameter("hubProjectName") final String hubProjectName) throws IOException, ServletException {
+    public FormValidation doCheckHubProjectRelease(@QueryParameter("hubProjectRelease") final String hubProjectRelease) throws IOException, ServletException {
         if (hubProjectRelease.length() > 0) {
+
             ClassLoader originalClassLoader = Thread.currentThread()
                     .getContextClassLoader();
             boolean changed = false;
@@ -311,50 +370,66 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                getConnectionCookie(getServerUrl(), credentialUserName, credentialPassword);
+                setCookies(getServerUrl(), credentialUserName, credentialPassword);
 
-                // TODO This api call is currently unsupported, still WIP
-                // URL url = new URL(getServerUrl() + "/api/v1/projects/" + getProjectId() + "/releases");
-                URL url = new URL(getServerUrl() + "/api/v1/projects/" + hubProjectName + "/releases");
+                Series<Cookie> cookies = getCookies();
+                String url = getServerUrl() + "/api/v1/projects/" + getProjectId() + "/releases";
+                ClientResource resource = new ClientResource(url);
 
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestProperty("Cookie", StringUtils.join(myCookieManager.getCookieStore().getCookies().toArray(), ","));
-                connection.setRequestMethod("GET");
-                connection.connect();
-                JAXBContext jc = JAXBContext.newInstance(ReleaseApi.class, ListHolder.class, Release.class);
-                Unmarshaller unmarshaller = jc.createUnmarshaller();
-                // unmarshaller.setProperty("eclipselink.media-type", MEDIA_TYPE);
-                // unmarshaller.setProperty("eclipselink.json.include-root", false);
-                InputStream xml = connection.getInputStream();
-                List<ListHolder> releases = (List<ListHolder>) unmarshaller.unmarshal(new StreamSource(xml), ListHolder.class).getValue();
+                resource.getRequest().setCookies(cookies);
+                resource.setMethod(Method.GET);
+                resource.get();
+                int responseCode = resource.getResponse().getStatus().getCode();
 
-                Object releasesForCurrProject = connection.getContent();
+                if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
 
-                connection.disconnect();
-                return FormValidation.error(releasesForCurrProject.getClass().getSimpleName());
-                // for (Release release : releasesForCurrProject.getItems()) {
-                // if (release.getVersion().toString().equals(hubProjectRelease)) {
-                // // This release exists for this project
-                // return FormValidation.ok("Release exists");
-                // } else {
-                // // This release doesn't exist for this project
-                // return FormValidation.ok("Release doesn't exist");
-                // }
-                // }
-                //
-                // // TODO return if this release exists for the current project or not
-                // return FormValidation.error(releasesForCurrProject.getClass().getSimpleName());
+                    Response resp = resource.getResponse();
+                    Reader reader = resp.getEntity().getReader();
+                    BufferedReader bufReader = new BufferedReader(reader);
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = bufReader.readLine()) != null) {
+                        sb.append(line + "\n");
+                    }
+                    byte[] mapData = sb.toString().getBytes();
 
+                    HashMap<String, Object> responseMap = new HashMap<String, Object>();
+                    // Create HashMap from the Rest response
+                    ObjectMapper responseMapper = new ObjectMapper();
+                    responseMap = responseMapper.readValue(mapData, HashMap.class);
+                    if (responseMap.containsKey("items")) {
+                        ArrayList<LinkedHashMap> releaseList = (ArrayList<LinkedHashMap>) responseMap.get("items");
+                        for (LinkedHashMap release : releaseList) {
+                            if (((String) release.get("version")).equals(hubProjectRelease)) {
+                                return FormValidation.ok(Messages.HubBuildScan_getReleaseExistsIn_0_(getProjectId()));
+                            }
+                        }
+                    } else {
+                        return FormValidation.error(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
+                    }
+                } else {
+                    return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+                }
+                return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(getProjectId()));
             } catch (Exception e) {
                 if (e.getCause() != null && e.getCause().getCause() != null) {
+                    if (e.getCause().getCause().toString().contains("(404) - Not Found")) {
+                        e.printStackTrace();
+                        return FormValidation.error(e.getCause().getCause().toString() + ", Need to provide an existing Hub Project.");
+                    }
                     e.printStackTrace();
                     return FormValidation.error(e.getCause().getCause().toString());
                 } else if (e.getCause() != null) {
+                    if (e.getCause().toString().contains("(404) - Not Found")) {
+                        return FormValidation.error(e.getCause().toString() + ", Need to provide an existing Hub Project.");
+                    }
                     return FormValidation.error(e.getCause().toString());
                 } else {
+                    if (e.toString().contains("(404) - Not Found")) {
+                        return FormValidation.error(e.toString() + ", Need to provide an existing Hub Project.");
+                    }
                     return FormValidation.error(e.toString());
                 }
-
             } finally {
                 if (changed) {
                     Thread.currentThread().setContextClassLoader(
@@ -396,26 +471,24 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            URL url = new URL(serverUrl + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setDoOutput(true);
-            connection.setInstanceFollowRedirects(false);
-            connection.setRequestMethod("POST");
+            String url = serverUrl + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword;
+            ClientResource resource = new ClientResource(url);
+            resource.setMethod(Method.POST);
 
-            int response = connection.getResponseCode();
-            connection.disconnect();
-            if (response == 200 || response == 204 || response == 202) {
-                String cookie = connection.getHeaderField("Set-Cookie");
-                if (!StringUtils.isEmpty(cookie)) {
-                    myCookieManager.getCookieStore().add(null, HttpCookie.parse(cookie).get(0));
-                }
+            EmptyRepresentation rep = new EmptyRepresentation();
+
+            resource.post(rep);
+
+            int responseCode = resource.getResponse().getStatus().getCode();
+
+            if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
                 return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
-            } else if (response == 401) {
+            } else if (responseCode == 401) {
+                // If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
                 return FormValidation.error(Messages.HubBuildScan_getCredentialsInValidFor_0_(serverUrl));
             } else {
-                return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(response));
+                return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
             }
-
         } catch (Exception e) {
             if (e.getCause() != null && e.getCause().getCause() != null) {
                 e.printStackTrace();
@@ -444,27 +517,32 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      *            String the Username for the Hub server
      * @param credentialPassword
      *            String the Password for the Hub server
-     * @throws IOException
-     * @throws BDRestException
      */
-    private void getConnectionCookie(String serverUrl, String credentialUserName, String credentialPassword) throws IOException, BDRestException {
+    private void setCookies(String serverUrl, String credentialUserName, String credentialPassword) {
+        String url = serverUrl + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword;
+        ClientResource resource = new ClientResource(url);
+        resource.setMethod(Method.POST);
 
-        URL url = new URL(serverUrl + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setDoOutput(true);
-        connection.setInstanceFollowRedirects(false);
-        connection.setRequestMethod("POST");
-        int response = connection.getResponseCode();
-        if (response == 200 || response == 204 || response == 202) {
-            String cookie = connection.getHeaderField(COOKIES_HEADER);
-            if (!StringUtils.isEmpty(cookie)) {
-                myCookieManager.getCookieStore().add(null, HttpCookie.parse(cookie).get(0));
-            }
-            connection.disconnect();
-        } else {
-            connection.disconnect();
-            throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(response));
+        EmptyRepresentation rep = new EmptyRepresentation();
+
+        resource.post(rep);
+        Series<CookieSetting> cookieSettings = resource.getResponse().getCookieSettings();
+        Series<Cookie> requestCookies = resource.getRequest().getCookies();
+        for (CookieSetting ck : cookieSettings) {
+            Cookie cookie = new Cookie();
+            cookie.setName(ck.getName());
+            cookie.setDomain(ck.getDomain());
+            cookie.setPath(ck.getPath());
+            cookie.setValue(ck.getValue());
+            cookie.setVersion(ck.getVersion());
+            requestCookies.add(cookie);
         }
+
+        cookies = requestCookies;
+    }
+
+    public Series<Cookie> getCookies() {
+        return cookies;
     }
 
     /**
