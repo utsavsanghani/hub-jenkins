@@ -14,10 +14,9 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Recorder;
 import hudson.tools.ToolDescriptor;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -133,7 +132,11 @@ public class PostBuildHubiScan extends Recorder {
                                                                                                 // with the workspace
                                                                                                 // directory
                     }
-                    runScan(build, launcher, listener, iScanScript, scanTargets);
+                    String scanOutput = runScan(build, launcher, listener, iScanScript, scanTargets);
+                    if (!scanOutput.contains("Finished in") && !scanOutput.contains("with status SUCCESS")) {
+                        result = Result.UNSTABLE;
+                    }
+
                 }
 
             } catch (Exception e) {
@@ -169,7 +172,7 @@ public class PostBuildHubiScan extends Recorder {
      * @throws HubConfigurationException
      * @throws InterruptedException
      */
-    private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanScript, List<String> scanTargets) throws IOException,
+    private String runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanScript, List<String> scanTargets) throws IOException,
             HubConfigurationException, InterruptedException {
 
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
@@ -202,22 +205,23 @@ public class PostBuildHubiScan extends Recorder {
         listener.getLogger().println("[DEBUG] : Using this java installation : " + getJava().getName() + " : " +
                 getJava().getHome());
 
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
         ProcStarter ps = launcher.launch();
         if (ps != null) {
             ps.envs(build.getEnvironment(listener));
             ps.cmds(cmd);
-            ps.stdout(listener);
+            ps.stdout(baos);
             ps.join();
         } else {
             listener.getLogger().println("[ERROR] : Could not find a ProcStarter to run the process!");
         }
 
-        OutputStream outputStream = ps.stdout();
-        PrintStream printOutStream = new PrintStream(outputStream);
-        printOutStream.println();
-        printOutStream.flush();
-        // TODO Check if iScan had and error
+        ByteArrayOutputStream outputStream = (ByteArrayOutputStream) ps.stdout();
+        String outputString = new String(outputStream.toByteArray(), "UTF-8");
+        listener.getLogger().println(outputString);
 
+        return outputString;
         // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will handle
         // closing it.
 

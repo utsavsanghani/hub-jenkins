@@ -263,11 +263,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 credentialPassword = credential.getPassword().getPlainText();
                 setCookies(getServerUrl(), credentialUserName, credentialPassword);
                 Series<Cookie> cookies = getCookies();
-
+                setProjectId(null);
                 // TODO This api call is currently unsupported, still WIP. THIS SHOULD be used INSTEAD OF the search
                 // String url = getServerUrl() + "/api/v1/projects/name/" + hubProjectName;
 
-                String url = getServerUrl() + "/api/v1/search/PROJECT?q=" + hubProjectName;
+                String url = getServerUrl() + "/api/v1/search/PROJECT?q=" + hubProjectName + "&limit=20";
                 ClientResource resource = new ClientResource(url);
 
                 resource.getRequest().setCookies(cookies);
@@ -299,7 +299,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                                 LinkedHashMap projectFields = (LinkedHashMap) project.get("fields");
 
                                 // All of the fields are ArrayLists with the value at the first position
-                                setProjectId(null);
                                 if (projectMatches.length() > 0) {
                                     projectMatches.append(", " + (String) ((ArrayList) projectFields.get("name")).get(0));
                                 } else {
@@ -313,13 +312,17 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                         } else if (projectPotentialMatches.size() == 1) {
                             // Single match was found
                             LinkedHashMap projectFields = (LinkedHashMap) projectPotentialMatches.get(0).get("fields");
-
-                            // All of the fields are ArrayLists with the value at the first position
-                            setProjectId((String) ((ArrayList) projectFields.get("uuid")).get(0));
-                            return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
+                            if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(hubProjectName)) {
+                                // All of the fields are ArrayLists with the value at the first position
+                                setProjectId((String) ((ArrayList) projectFields.get("uuid")).get(0));
+                                return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
+                            } else {
+                                projectMatches.append((String) ((ArrayList) projectFields.get("name")).get(0));
+                                return FormValidation
+                                        .error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getServerUrl(), projectMatches.toString()));
+                            }
                         }
                     } else {
-                        setProjectId(null);
                         return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getServerUrl()));
                     }
                 } else {
@@ -378,14 +381,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 setCookies(getServerUrl(), credentialUserName, credentialPassword);
 
                 Series<Cookie> cookies = getCookies();
-                String url = getServerUrl() + "/api/v1/projects/" + getProjectId() + "/releases";
+                String url = getServerUrl() + "/api/v1/projects/" + getProjectId() + "/releases?limit=20";
                 ClientResource resource = new ClientResource(url);
 
                 resource.getRequest().setCookies(cookies);
                 resource.setMethod(Method.GET);
                 resource.get();
                 int responseCode = resource.getResponse().getStatus().getCode();
-
+                StringBuilder projectReleases = new StringBuilder();
                 if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
 
                     Response resp = resource.getResponse();
@@ -407,15 +410,22 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                         for (LinkedHashMap release : releaseList) {
                             if (((String) release.get("version")).equals(hubProjectRelease)) {
                                 return FormValidation.ok(Messages.HubBuildScan_getReleaseExistsIn_0_(getProjectId()));
+                            } else {
+                                if (projectReleases.length() > 0) {
+                                    projectReleases.append(", " + ((String) release.get("version")));
+                                } else {
+                                    projectReleases.append((String) release.get("version"));
+                                }
                             }
                         }
                     } else {
+                        // The Hub Api has changed and we received a JSON response that we did not expect
                         return FormValidation.error(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
                     }
                 } else {
                     return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
                 }
-                return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(getProjectId()));
+                return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(getProjectId(), projectReleases.toString()));
             } catch (Exception e) {
                 if (e.getCause() != null && e.getCause().getCause() != null) {
                     if (e.getCause().getCause().toString().contains("(404) - Not Found")) {

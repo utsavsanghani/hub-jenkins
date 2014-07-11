@@ -78,19 +78,19 @@ public class Messages {
     }
 
     /**
-     * This Release does not exist in the Project with Id : {0}
+     * This Release does not exist in the Project with Id : {0}, BUT these releases were found : {1}
      * 
      */
-    public static String HubBuildScan_getReleaseNonExistingIn_0_(Object arg1) {
-        return holder.format("HubBuildScan_getReleaseNonExistingIn_0_", arg1);
+    public static String HubBuildScan_getReleaseNonExistingIn_0_(Object arg1, Object arg2) {
+        return holder.format("HubBuildScan_getReleaseNonExistingIn_0_", arg1, arg2);
     }
 
     /**
-     * This Release does not exist in the Project with Id : {0}
+     * This Release does not exist in the Project with Id : {0}, BUT these releases were found : {1}
      * 
      */
-    public static Localizable _HubBuildScan_getReleaseNonExistingIn_0_(Object arg1) {
-        return new Localizable(holder, "HubBuildScan_getReleaseNonExistingIn_0_", arg1);
+    public static Localizable _HubBuildScan_getReleaseNonExistingIn_0_(Object arg1, Object arg2) {
+        return new Localizable(holder, "HubBuildScan_getReleaseNonExistingIn_0_", arg1, arg2);
     }
 
     /**
@@ -254,7 +254,7 @@ public class Messages {
     }
 
     /**
-     * Expected a different JSON response from the server, Or the response was mapped incorrectly.
+     * Expected a different JSON response from the server, the Hub API's may have changed, Or the response was mapped incorrectly.
      * 
      */
     public static String HubBuildScan_getIncorrectMappingOfServerResponse() {
@@ -262,7 +262,7 @@ public class Messages {
     }
 
     /**
-     * Expected a different JSON response from the server, Or the response was mapped incorrectly.
+     * Expected a different JSON response from the server, the Hub API's may have changed, Or the response was mapped incorrectly.
      * 
      */
     public static Localizable _HubBuildScan_getIncorrectMappingOfServerResponse() {
