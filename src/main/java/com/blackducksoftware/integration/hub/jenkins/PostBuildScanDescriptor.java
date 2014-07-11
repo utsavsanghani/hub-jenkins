@@ -9,9 +9,7 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -31,13 +29,6 @@ import net.sf.json.JSONObject;
 import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
-import org.restlet.Response;
-import org.restlet.data.Cookie;
-import org.restlet.data.CookieSetting;
-import org.restlet.data.Method;
-import org.restlet.representation.EmptyRepresentation;
-import org.restlet.resource.ClientResource;
-import org.restlet.util.Series;
 
 import com.blackducksoftware.integration.hub.jenkins.IScanInstallation.IScanDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
@@ -49,7 +40,6 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.cloudbees.plugins.credentials.matchers.IdMatcher;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Descriptor for {@link CodeCenterBuildWrapper}. Used as a singleton. The
@@ -77,8 +67,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     private HubServerInfo hubServerInfo;
 
     private String projectId;
-
-    private Series<Cookie> cookies;
 
     /**
      * @return the hubServerInfo
@@ -261,72 +249,45 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 UsernamePasswordCredentialsImpl credential = getCredentials(getHubServerInfo().getCredentialsId());
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
-                setCookies(getServerUrl(), credentialUserName, credentialPassword);
-                Series<Cookie> cookies = getCookies();
-                setProjectId(null);
-                // TODO This api call is currently unsupported, still WIP. THIS SHOULD be used INSTEAD OF the search
-                // String url = getServerUrl() + "/api/v1/projects/name/" + hubProjectName;
+                JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+                service.setCookies(getServerUrl(), credentialUserName, credentialPassword);
 
-                String url = getServerUrl() + "/api/v1/search/PROJECT?q=" + hubProjectName + "&limit=20";
-                ClientResource resource = new ClientResource(url);
+                HashMap<String, Object> responseMap = service.getProjectMatches(getServerUrl(), hubProjectName);
 
-                resource.getRequest().setCookies(cookies);
-                resource.setMethod(Method.GET);
-                resource.get();
-                int responseCode = resource.getResponse().getStatus().getCode();
+                if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
+                    ArrayList<LinkedHashMap> projectPotentialMatches = (ArrayList<LinkedHashMap>) responseMap.get("hits");
+                    StringBuilder projectMatches = new StringBuilder();
+                    // More than one match found
+                    if (projectPotentialMatches.size() > 1) {
+                        for (LinkedHashMap project : projectPotentialMatches) {
+                            LinkedHashMap projectFields = (LinkedHashMap) project.get("fields");
 
-                if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-                    Response resp = resource.getResponse();
-                    Reader reader = resp.getEntity().getReader();
-                    BufferedReader bufReader = new BufferedReader(reader);
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = bufReader.readLine()) != null) {
-                        sb.append(line + "\n");
-                    }
-                    byte[] mapData = sb.toString().getBytes();
-
-                    HashMap<String, Object> responseMap = new HashMap<String, Object>();
-                    // Create HashMap from the Rest response
-                    ObjectMapper responseMapper = new ObjectMapper();
-                    responseMap = responseMapper.readValue(mapData, HashMap.class);
-                    if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
-                        ArrayList<LinkedHashMap> projectPotentialMatches = (ArrayList<LinkedHashMap>) responseMap.get("hits");
-                        StringBuilder projectMatches = new StringBuilder();
-                        // More than one match found
-                        if (projectPotentialMatches.size() > 1) {
-                            for (LinkedHashMap project : projectPotentialMatches) {
-                                LinkedHashMap projectFields = (LinkedHashMap) project.get("fields");
-
-                                // All of the fields are ArrayLists with the value at the first position
-                                if (projectMatches.length() > 0) {
-                                    projectMatches.append(", " + (String) ((ArrayList) projectFields.get("name")).get(0));
-                                } else {
-                                    projectMatches.append((String) ((ArrayList) projectFields.get("name")).get(0));
-                                }
-                            }
-                            // Found matches to the project name, print server Url and all the matches for this name
-                            // that were found
-                            return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getServerUrl(), projectMatches.toString()));
-
-                        } else if (projectPotentialMatches.size() == 1) {
-                            // Single match was found
-                            LinkedHashMap projectFields = (LinkedHashMap) projectPotentialMatches.get(0).get("fields");
-                            if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(hubProjectName)) {
-                                // All of the fields are ArrayLists with the value at the first position
-                                setProjectId((String) ((ArrayList) projectFields.get("uuid")).get(0));
-                                return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
+                            // All of the fields are ArrayLists with the value at the first position
+                            if (projectMatches.length() > 0) {
+                                projectMatches.append(", " + (String) ((ArrayList) projectFields.get("name")).get(0));
                             } else {
                                 projectMatches.append((String) ((ArrayList) projectFields.get("name")).get(0));
-                                return FormValidation
-                                        .error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getServerUrl(), projectMatches.toString()));
                             }
                         }
-                    } else {
-                        return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getServerUrl()));
+                        // Found matches to the project name, print server Url and all the matches for this name
+                        // that were found
+                        return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getServerUrl(), projectMatches.toString()));
+
+                    } else if (projectPotentialMatches.size() == 1) {
+                        // Single match was found
+                        LinkedHashMap projectFields = (LinkedHashMap) projectPotentialMatches.get(0).get("fields");
+                        if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(hubProjectName)) {
+                            // All of the fields are ArrayLists with the value at the first position
+                            setProjectId((String) ((ArrayList) projectFields.get("uuid")).get(0));
+                            return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
+                        } else {
+                            projectMatches.append((String) ((ArrayList) projectFields.get("name")).get(0));
+                            return FormValidation
+                                    .error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getServerUrl(), projectMatches.toString()));
+                        }
                     }
                 } else {
-                    return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+                    return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getServerUrl()));
                 }
             } catch (Exception e) {
                 if (e.getCause() != null && e.getCause().getCause() != null) {
@@ -377,53 +338,27 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 UsernamePasswordCredentialsImpl credential = getCredentials(getHubServerInfo().getCredentialsId());
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
+                JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+                service.setCookies(getServerUrl(), credentialUserName, credentialPassword);
 
-                setCookies(getServerUrl(), credentialUserName, credentialPassword);
-
-                Series<Cookie> cookies = getCookies();
-                String url = getServerUrl() + "/api/v1/projects/" + getProjectId() + "/releases?limit=20";
-                ClientResource resource = new ClientResource(url);
-
-                resource.getRequest().setCookies(cookies);
-                resource.setMethod(Method.GET);
-                resource.get();
-                int responseCode = resource.getResponse().getStatus().getCode();
+                HashMap<String, Object> responseMap = service.getReleaseMatchesForProjectId(getServerUrl(), hubProjectRelease);
                 StringBuilder projectReleases = new StringBuilder();
-                if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-
-                    Response resp = resource.getResponse();
-                    Reader reader = resp.getEntity().getReader();
-                    BufferedReader bufReader = new BufferedReader(reader);
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = bufReader.readLine()) != null) {
-                        sb.append(line + "\n");
-                    }
-                    byte[] mapData = sb.toString().getBytes();
-
-                    HashMap<String, Object> responseMap = new HashMap<String, Object>();
-                    // Create HashMap from the Rest response
-                    ObjectMapper responseMapper = new ObjectMapper();
-                    responseMap = responseMapper.readValue(mapData, HashMap.class);
-                    if (responseMap.containsKey("items")) {
-                        ArrayList<LinkedHashMap> releaseList = (ArrayList<LinkedHashMap>) responseMap.get("items");
-                        for (LinkedHashMap release : releaseList) {
-                            if (((String) release.get("version")).equals(hubProjectRelease)) {
-                                return FormValidation.ok(Messages.HubBuildScan_getReleaseExistsIn_0_(getProjectId()));
+                if (responseMap.containsKey("items")) {
+                    ArrayList<LinkedHashMap> releaseList = (ArrayList<LinkedHashMap>) responseMap.get("items");
+                    for (LinkedHashMap release : releaseList) {
+                        if (((String) release.get("version")).equals(hubProjectRelease)) {
+                            return FormValidation.ok(Messages.HubBuildScan_getReleaseExistsIn_0_(getProjectId()));
+                        } else {
+                            if (projectReleases.length() > 0) {
+                                projectReleases.append(", " + ((String) release.get("version")));
                             } else {
-                                if (projectReleases.length() > 0) {
-                                    projectReleases.append(", " + ((String) release.get("version")));
-                                } else {
-                                    projectReleases.append((String) release.get("version"));
-                                }
+                                projectReleases.append((String) release.get("version"));
                             }
                         }
-                    } else {
-                        // The Hub Api has changed and we received a JSON response that we did not expect
-                        return FormValidation.error(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
                     }
                 } else {
-                    return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+                    // The Hub Api has changed and we received a JSON response that we did not expect
+                    return FormValidation.error(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
                 }
                 return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(getProjectId(), projectReleases.toString()));
             } catch (Exception e) {
@@ -486,15 +421,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            String url = serverUrl + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword;
-            ClientResource resource = new ClientResource(url);
-            resource.setMethod(Method.POST);
+            JenkinsHubIntRestService service = new JenkinsHubIntRestService();
 
-            EmptyRepresentation rep = new EmptyRepresentation();
-
-            resource.post(rep);
-
-            int responseCode = resource.getResponse().getStatus().getCode();
+            int responseCode = service.setCookies(serverUrl, credentialUserName, credentialPassword);
 
             if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
                 return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
@@ -521,43 +450,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             }
         }
 
-    }
-
-    /**
-     * Gets the cookie for the Authorized connection to the Hub server.
-     * 
-     * @param serverUrl
-     *            String the Url for the Hub server
-     * @param credentialUserName
-     *            String the Username for the Hub server
-     * @param credentialPassword
-     *            String the Password for the Hub server
-     */
-    private void setCookies(String serverUrl, String credentialUserName, String credentialPassword) {
-        String url = serverUrl + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword;
-        ClientResource resource = new ClientResource(url);
-        resource.setMethod(Method.POST);
-
-        EmptyRepresentation rep = new EmptyRepresentation();
-
-        resource.post(rep);
-        Series<CookieSetting> cookieSettings = resource.getResponse().getCookieSettings();
-        Series<Cookie> requestCookies = resource.getRequest().getCookies();
-        for (CookieSetting ck : cookieSettings) {
-            Cookie cookie = new Cookie();
-            cookie.setName(ck.getName());
-            cookie.setDomain(ck.getDomain());
-            cookie.setPath(ck.getPath());
-            cookie.setValue(ck.getValue());
-            cookie.setVersion(ck.getVersion());
-            requestCookies.add(cookie);
-        }
-
-        cookies = requestCookies;
-    }
-
-    public Series<Cookie> getCookies() {
-        return cookies;
     }
 
     /**
