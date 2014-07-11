@@ -13,9 +13,13 @@
   -->
   
   <f:section title="${%GlobalSectionTitle}">
+  	<f:entry title="${%HubPort}" field="hubPort"
+      description="Provide the Port for your Black Duck Hub Server">
+        <f:textbox field="hubPort" value="${instance.hubPort}"/>
+    </f:entry>
 	<f:entry title="${%ServerURL}" field="serverUrl"
       description="Provide the Url for your Black Duck Hub Server">
-        <f:textbox field="serverUrl" value="${descriptor.serverUrl}"/>
+        <f:textbox field="serverUrl" value="${instance.serverUrl}"/>
     </f:entry>
     <f:entry title="${%Credentials}" field="hubCredentialsId" >
     	<c:select/>
@@ -24,7 +28,7 @@
          method="testConnection" with="serverUrl,hubCredentialsId" />
     <f:advanced>
       <f:entry title="${%ConnectionTimeout}" field="timeout" description="in seconds" >
-          <f:textbox clazz="number" field="timeout" value="${descriptor.timeout}" default="${descriptor.defaultTimeout}"/>
+          <f:textbox clazz="number" field="timeout" value="${instance.timeout}" default="${instance.defaultTimeout}"/>
       </f:entry>
     </f:advanced>
   </f:section>
