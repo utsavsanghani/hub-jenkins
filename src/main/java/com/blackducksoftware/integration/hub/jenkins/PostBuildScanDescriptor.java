@@ -58,6 +58,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
+    private static final String FORM_PORT = "hubPort";
+
     private HubServerInfo hubServerInfo;
 
     /**
@@ -152,15 +154,18 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckServerUrl(@QueryParameter String value)
+    public FormValidation doCheckServerUrl(@QueryParameter("serverUrl") String serverUrl, @QueryParameter("hubPort") String hubPort)
             throws IOException, ServletException {
-        if (value.length() == 0) {
+        if (serverUrl.length() == 0) {
             return FormValidation.error(Messages
                     .HubBuildScan_getPleaseSetServerUrl());
         }
+        if (hubPort.length() != 0) {
+            serverUrl = serverUrl + ":" + hubPort;
+        }
         URL url;
         try {
-            url = new URL(value);
+            url = new URL(serverUrl);
             try {
                 url.toURI();
             } catch (URISyntaxException e) {
@@ -283,7 +288,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         // To persist global configuration information,
         // set that to properties and call save().
         hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID),
-                formData.getLong(FORM_TIMEOUT));
+                formData.getLong(FORM_TIMEOUT), formData.getString(FORM_PORT));
         // ^Can also use req.bindJSON(this, formData);
         // (easier when there are many fields; need set* methods for this,
         // like setUseFrench)
@@ -308,11 +313,17 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 : hubServerInfo.getTimeout();
     }
 
+    public String getHubPort() {
+        return (hubServerInfo == null ? "" : (hubServerInfo
+                .getHubPort() == null ? "" : hubServerInfo
+                .getHubPort()));
+    }
+
     public long getDefaultTimeout() {
         return DEFAULT_TIMEOUT;
     }
 
-    public String getCredentialsId() {
+    public String getHubCredentialsId() {
         return (hubServerInfo == null ? "" : (hubServerInfo.getCredentialsId() == null ? "" : hubServerInfo.getCredentialsId()));
     }
 }

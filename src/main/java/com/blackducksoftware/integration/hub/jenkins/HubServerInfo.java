@@ -20,6 +20,8 @@ public class HubServerInfo implements Serializable {
 
     private String serverUrl;
 
+    private String hubPort;
+
     private String hubCredentialsId;
 
     private UsernamePasswordCredentialsImpl credential;
@@ -29,11 +31,20 @@ public class HubServerInfo implements Serializable {
     public HubServerInfo() {
     }
 
-    public HubServerInfo(String serverUrl, String hubCredentialsId, long timeout) {
+    public HubServerInfo(String serverUrl, String hubCredentialsId, long timeout, String hubPort) {
         super();
         this.serverUrl = serverUrl;
         this.hubCredentialsId = hubCredentialsId;
         this.timeout = timeout;
+        this.hubPort = hubPort;
+    }
+
+    public String getHubPort() {
+        return hubPort;
+    }
+
+    public void setHubPort(String hubPort) {
+        this.hubPort = hubPort;
     }
 
     public long getTimeout() {
@@ -101,15 +112,10 @@ public class HubServerInfo implements Serializable {
         return credential;
     }
 
-    /*
-     * (non-JSDoc)
-     * 
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
-        return "HubServerInfo [serverUrl=" + serverUrl + ", hubCredentialsId=" + hubCredentialsId + ", credential=" + credential + ", timeout=" + timeout
-                + "]";
+        return "HubServerInfo [serverUrl=" + serverUrl + ", hubPort=" + hubPort + ", hubCredentialsId=" + hubCredentialsId + ", credential=" + credential
+                + ", timeout=" + timeout + "]";
     }
 
 }

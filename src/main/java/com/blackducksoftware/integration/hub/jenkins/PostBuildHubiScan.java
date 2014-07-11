@@ -174,6 +174,11 @@ public class PostBuildHubiScan extends Recorder {
         cmd.add(getDescriptor().getHubServerInfo().getUsername());
         cmd.add("--password");
         cmd.add(getDescriptor().getHubServerInfo().getPassword());
+        if (!StringUtils.isEmpty(getDescriptor().getHubServerInfo().getHubPort())) {
+            cmd.add("--port");
+            cmd.add(getDescriptor().getHubServerInfo().getHubPort());
+        }
+
         if (isTEST()) {
             cmd.add("--dryRun");
         }
