@@ -312,6 +312,6 @@ public class IntegrationTest {
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
         Assert.assertTrue(buildOutput
-                .contains("com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException: Could not find the specified Java executable"));
+                .contains("com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException: Could not find the specified Java installation at"));
     }
 }
