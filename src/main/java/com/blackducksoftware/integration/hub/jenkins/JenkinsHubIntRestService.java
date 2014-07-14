@@ -36,7 +36,6 @@ public class JenkinsHubIntRestService {
      * @return int Status code
      */
     public int setCookies(String serverUrl, String credentialUserName, String credentialPassword) {
-        setCookies(serverUrl, credentialUserName, credentialPassword);
         Series<Cookie> cookies = getCookies();
 
         String url = serverUrl + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword;
