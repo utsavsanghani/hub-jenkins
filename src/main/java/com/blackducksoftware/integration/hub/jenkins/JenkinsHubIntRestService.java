@@ -58,7 +58,7 @@ public class JenkinsHubIntRestService {
                 requestCookies.add(cookie);
             }
 
-            cookies = requestCookies;
+            this.cookies = requestCookies;
         } else {
             // cookies already set
         }
