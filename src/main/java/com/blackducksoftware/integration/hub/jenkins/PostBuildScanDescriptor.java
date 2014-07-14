@@ -341,7 +341,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 JenkinsHubIntRestService service = new JenkinsHubIntRestService();
                 service.setCookies(getServerUrl(), credentialUserName, credentialPassword);
 
-                HashMap<String, Object> responseMap = service.getReleaseMatchesForProjectId(getServerUrl(), hubProjectRelease);
+                HashMap<String, Object> responseMap = service.getReleaseMatchesForProjectId(getServerUrl(), getProjectId());
                 StringBuilder projectReleases = new StringBuilder();
                 if (responseMap.containsKey("items")) {
                     ArrayList<LinkedHashMap> releaseList = (ArrayList<LinkedHashMap>) responseMap.get("items");
