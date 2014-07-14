@@ -159,7 +159,7 @@ public class PostBuildHubiScanUnitTest {
         when(mockIScanInstall.getHome()).thenReturn(iScanInstallPath);
         when(mockIScanInstall.forNode(Mockito.any(Node.class), Mockito.any(BuildListener.class))).thenReturn(mockIScanInstall);
         when(mockIScanInstall.getCLI(Mockito.any(VirtualChannel.class))).thenCallRealMethod();
-        when(mockIScanInstall.getExists(Mockito.any(VirtualChannel.class))).thenCallRealMethod();
+        when(mockIScanInstall.getExists(Mockito.any(VirtualChannel.class), Mockito.any(BuildListener.class))).thenCallRealMethod();
         IScanInstallation[] iScanInstallations = new IScanInstallation[1];
         iScanInstallations[0] = mockIScanInstall;
 
@@ -206,7 +206,7 @@ public class PostBuildHubiScanUnitTest {
         Node node = slave;
         when(mockBuild.getBuiltOn()).thenReturn(node);
 
-        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath + "/FAKE/PATH/scan.cli.sh", null);
+        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath + "/FAKE/PATH/scan.cli.jar", null);
         IScanInstallation[] iScanInstallations = new IScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 

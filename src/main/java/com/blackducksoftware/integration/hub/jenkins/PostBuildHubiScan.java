@@ -164,7 +164,7 @@ public class PostBuildHubiScan extends Recorder {
         cmd.add(getJava().getHome() + "/bin/java");
         cmd.add("-Done-jar.silent=true");
         cmd.add("-jar");
-        cmd.add("-Xmx2048m");
+        cmd.add("-Xmx512m");
         cmd.add(iScanScript.getRemote());
         cmd.add("--host");
         String host = getDescriptor().getServerUrl().substring(7);
@@ -232,16 +232,20 @@ public class PostBuildHubiScan extends Recorder {
             // Empty node name indicates master
             javaHomeTemp = build.getProject().getJDK();
         } else {
-            javaHomeTemp = javaHomeTemp.forNode(build.getBuiltOn(), listener);
+            javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), listener);
         }
         if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
+            if (envVars.get("JAVA_HOME") == null) {
+                throw new HubConfigurationException("Need to define a JAVA_HOME or select an installed JDK.");
+            }
             // In case the user did not select a java installation, set to the environment variable JAVA_HOME
             javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
         }
-        File javaExecFile = new File(javaHomeTemp.getHome() + "/bin/java");
+        // FIXME look for the java executable and make sure it exists
+        File javaExecFile = new File(javaHomeTemp.getHome());
         FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), javaExecFile.getCanonicalPath());
         if (!javaExec.exists()) {
-            throw new HubConfigurationException("Could not find the specified Java executable");
+            throw new HubConfigurationException("Could not find the specified Java installation at: " + javaExec.getRemote());
         }
         java = javaHomeTemp;
     }
@@ -277,7 +281,7 @@ public class PostBuildHubiScan extends Recorder {
                 iScan = iScan.forNode(node, listener);
             }
             if (iScan.getName().equals(getiScanName())) {
-                if (iScan.getExists(node.getChannel())) {
+                if (iScan.getExists(node.getChannel(), listener)) {
                     iScanScript = iScan.getCLI(node.getChannel());
                     listener.getLogger().println(
                             "[DEBUG] : Using this iScan CLI at : " + iScanScript.getRemote());
