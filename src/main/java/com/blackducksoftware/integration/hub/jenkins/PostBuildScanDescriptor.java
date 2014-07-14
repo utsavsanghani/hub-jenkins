@@ -205,14 +205,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckServerUrl(@QueryParameter("serverUrl") String serverUrl, @QueryParameter("hubPort") String hubPort)
+    public FormValidation doCheckServerUrl(@QueryParameter("serverUrl") String serverUrl)
             throws IOException, ServletException {
         if (serverUrl.length() == 0) {
             return FormValidation.error(Messages
                     .HubBuildScan_getPleaseSetServerUrl());
-        }
-        if (hubPort.length() != 0) {
-            serverUrl = serverUrl + ":" + hubPort;
         }
         URL url;
         try {

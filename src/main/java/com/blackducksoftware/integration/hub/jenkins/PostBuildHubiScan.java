@@ -183,12 +183,12 @@ public class PostBuildHubiScan extends Recorder {
         cmd.add(getJava().getHome() + "/bin/java");
         cmd.add("-Done-jar.silent=true");
         cmd.add("-jar");
+        // TODO make the memory configurable at the job level
         cmd.add("-Xmx512m");
         cmd.add(iScanScript.getRemote());
         cmd.add("--host");
-        String host = getDescriptor().getServerUrl().substring(7);
-        cmd.add(host);
-        listener.getLogger().println("[DEBUG] : Using this Hub Url : '" + host + "'");
+        cmd.add(url.getHost());
+        listener.getLogger().println("[DEBUG] : Using this Hub Url : '" + url.getHost() + "'");
         cmd.add("--username");
         cmd.add(getDescriptor().getHubServerInfo().getUsername());
         cmd.add("--password");
