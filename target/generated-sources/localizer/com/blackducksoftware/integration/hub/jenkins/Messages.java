@@ -30,22 +30,6 @@ public class Messages {
     }
 
     /**
-     * Please fill in the Hub credentials in the global settings!
-     * 
-     */
-    public static String HubBuildScan_getPleaseFillInGlobalCCCredentials() {
-        return holder.format("HubBuildScan_getPleaseFillInGlobalCCCredentials");
-    }
-
-    /**
-     * Please fill in the Hub credentials in the global settings!
-     * 
-     */
-    public static Localizable _HubBuildScan_getPleaseFillInGlobalCCCredentials() {
-        return new Localizable(holder, "HubBuildScan_getPleaseFillInGlobalCCCredentials");
-    }
-
-    /**
      * This Project exists on the Hub Server : {0}
      * 
      */
@@ -91,38 +75,6 @@ public class Messages {
      */
     public static Localizable _HubBuildScan_getReleaseNonExistingIn_0_(Object arg1, Object arg2) {
         return new Localizable(holder, "HubBuildScan_getReleaseNonExistingIn_0_", arg1, arg2);
-    }
-
-    /**
-     * Directed to the Hub.
-     * 
-     */
-    public static String HubBuildScan_getDirectedToHub() {
-        return holder.format("HubBuildScan_getDirectedToHub");
-    }
-
-    /**
-     * Directed to the Hub.
-     * 
-     */
-    public static Localizable _HubBuildScan_getDirectedToHub() {
-        return new Localizable(holder, "HubBuildScan_getDirectedToHub");
-    }
-
-    /**
-     * Please set an application name!
-     * 
-     */
-    public static String HubBuildScan_getPleaseSetApplicationName() {
-        return holder.format("HubBuildScan_getPleaseSetApplicationName");
-    }
-
-    /**
-     * Please set an application name!
-     * 
-     */
-    public static Localizable _HubBuildScan_getPleaseSetApplicationName() {
-        return new Localizable(holder, "HubBuildScan_getPleaseSetApplicationName");
     }
 
     /**
@@ -190,19 +142,19 @@ public class Messages {
     }
 
     /**
-     * This application has been created: {0}
+     * The Project and Release specified already exist!
      * 
      */
-    public static String HubBuildScan_getApplicationCreated_0_(Object arg1) {
-        return holder.format("HubBuildScan_getApplicationCreated_0_", arg1);
+    public static String HubBuildScan_getProjectAndReleaseExist() {
+        return holder.format("HubBuildScan_getProjectAndReleaseExist");
     }
 
     /**
-     * This application has been created: {0}
+     * The Project and Release specified already exist!
      * 
      */
-    public static Localizable _HubBuildScan_getApplicationCreated_0_(Object arg1) {
-        return new Localizable(holder, "HubBuildScan_getApplicationCreated_0_", arg1);
+    public static Localizable _HubBuildScan_getProjectAndReleaseExist() {
+        return new Localizable(holder, "HubBuildScan_getProjectAndReleaseExist");
     }
 
     /**
@@ -222,6 +174,22 @@ public class Messages {
     }
 
     /**
+     * Need to provide a Project name.
+     * 
+     */
+    public static String HubBuildScan_getProvideProjectName() {
+        return holder.format("HubBuildScan_getProvideProjectName");
+    }
+
+    /**
+     * Need to provide a Project name.
+     * 
+     */
+    public static Localizable _HubBuildScan_getProvideProjectName() {
+        return new Localizable(holder, "HubBuildScan_getProvideProjectName");
+    }
+
+    /**
      * Could not connect to the Hub server with the Given Url and credentials. Error Code:  {0}
      * 
      */
@@ -238,22 +206,6 @@ public class Messages {
     }
 
     /**
-     * Please set an application version!
-     * 
-     */
-    public static String HubBuildScan_getPleaseSetApplicationVersion() {
-        return holder.format("HubBuildScan_getPleaseSetApplicationVersion");
-    }
-
-    /**
-     * Please set an application version!
-     * 
-     */
-    public static Localizable _HubBuildScan_getPleaseSetApplicationVersion() {
-        return new Localizable(holder, "HubBuildScan_getPleaseSetApplicationVersion");
-    }
-
-    /**
      * Expected a different JSON response from the server, the Hub API's may have changed, Or the response was mapped incorrectly.
      * 
      */
@@ -267,6 +219,22 @@ public class Messages {
      */
     public static Localizable _HubBuildScan_getIncorrectMappingOfServerResponse() {
         return new Localizable(holder, "HubBuildScan_getIncorrectMappingOfServerResponse");
+    }
+
+    /**
+     * Need to provide a Project release.
+     * 
+     */
+    public static String HubBuildScan_getProvideProjectRelease() {
+        return holder.format("HubBuildScan_getProvideProjectRelease");
+    }
+
+    /**
+     * Need to provide a Project release.
+     * 
+     */
+    public static Localizable _HubBuildScan_getProvideProjectRelease() {
+        return new Localizable(holder, "HubBuildScan_getProvideProjectRelease");
     }
 
     /**
@@ -299,6 +267,22 @@ public class Messages {
      */
     public static Localizable _HubBuildScan_getCanNotReachThisServer() {
         return new Localizable(holder, "HubBuildScan_getCanNotReachThisServer");
+    }
+
+    /**
+     * The Project and Release have been created!
+     * 
+     */
+    public static String HubBuildScan_getProjectAndReleaseCreated() {
+        return holder.format("HubBuildScan_getProjectAndReleaseCreated");
+    }
+
+    /**
+     * The Project and Release have been created!
+     * 
+     */
+    public static Localizable _HubBuildScan_getProjectAndReleaseCreated() {
+        return new Localizable(holder, "HubBuildScan_getProjectAndReleaseCreated");
     }
 
     /**

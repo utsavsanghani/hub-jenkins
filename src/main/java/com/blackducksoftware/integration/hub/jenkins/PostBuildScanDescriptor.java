@@ -62,11 +62,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
-    private static final String FORM_PORT = "hubPort";
-
     private HubServerInfo hubServerInfo;
 
     private String projectId;
+
+    private boolean projectExists = false;
+
+    private boolean releaseExists = false;
 
     /**
      * @return the hubServerInfo
@@ -81,6 +83,22 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      */
     public void setHubServerInfo(HubServerInfo hubServerInfo) {
         this.hubServerInfo = hubServerInfo;
+    }
+
+    public boolean isProjectExists() {
+        return projectExists;
+    }
+
+    private void setProjectExists(boolean projectExists) {
+        this.projectExists = projectExists;
+    }
+
+    public boolean isReleaseExists() {
+        return releaseExists;
+    }
+
+    private void setReleaseExists(boolean releaseExists) {
+        this.releaseExists = releaseExists;
     }
 
     public String getProjectId() {
@@ -237,6 +255,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     .getContextClassLoader();
             boolean changed = false;
             try {
+                setProjectExists(false);
                 if (StringUtils.isEmpty(getServerUrl())) {
                     return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
                 }
@@ -250,9 +269,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
                 JenkinsHubIntRestService service = new JenkinsHubIntRestService();
-                service.setCookies(getServerUrl(), credentialUserName, credentialPassword);
+                service.setBaseUrl(getServerUrl());
 
-                HashMap<String, Object> responseMap = service.getProjectMatches(getServerUrl(), hubProjectName);
+                service.setCookies(credentialUserName, credentialPassword);
+
+                HashMap<String, Object> responseMap = service.getProjectMatches(hubProjectName);
 
                 if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
                     ArrayList<LinkedHashMap> projectPotentialMatches = (ArrayList<LinkedHashMap>) responseMap.get("hits");
@@ -261,7 +282,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     if (projectPotentialMatches.size() > 1) {
                         for (LinkedHashMap project : projectPotentialMatches) {
                             LinkedHashMap projectFields = (LinkedHashMap) project.get("fields");
-
+                            if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(hubProjectName)) {
+                                // All of the fields are ArrayLists with the value at the first position
+                                setProjectId((String) ((ArrayList) projectFields.get("uuid")).get(0));
+                                setProjectExists(true);
+                                return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
+                            }
                             // All of the fields are ArrayLists with the value at the first position
                             if (projectMatches.length() > 0) {
                                 projectMatches.append(", " + (String) ((ArrayList) projectFields.get("name")).get(0));
@@ -279,6 +305,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                         if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(hubProjectName)) {
                             // All of the fields are ArrayLists with the value at the first position
                             setProjectId((String) ((ArrayList) projectFields.get("uuid")).get(0));
+                            setProjectExists(true);
                             return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
                         } else {
                             projectMatches.append((String) ((ArrayList) projectFields.get("name")).get(0));
@@ -325,6 +352,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     .getContextClassLoader();
             boolean changed = false;
             try {
+                setReleaseExists(false);
                 if (StringUtils.isEmpty(getServerUrl())) {
                     return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
                 }
@@ -339,14 +367,16 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
                 JenkinsHubIntRestService service = new JenkinsHubIntRestService();
-                service.setCookies(getServerUrl(), credentialUserName, credentialPassword);
+                service.setBaseUrl(getServerUrl());
+                service.setCookies(credentialUserName, credentialPassword);
 
-                HashMap<String, Object> responseMap = service.getReleaseMatchesForProjectId(getServerUrl(), getProjectId());
+                HashMap<String, Object> responseMap = service.getReleaseMatchesForProjectId(getProjectId());
                 StringBuilder projectReleases = new StringBuilder();
                 if (responseMap.containsKey("items")) {
                     ArrayList<LinkedHashMap> releaseList = (ArrayList<LinkedHashMap>) responseMap.get("items");
                     for (LinkedHashMap release : releaseList) {
                         if (((String) release.get("version")).equals(hubProjectRelease)) {
+                            setReleaseExists(true);
                             return FormValidation.ok(Messages.HubBuildScan_getReleaseExistsIn_0_(getProjectId()));
                         } else {
                             if (projectReleases.length() > 0) {
@@ -422,14 +452,93 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialPassword = credential.getPassword().getPlainText();
 
             JenkinsHubIntRestService service = new JenkinsHubIntRestService();
-
-            int responseCode = service.setCookies(serverUrl, credentialUserName, credentialPassword);
+            service.setBaseUrl(serverUrl);
+            int responseCode = service.setCookies(credentialUserName, credentialPassword);
 
             if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
                 return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
             } else if (responseCode == 401) {
                 // If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
                 return FormValidation.error(Messages.HubBuildScan_getCredentialsInValidFor_0_(serverUrl));
+            } else {
+                return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+            }
+        } catch (Exception e) {
+            if (e.getCause() != null && e.getCause().getCause() != null) {
+                e.printStackTrace();
+                return FormValidation.error(e.getCause().getCause().toString());
+            } else if (e.getCause() != null) {
+                return FormValidation.error(e.getCause().toString());
+            } else {
+                return FormValidation.error(e.toString());
+            }
+
+        } finally {
+            if (changed) {
+                Thread.currentThread().setContextClassLoader(
+                        originalClassLoader);
+            }
+        }
+
+    }
+
+    /**
+     * Validates that the URL, Username, and Password are correct for connecting to the Hub Server.
+     * 
+     * 
+     * @param serverUrl
+     *            String
+     * @param hubCredentialsId
+     *            String
+     * @return FormValidation
+     * @throws ServletException
+     */
+    public FormValidation doCreateHubProject(@QueryParameter("hubProjectName") final String hubProjectName,
+            @QueryParameter("hubProjectRelease") final String hubProjectRelease) {
+        ClassLoader originalClassLoader = Thread.currentThread()
+                .getContextClassLoader();
+        boolean changed = false;
+        try {
+            if (StringUtils.isEmpty(hubProjectName)) {
+                return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
+            }
+            if (StringUtils.isEmpty(hubProjectRelease)) {
+                return FormValidation.error(Messages.HubBuildScan_getProvideProjectRelease());
+            }
+
+            String credentialUserName = null;
+            String credentialPassword = null;
+
+            UsernamePasswordCredentialsImpl credential = getCredentials(getHubCredentialsId());
+            credentialUserName = credential.getUsername();
+            credentialPassword = credential.getPassword().getPlainText();
+
+            JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+            service.setBaseUrl(getServerUrl());
+            service.setCookies(credentialUserName, credentialPassword);
+
+            if (!isProjectExists()) {
+                HashMap<String, Object> responseMap = service.createHubProject(hubProjectName);
+                StringBuilder projectReleases = new StringBuilder();
+                if (responseMap.containsKey("id")) {
+                    String id = (String) responseMap.get("id");
+                    setProjectId(id);
+                } else {
+                    // The Hub Api has changed and we received a JSON response that we did not expect
+                    return FormValidation.error(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
+                }
+            }
+            int responseCode = 0;
+            if (!isReleaseExists()) {
+                responseCode = service.createHubRelease(hubProjectRelease, getProjectId());
+            } else {
+                return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseExist());
+            }
+            if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+                return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseCreated());
+            } else if (responseCode == 401) {
+                // If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
+                return FormValidation.error(Messages.HubBuildScan_getCredentialsInValidFor_0_(getServerUrl()));
             } else {
                 return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
             }
@@ -519,7 +628,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         // To persist global configuration information,
         // set that to properties and call save().
         hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID),
-                formData.getLong(FORM_TIMEOUT), formData.getString(FORM_PORT));
+                formData.getLong(FORM_TIMEOUT));
         // ^Can also use req.bindJSON(this, formData);
         // (easier when there are many fields; need set* methods for this,
         // like setUseFrench)
@@ -542,12 +651,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public long getTimeout() {
         return hubServerInfo == null ? getDefaultTimeout()
                 : hubServerInfo.getTimeout();
-    }
-
-    public String getHubPort() {
-        return (hubServerInfo == null ? "" : (hubServerInfo
-                .getHubPort() == null ? "" : hubServerInfo
-                .getHubPort()));
     }
 
     public long getDefaultTimeout() {

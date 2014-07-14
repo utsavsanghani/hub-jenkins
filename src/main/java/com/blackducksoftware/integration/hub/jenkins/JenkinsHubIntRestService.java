@@ -19,8 +19,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class JenkinsHubIntRestService {
     private Series<Cookie> cookies;
 
+    private String baseUrl;
+
     protected JenkinsHubIntRestService() {
 
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
     }
 
     /**
@@ -35,10 +45,10 @@ public class JenkinsHubIntRestService {
      * 
      * @return int Status code
      */
-    public int setCookies(String serverUrl, String credentialUserName, String credentialPassword) {
+    public int setCookies(String credentialUserName, String credentialPassword) {
         Series<Cookie> cookies = getCookies();
 
-        String url = serverUrl + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword;
+        String url = getBaseUrl() + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword;
         ClientResource resource = new ClientResource(url);
         resource.setMethod(Method.POST);
 
@@ -70,9 +80,9 @@ public class JenkinsHubIntRestService {
         return cookies;
     }
 
-    public HashMap<String, Object> getProjectMatches(String serverUrl, String hubProjectName) throws IOException, BDRestException {
+    public HashMap<String, Object> getProjectMatches(String hubProjectName) throws IOException, BDRestException {
 
-        String url = serverUrl + "/api/v1/search/PROJECT?q=" + hubProjectName + "&limit=20";
+        String url = getBaseUrl() + "/api/v1/search/PROJECT?q=" + hubProjectName + "&limit=20";
         ClientResource resource = new ClientResource(url);
 
         resource.getRequest().setCookies(cookies);
@@ -100,10 +110,10 @@ public class JenkinsHubIntRestService {
         return responseMap;
     }
 
-    public HashMap<String, Object> getReleaseMatchesForProjectId(String serverUrl, String projectId) throws IOException, BDRestException {
+    public HashMap<String, Object> getReleaseMatchesForProjectId(String projectId) throws IOException, BDRestException {
 
         Series<Cookie> cookies = getCookies();
-        String url = serverUrl + "/api/v1/projects/" + projectId + "/releases?limit=20";
+        String url = getBaseUrl() + "/api/v1/projects/" + projectId + "/releases?limit=20";
         ClientResource resource = new ClientResource(url);
 
         resource.getRequest().setCookies(cookies);
@@ -131,5 +141,55 @@ public class JenkinsHubIntRestService {
             throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
         }
         return responseMap;
+    }
+
+    public HashMap<String, Object> createHubProject(String projectName) throws IOException, BDRestException {
+
+        Series<Cookie> cookies = getCookies();
+        String url = getBaseUrl() + "/api/v1/projects";
+        ClientResource resource = new ClientResource(url);
+
+        resource.getRequest().setCookies(cookies);
+        resource.setMethod(Method.POST);
+        resource.setAttribute("name", projectName);
+        EmptyRepresentation rep = new EmptyRepresentation();
+        resource.post(rep);
+        int responseCode = resource.getResponse().getStatus().getCode();
+
+        HashMap<String, Object> responseMap = new HashMap<String, Object>();
+        if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+
+            Response resp = resource.getResponse();
+            Reader reader = resp.getEntity().getReader();
+            BufferedReader bufReader = new BufferedReader(reader);
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = bufReader.readLine()) != null) {
+                sb.append(line + "\n");
+            }
+            byte[] mapData = sb.toString().getBytes();
+
+            // Create HashMap from the Rest response
+            ObjectMapper responseMapper = new ObjectMapper();
+            responseMap = responseMapper.readValue(mapData, HashMap.class);
+        } else {
+            throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+        }
+        return responseMap;
+    }
+
+    public int createHubRelease(String projectRelease, String projectId) throws IOException, BDRestException {
+        Series<Cookie> cookies = getCookies();
+        String url = getBaseUrl() + "/api/v1/releases";
+        ClientResource resource = new ClientResource(url);
+
+        resource.getRequest().setCookies(cookies);
+        resource.setMethod(Method.POST);
+        resource.getRequestAttributes().put("projectId", projectId);
+        resource.getRequestAttributes().put("version", projectRelease);
+        resource.post(resource.getRequest());
+        int responseCode = resource.getResponse().getStatus().getCode();
+
+        return responseCode;
     }
 }

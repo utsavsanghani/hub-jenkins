@@ -8,6 +8,8 @@
 <f:entry field="hubProjectRelease" title="${%ProjectReleaseTitle}">
 	<f:textbox value="${instance.getHubProjectRelease()}"/>
 </f:entry>
+<f:validateButton title="${%CreateProject}" progress="${%CreateProjectProgress}"
+         method="createHubProject" with="hubProjectName,hubProjectRelease" />
 		
 <f:entry field="iScanName" title="${%ScanInstallationsTitle}">
 	<f:select />

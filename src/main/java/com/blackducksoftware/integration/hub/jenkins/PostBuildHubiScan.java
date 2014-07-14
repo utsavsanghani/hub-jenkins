@@ -17,6 +17,7 @@ import hudson.tools.ToolDescriptor;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -176,6 +177,7 @@ public class PostBuildHubiScan extends Recorder {
             HubConfigurationException, InterruptedException {
 
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
+        URL url = new URL(getDescriptor().getServerUrl());
 
         List<String> cmd = new ArrayList<String>();
         cmd.add(getJava().getHome() + "/bin/java");
@@ -191,9 +193,9 @@ public class PostBuildHubiScan extends Recorder {
         cmd.add(getDescriptor().getHubServerInfo().getUsername());
         cmd.add("--password");
         cmd.add(getDescriptor().getHubServerInfo().getPassword());
-        if (!StringUtils.isEmpty(getDescriptor().getHubServerInfo().getHubPort())) {
+        if (url.getPort() != -1) {
             cmd.add("--port");
-            cmd.add(getDescriptor().getHubServerInfo().getHubPort());
+            cmd.add(Integer.toString(url.getPort()));
         }
 
         if (isTEST()) {
