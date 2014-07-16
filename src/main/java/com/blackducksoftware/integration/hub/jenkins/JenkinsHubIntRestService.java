@@ -148,6 +148,14 @@ public class JenkinsHubIntRestService {
     // return null;
     // }
 
+    public void getScanCodeLocations() {
+        Series<Cookie> cookies = getCookies();
+        String url = getBaseUrl() + "/api/v1/scnlocations";
+        ClientResource resource = new ClientResource(url);
+        // http://2m-internal.blackducksoftware.com/api.html#!/composite-asset-reference-rest-server/findScanCodeLocations_get_0
+        // http://2m-internal.blackducksoftware.com/api.html#!/asset-reference-rest-server/createAssetReference_post_0
+    }
+
     public String getProjectIdFromResponse(HashMap<String, Object> responseMap, String projectName) throws IOException, BDRestException {
         String projectId = null;
         if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
