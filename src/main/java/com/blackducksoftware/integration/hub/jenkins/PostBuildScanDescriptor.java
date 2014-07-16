@@ -518,6 +518,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             service.setBaseUrl(getServerUrl());
             service.setCookies(credentialUserName, credentialPassword);
 
+            if (isProjectExists() && isReleaseExists()) {
+                return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseExist());
+            }
+
             if (!isProjectExists()) {
                 setReleaseExists(false);
                 HashMap<String, Object> responseMap = service.createHubProject(hubProjectName);
@@ -531,11 +535,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
             }
             int responseCode = 0;
-            if (!isReleaseExists()) {
-                responseCode = service.createHubRelease(hubProjectRelease, getProjectId());
-            } else {
-                return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseExist());
-            }
+            responseCode = service.createHubRelease(hubProjectRelease, getProjectId());
             if (responseCode == 201) {
                 return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseCreated());
             } else if (responseCode == 401) {
