@@ -5,11 +5,15 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
 
+import net.sf.json.JSONObject;
+
 import org.restlet.Response;
 import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
+import org.restlet.data.MediaType;
 import org.restlet.data.Method;
 import org.restlet.representation.EmptyRepresentation;
+import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.ClientResource;
 import org.restlet.util.Series;
 
@@ -151,13 +155,20 @@ public class JenkinsHubIntRestService {
 
         resource.getRequest().setCookies(cookies);
         resource.setMethod(Method.POST);
-        resource.setAttribute("name", projectName);
-        EmptyRepresentation rep = new EmptyRepresentation();
-        resource.post(rep);
+
+        JSONObject obj = new JSONObject();
+        obj.put("name", projectName);
+
+        resource.getRequest().setCookies(cookies);
+        resource.setMethod(Method.POST);
+        StringRepresentation stringRep = new StringRepresentation(obj.toString());
+        stringRep.setMediaType(MediaType.APPLICATION_JSON);
+
+        resource.post(stringRep);
         int responseCode = resource.getResponse().getStatus().getCode();
 
         HashMap<String, Object> responseMap = new HashMap<String, Object>();
-        if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+        if (responseCode == 201) {
 
             Response resp = resource.getResponse();
             Reader reader = resp.getEntity().getReader();
@@ -183,11 +194,16 @@ public class JenkinsHubIntRestService {
         String url = getBaseUrl() + "/api/v1/releases";
         ClientResource resource = new ClientResource(url);
 
+        JSONObject obj = new JSONObject();
+        obj.put("projectId", projectId);
+        obj.put("version", projectRelease);
+
         resource.getRequest().setCookies(cookies);
         resource.setMethod(Method.POST);
-        resource.getRequestAttributes().put("projectId", projectId);
-        resource.getRequestAttributes().put("version", projectRelease);
-        resource.post(resource.getRequest());
+        StringRepresentation stringRep = new StringRepresentation(obj.toString());
+        stringRep.setMediaType(MediaType.APPLICATION_JSON);
+
+        resource.post(stringRep);
         int responseCode = resource.getResponse().getStatus().getCode();
 
         return responseCode;

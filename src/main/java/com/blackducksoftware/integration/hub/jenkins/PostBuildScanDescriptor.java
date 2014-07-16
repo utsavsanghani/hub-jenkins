@@ -253,6 +253,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             boolean changed = false;
             try {
                 setProjectExists(false);
+                setProjectId(null);
                 if (StringUtils.isEmpty(getServerUrl())) {
                     return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
                 }
@@ -350,6 +351,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             boolean changed = false;
             try {
                 setReleaseExists(false);
+                if (StringUtils.isEmpty(getProjectId())) {
+                    return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null));
+                }
                 if (StringUtils.isEmpty(getServerUrl())) {
                     return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
                 }
@@ -515,6 +519,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             service.setCookies(credentialUserName, credentialPassword);
 
             if (!isProjectExists()) {
+                setReleaseExists(false);
                 HashMap<String, Object> responseMap = service.createHubProject(hubProjectName);
                 StringBuilder projectReleases = new StringBuilder();
                 if (responseMap.containsKey("id")) {
@@ -531,7 +536,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             } else {
                 return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseExist());
             }
-            if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+            if (responseCode == 201) {
                 return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseCreated());
             } else if (responseCode == 401) {
                 // If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
