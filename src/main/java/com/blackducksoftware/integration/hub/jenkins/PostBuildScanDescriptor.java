@@ -26,7 +26,7 @@ import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
-import org.codehaus.plexus.util.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -89,7 +89,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return projectExists;
     }
 
-    private void setProjectExists(boolean projectExists) {
+    public void setProjectExists(boolean projectExists) {
         this.projectExists = projectExists;
     }
 
@@ -97,7 +97,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return releaseExists;
     }
 
-    private void setReleaseExists(boolean releaseExists) {
+    public void setReleaseExists(boolean releaseExists) {
         this.releaseExists = releaseExists;
     }
 
@@ -105,20 +105,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         if (projectId != null) {
             return projectId;
         } else {
-            // TODO When we get this api
-            // String url = getServerUrl() + "/api/v1/projects/name/" + hubProjectName;
-            // ClientResource resource = new ClientResource(url);
-            // resource.getRequest().setCookies(cookies);
-            // resource.setMethod(Method.GET);
-            // resource.get();
-            // int responseCode = resource.getResponse().getStatus().getCode();
-            //
-            // if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-            //
-            // Response resp = resource.getResponse();
-            // get project Id from the response
-            // }
-
+            // TODO When we get the api for this
+            // return getProjectId(getProjectName());
             return projectId;
         }
 
@@ -264,6 +252,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 String credentialPassword = null;
 
                 UsernamePasswordCredentialsImpl credential = getCredentials(getHubServerInfo().getCredentialsId());
+                if (credential == null) {
+                    return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
+                }
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
                 JenkinsHubIntRestService service = new JenkinsHubIntRestService();
@@ -365,6 +356,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 String credentialPassword = null;
 
                 UsernamePasswordCredentialsImpl credential = getCredentials(getHubServerInfo().getCredentialsId());
+                if (credential == null) {
+                    return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
+                }
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
                 JenkinsHubIntRestService service = new JenkinsHubIntRestService();
@@ -449,6 +443,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             String credentialPassword = null;
 
             UsernamePasswordCredentialsImpl credential = getCredentials(hubCredentialsId);
+            if (credential == null) {
+                return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
+            }
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
@@ -511,6 +508,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             String credentialPassword = null;
 
             UsernamePasswordCredentialsImpl credential = getCredentials(getHubCredentialsId());
+            if (credential == null) {
+                return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
+            }
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 

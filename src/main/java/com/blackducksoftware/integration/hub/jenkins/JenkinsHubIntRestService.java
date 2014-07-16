@@ -3,7 +3,9 @@ package com.blackducksoftware.integration.hub.jenkins;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import net.sf.json.JSONObject;
 
@@ -114,6 +116,64 @@ public class JenkinsHubIntRestService {
         return responseMap;
     }
 
+    // TODO
+    // public String getProjectId(String hubProjectName) throws IOException, BDRestException {
+    //
+    // String url = getBaseUrl() + "/api/v1/projects/name/" + hubProjectName + "?projectName=" + hubProjectName;
+    // ClientResource resource = new ClientResource(url);
+    //
+    // resource.getRequest().setCookies(cookies);
+    // resource.setMethod(Method.GET);
+    // resource.get();
+    // int responseCode = resource.getResponse().getStatus().getCode();
+    //
+    // HashMap<String, Object> responseMap = new HashMap<String, Object>();
+    // if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+    // Response resp = resource.getResponse();
+    // Reader reader = resp.getEntity().getReader();
+    // BufferedReader bufReader = new BufferedReader(reader);
+    // StringBuilder sb = new StringBuilder();
+    // String line;
+    // while ((line = bufReader.readLine()) != null) {
+    // sb.append(line + "\n");
+    // }
+    // byte[] mapData = sb.toString().getBytes();
+    // // Create HashMap from the Rest response
+    // ObjectMapper responseMapper = new ObjectMapper();
+    // responseMap = responseMapper.readValue(mapData, HashMap.class);
+    // } else {
+    // throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+    // }
+    // // TODO parse the response and Return the project Id
+    // return null;
+    // }
+
+    public String getProjectIdFromResponse(HashMap<String, Object> responseMap, String projectName) throws IOException, BDRestException {
+        String projectId = null;
+        if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
+            ArrayList<LinkedHashMap> projectPotentialMatches = (ArrayList<LinkedHashMap>) responseMap.get("hits");
+            // More than one match found
+            if (projectPotentialMatches.size() > 1) {
+                for (LinkedHashMap project : projectPotentialMatches) {
+                    LinkedHashMap projectFields = (LinkedHashMap) project.get("fields");
+                    if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(projectName)) {
+                        // All of the fields are ArrayLists with the value at the first position
+                        projectId = (String) ((ArrayList) projectFields.get("uuid")).get(0);
+                    }
+
+                }
+            } else if (projectPotentialMatches.size() == 1) {
+                // Single match was found
+                LinkedHashMap projectFields = (LinkedHashMap) projectPotentialMatches.get(0).get("fields");
+                if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(projectName)) {
+                    // All of the fields are ArrayLists with the value at the first position
+                    projectId = (String) ((ArrayList) projectFields.get("uuid")).get(0);
+                }
+            }
+        }
+        return projectId;
+    }
+
     public HashMap<String, Object> getReleaseMatchesForProjectId(String projectId) throws IOException, BDRestException {
 
         Series<Cookie> cookies = getCookies();
@@ -159,8 +219,6 @@ public class JenkinsHubIntRestService {
         JSONObject obj = new JSONObject();
         obj.put("name", projectName);
 
-        resource.getRequest().setCookies(cookies);
-        resource.setMethod(Method.POST);
         StringRepresentation stringRep = new StringRepresentation(obj.toString());
         stringRep.setMediaType(MediaType.APPLICATION_JSON);
 
