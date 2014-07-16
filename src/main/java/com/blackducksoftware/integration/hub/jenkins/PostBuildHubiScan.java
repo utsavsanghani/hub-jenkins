@@ -37,6 +37,10 @@ public class PostBuildHubiScan extends Recorder {
 
     private String hubProjectRelease;
 
+    private static final int DEFAULT_MEMORY = 256;
+
+    private int iScanMemory;
+
     private String workingDirectory;
 
     private JDK java;
@@ -44,11 +48,17 @@ public class PostBuildHubiScan extends Recorder {
     private static boolean TEST = false;
 
     @DataBoundConstructor
-    public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease) {
+    public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease, int iScanMemory) {
         this.scans = scans;
         this.iScanName = iScanName;
         this.hubProjectName = hubProjectName;
         this.hubProjectRelease = hubProjectRelease;
+        if (iScanMemory == 0) {
+            this.iScanMemory = DEFAULT_MEMORY;
+        } else {
+            this.iScanMemory = iScanMemory;
+        }
+
     }
 
     public boolean isTEST() {
@@ -58,6 +68,10 @@ public class PostBuildHubiScan extends Recorder {
     // Set to true run the integration test without running the actual iScan.
     public void setTEST(boolean tEST) {
         TEST = tEST;
+    }
+
+    public int getIScanMemory() {
+        return iScanMemory;
     }
 
     public String getHubProjectRelease() {
@@ -184,7 +198,12 @@ public class PostBuildHubiScan extends Recorder {
         cmd.add("-Done-jar.silent=true");
         cmd.add("-jar");
         // TODO make the memory configurable at the job level
-        cmd.add("-Xmx512m");
+
+        if (getIScanMemory() != 256) {
+            cmd.add("-Xmx" + getIScanMemory() + "m");
+        } else {
+            cmd.add("-Xmx" + DEFAULT_MEMORY + "m");
+        }
         cmd.add(iScanScript.getRemote());
         cmd.add("--host");
         cmd.add(url.getHost());

@@ -8,6 +8,9 @@
 <f:entry field="hubProjectRelease" title="${%ProjectReleaseTitle}">
 	<f:textbox value="${instance.getHubProjectRelease()}"/>
 </f:entry>
+<f:entry field="iScanMemory" title="${%MemoryAllocation}">
+	<f:textbox value="${instance.getIScanMemory()}"/>
+</f:entry>
 <f:validateButton title="${%CreateProject}" progress="${%CreateProjectProgress}"
          method="createHubProject" with="hubProjectName,hubProjectRelease" />
 		

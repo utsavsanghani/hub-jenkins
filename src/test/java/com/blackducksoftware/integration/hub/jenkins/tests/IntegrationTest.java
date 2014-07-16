@@ -106,7 +106,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256);
 
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
@@ -155,7 +155,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256);
 
         project.getPublishersList().add(pbScan);
 
@@ -202,7 +202,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256);
 
         project.getPublishersList().add(pbScan);
 
@@ -246,7 +246,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256);
         pbScan.setTEST(true);
 
         JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");
@@ -292,7 +292,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256);
         pbScan.setTEST(true);
 
         JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");
