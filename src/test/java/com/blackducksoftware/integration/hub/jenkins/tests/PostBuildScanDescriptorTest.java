@@ -81,30 +81,34 @@ public class PostBuildScanDescriptorTest {
     }
 
     @AfterClass
-    public static void tearDown() throws Exception {
-        HashMap<String, Object> responseMap = restHelper.getProjectMatches(PROJECT_NAME_EXISTING);
-        if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
-            ArrayList<LinkedHashMap> projectPotentialMatches = (ArrayList<LinkedHashMap>) responseMap.get("hits");
-            // More than one match found
-            if (projectPotentialMatches.size() > 1) {
-                for (LinkedHashMap project : projectPotentialMatches) {
-                    LinkedHashMap projectFields = (LinkedHashMap) project.get("fields");
+    public static void tearDown() {
+        try {
+            HashMap<String, Object> responseMap = restHelper.getProjectMatches(PROJECT_NAME_EXISTING);
+            if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
+                ArrayList<LinkedHashMap> projectPotentialMatches = (ArrayList<LinkedHashMap>) responseMap.get("hits");
+                // More than one match found
+                if (projectPotentialMatches.size() > 1) {
+                    for (LinkedHashMap project : projectPotentialMatches) {
+                        LinkedHashMap projectFields = (LinkedHashMap) project.get("fields");
+                        if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(PROJECT_NAME_EXISTING)) {
+                            // All of the fields are ArrayLists with the value at the first position
+                            projectId = (String) ((ArrayList) projectFields.get("uuid")).get(0);
+                            restHelper.deleteHubProject(projectId);
+                        }
+
+                    }
+                } else if (projectPotentialMatches.size() == 1) {
+                    // Single match was found
+                    LinkedHashMap projectFields = (LinkedHashMap) projectPotentialMatches.get(0).get("fields");
                     if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(PROJECT_NAME_EXISTING)) {
                         // All of the fields are ArrayLists with the value at the first position
                         projectId = (String) ((ArrayList) projectFields.get("uuid")).get(0);
                         restHelper.deleteHubProject(projectId);
                     }
-
-                }
-            } else if (projectPotentialMatches.size() == 1) {
-                // Single match was found
-                LinkedHashMap projectFields = (LinkedHashMap) projectPotentialMatches.get(0).get("fields");
-                if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(PROJECT_NAME_EXISTING)) {
-                    // All of the fields are ArrayLists with the value at the first position
-                    projectId = (String) ((ArrayList) projectFields.get("uuid")).get(0);
-                    restHelper.deleteHubProject(projectId);
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

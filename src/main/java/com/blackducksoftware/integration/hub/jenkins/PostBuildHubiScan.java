@@ -153,6 +153,9 @@ public class PostBuildHubiScan extends Recorder {
                     if (!scanOutput.contains("Finished in") && !scanOutput.contains("with status SUCCESS")) {
                         result = Result.UNSTABLE;
                     }
+
+                    // Only map the scans to a Project Release if the Project name and Project Release have been
+                    // configured
                     if (!StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectRelease())) {
                         JenkinsHubIntRestService service = new JenkinsHubIntRestService();
                         service.setBaseUrl(getDescriptor().getHubServerInfo().getServerUrl());
