@@ -165,7 +165,7 @@ public class JenkinsHubIntRestService {
      * @return List<String> scan Ids
      * @throws UnknownHostException
      */
-    public List<String> getScanCodeLocations(BuildListener listener, List<String> scanTargets) throws UnknownHostException {
+    public List<String> getScanIds(BuildListener listener, List<String> scanTargets) throws UnknownHostException {
         Series<Cookie> cookies = getCookies();
         String localhostname = InetAddress.getLocalHost().getHostName();
         String url = null;
@@ -242,7 +242,55 @@ public class JenkinsHubIntRestService {
         // http://2m-internal.blackducksoftware.com/api.html#!/asset-reference-rest-server/createAssetReference_post_0
     }
 
-    public String getProjectIdFromResponse(HashMap<String, Object> responseMap, String projectName) throws IOException, BDRestException {
+    public void mapScansToProjectRelease(BuildListener listener, List<String> scanIds, String releaseId) throws BDRestException {
+        if (scanIds.size() > 0) {
+            for (String scanId : scanIds) {
+                listener.getLogger().println("Mapping the scan with id: '" + scanId + "', to the Release with Id: '" + releaseId + "'.");
+                String url = getBaseUrl() + "/api/v1/assetreferences";
+                ClientResource resource = new ClientResource(url);
+
+                resource.getRequest().setCookies(cookies);
+                resource.setMethod(Method.POST);
+
+                JSONObject obj = new JSONObject();
+
+                JSONObject ownerEntity = new JSONObject();
+                ownerEntity.put("entityId", releaseId);
+                // this is the release location
+                ownerEntity.put("entityType", "RL");
+
+                JSONObject assetEntity = new JSONObject();
+                assetEntity.put("entityId", scanId);
+                // this is the code location
+                assetEntity.put("entityType", "CL");
+
+                obj.put("ownerEntityKey", ownerEntity);
+                obj.put("assetEntityKey", assetEntity);
+
+                StringRepresentation stringRep = new StringRepresentation(obj.toString());
+                stringRep.setMediaType(MediaType.APPLICATION_JSON);
+
+                resource.post(stringRep);
+
+                int responseCode = resource.getResponse().getStatus().getCode();
+
+                // HashMap<String, Object> responseMap = new HashMap<String, Object>();
+                if (responseCode == 201) {
+                    // Successful mapping
+                    listener.getLogger().println("Successfully mapped the scan with id: " + scanId + ", to the Release with Id: " + releaseId);
+                } else {
+                    throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+                }
+            }
+        }
+        else {
+            listener.getLogger().println("Could not find any scan Id's to map to the Release.");
+        }
+        // return responseMap;
+
+    }
+
+    public String getProjectIdFromProjectMatches(HashMap<String, Object> responseMap, String projectName) throws IOException, BDRestException {
         String projectId = null;
         if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
             ArrayList<LinkedHashMap> projectPotentialMatches = (ArrayList<LinkedHashMap>) responseMap.get("hits");
@@ -299,6 +347,21 @@ public class JenkinsHubIntRestService {
             throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
         }
         return responseMap;
+    }
+
+    public String getReleaseIdFromReleaseMatches(HashMap<String, Object> responseMap, String releaseVersion) throws IOException, BDRestException {
+        String releaseId = null;
+
+        if (responseMap.containsKey("items")) {
+            ArrayList<LinkedHashMap> releaseList = (ArrayList<LinkedHashMap>) responseMap.get("items");
+            for (LinkedHashMap release : releaseList) {
+                if (((String) release.get("version")).equals(releaseVersion)) {
+                    releaseId = (String) release.get("id");
+
+                }
+            }
+        }
+        return releaseId;
     }
 
     public HashMap<String, Object> createHubProject(String projectName) throws IOException, BDRestException {
