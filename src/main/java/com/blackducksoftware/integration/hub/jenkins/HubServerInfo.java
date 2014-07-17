@@ -24,25 +24,25 @@ public class HubServerInfo implements Serializable {
 
     private UsernamePasswordCredentialsImpl credential;
 
-    private long timeout;
+    // private long timeout;
 
     public HubServerInfo() {
     }
 
-    public HubServerInfo(String serverUrl, String hubCredentialsId, long timeout) {
+    public HubServerInfo(String serverUrl, String hubCredentialsId) {
         super();
         this.serverUrl = serverUrl;
         this.hubCredentialsId = hubCredentialsId;
-        this.timeout = timeout;
+        // this.timeout = timeout;
     }
 
-    public long getTimeout() {
-        return timeout;
-    }
-
-    public void setTimeout(long timeout) {
-        this.timeout = timeout;
-    }
+    // public long getTimeout() {
+    // return timeout;
+    // }
+    //
+    // public void setTimeout(long timeout) {
+    // this.timeout = timeout;
+    // }
 
     public String getServerUrl() {
         return serverUrl;
@@ -103,8 +103,8 @@ public class HubServerInfo implements Serializable {
 
     @Override
     public String toString() {
-        return "HubServerInfo [serverUrl=" + serverUrl + ", hubCredentialsId=" + hubCredentialsId + ", credential=" + credential
-                + ", timeout=" + timeout + "]";
+        return "HubServerInfo [serverUrl=" + serverUrl + ", hubCredentialsId=" + hubCredentialsId + ", credential=" + credential + "]";
+        // + ", timeout=" + timeout + "]";
     }
 
 }

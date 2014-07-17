@@ -56,9 +56,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final String FORM_SERVER_URL = "serverUrl";
 
-    private static final String FORM_TIMEOUT = "timeout";
+    // private static final String FORM_TIMEOUT = "timeout";
 
-    private static final long DEFAULT_TIMEOUT = 300;
+    // private static final long DEFAULT_TIMEOUT = 300;
 
     private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
@@ -629,8 +629,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             throws Descriptor.FormException {
         // To persist global configuration information,
         // set that to properties and call save().
-        hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID),
-                formData.getLong(FORM_TIMEOUT));
+        hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID));
+        // formData.getLong(FORM_TIMEOUT));
         // ^Can also use req.bindJSON(this, formData);
         // (easier when there are many fields; need set* methods for this,
         // like setUseFrench)
@@ -650,14 +650,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 .getServerUrl()));
     }
 
-    public long getTimeout() {
-        return hubServerInfo == null ? getDefaultTimeout()
-                : hubServerInfo.getTimeout();
-    }
-
-    public long getDefaultTimeout() {
-        return DEFAULT_TIMEOUT;
-    }
+    // public long getTimeout() {
+    // return hubServerInfo == null ? getDefaultTimeout()
+    // : hubServerInfo.getTimeout();
+    // }
+    //
+    // public long getDefaultTimeout() {
+    // return DEFAULT_TIMEOUT;
+    // }
 
     public String getHubCredentialsId() {
         return (hubServerInfo == null ? "" : (hubServerInfo.getCredentialsId() == null ? "" : hubServerInfo.getCredentialsId()));
