@@ -47,7 +47,7 @@ public class PostBuildHubiScan extends Recorder {
 
     private JDK java;
 
-    private static boolean TEST = false;
+    private boolean TEST = false;
 
     @DataBoundConstructor
     public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease, int iScanMemory) {
