@@ -152,6 +152,16 @@ public class PostBuildHubiScan extends Recorder {
                         result = Result.UNSTABLE;
                     }
 
+                    JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+                    service.setBaseUrl(getDescriptor().getHubServerInfo().getServerUrl());
+                    service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
+                            getDescriptor().getHubServerInfo().getPassword());
+                    List<String> scanIds = service.getScanCodeLocations(listener, scanTargets);
+                    if (scanIds.size() > 0) {
+                        for (String scanId : scanIds) {
+                            listener.getLogger().println(scanId);
+                        }
+                    }
                 }
 
             } catch (Exception e) {

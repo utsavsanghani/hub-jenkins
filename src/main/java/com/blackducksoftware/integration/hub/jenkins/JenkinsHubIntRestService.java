@@ -1,14 +1,20 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
+import hudson.model.BuildListener;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import net.sf.json.JSONObject;
 
+import org.joda.time.DateTime;
 import org.restlet.Response;
 import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
@@ -148,11 +154,91 @@ public class JenkinsHubIntRestService {
     // return null;
     // }
 
-    public void getScanCodeLocations() {
+    /**
+     * Gets the scan Id for each scan target, it searches the list of scans and gets the latest scan id for the scan
+     * matching the hostname and path
+     * 
+     * @param listener
+     *            BuildListener
+     * @param scanTargets
+     *            List<String>
+     * @return List<String> scan Ids
+     * @throws UnknownHostException
+     */
+    public List<String> getScanCodeLocations(BuildListener listener, List<String> scanTargets) throws UnknownHostException {
         Series<Cookie> cookies = getCookies();
-        String url = getBaseUrl() + "/api/v1/scnlocations";
-        ClientResource resource = new ClientResource(url);
+        String localhostname = InetAddress.getLocalHost().getHostName();
+        String url = null;
+        ClientResource resource = null;
+        List<String> scanIds = new ArrayList<String>();
+        for (String targetPath : scanTargets) {
+            url = getBaseUrl() + "/api/v1/scanlocations?host=" + localhostname + "&path=" + targetPath;
+            resource = new ClientResource(url);
+
+            resource.getRequest().setCookies(cookies);
+            resource.setMethod(Method.GET);
+            resource.get();
+
+            int responseCode = resource.getResponse().getStatus().getCode();
+            try {
+                HashMap<String, Object> responseMap = new HashMap<String, Object>();
+                if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+
+                    Response resp = resource.getResponse();
+                    Reader reader = resp.getEntity().getReader();
+                    BufferedReader bufReader = new BufferedReader(reader);
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = bufReader.readLine()) != null) {
+                        sb.append(line + "\n");
+                    }
+                    byte[] mapData = sb.toString().getBytes();
+
+                    // Create HashMap from the Rest response
+                    ObjectMapper responseMapper = new ObjectMapper();
+                    responseMap = responseMapper.readValue(mapData, HashMap.class);
+                } else {
+                    throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+                }
+
+                if (responseMap.containsKey("items") && ((ArrayList<LinkedHashMap>) responseMap.get("items")).size() > 0) {
+                    ArrayList<LinkedHashMap> scanMatchesList = (ArrayList<LinkedHashMap>) responseMap.get("items");
+                    // More than one match found
+                    String scanId = null;
+                    if (scanMatchesList.size() > 1) {
+                        LinkedHashMap latestScan = null;
+                        DateTime lastestScanTime = null;
+                        for (LinkedHashMap scanMatch : scanMatchesList) {
+                            DateTime currScanTime = (DateTime) scanMatch.get("lastScanUploadDate");
+                            if (latestScan == null) {
+                                lastestScanTime = currScanTime;
+                                latestScan = scanMatch;
+                                scanId = (String) scanMatch.get("id");
+                            } else {
+                                if (currScanTime.isAfter(lastestScanTime)) {
+                                    lastestScanTime = currScanTime;
+                                    latestScan = scanMatch;
+                                    scanId = (String) scanMatch.get("id");
+                                }
+                            }
+                        }
+                    } else if (scanMatchesList.size() == 1) {
+                        // Single match was found
+                        LinkedHashMap scanMatch = scanMatchesList.get(0);
+                        scanId = (String) scanMatch.get("id");
+                    }
+                    scanIds.add(scanId);
+                }
+            } catch (IOException e) {
+                e.printStackTrace(listener.getLogger());
+            } catch (BDRestException e) {
+                e.printStackTrace(listener.getLogger());
+            }
+        }
+        return scanIds;
+
         // http://2m-internal.blackducksoftware.com/api.html#!/composite-asset-reference-rest-server/findScanCodeLocations_get_0
+
         // http://2m-internal.blackducksoftware.com/api.html#!/asset-reference-rest-server/createAssetReference_post_0
     }
 
