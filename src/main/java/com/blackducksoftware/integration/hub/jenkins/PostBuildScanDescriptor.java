@@ -503,6 +503,23 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             if (StringUtils.isEmpty(hubProjectRelease)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectRelease());
             }
+            // Check if the Project with the given name exists or not before creating it
+            FormValidation projectNameCheck = doCheckHubProjectName(hubProjectName);
+            String projectNonExistentMessage = Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(null, null);
+            projectNonExistentMessage = projectNonExistentMessage.substring(0, 47);
+            if (FormValidation.Kind.OK.equals(projectNameCheck.kind)) {
+                // Project exists for given name
+
+                // Check if the Release for the given Project exists or not before creating it
+                FormValidation projectReleaseCheck = doCheckHubProjectRelease(hubProjectRelease);
+                String releaseNonExistentMessage = Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null);
+                releaseNonExistentMessage = releaseNonExistentMessage.substring(0, 52);
+                if (!FormValidation.Kind.ERROR.equals(projectReleaseCheck.kind) && !projectReleaseCheck.getMessage().contains(releaseNonExistentMessage)) {
+                    return FormValidation.error(projectReleaseCheck.getMessage());
+                }
+            } else if (!FormValidation.Kind.ERROR.equals(projectNameCheck.kind) && !projectNameCheck.getMessage().contains(projectNonExistentMessage)) {
+                return FormValidation.error(projectNameCheck.getMessage());
+            }
 
             String credentialUserName = null;
             String credentialPassword = null;

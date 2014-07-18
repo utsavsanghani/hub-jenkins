@@ -83,6 +83,7 @@ public class PostBuildScanDescriptorTest {
     @AfterClass
     public static void tearDown() {
         try {
+            // This cleans up all the Projects that were created for the tests that may still be hanging around
             HashMap<String, Object> responseMap = restHelper.getProjectMatches(PROJECT_NAME_EXISTING);
             if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
                 ArrayList<LinkedHashMap> projectPotentialMatches = (ArrayList<LinkedHashMap>) responseMap.get("hits");
@@ -213,7 +214,7 @@ public class PostBuildScanDescriptorTest {
     }
 
     @Test
-    public void testCreateProjectDuplicateName() throws IOException, ServletException, BDRestException {
+    public void testCreateProjectDuplicateNameDifferentRelease() throws IOException, ServletException, BDRestException {
         PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 testProperties.getProperty("TEST_USERNAME"),
@@ -233,7 +234,6 @@ public class PostBuildScanDescriptorTest {
         Assert.assertEquals(FormValidation.Kind.OK, form.kind);
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectAndReleaseCreated());
         projectId = descriptor.getProjectId();
-        descriptor.setProjectExists(true);
         try {
             FormValidation form2 = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, "New Release");
             Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
@@ -262,9 +262,19 @@ public class PostBuildScanDescriptorTest {
 
         descriptor.setProjectExists(true);
         descriptor.setReleaseExists(true);
-        FormValidation form2 = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
-        Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
-        Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectAndReleaseExist());
+        FormValidation form = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
+        Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectAndReleaseCreated());
+        projectId = descriptor.getProjectId();
+        try {
+            FormValidation form2 = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
+            Assert.assertEquals(FormValidation.Kind.ERROR, form2.kind);
+            String releaseExistsMessage = Messages.HubBuildScan_getReleaseExistsIn_0_(null);
+            releaseExistsMessage = releaseExistsMessage.substring(0, 44);
+            Assert.assertTrue(form2.getMessage().contains(releaseExistsMessage));
+        } finally {
+            restHelper.deleteHubProject(projectId);
+        }
     }
 
     @Test

@@ -209,7 +209,8 @@ public class JenkinsHubIntRestService {
                         LinkedHashMap latestScan = null;
                         DateTime lastestScanTime = null;
                         for (LinkedHashMap scanMatch : scanMatchesList) {
-                            DateTime currScanTime = (DateTime) scanMatch.get("lastScanUploadDate");
+                            Long time = (Long) scanMatch.get("lastScanUploadDate");
+                            DateTime currScanTime = new DateTime(time);
                             if (latestScan == null) {
                                 lastestScanTime = currScanTime;
                                 latestScan = scanMatch;
