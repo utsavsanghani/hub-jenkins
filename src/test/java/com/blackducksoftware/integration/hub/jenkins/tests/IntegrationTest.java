@@ -120,7 +120,7 @@ public class IntegrationTest {
         Assert.assertTrue(buildOutput.contains("[DEBUG] : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7) + "'"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
         Assert.assertTrue(buildOutput.contains("Finished in"));
         Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
@@ -166,7 +166,7 @@ public class IntegrationTest {
         Assert.assertTrue(buildOutput.contains("[DEBUG] : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7) + "'"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
         Assert.assertTrue(buildOutput.contains("ERROR:")); // TODO replace with new iScan error message
         Assert.assertTrue(buildOutput.contains("Finished in"));
@@ -213,7 +213,7 @@ public class IntegrationTest {
         Assert.assertTrue(buildOutput.contains("[DEBUG] : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7) + "'"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
         Assert.assertTrue(buildOutput.contains("ERROR:")); // TODO replace with new iScan error message
         Assert.assertTrue(buildOutput.contains("Finished in"));

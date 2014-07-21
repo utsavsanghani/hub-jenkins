@@ -66,10 +66,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private String projectId;
 
-    private boolean projectExists = false;
-
-    private boolean releaseExists = false;
-
     /**
      * @return the hubServerInfo
      */
@@ -83,22 +79,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      */
     public void setHubServerInfo(HubServerInfo hubServerInfo) {
         this.hubServerInfo = hubServerInfo;
-    }
-
-    public boolean isProjectExists() {
-        return projectExists;
-    }
-
-    public void setProjectExists(boolean projectExists) {
-        this.projectExists = projectExists;
-    }
-
-    public boolean isReleaseExists() {
-        return releaseExists;
-    }
-
-    public void setReleaseExists(boolean releaseExists) {
-        this.releaseExists = releaseExists;
     }
 
     public String getProjectId() {
@@ -240,7 +220,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     .getContextClassLoader();
             boolean changed = false;
             try {
-                setProjectExists(false);
                 setProjectId(null);
                 if (StringUtils.isEmpty(getServerUrl())) {
                     return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
@@ -274,7 +253,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                             if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(hubProjectName)) {
                                 // All of the fields are ArrayLists with the value at the first position
                                 setProjectId((String) ((ArrayList) projectFields.get("uuid")).get(0));
-                                setProjectExists(true);
                                 return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
                             }
                             // All of the fields are ArrayLists with the value at the first position
@@ -294,7 +272,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                         if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(hubProjectName)) {
                             // All of the fields are ArrayLists with the value at the first position
                             setProjectId((String) ((ArrayList) projectFields.get("uuid")).get(0));
-                            setProjectExists(true);
                             return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
                         } else {
                             projectMatches.append((String) ((ArrayList) projectFields.get("name")).get(0));
@@ -341,7 +318,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     .getContextClassLoader();
             boolean changed = false;
             try {
-                setReleaseExists(false);
                 if (StringUtils.isEmpty(getProjectId())) {
                     return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null));
                 }
@@ -371,7 +347,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     ArrayList<LinkedHashMap> releaseList = (ArrayList<LinkedHashMap>) responseMap.get("items");
                     for (LinkedHashMap release : releaseList) {
                         if (((String) release.get("version")).equals(hubProjectRelease)) {
-                            setReleaseExists(true);
                             return FormValidation.ok(Messages.HubBuildScan_getReleaseExistsIn_0_(getProjectId()));
                         } else {
                             if (projectReleases.length() > 0) {
@@ -507,14 +482,17 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             FormValidation projectNameCheck = doCheckHubProjectName(hubProjectName);
             String projectNonExistentMessage = Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(null, null);
             projectNonExistentMessage = projectNonExistentMessage.substring(0, 47);
+            boolean projectExists = false;
             if (FormValidation.Kind.OK.equals(projectNameCheck.kind)) {
                 // Project exists for given name
-
+                projectExists = true;
                 // Check if the Release for the given Project exists or not before creating it
                 FormValidation projectReleaseCheck = doCheckHubProjectRelease(hubProjectRelease);
                 String releaseNonExistentMessage = Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null);
                 releaseNonExistentMessage = releaseNonExistentMessage.substring(0, 52);
-                if (!FormValidation.Kind.ERROR.equals(projectReleaseCheck.kind) && !projectReleaseCheck.getMessage().contains(releaseNonExistentMessage)) {
+                if (FormValidation.Kind.OK.equals(projectReleaseCheck.kind)) {
+                    return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseExist());
+                } else if (!FormValidation.Kind.ERROR.equals(projectReleaseCheck.kind) && !projectReleaseCheck.getMessage().contains(releaseNonExistentMessage)) {
                     return FormValidation.error(projectReleaseCheck.getMessage());
                 }
             } else if (!FormValidation.Kind.ERROR.equals(projectNameCheck.kind) && !projectNameCheck.getMessage().contains(projectNonExistentMessage)) {
@@ -535,12 +513,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             service.setBaseUrl(getServerUrl());
             service.setCookies(credentialUserName, credentialPassword);
 
-            if (isProjectExists() && isReleaseExists()) {
-                return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseExist());
-            }
-
-            if (!isProjectExists()) {
-                setReleaseExists(false);
+            if (!projectExists) {
                 HashMap<String, Object> responseMap = service.createHubProject(hubProjectName);
                 StringBuilder projectReleases = new StringBuilder();
                 if (responseMap.containsKey("id")) {

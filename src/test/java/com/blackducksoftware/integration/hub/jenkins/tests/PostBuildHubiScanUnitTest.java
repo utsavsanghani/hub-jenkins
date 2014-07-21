@@ -37,7 +37,7 @@ import com.google.common.base.Charsets;
 
 public class PostBuildHubiScanUnitTest {
 
-    private static final String TEST_CLI_PATH = "/lib/scan.cli-1.14.0-SNAPSHOT-standalone.jar";
+    private static final String TEST_CLI_PATH = "/lib/scan.cli-1.14.0-20140721.160711-292-standalone.jar";
 
     private static String VALID_CREDENTIAL = "Valid Credential Id";
 

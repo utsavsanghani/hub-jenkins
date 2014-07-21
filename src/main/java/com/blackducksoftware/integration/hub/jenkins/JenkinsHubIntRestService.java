@@ -156,7 +156,8 @@ public class JenkinsHubIntRestService {
 
     /**
      * Gets the scan Id for each scan target, it searches the list of scans and gets the latest scan id for the scan
-     * matching the hostname and path
+     * matching the hostname and path. If the matching scans are already mapped to the Release then that id will not be
+     * returned in the list.
      * 
      * @param listener
      *            BuildListener
@@ -165,7 +166,7 @@ public class JenkinsHubIntRestService {
      * @return List<String> scan Ids
      * @throws UnknownHostException
      */
-    public List<String> getScanIds(BuildListener listener, List<String> scanTargets) throws UnknownHostException {
+    public List<String> getScanIds(BuildListener listener, List<String> scanTargets, String releaseId) throws UnknownHostException {
         Series<Cookie> cookies = getCookies();
         String localhostname = InetAddress.getLocalHost().getHostName();
         String url = null;
@@ -200,35 +201,87 @@ public class JenkinsHubIntRestService {
                 } else {
                     throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
                 }
+                // TODO get assetReferenceList from scan match, if the assetEntityId matches the scan Id and the
+                // ownerEntityId matches the release Id then this scan is already mapped to this release.
 
                 if (responseMap.containsKey("items") && ((ArrayList<LinkedHashMap>) responseMap.get("items")).size() > 0) {
                     ArrayList<LinkedHashMap> scanMatchesList = (ArrayList<LinkedHashMap>) responseMap.get("items");
                     // More than one match found
                     String scanId = null;
+                    String path = null;
+                    boolean alreadyMapped = false;
                     if (scanMatchesList.size() > 1) {
                         LinkedHashMap latestScan = null;
                         DateTime lastestScanTime = null;
                         for (LinkedHashMap scanMatch : scanMatchesList) {
-                            Long time = (Long) scanMatch.get("lastScanUploadDate");
-                            DateTime currScanTime = new DateTime(time);
-                            if (latestScan == null) {
-                                lastestScanTime = currScanTime;
-                                latestScan = scanMatch;
-                                scanId = (String) scanMatch.get("id");
-                            } else {
-                                if (currScanTime.isAfter(lastestScanTime)) {
-                                    lastestScanTime = currScanTime;
-                                    latestScan = scanMatch;
+                            path = (String) scanMatch.get("path");
+                            if (targetPath.equals(path)) {
+                                ArrayList<LinkedHashMap> assetReferences = (ArrayList<LinkedHashMap>) scanMatch.get("assetReferenceList");
+                                if (assetReferences.size() > 0) {
+                                    for (LinkedHashMap assetReference : assetReferences) {
+                                        LinkedHashMap ownerEntity = (LinkedHashMap) assetReference.get("ownerEntityKey");
+                                        String ownerId = (String) ownerEntity.get("entityId");
+                                        if (!ownerId.equals(releaseId)) {
+                                            // Single match was found
+                                            scanId = (String) scanMatch.get("id");
+                                        } else {
+                                            alreadyMapped = true;
+                                            listener.getLogger().println(
+                                                    "[DEBUG] The scan with Id: '" + (String) scanMatch.get("id")
+                                                            + "' is already mapped to the Release with Id: '"
+                                                            + releaseId + "'.");
+                                        }
+                                    }
+                                } else {
                                     scanId = (String) scanMatch.get("id");
                                 }
                             }
                         }
                     } else if (scanMatchesList.size() == 1) {
-                        // Single match was found
                         LinkedHashMap scanMatch = scanMatchesList.get(0);
-                        scanId = (String) scanMatch.get("id");
+                        path = (String) scanMatch.get("path");
+                        if (targetPath.equals(path)) {
+                            ArrayList<LinkedHashMap> assetReferences = (ArrayList<LinkedHashMap>) scanMatch.get("assetReferenceList");
+                            if (assetReferences.size() > 0) {
+                                for (LinkedHashMap assetReference : assetReferences) {
+                                    LinkedHashMap ownerEntity = (LinkedHashMap) assetReference.get("ownerEntityKey");
+                                    String ownerId = (String) ownerEntity.get("entityId");
+                                    if (!ownerId.equals(releaseId)) {
+                                        // Single match was found
+                                        scanId = (String) scanMatch.get("id");
+                                    } else {
+                                        alreadyMapped = true;
+                                        listener.getLogger().println(
+                                                "[DEBUG] The scan with Id: '" + (String) scanMatch.get("id") + "' is already mapped to the Release with Id: '"
+                                                        + releaseId + "'.");
+                                    }
+                                }
+                            } else {
+                                scanId = (String) scanMatch.get("id");
+                            }
+                        }
                     }
-                    scanIds.add(scanId);
+                    if (scanId != null) {
+                        if (scanIds.contains(scanId)) {
+                            listener.getLogger()
+                                    .println(
+                                            "[DEBUG] The scan target : '"
+                                                    + targetPath
+                                                    + "' has Id: '"
+                                                    + scanId
+                                                    + "'. BUT this Id has already been added to the list. Either this is a duplicate target or the correct scan could not be found.");
+                        } else {
+                            listener.getLogger().println(
+                                    "[DEBUG] The scan target : '" + targetPath + "' has Id: '" + scanId + "'.");
+                            scanIds.add(scanId);
+                        }
+
+                    } else {
+                        if (!alreadyMapped) {
+                            listener.getLogger().println(
+                                    "[ERROR] No Id could be found for the scan target : '" + targetPath + "'.");
+                        }
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace(listener.getLogger());
@@ -237,16 +290,12 @@ public class JenkinsHubIntRestService {
             }
         }
         return scanIds;
-
-        // http://2m-internal.blackducksoftware.com/api.html#!/composite-asset-reference-rest-server/findScanCodeLocations_get_0
-
-        // http://2m-internal.blackducksoftware.com/api.html#!/asset-reference-rest-server/createAssetReference_post_0
     }
 
     public void mapScansToProjectRelease(BuildListener listener, List<String> scanIds, String releaseId) throws BDRestException {
         if (scanIds.size() > 0) {
             for (String scanId : scanIds) {
-                listener.getLogger().println("Mapping the scan with id: '" + scanId + "', to the Release with Id: '" + releaseId + "'.");
+                listener.getLogger().println("[DEBUG] Mapping the scan with id: '" + scanId + "', to the Release with Id: '" + releaseId + "'.");
                 String url = getBaseUrl() + "/api/v1/assetreferences";
                 ClientResource resource = new ClientResource(url);
 
@@ -270,22 +319,21 @@ public class JenkinsHubIntRestService {
 
                 StringRepresentation stringRep = new StringRepresentation(obj.toString());
                 stringRep.setMediaType(MediaType.APPLICATION_JSON);
-
                 resource.post(stringRep);
-
                 int responseCode = resource.getResponse().getStatus().getCode();
 
                 // HashMap<String, Object> responseMap = new HashMap<String, Object>();
                 if (responseCode == 201) {
                     // Successful mapping
-                    listener.getLogger().println("Successfully mapped the scan with id: " + scanId + ", to the Release with Id: " + releaseId);
+                    listener.getLogger()
+                            .println("[DEBUG] Successfully mapped the scan with id: '" + scanId + "', to the Release with Id: '" + releaseId + "'.");
                 } else {
                     throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
                 }
             }
         }
         else {
-            listener.getLogger().println("Could not find any scan Id's to map to the Release.");
+            listener.getLogger().println("[DEBUG] Could not find any scan Id's to map to the Release.");
         }
         // return responseMap;
 

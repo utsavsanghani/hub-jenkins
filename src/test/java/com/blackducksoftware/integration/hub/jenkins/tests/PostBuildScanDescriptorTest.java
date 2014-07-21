@@ -13,7 +13,7 @@ import javax.servlet.ServletException;
 
 import junit.framework.Assert;
 
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -73,15 +73,10 @@ public class PostBuildScanDescriptorTest {
 
         restHelper.setBaseUrl(url);
         restHelper.setCookies(user, pass);
-        try {
-            tearDown();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
-    @AfterClass
-    public static void tearDown() {
+    @After
+    public void tearDown() {
         try {
             // This cleans up all the Projects that were created for the tests that may still be hanging around
             HashMap<String, Object> responseMap = restHelper.getProjectMatches(PROJECT_NAME_EXISTING);
@@ -94,7 +89,7 @@ public class PostBuildScanDescriptorTest {
                         if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(PROJECT_NAME_EXISTING)) {
                             // All of the fields are ArrayLists with the value at the first position
                             projectId = (String) ((ArrayList) projectFields.get("uuid")).get(0);
-                            restHelper.deleteHubProject(projectId);
+                            tearDownProject(projectId);
                         }
 
                     }
@@ -104,10 +99,18 @@ public class PostBuildScanDescriptorTest {
                     if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(PROJECT_NAME_EXISTING)) {
                         // All of the fields are ArrayLists with the value at the first position
                         projectId = (String) ((ArrayList) projectFields.get("uuid")).get(0);
-                        restHelper.deleteHubProject(projectId);
+                        tearDownProject(projectId);
                     }
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void tearDownProject(String projectId) {
+        try {
+            restHelper.deleteHubProject(projectId);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -192,29 +195,61 @@ public class PostBuildScanDescriptorTest {
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         descriptor.setHubServerInfo(hubServerInfo);
 
+        // try {
         FormValidation form = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
+        projectId = descriptor.getProjectId();
         Assert.assertEquals(FormValidation.Kind.OK, form.kind);
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectAndReleaseCreated());
-        projectId = descriptor.getProjectId();
-        try {
-            // wait 1.5 seconds before checking for the project and release
-            Thread.sleep(1500);
-            // Need to wait a second before checking if the project exists or it will not be recognized
-            FormValidation form2 = descriptor.doCheckHubProjectName(PROJECT_NAME_EXISTING);
-            Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
-            Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectExistsIn_0_(testProperties.getProperty("TEST_HUB_SERVER_URL")));
 
-            FormValidation form3 = descriptor.doCheckHubProjectRelease(PROJECT_RELEASE_EXISTING);
-            Assert.assertEquals(FormValidation.Kind.OK, form3.kind);
-            Assert.assertEquals(form3.getMessage(), Messages.HubBuildScan_getReleaseExistsIn_0_(projectId));
-        } finally {
-            restHelper.deleteHubProject(projectId);
-        }
+        // wait 1.5 seconds before checking for the project and release
+        Thread.sleep(1500);
+        // Need to wait a second before checking if the project exists or it will not be recognized
+        FormValidation form2 = descriptor.doCheckHubProjectName(PROJECT_NAME_EXISTING);
+        Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
+        Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectExistsIn_0_(testProperties.getProperty("TEST_HUB_SERVER_URL")));
+
+        FormValidation form3 = descriptor.doCheckHubProjectRelease(PROJECT_RELEASE_EXISTING);
+        Assert.assertEquals(FormValidation.Kind.OK, form3.kind);
+        Assert.assertEquals(form3.getMessage(), Messages.HubBuildScan_getReleaseExistsIn_0_(projectId));
+        // } finally {
+        // tearDownProject(projectId);
+        // }
 
     }
 
     @Test
-    public void testCreateProjectDuplicateNameDifferentRelease() throws IOException, ServletException, BDRestException {
+    public void testCreateProjectDuplicateNameDifferentRelease() throws IOException, ServletException, BDRestException, InterruptedException {
+        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
+                testProperties.getProperty("TEST_USERNAME"),
+                testProperties.getProperty("TEST_PASSWORD"));
+        UserFacingAction store = new UserFacingAction();
+        try {
+            store.getStore().addCredentials(Domain.global(), credential);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        HubServerInfo hubServerInfo = new HubServerInfo();
+        hubServerInfo.setCredentialsId(credential.getId());
+        hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+        descriptor.setHubServerInfo(hubServerInfo);
+        // try {
+        FormValidation form = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
+        // projectId = descriptor.getProjectId();
+        Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectAndReleaseCreated());
+        Thread.sleep(2500);
+        FormValidation form2 = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, "New Release");
+        Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
+        Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectAndReleaseCreated());
+        Thread.sleep(500);
+        // } finally {
+        // tearDownProject(projectId);
+        // }
+    }
+
+    @Test
+    public void testCreateProjectDuplicateRelease() throws IOException, ServletException, BDRestException, InterruptedException {
         PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 testProperties.getProperty("TEST_USERNAME"),
@@ -230,51 +265,18 @@ public class PostBuildScanDescriptorTest {
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         descriptor.setHubServerInfo(hubServerInfo);
 
+        // try {
         FormValidation form = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
+        projectId = descriptor.getProjectId();
         Assert.assertEquals(FormValidation.Kind.OK, form.kind);
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectAndReleaseCreated());
-        projectId = descriptor.getProjectId();
-        try {
-            FormValidation form2 = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, "New Release");
-            Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
-            Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectAndReleaseCreated());
-        } finally {
-            restHelper.deleteHubProject(projectId);
-        }
-    }
-
-    @Test
-    public void testCreateProjectDuplicateRelease() throws IOException, ServletException, BDRestException {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
-        UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
-                testProperties.getProperty("TEST_USERNAME"),
-                testProperties.getProperty("TEST_PASSWORD"));
-        UserFacingAction store = new UserFacingAction();
-        try {
-            store.getStore().addCredentials(Domain.global(), credential);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        HubServerInfo hubServerInfo = new HubServerInfo();
-        hubServerInfo.setCredentialsId(credential.getId());
-        hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
-
-        descriptor.setProjectExists(true);
-        descriptor.setReleaseExists(true);
-        FormValidation form = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
-        Assert.assertEquals(FormValidation.Kind.OK, form.kind);
-        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectAndReleaseCreated());
-        projectId = descriptor.getProjectId();
-        try {
-            FormValidation form2 = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
-            Assert.assertEquals(FormValidation.Kind.ERROR, form2.kind);
-            String releaseExistsMessage = Messages.HubBuildScan_getReleaseExistsIn_0_(null);
-            releaseExistsMessage = releaseExistsMessage.substring(0, 44);
-            Assert.assertTrue(form2.getMessage().contains(releaseExistsMessage));
-        } finally {
-            restHelper.deleteHubProject(projectId);
-        }
+        Thread.sleep(2500);
+        FormValidation form2 = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
+        Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
+        Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectAndReleaseExist());
+        // } finally {
+        // tearDownProject(projectId);
+        // }
     }
 
     @Test
@@ -300,7 +302,7 @@ public class PostBuildScanDescriptorTest {
     }
 
     @Test
-    public void testCheckForProjectReleaseNotExistent() throws IOException, ServletException, BDRestException {
+    public void testCheckForProjectReleaseNotExistent() throws IOException, ServletException, BDRestException, InterruptedException {
         PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 testProperties.getProperty("TEST_USERNAME"),
@@ -316,17 +318,18 @@ public class PostBuildScanDescriptorTest {
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         descriptor.setHubServerInfo(hubServerInfo);
 
+        // try {
         FormValidation form = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
+        // projectId = descriptor.getProjectId();
         Assert.assertEquals(FormValidation.Kind.OK, form.kind);
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectAndReleaseCreated());
-        projectId = descriptor.getProjectId();
-        try {
-            FormValidation form2 = descriptor.doCheckHubProjectRelease(PROJECT_RELEASE_NOT_EXISTING);
-            Assert.assertEquals(FormValidation.Kind.ERROR, form2.kind);
-            Assert.assertTrue(form2.getMessage().contains(Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null).substring(0, 52)));
-        } finally {
-            restHelper.deleteHubProject(projectId);
-        }
+        Thread.sleep(1500);
+        FormValidation form2 = descriptor.doCheckHubProjectRelease(PROJECT_RELEASE_NOT_EXISTING);
+        Assert.assertEquals(FormValidation.Kind.ERROR, form2.kind);
+        Assert.assertTrue(form2.getMessage().contains(Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null).substring(0, 52)));
+        // } finally {
+        // tearDownProject(projectId);
+        // }
     }
 
     @Test

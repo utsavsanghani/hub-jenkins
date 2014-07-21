@@ -25,7 +25,6 @@ import java.util.List;
 import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
 
@@ -145,9 +144,14 @@ public class PostBuildHubiScan extends Recorder {
                     FilePath iScanScript = getIScanCLI(iScanTools, listener, build);
                     List<String> scanTargets = new ArrayList<String>();
                     for (IScanJobs scanJob : getScans()) {
-                        scanTargets.add(getWorkingDirectory() + "/" + scanJob.getScanTarget()); // Prefixes the targets
-                                                                                                // with the workspace
-                                                                                                // directory
+                        if (StringUtils.isEmpty(scanJob.getScanTarget())) {
+                            scanTargets.add(getWorkingDirectory());
+                        } else {
+                            scanTargets.add(getWorkingDirectory() + "/" + scanJob.getScanTarget()); // Prefixes the
+                                                                                                    // targets
+                            // with the workspace
+                            // directory
+                        }
                     }
                     String scanOutput = runScan(build, launcher, listener, iScanScript, scanTargets);
                     if (!scanOutput.contains("Finished in") && !scanOutput.contains("with status SUCCESS")) {
@@ -157,28 +161,38 @@ public class PostBuildHubiScan extends Recorder {
                     // Only map the scans to a Project Release if the Project name and Project Release have been
                     // configured
                     if (!StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectRelease())) {
+                        // Wait 2 seconds for the scans to be recognized in the Hub server
+                        Thread.sleep(2000);
+
                         JenkinsHubIntRestService service = new JenkinsHubIntRestService();
                         service.setBaseUrl(getDescriptor().getHubServerInfo().getServerUrl());
                         service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
                                 getDescriptor().getHubServerInfo().getPassword());
-                        List<String> scanIds = service.getScanIds(listener, scanTargets);
-                        listener.getLogger().println("These scan Id's were found for the scan targets.");
-                        if (scanIds.size() > 0) {
-                            for (String scanId : scanIds) {
-                                listener.getLogger().println(scanId);
-                            }
-                        } else {
-                            throw new BDRestException("Could not find any scan Id's for the given scan targets.");
-                        }
-                        listener.getLogger().println(
-                                "Linking the scan Id's to the Hub Project: '" + getHubProjectName() + "', and Release: '" + getHubProjectRelease() + "'.");
+
                         String projectId = null;
                         String releaseId = null;
                         HashMap<String, Object> projectMatchesResponse = service.getProjectMatches(getHubProjectName());
                         projectId = service.getProjectIdFromProjectMatches(projectMatchesResponse, getHubProjectName());
+                        listener.getLogger().println("[DEBUG] Project Id: '" + projectId + "'");
                         HashMap<String, Object> releaseMatchesResponse = service.getReleaseMatchesForProjectId(projectId);
                         releaseId = service.getReleaseIdFromReleaseMatches(releaseMatchesResponse, getHubProjectRelease());
-                        service.mapScansToProjectRelease(listener, scanIds, releaseId);
+                        listener.getLogger().println("[DEBUG] Release Id: '" + releaseId + "'");
+                        List<String> scanIds = service.getScanIds(listener, scanTargets, releaseId);
+                        if (scanIds.size() > 0) {
+                            listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
+                            for (String scanId : scanIds) {
+                                listener.getLogger().println(scanId);
+                            }
+                            listener.getLogger().println(
+                                    "[DEBUG] Linking the scan Id's to the Hub Project: '" + getHubProjectName() + "', and Release: '" + getHubProjectRelease()
+                                            + "'.");
+
+                            service.mapScansToProjectRelease(listener, scanIds, releaseId);
+                        } else {
+                            listener.getLogger()
+                                    .println(
+                                            "[DEBUG] These scans are already mapped to this Release or there was an issue getting the Id's for the defined scan targets.");
+                        }
                     }
                 }
             } catch (Exception e) {
