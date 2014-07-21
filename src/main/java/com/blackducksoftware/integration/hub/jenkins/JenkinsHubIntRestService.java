@@ -163,6 +163,9 @@ public class JenkinsHubIntRestService {
      *            BuildListener
      * @param scanTargets
      *            List<String>
+     * @param releaseId
+     *            String
+     * 
      * @return List<String> scan Ids
      * @throws UnknownHostException
      */
@@ -291,6 +294,149 @@ public class JenkinsHubIntRestService {
         }
         return scanIds;
     }
+
+    // /**
+    // * Checks to see if the Scans with the given Id's are already mapped to the release or not.
+    // *
+    // * @param listener
+    // * BuildListener
+    // * @param scanTargets
+    // * List<String>
+    // * @param scanIds
+    // * List<String>
+    // * @param releaseId
+    // * String
+    // * @return List<String> the unmapped scan Id's
+    // *
+    // * @throws UnknownHostException
+    // */
+    // public List<String> checkScanIds(BuildListener listener, List<String> scanTargets, List<String> scanIds, String
+    // releaseId) throws UnknownHostException {
+    // Series<Cookie> cookies = getCookies();
+    // String localhostname = InetAddress.getLocalHost().getHostName();
+    // String url = null;
+    // ClientResource resource = null;
+    // for (String targetPath : scanTargets) {
+    // url = getBaseUrl() + "/api/v1/scanlocations?host=" + localhostname + "&path=" + targetPath;
+    // resource = new ClientResource(url);
+    //
+    // resource.getRequest().setCookies(cookies);
+    // resource.setMethod(Method.GET);
+    // resource.get();
+    //
+    // int responseCode = resource.getResponse().getStatus().getCode();
+    // try {
+    // HashMap<String, Object> responseMap = new HashMap<String, Object>();
+    // if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+    //
+    // Response resp = resource.getResponse();
+    // Reader reader = resp.getEntity().getReader();
+    // BufferedReader bufReader = new BufferedReader(reader);
+    // StringBuilder sb = new StringBuilder();
+    // String line;
+    // while ((line = bufReader.readLine()) != null) {
+    // sb.append(line + "\n");
+    // }
+    // byte[] mapData = sb.toString().getBytes();
+    //
+    // // Create HashMap from the Rest response
+    // ObjectMapper responseMapper = new ObjectMapper();
+    // responseMap = responseMapper.readValue(mapData, HashMap.class);
+    // } else {
+    // throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+    // }
+    // // TODO get assetReferenceList from scan match, if the assetEntityId matches the scan Id and the
+    // // ownerEntityId matches the release Id then this scan is already mapped to this release.
+    //
+    // if (responseMap.containsKey("items") && ((ArrayList<LinkedHashMap>) responseMap.get("items")).size() > 0) {
+    // ArrayList<LinkedHashMap> scanMatchesList = (ArrayList<LinkedHashMap>) responseMap.get("items");
+    // // More than one match found
+    // String scanId = null;
+    // String path = null;
+    // boolean alreadyMapped = false;
+    // if (scanMatchesList.size() > 1) {
+    // LinkedHashMap latestScan = null;
+    // DateTime lastestScanTime = null;
+    // for (LinkedHashMap scanMatch : scanMatchesList) {
+    // path = (String) scanMatch.get("path");
+    // if (targetPath.equals(path)) {
+    // ArrayList<LinkedHashMap> assetReferences = (ArrayList<LinkedHashMap>) scanMatch.get("assetReferenceList");
+    // if (assetReferences.size() > 0) {
+    // for (LinkedHashMap assetReference : assetReferences) {
+    // LinkedHashMap ownerEntity = (LinkedHashMap) assetReference.get("ownerEntityKey");
+    // String ownerId = (String) ownerEntity.get("entityId");
+    // if (!ownerId.equals(releaseId)) {
+    // // Single match was found
+    // scanId = (String) scanMatch.get("id");
+    // } else {
+    // alreadyMapped = true;
+    // listener.getLogger().println(
+    // "[DEBUG] The scan with Id: '" + (String) scanMatch.get("id")
+    // + "' is already mapped to the Release with Id: '"
+    // + releaseId + "'.");
+    // }
+    // }
+    // } else {
+    // scanId = (String) scanMatch.get("id");
+    // }
+    // }
+    // }
+    // } else if (scanMatchesList.size() == 1) {
+    // LinkedHashMap scanMatch = scanMatchesList.get(0);
+    // path = (String) scanMatch.get("path");
+    // if (targetPath.equals(path)) {
+    // ArrayList<LinkedHashMap> assetReferences = (ArrayList<LinkedHashMap>) scanMatch.get("assetReferenceList");
+    // if (assetReferences.size() > 0) {
+    // for (LinkedHashMap assetReference : assetReferences) {
+    // LinkedHashMap ownerEntity = (LinkedHashMap) assetReference.get("ownerEntityKey");
+    // String ownerId = (String) ownerEntity.get("entityId");
+    // if (!ownerId.equals(releaseId)) {
+    // // Single match was found
+    // scanId = (String) scanMatch.get("id");
+    // } else {
+    // alreadyMapped = true;
+    // listener.getLogger().println(
+    // "[DEBUG] The scan with Id: '" + (String) scanMatch.get("id") + "' is already mapped to the Release with Id: '"
+    // + releaseId + "'.");
+    // }
+    // }
+    // } else {
+    // scanId = (String) scanMatch.get("id");
+    // }
+    // }
+    // }
+    // // if (scanId != null) {
+    // // if (scanIds.contains(scanId)) {
+    // // listener.getLogger()
+    // // .println(
+    // // "[DEBUG] The scan target : '"
+    // // + targetPath
+    // // + "' has Id: '"
+    // // + scanId
+    // // +
+    // //
+    // "'. BUT this Id has already been added to the list. Either this is a duplicate target or the correct scan could not be found.");
+    // // } else {
+    // // listener.getLogger().println(
+    // // "[DEBUG] The scan target : '" + targetPath + "' has Id: '" + scanId + "'.");
+    // // scanIds.add(scanId);
+    // // }
+    // //
+    // // } else {
+    // // if (!alreadyMapped) {
+    // // listener.getLogger().println(
+    // // "[ERROR] No Id could be found for the scan target : '" + targetPath + "'.");
+    // // }
+    // // }
+    // }
+    // } catch (IOException e) {
+    // e.printStackTrace(listener.getLogger());
+    // } catch (BDRestException e) {
+    // e.printStackTrace(listener.getLogger());
+    // }
+    // }
+    // return scanIds;
+    // }
 
     public void mapScansToProjectRelease(BuildListener listener, List<String> scanIds, String releaseId) throws BDRestException {
         if (scanIds.size() > 0) {

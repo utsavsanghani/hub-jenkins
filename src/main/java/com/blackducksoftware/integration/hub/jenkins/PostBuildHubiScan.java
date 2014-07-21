@@ -46,6 +46,8 @@ public class PostBuildHubiScan extends Recorder {
 
     private JDK java;
 
+    private Result result;
+
     private boolean TEST = false;
 
     @DataBoundConstructor
@@ -69,6 +71,14 @@ public class PostBuildHubiScan extends Recorder {
     // Set to true run the integration test without running the actual iScan.
     public void setTEST(boolean tEST) {
         TEST = tEST;
+    }
+
+    public Result getResult() {
+        return result;
+    }
+
+    public void setResult(Result result) {
+        this.result = result;
     }
 
     public int getIScanMemory() {
@@ -126,7 +136,7 @@ public class PostBuildHubiScan extends Recorder {
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher,
             BuildListener listener) throws InterruptedException, IOException {
-        Result result = build.getResult();
+        setResult(build.getResult());
         if (result.equals(Result.SUCCESS)) {
             try {
                 listener.getLogger().println("Starting Black Duck iScans...");
@@ -141,7 +151,7 @@ public class PostBuildHubiScan extends Recorder {
                     setWorkingDirectory(build.getWorkspace().getRemote()); // This should work on master and
                                                                            // slaves
                     setJava(build, listener);
-                    FilePath iScanScript = getIScanCLI(iScanTools, listener, build);
+                    FilePath iScanExec = getIScanCLI(iScanTools, listener, build);
                     List<String> scanTargets = new ArrayList<String>();
                     for (IScanJobs scanJob : getScans()) {
                         if (StringUtils.isEmpty(scanJob.getScanTarget())) {
@@ -153,10 +163,8 @@ public class PostBuildHubiScan extends Recorder {
                             // directory
                         }
                     }
-                    String scanOutput = runScan(build, launcher, listener, iScanScript, scanTargets);
-                    if (!scanOutput.contains("Finished in") && !scanOutput.contains("with status SUCCESS")) {
-                        result = Result.UNSTABLE;
-                    }
+                    // List<String> scanIds = runScan(build, launcher, listener, iScanExec, scanTargets);
+                    runScan(build, launcher, listener, iScanExec, scanTargets);
 
                     // Only map the scans to a Project Release if the Project name and Project Release have been
                     // configured
@@ -178,6 +186,7 @@ public class PostBuildHubiScan extends Recorder {
                         releaseId = service.getReleaseIdFromReleaseMatches(releaseMatchesResponse, getHubProjectRelease());
                         listener.getLogger().println("[DEBUG] Release Id: '" + releaseId + "'");
                         List<String> scanIds = service.getScanIds(listener, scanTargets, releaseId);
+                        // scanIds = service.checkScanIds(listener, scanTargets, scanIds, releaseId);
                         if (scanIds.size() > 0) {
                             listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
                             for (String scanId : scanIds) {
@@ -198,13 +207,13 @@ public class PostBuildHubiScan extends Recorder {
             } catch (Exception e) {
                 e.printStackTrace(listener.getLogger());
                 listener.error(e.getMessage());
-                result = Result.UNSTABLE;
+                setResult(Result.UNSTABLE);
             }
         } else {
             listener.getLogger().println("Build was not successful. Will not run Black Duck iScans.");
         }
         listener.getLogger().println("Finished running Black Duck iScans.");
-        build.setResult(result);
+        build.setResult(getResult());
         return true;
     }
 
@@ -219,16 +228,18 @@ public class PostBuildHubiScan extends Recorder {
      *            Launcher
      * @param listener
      *            BuildListener
-     * @param iScanScript
+     * @param iScanExec
      *            FilePath
      * @param scanTargets
      *            List<String>
      * 
+     * @return List<String> scan Id's
      * @throws IOException
      * @throws HubConfigurationException
      * @throws InterruptedException
      */
-    private String runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanScript, List<String> scanTargets) throws IOException,
+    private List<String> runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanExec, List<String> scanTargets)
+            throws IOException,
             HubConfigurationException, InterruptedException {
 
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
@@ -245,7 +256,7 @@ public class PostBuildHubiScan extends Recorder {
         } else {
             cmd.add("-Xmx" + DEFAULT_MEMORY + "m");
         }
-        cmd.add(iScanScript.getRemote());
+        cmd.add(iScanExec.getRemote());
         cmd.add("--host");
         cmd.add(url.getHost());
         listener.getLogger().println("[DEBUG] : Using this Hub Url : '" + url.getHost() + "'");
@@ -266,27 +277,96 @@ public class PostBuildHubiScan extends Recorder {
         }
         listener.getLogger().println("[DEBUG] : Using this java installation : " + getJava().getName() + " : " +
                 getJava().getHome());
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ProcStarter ps = launcher.launch();
         if (ps != null) {
             ps.envs(build.getEnvironment(listener));
             ps.cmds(cmd);
-            ps.stdout(baos);
+            ps.stdout(byteStream);
             ps.join();
         } else {
             listener.getLogger().println("[ERROR] : Could not find a ProcStarter to run the process!");
         }
-
-        ByteArrayOutputStream outputStream = (ByteArrayOutputStream) ps.stdout();
-        String outputString = new String(outputStream.toByteArray(), "UTF-8");
-        listener.getLogger().println(outputString);
-
-        return outputString;
+        byteStream = (ByteArrayOutputStream) ps.stdout();
         // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will handle
         // closing it.
-
+        String outputString = new String(byteStream.toByteArray(), "UTF-8");
+        listener.getLogger().println(outputString);
+        if (!outputString.contains("Finished in") && !outputString.contains("with status SUCCESS")) {
+            setResult(Result.UNSTABLE);
+        } else {
+            // ArrayList<String> scanIds = new ArrayList<String>();
+            // for (String target : scanTargets) {
+            // File scanTargetFile = new File(target);
+            // String fileName = scanTargetFile.getName();
+            //
+            // FilePath libFolder = iScanExec.getParent();
+            // List<FilePath> files = libFolder.list();
+            // FilePath logFolder = null;
+            // for (FilePath file : files) {
+            // if (file.getName().contains("log")) {
+            // logFolder = file;
+            // }
+            // }
+            //
+            // File latestLogFile = null;
+            // DateTime latestLogTime = null;
+            // List<FilePath> logFiles = logFolder.list();
+            // for (FilePath log : logFiles) {
+            // if (log.getName().contains(fileName)) {
+            // if (latestLogFile == null) {
+            // String logName = log.getName();
+            // String localhostname = InetAddress.getLocalHost().getHostName();
+            // String time = logName.replace(localhostname + "-" + fileName + "-", "");
+            // time = time.replace(".log", "");
+            // time = time.substring(0, time.length() - 5);
+            // DateTimeFormatter dateStringFormat = new
+            // DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+            // DateTime dateTime = dateStringFormat.parseDateTime(time);
+            // latestLogTime = dateTime;
+            // latestLogFile = new File(log.getRemote());
+            // } else {
+            // String logName = log.getName();
+            // String localhostname = InetAddress.getLocalHost().getHostName();
+            // String time = logName.replace(localhostname + "-" + fileName + "-", "");
+            // time = time.replace(".log", "");
+            // time = time.substring(0, time.length() - 5);
+            // DateTimeFormatter dateStringFormat = new
+            // DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+            // DateTime logTime = dateStringFormat.parseDateTime(time);
+            //
+            // if (logTime.isAfter(latestLogTime)) {
+            // latestLogTime = logTime;
+            // latestLogFile = new File(log.getRemote());
+            // }
+            //
+            // }
+            // }
+            // }
+            // BufferedReader reader = new BufferedReader(new FileReader(latestLogFile));
+            // String line = reader.readLine();
+            // boolean gotToScanResult = false;
+            // while (line != null) {
+            // line = reader.readLine();
+            // if (line != null) {
+            // if (gotToScanResult) {
+            // listener.getLogger().println(line);
+            // }
+            // if (line.contains("Scan result")) {
+            // if (line.contains("id=")) {
+            // gotToScanResult = true;
+            // int start = line.indexOf("id=") + 3;
+            // int end = line.indexOf(",");
+            // scanIds.add(line.substring(start, end));
+            // listener.getLogger().println(line);
+            // }
+            // }
+            // }
+            // }
+            // }
+            // return scanIds;
+        }
+        return null;
     }
 
     public JDK getJava() {
@@ -351,7 +431,7 @@ public class PostBuildHubiScan extends Recorder {
      */
     public FilePath getIScanCLI(IScanInstallation[] iScanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
             InterruptedException, HubConfigurationException {
-        FilePath iScanScript = null;
+        FilePath iScanExec = null;
         for (IScanInstallation iScan : iScanTools) {
             Node node = build.getBuiltOn();
             if (StringUtils.isEmpty(node.getNodeName())) {
@@ -363,21 +443,21 @@ public class PostBuildHubiScan extends Recorder {
             }
             if (iScan.getName().equals(getiScanName())) {
                 if (iScan.getExists(node.getChannel(), listener)) {
-                    iScanScript = iScan.getCLI(node.getChannel());
+                    iScanExec = iScan.getCLI(node.getChannel());
                     listener.getLogger().println(
-                            "[DEBUG] : Using this iScan CLI at : " + iScanScript.getRemote());
+                            "[DEBUG] : Using this iScan CLI at : " + iScanExec.getRemote());
                 } else {
                     listener.getLogger().println("[ERROR] : Could not find the CLI file in : " + iScan.getHome());
                     throw new IScanToolMissingException("Could not find the CLI file to execute at : '" + iScan.getHome() + "'");
                 }
             }
         }
-        if (iScanScript == null) {
+        if (iScanExec == null) {
             // Should not get here unless there are no iScan Installations defined
             // But we check this just in case
             throw new HubConfigurationException("You need to select which iScan installation to use.");
         }
-        return iScanScript;
+        return iScanExec;
     }
 
     /**
