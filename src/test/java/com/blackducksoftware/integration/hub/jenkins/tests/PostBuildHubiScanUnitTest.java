@@ -137,7 +137,7 @@ public class PostBuildHubiScanUnitTest {
         FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
-        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : master"));
+        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Running on : master"));
         Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Using this iScan CLI at : "));
     }
 
@@ -170,7 +170,7 @@ public class PostBuildHubiScanUnitTest {
         FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
-        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : testSlave"));
+        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Running on : testSlave"));
         Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Using this iScan CLI at : "));
     }
 

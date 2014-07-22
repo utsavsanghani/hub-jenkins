@@ -1,5 +1,8 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
+import java.io.IOException;
+import java.util.HashMap;
+
 import org.apache.commons.lang.StringUtils;
 import org.restlet.data.Cookie;
 import org.restlet.data.Method;
@@ -44,6 +47,57 @@ public class JenkinsHubIntTestHelper extends JenkinsHubIntRestService {
         } else {
             return true;
         }
+    }
+
+    /**
+     * Create Hub Project. For test purposes only!
+     * 
+     * @param projectId
+     *            String
+     * @return String projectId
+     * @throws BDRestException
+     * @throws IOException
+     */
+    public String createTestHubProject(String hubProjectName) throws BDRestException, IOException {
+        if (StringUtils.isEmpty(hubProjectName)) {
+            return null;
+        }
+        String projectId = null;
+        Series<Cookie> cookies = getCookies();
+        HashMap<String, Object> responseMap = createHubProject(hubProjectName);
+        StringBuilder projectReleases = new StringBuilder();
+        if (responseMap.containsKey("id")) {
+            projectId = (String) responseMap.get("id");
+        } else {
+            // The Hub Api has changed and we received a JSON response that we did not expect
+            throw new BDRestException(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
+        }
+        return projectId;
+    }
+
+    /**
+     * Create Hub Project Release. For test purposes only!
+     * 
+     * @param projectId
+     *            String
+     * @return boolean true if created successfully
+     * @throws BDRestException
+     * @throws IOException
+     */
+    public boolean createTestHubProjectRelease(String hubProjectRelease, String projectId) throws IOException, BDRestException {
+        if (StringUtils.isEmpty(projectId)) {
+            return false;
+        }
+        if (StringUtils.isEmpty(hubProjectRelease)) {
+            return false;
+        }
+        int responseCode = 0;
+        responseCode = createHubRelease(hubProjectRelease, projectId);
+        if (responseCode != 201) {
+            return false;
+        }
+        return true;
+
     }
 
 }

@@ -34,7 +34,7 @@ public class PostBuildScanDescriptorTest {
 
     private static final String USERNAME_NON_EXISTING = "Assert.failureUser";
 
-    private static final String PROJECT_NAME_EXISTING = "Jenkins Hub Integration Test Project";
+    private static final String PROJECT_NAME_EXISTING = "Jenkins Hub Descriptor Test Project";
 
     private static final String PROJECT_NAME_NOT_EXISTING = "Assert Project Does Not Exist";
 
@@ -66,11 +66,10 @@ public class PostBuildScanDescriptorTest {
         } catch (IOException e) {
             System.err.println("reading test.properties failed!");
         }
-        restHelper = new JenkinsHubIntTestHelper();
         String user = testProperties.getProperty("TEST_USERNAME");
         String pass = testProperties.getProperty("TEST_PASSWORD");
         String url = testProperties.getProperty("TEST_HUB_SERVER_URL");
-
+        restHelper = new JenkinsHubIntTestHelper();
         restHelper.setBaseUrl(url);
         restHelper.setCookies(user, pass);
     }

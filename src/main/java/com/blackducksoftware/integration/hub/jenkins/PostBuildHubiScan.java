@@ -17,12 +17,16 @@ import hudson.tools.ToolDescriptor;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import org.codehaus.plexus.util.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
@@ -163,7 +167,6 @@ public class PostBuildHubiScan extends Recorder {
                             // directory
                         }
                     }
-                    // List<String> scanIds = runScan(build, launcher, listener, iScanExec, scanTargets);
                     runScan(build, launcher, listener, iScanExec, scanTargets);
 
                     // Only map the scans to a Project Release if the Project name and Project Release have been
@@ -185,8 +188,7 @@ public class PostBuildHubiScan extends Recorder {
                         HashMap<String, Object> releaseMatchesResponse = service.getReleaseMatchesForProjectId(projectId);
                         releaseId = service.getReleaseIdFromReleaseMatches(releaseMatchesResponse, getHubProjectRelease());
                         listener.getLogger().println("[DEBUG] Release Id: '" + releaseId + "'");
-                        List<String> scanIds = service.getScanIds(listener, scanTargets, releaseId);
-                        // scanIds = service.checkScanIds(listener, scanTargets, scanIds, releaseId);
+                        List<String> scanIds = service.getScanLocationIds(listener, scanTargets, releaseId);
                         if (scanIds.size() > 0) {
                             listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
                             for (String scanId : scanIds) {
@@ -233,12 +235,11 @@ public class PostBuildHubiScan extends Recorder {
      * @param scanTargets
      *            List<String>
      * 
-     * @return List<String> scan Id's
      * @throws IOException
      * @throws HubConfigurationException
      * @throws InterruptedException
      */
-    private List<String> runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanExec, List<String> scanTargets)
+    private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanExec, List<String> scanTargets)
             throws IOException,
             HubConfigurationException, InterruptedException {
 
@@ -295,78 +296,55 @@ public class PostBuildHubiScan extends Recorder {
         if (!outputString.contains("Finished in") && !outputString.contains("with status SUCCESS")) {
             setResult(Result.UNSTABLE);
         } else {
-            // ArrayList<String> scanIds = new ArrayList<String>();
-            // for (String target : scanTargets) {
-            // File scanTargetFile = new File(target);
-            // String fileName = scanTargetFile.getName();
-            //
-            // FilePath libFolder = iScanExec.getParent();
-            // List<FilePath> files = libFolder.list();
-            // FilePath logFolder = null;
-            // for (FilePath file : files) {
-            // if (file.getName().contains("log")) {
-            // logFolder = file;
-            // }
-            // }
-            //
-            // File latestLogFile = null;
-            // DateTime latestLogTime = null;
-            // List<FilePath> logFiles = logFolder.list();
-            // for (FilePath log : logFiles) {
-            // if (log.getName().contains(fileName)) {
-            // if (latestLogFile == null) {
-            // String logName = log.getName();
-            // String localhostname = InetAddress.getLocalHost().getHostName();
-            // String time = logName.replace(localhostname + "-" + fileName + "-", "");
-            // time = time.replace(".log", "");
-            // time = time.substring(0, time.length() - 5);
-            // DateTimeFormatter dateStringFormat = new
-            // DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-            // DateTime dateTime = dateStringFormat.parseDateTime(time);
-            // latestLogTime = dateTime;
-            // latestLogFile = new File(log.getRemote());
-            // } else {
-            // String logName = log.getName();
-            // String localhostname = InetAddress.getLocalHost().getHostName();
-            // String time = logName.replace(localhostname + "-" + fileName + "-", "");
-            // time = time.replace(".log", "");
-            // time = time.substring(0, time.length() - 5);
-            // DateTimeFormatter dateStringFormat = new
-            // DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-            // DateTime logTime = dateStringFormat.parseDateTime(time);
-            //
-            // if (logTime.isAfter(latestLogTime)) {
-            // latestLogTime = logTime;
-            // latestLogFile = new File(log.getRemote());
-            // }
-            //
-            // }
-            // }
-            // }
-            // BufferedReader reader = new BufferedReader(new FileReader(latestLogFile));
-            // String line = reader.readLine();
-            // boolean gotToScanResult = false;
-            // while (line != null) {
-            // line = reader.readLine();
-            // if (line != null) {
-            // if (gotToScanResult) {
-            // listener.getLogger().println(line);
-            // }
-            // if (line.contains("Scan result")) {
-            // if (line.contains("id=")) {
-            // gotToScanResult = true;
-            // int start = line.indexOf("id=") + 3;
-            // int end = line.indexOf(",");
-            // scanIds.add(line.substring(start, end));
-            // listener.getLogger().println(line);
-            // }
-            // }
-            // }
-            // }
-            // }
-            // return scanIds;
+            for (String target : scanTargets) {
+                File scanTargetFile = new File(target);
+                String fileName = scanTargetFile.getName();
+
+                FilePath libFolder = iScanExec.getParent();
+                List<FilePath> files = libFolder.list();
+                FilePath logFolder = null;
+                for (FilePath file : files) {
+                    if (file.getName().contains("log")) {
+                        logFolder = file;
+                    }
+                }
+                File latestLogFile = null;
+                DateTime latestLogTime = null;
+                List<FilePath> logFiles = logFolder.list();
+                for (FilePath log : logFiles) {
+                    if (log.getName().contains(fileName)) {
+                        if (latestLogFile == null) {
+                            String logName = log.getName();
+                            String localhostname = InetAddress.getLocalHost().getHostName();
+                            String time = logName.replace(localhostname + "-" + fileName + "-", "");
+                            time = time.replace(".log", "");
+                            time = time.substring(0, time.length() - 5);
+                            DateTimeFormatter dateStringFormat = new
+                                    DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+                            DateTime dateTime = dateStringFormat.parseDateTime(time);
+                            latestLogTime = dateTime;
+                            latestLogFile = new File(log.getRemote());
+                        } else {
+                            String logName = log.getName();
+                            String localhostname = InetAddress.getLocalHost().getHostName();
+                            String time = logName.replace(localhostname + "-" + fileName + "-", "");
+                            time = time.replace(".log", "");
+                            time = time.substring(0, time.length() - 5);
+                            DateTimeFormatter dateStringFormat = new
+                                    DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+                            DateTime logTime = dateStringFormat.parseDateTime(time);
+
+                            if (logTime.isAfter(latestLogTime)) {
+                                latestLogTime = logTime;
+                                latestLogFile = new File(log.getRemote());
+                            }
+                        }
+                    }
+                }
+                listener.getLogger().println("For scan target : '" + target + "', you can view the iScan CLI logs at : '" + latestLogFile.getCanonicalPath());
+                listener.getLogger().println();
+            }
         }
-        return null;
     }
 
     public JDK getJava() {
@@ -436,9 +414,9 @@ public class PostBuildHubiScan extends Recorder {
             Node node = build.getBuiltOn();
             if (StringUtils.isEmpty(node.getNodeName())) {
                 // Empty node name indicates master
-                listener.getLogger().println("[DEBUG] : master");
+                listener.getLogger().println("[DEBUG] : Running on : master");
             } else {
-                listener.getLogger().println("[DEBUG] : " + node.getNodeName());
+                listener.getLogger().println("[DEBUG] : Running on : " + node.getNodeName());
                 iScan = iScan.forNode(node, listener);
             }
             if (iScan.getName().equals(getiScanName())) {
