@@ -304,65 +304,67 @@ public class PostBuildHubiScan extends Recorder {
             ps.cmds(cmd);
             ps.stdout(byteStream);
             ps.join();
-        } else {
-            listener.getLogger().println("[ERROR] : Could not find a ProcStarter to run the process!");
-        }
-        ByteArrayOutputStream byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
-        // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will handle
-        // closing it.
-        String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
-        listener.getLogger().println(outputString);
-        if (!outputString.contains("Finished in") && !outputString.contains("with status SUCCESS")) {
-            setResult(Result.UNSTABLE);
-        } else {
-            for (String target : scanTargets) {
-                File scanTargetFile = new File(target);
-                String fileName = scanTargetFile.getName();
 
-                FilePath libFolder = iScanExec.getParent();
-                List<FilePath> files = libFolder.list();
-                FilePath logFolder = null;
-                for (FilePath file : files) {
-                    if (file.getName().contains("log")) {
-                        logFolder = file;
+            ByteArrayOutputStream byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
+            // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will handle
+            // closing it.
+            String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
+            listener.getLogger().println(outputString);
+            if (!outputString.contains("Finished in") && !outputString.contains("with status SUCCESS")) {
+                setResult(Result.UNSTABLE);
+            } else {
+                for (String target : scanTargets) {
+                    File scanTargetFile = new File(target);
+                    String fileName = scanTargetFile.getName();
+
+                    FilePath libFolder = iScanExec.getParent();
+                    List<FilePath> files = libFolder.list();
+                    FilePath logFolder = null;
+                    for (FilePath file : files) {
+                        if (file.getName().contains("log")) {
+                            logFolder = file;
+                        }
                     }
-                }
-                File latestLogFile = null;
-                DateTime latestLogTime = null;
-                List<FilePath> logFiles = logFolder.list();
-                for (FilePath log : logFiles) {
-                    if (log.getName().contains(fileName)) {
-                        if (latestLogFile == null) {
-                            String logName = log.getName();
-                            String localhostname = InetAddress.getLocalHost().getHostName();
-                            String time = logName.replace(localhostname + "-" + fileName + "-", "");
-                            time = time.replace(".log", "");
-                            time = time.substring(0, time.length() - 5);
-                            DateTimeFormatter dateStringFormat = new
-                                    DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-                            DateTime dateTime = dateStringFormat.parseDateTime(time);
-                            latestLogTime = dateTime;
-                            latestLogFile = new File(log.getRemote());
-                        } else {
-                            String logName = log.getName();
-                            String localhostname = InetAddress.getLocalHost().getHostName();
-                            String time = logName.replace(localhostname + "-" + fileName + "-", "");
-                            time = time.replace(".log", "");
-                            time = time.substring(0, time.length() - 5);
-                            DateTimeFormatter dateStringFormat = new
-                                    DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-                            DateTime logTime = dateStringFormat.parseDateTime(time);
-
-                            if (logTime.isAfter(latestLogTime)) {
-                                latestLogTime = logTime;
+                    File latestLogFile = null;
+                    DateTime latestLogTime = null;
+                    List<FilePath> logFiles = logFolder.list();
+                    for (FilePath log : logFiles) {
+                        if (log.getName().contains(fileName)) {
+                            if (latestLogFile == null) {
+                                String logName = log.getName();
+                                String localhostname = InetAddress.getLocalHost().getHostName();
+                                String time = logName.replace(localhostname + "-" + fileName + "-", "");
+                                time = time.replace(".log", "");
+                                time = time.substring(0, time.length() - 5);
+                                DateTimeFormatter dateStringFormat = new
+                                        DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+                                DateTime dateTime = dateStringFormat.parseDateTime(time);
+                                latestLogTime = dateTime;
                                 latestLogFile = new File(log.getRemote());
+                            } else {
+                                String logName = log.getName();
+                                String localhostname = InetAddress.getLocalHost().getHostName();
+                                String time = logName.replace(localhostname + "-" + fileName + "-", "");
+                                time = time.replace(".log", "");
+                                time = time.substring(0, time.length() - 5);
+                                DateTimeFormatter dateStringFormat = new
+                                        DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+                                DateTime logTime = dateStringFormat.parseDateTime(time);
+
+                                if (logTime.isAfter(latestLogTime)) {
+                                    latestLogTime = logTime;
+                                    latestLogFile = new File(log.getRemote());
+                                }
                             }
                         }
                     }
+                    listener.getLogger().println(
+                            "For scan target : '" + target + "', you can view the iScan CLI logs at : '" + latestLogFile.getCanonicalPath());
+                    listener.getLogger().println();
                 }
-                listener.getLogger().println("For scan target : '" + target + "', you can view the iScan CLI logs at : '" + latestLogFile.getCanonicalPath());
-                listener.getLogger().println();
             }
+        } else {
+            listener.getLogger().println("[ERROR] : Could not find a ProcStarter to run the process!");
         }
     }
 
