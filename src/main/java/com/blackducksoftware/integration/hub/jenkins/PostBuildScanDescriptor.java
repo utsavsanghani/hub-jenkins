@@ -67,6 +67,15 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     private String projectId;
 
     /**
+     * In order to load the persisted global configuration, you have to call
+     * load() in the constructor.
+     */
+    public PostBuildScanDescriptor() {
+        super(PostBuildHubiScan.class);
+        load();
+    }
+
+    /**
      * @return the hubServerInfo
      */
     public HubServerInfo getHubServerInfo() {
@@ -97,15 +106,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     /**
-     * In order to load the persisted global configuration, you have to call
-     * load() in the constructor.
-     */
-    public PostBuildScanDescriptor() {
-        super(PostBuildHubiScan.class);
-        load();
-    }
-
-    /**
      * Fills the Credential drop down list in the global config
      * 
      * @return
@@ -119,10 +119,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
             // Code copied from
             // https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
-            CredentialsMatcher CREDENTIALS_MATCHER = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
+            CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
             AbstractProject<?, ?> project = null; // Dont want to limit the search to a particular project for the drop
             // down menu
-            boxModel = new StandardListBoxModel().withEmptySelection().withMatching(CREDENTIALS_MATCHER,
+            boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher,
                     CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
 
         } finally {
@@ -243,7 +243,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
                 ArrayList<LinkedHashMap<String, Object>> responseList = service.getProjectMatches(hubProjectName);
 
-                if (responseList.size() > 0) {
+                if (!responseList.isEmpty()) {
                     StringBuilder projectMatches = new StringBuilder();
                     for (LinkedHashMap<String, Object> map : responseList) {
                         if (map.get("value").equals(hubProjectName)) {
@@ -264,7 +264,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
             } catch (Exception e) {
                 if (e.getCause() != null && e.getCause().getCause() != null) {
-                    e.printStackTrace();
                     return FormValidation.error(e.getCause().getCause().toString());
                 } else if (e.getCause() != null) {
                     return FormValidation.error(e.getCause().toString());
@@ -344,10 +343,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             } catch (Exception e) {
                 if (e.getCause() != null && e.getCause().getCause() != null) {
                     if (e.getCause().getCause().toString().contains("(404) - Not Found")) {
-                        e.printStackTrace();
+
                         return FormValidation.error(e.getCause().getCause().toString() + ", Need to provide an existing Hub Project.");
                     }
-                    e.printStackTrace();
+
                     return FormValidation.error(e.getCause().getCause().toString());
                 } else if (e.getCause() != null) {
                     if (e.getCause().toString().contains("(404) - Not Found")) {
@@ -418,7 +417,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             }
         } catch (Exception e) {
             if (e.getCause() != null && e.getCause().getCause() != null) {
-                e.printStackTrace();
+
                 return FormValidation.error(e.getCause().getCause().toString());
             } else if (e.getCause() != null) {
                 return FormValidation.error(e.getCause().toString());
@@ -495,7 +494,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
             if (!projectExists) {
                 HashMap<String, Object> responseMap = service.createHubProject(hubProjectName);
-                StringBuilder projectReleases = new StringBuilder();
                 if (responseMap.containsKey("id")) {
                     String id = (String) responseMap.get("id");
                     setProjectId(id);
@@ -516,7 +514,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             }
         } catch (Exception e) {
             if (e.getCause() != null && e.getCause().getCause() != null) {
-                e.printStackTrace();
+
                 return FormValidation.error(e.getCause().getCause().toString());
             } else if (e.getCause() != null) {
                 return FormValidation.error(e.getCause().toString());
@@ -549,11 +547,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 Collections.<DomainRequirement> emptyList());
         IdMatcher matcher = new IdMatcher(hubCredentialsId);
         for (StandardCredentials c : credentials) {
-            if (matcher.matches(c)) {
-                if (c instanceof UsernamePasswordCredentialsImpl) {
-                    UsernamePasswordCredentialsImpl credential = (UsernamePasswordCredentialsImpl) c;
-                    return credential;
-                }
+            if (matcher.matches(c) && c instanceof UsernamePasswordCredentialsImpl) {
+                UsernamePasswordCredentialsImpl credential = (UsernamePasswordCredentialsImpl) c;
+                return credential;
             }
         }
         // Could not find the matching credentials

@@ -14,7 +14,6 @@ import java.util.List;
 
 import net.sf.json.JSONObject;
 
-import org.joda.time.DateTime;
 import org.restlet.Response;
 import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
@@ -58,8 +57,6 @@ public class JenkinsHubIntRestService {
      * @return int Status code
      */
     public int setCookies(String credentialUserName, String credentialPassword) {
-        Series<Cookie> cookies = getCookies();
-
         String url = getBaseUrl() + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword;
         ClientResource resource = new ClientResource(url);
         resource.setMethod(Method.POST);
@@ -80,10 +77,11 @@ public class JenkinsHubIntRestService {
                 requestCookies.add(cookie);
             }
 
-            this.cookies = requestCookies;
-        } else {
-            // cookies already set
+            cookies = requestCookies;
         }
+        // else {
+        // cookies already set
+        // }
 
         return resource.getResponse().getStatus().getCode();
     }
@@ -97,30 +95,32 @@ public class JenkinsHubIntRestService {
         String url = getBaseUrl() + "/api/v1/autocomplete/PROJECT?text=" + hubProjectName + "&limit=20";
         ClientResource resource = new ClientResource(url);
 
-        resource.getRequest().setCookies(cookies);
+        resource.getRequest().setCookies(getCookies());
         resource.setMethod(Method.GET);
         resource.get();
         int responseCode = resource.getResponse().getStatus().getCode();
 
-        ArrayList<LinkedHashMap<String, Object>> list = new ArrayList<LinkedHashMap<String, Object>>();
         if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+            ArrayList<LinkedHashMap<String, Object>> list = null;
             Response resp = resource.getResponse();
             Reader reader = resp.getEntity().getReader();
             BufferedReader bufReader = new BufferedReader(reader);
             StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = bufReader.readLine()) != null) {
+            String line = bufReader.readLine();
+            while (line != null) {
                 sb.append(line + "\n");
+                line = bufReader.readLine();
             }
+            bufReader.close();
             byte[] mapData = sb.toString().getBytes();
             // Create HashMap from the Rest response
             ObjectMapper responseMapper = new ObjectMapper();
             list = responseMapper.readValue(mapData, ArrayList.class);
             // responseMap = responseMapper.readValue(mapData, HashMap.class);
+            return list;
         } else {
             throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
         }
-        return list;
     }
 
     // TODO
@@ -129,7 +129,7 @@ public class JenkinsHubIntRestService {
     // String url = getBaseUrl() + "/api/v1/projects/name/" + hubProjectName + "?projectName=" + hubProjectName;
     // ClientResource resource = new ClientResource(url);
     //
-    // resource.getRequest().setCookies(cookies);
+    // resource.getRequest().setCookies(getCookies());
     // resource.setMethod(Method.GET);
     // resource.get();
     // int responseCode = resource.getResponse().getStatus().getCode();
@@ -140,10 +140,12 @@ public class JenkinsHubIntRestService {
     // Reader reader = resp.getEntity().getReader();
     // BufferedReader bufReader = new BufferedReader(reader);
     // StringBuilder sb = new StringBuilder();
-    // String line;
-    // while ((line = bufReader.readLine()) != null) {
+    // String line = bufReader.readLine();
+    // while (line != null) {
     // sb.append(line + "\n");
+    // line = bufReader.readLine();
     // }
+    // bufReader.close();
     // byte[] mapData = sb.toString().getBytes();
     // // Create HashMap from the Rest response
     // ObjectMapper responseMapper = new ObjectMapper();
@@ -171,7 +173,6 @@ public class JenkinsHubIntRestService {
      * @throws UnknownHostException
      */
     public List<String> getScanLocationIds(BuildListener listener, List<String> scanTargets, String releaseId) throws UnknownHostException {
-        Series<Cookie> cookies = getCookies();
         String localhostname = InetAddress.getLocalHost().getHostName();
         String url = null;
         ClientResource resource = null;
@@ -180,23 +181,24 @@ public class JenkinsHubIntRestService {
             url = getBaseUrl() + "/api/v1/scanlocations?host=" + localhostname + "&path=" + targetPath;
             resource = new ClientResource(url);
 
-            resource.getRequest().setCookies(cookies);
+            resource.getRequest().setCookies(getCookies());
             resource.setMethod(Method.GET);
             resource.get();
 
             int responseCode = resource.getResponse().getStatus().getCode();
             try {
-                HashMap<String, Object> responseMap = new HashMap<String, Object>();
+                HashMap<String, Object> responseMap = null;
                 if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-
                     Response resp = resource.getResponse();
                     Reader reader = resp.getEntity().getReader();
                     BufferedReader bufReader = new BufferedReader(reader);
                     StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = bufReader.readLine()) != null) {
+                    String line = bufReader.readLine();
+                    while (line != null) {
                         sb.append(line + "\n");
+                        line = bufReader.readLine();
                     }
+                    bufReader.close();
                     byte[] mapData = sb.toString().getBytes();
 
                     // Create HashMap from the Rest response
@@ -213,14 +215,12 @@ public class JenkinsHubIntRestService {
                     String path = null;
                     boolean alreadyMapped = false;
                     if (scanMatchesList.size() > 1) {
-                        LinkedHashMap<String, Object> latestScan = null;
-                        DateTime lastestScanTime = null;
                         for (LinkedHashMap<String, Object> scanMatch : scanMatchesList) {
                             path = (String) scanMatch.get("path");
                             if (targetPath.equals(path)) {
                                 ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) scanMatch
                                         .get("assetReferenceList");
-                                if (assetReferences.size() > 0) {
+                                if (!assetReferences.isEmpty()) {
                                     for (LinkedHashMap<String, Object> assetReference : assetReferences) {
                                         LinkedHashMap<String, Object> ownerEntity = (LinkedHashMap<String, Object>) assetReference.get("ownerEntityKey");
                                         String ownerId = (String) ownerEntity.get("entityId");
@@ -250,7 +250,7 @@ public class JenkinsHubIntRestService {
                         if (targetPath.equals(path)) {
                             ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) scanMatch
                                     .get("assetReferenceList");
-                            if (assetReferences.size() > 0) {
+                            if (!assetReferences.isEmpty()) {
                                 for (LinkedHashMap<String, Object> assetReference : assetReferences) {
                                     LinkedHashMap<String, Object> ownerEntity = (LinkedHashMap<String, Object>) assetReference.get("ownerEntityKey");
                                     String ownerId = (String) ownerEntity.get("entityId");
@@ -307,13 +307,13 @@ public class JenkinsHubIntRestService {
     }
 
     public void mapScansToProjectRelease(BuildListener listener, List<String> scanIds, String releaseId) throws BDRestException {
-        if (scanIds.size() > 0) {
+        if (!scanIds.isEmpty()) {
             for (String scanId : scanIds) {
                 listener.getLogger().println("[DEBUG] Mapping the scan with id: '" + scanId + "', to the Release with Id: '" + releaseId + "'.");
                 String url = getBaseUrl() + "/api/v1/assetreferences";
                 ClientResource resource = new ClientResource(url);
 
-                resource.getRequest().setCookies(cookies);
+                resource.getRequest().setCookies(getCookies());
                 resource.setMethod(Method.POST);
 
                 JSONObject obj = new JSONObject();
@@ -367,13 +367,14 @@ public class JenkinsHubIntRestService {
     public ArrayList<String> getProjectIdsFromProjectMatches(ArrayList<LinkedHashMap<String, Object>> responseList, String projectName) throws IOException,
             BDRestException {
         ArrayList<String> projectId = new ArrayList<String>();
-        if (responseList.size() > 0) {
+        if (!responseList.isEmpty()) {
             for (LinkedHashMap<String, Object> map : responseList) {
                 if (map.get("value").equals(projectName)) {
                     projectId.add((String) map.get("uuid"));
-                } else {
-                    // name does not match
                 }
+                // else {
+                // name does not match
+                // }
             }
         }
         return projectId;
@@ -381,26 +382,27 @@ public class JenkinsHubIntRestService {
 
     public LinkedHashMap<String, Object> getReleaseMatchesForProjectId(String projectId) throws IOException, BDRestException {
 
-        Series<Cookie> cookies = getCookies();
         String url = getBaseUrl() + "/api/v1/projects/" + projectId + "/releases?limit=20";
         ClientResource resource = new ClientResource(url);
 
-        resource.getRequest().setCookies(cookies);
+        resource.getRequest().setCookies(getCookies());
         resource.setMethod(Method.GET);
         resource.get();
         int responseCode = resource.getResponse().getStatus().getCode();
 
-        LinkedHashMap<String, Object> responseMap = new LinkedHashMap<String, Object>();
+        LinkedHashMap<String, Object> responseMap = null;
         if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
 
             Response resp = resource.getResponse();
             Reader reader = resp.getEntity().getReader();
             BufferedReader bufReader = new BufferedReader(reader);
             StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = bufReader.readLine()) != null) {
+            String line = bufReader.readLine();
+            while (line != null) {
                 sb.append(line + "\n");
+                line = bufReader.readLine();
             }
+            bufReader.close();
             byte[] mapData = sb.toString().getBytes();
 
             // Create HashMap from the Rest response
@@ -429,11 +431,10 @@ public class JenkinsHubIntRestService {
 
     public HashMap<String, Object> createHubProject(String projectName) throws IOException, BDRestException {
 
-        Series<Cookie> cookies = getCookies();
         String url = getBaseUrl() + "/api/v1/projects";
         ClientResource resource = new ClientResource(url);
 
-        resource.getRequest().setCookies(cookies);
+        resource.getRequest().setCookies(getCookies());
         resource.setMethod(Method.POST);
 
         JSONObject obj = new JSONObject();
@@ -445,17 +446,19 @@ public class JenkinsHubIntRestService {
         resource.post(stringRep);
         int responseCode = resource.getResponse().getStatus().getCode();
 
-        HashMap<String, Object> responseMap = new HashMap<String, Object>();
+        HashMap<String, Object> responseMap = null;
         if (responseCode == 201) {
 
             Response resp = resource.getResponse();
             Reader reader = resp.getEntity().getReader();
             BufferedReader bufReader = new BufferedReader(reader);
             StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = bufReader.readLine()) != null) {
+            String line = bufReader.readLine();
+            while (line != null) {
                 sb.append(line + "\n");
+                line = bufReader.readLine();
             }
+            bufReader.close();
             byte[] mapData = sb.toString().getBytes();
 
             // Create HashMap from the Rest response
@@ -468,7 +471,6 @@ public class JenkinsHubIntRestService {
     }
 
     public int createHubRelease(String projectRelease, String projectId) throws IOException, BDRestException {
-        Series<Cookie> cookies = getCookies();
         String url = getBaseUrl() + "/api/v1/releases";
         ClientResource resource = new ClientResource(url);
 
@@ -476,7 +478,7 @@ public class JenkinsHubIntRestService {
         obj.put("projectId", projectId);
         obj.put("version", projectRelease);
 
-        resource.getRequest().setCookies(cookies);
+        resource.getRequest().setCookies(getCookies());
         resource.setMethod(Method.POST);
         StringRepresentation stringRep = new StringRepresentation(obj.toString());
         stringRep.setMediaType(MediaType.APPLICATION_JSON);

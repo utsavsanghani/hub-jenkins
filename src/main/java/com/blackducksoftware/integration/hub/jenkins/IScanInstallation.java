@@ -61,10 +61,10 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
         List<FilePath> files = homeFilePath.listDirectories();
         if (files != null) {
             listener.getLogger().println("[DEBUG] directories in the iScan directory: " + files.size());
-            if (files.size() > 0) {
+            if (!files.isEmpty()) {
                 FilePath libFolder = null;
                 for (FilePath iScanDirectory : files) {
-                    if (iScanDirectory.getName().equalsIgnoreCase("lib")) {
+                    if ("lib".equalsIgnoreCase(iScanDirectory.getName())) {
                         libFolder = iScanDirectory;
                     }
                 }
@@ -84,11 +84,7 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
                         }
                     }
                 }
-                if (iScanScript.exists()) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return iScanScript.exists();
             } else {
                 return false;
             }

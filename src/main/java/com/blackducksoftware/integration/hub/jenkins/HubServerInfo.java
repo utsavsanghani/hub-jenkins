@@ -90,11 +90,8 @@ public class HubServerInfo implements Serializable {
                     Collections.<DomainRequirement> emptyList());
             IdMatcher matcher = new IdMatcher(hubCredentialsId);
             for (StandardCredentials c : credentials) {
-                if (matcher.matches(c)) {
-                    if (c instanceof UsernamePasswordCredentialsImpl) {
-                        UsernamePasswordCredentialsImpl credential = (UsernamePasswordCredentialsImpl) c;
-                        this.credential = credential;
-                    }
+                if (matcher.matches(c) && c instanceof UsernamePasswordCredentialsImpl) {
+                    credential = (UsernamePasswordCredentialsImpl) c;
                 }
             }
         }
