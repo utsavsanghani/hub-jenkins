@@ -35,17 +35,17 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissing
 
 public class PostBuildHubiScan extends Recorder {
 
-    private IScanJobs[] scans;
-
-    private String iScanName;
-
-    private String hubProjectName;
-
-    private String hubProjectRelease;
-
     private static final int DEFAULT_MEMORY = 256;
 
-    private int iScanMemory;
+    private final IScanJobs[] scans;
+
+    private final String iScanName;
+
+    private final String hubProjectName;
+
+    private final String hubProjectRelease;
+
+    private final int iScanMemory;
 
     private String workingDirectory;
 
@@ -55,7 +55,7 @@ public class PostBuildHubiScan extends Recorder {
 
     private JenkinsHubIntRestService service = null;
 
-    private boolean TEST = false;
+    private boolean test = false;
 
     @DataBoundConstructor
     public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease, int iScanMemory) {
@@ -72,12 +72,12 @@ public class PostBuildHubiScan extends Recorder {
     }
 
     public boolean isTEST() {
-        return TEST;
+        return test;
     }
 
     // Set to true run the integration test without running the actual iScan.
     public void setTEST(boolean tEST) {
-        TEST = tEST;
+        test = tEST;
     }
 
     public Result getResult() {
@@ -178,13 +178,13 @@ public class PostBuildHubiScan extends Recorder {
                         // Wait 2 seconds for the scans to be recognized in the Hub server
                         Thread.sleep(2000);
 
-                        JenkinsHubIntRestService service = getJenkinsHubIntRestService();
+                        setJenkinsHubIntRestService();
 
                         ArrayList<String> projectId = null;
                         String releaseId = null;
                         ArrayList<LinkedHashMap<String, Object>> projectMatchesResponse = service.getProjectMatches(getHubProjectName());
                         projectId = service.getProjectIdsFromProjectMatches(projectMatchesResponse, getHubProjectName());
-                        if (projectId == null || projectId.size() == 0) {
+                        if (projectId == null || projectId.isEmpty()) {
                             throw new BDJenkinsHubPluginException("The specified Project could not be found.");
                         } else if (projectId.size() > 1) {
                             throw new BDJenkinsHubPluginException("More than one Project was found with the same name.");
@@ -198,7 +198,7 @@ public class PostBuildHubiScan extends Recorder {
                         }
 
                         List<String> scanIds = service.getScanLocationIds(listener, scanTargets, releaseId);
-                        if (scanIds.size() > 0) {
+                        if (!scanIds.isEmpty()) {
                             listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
                             for (String scanId : scanIds) {
                                 listener.getLogger().println(scanId);
@@ -229,16 +229,13 @@ public class PostBuildHubiScan extends Recorder {
         return true;
     }
 
-    public JenkinsHubIntRestService getJenkinsHubIntRestService() {
-        if (service != null) {
-            return service;
-        } else {
+    public void setJenkinsHubIntRestService() {
+        if (service == null) {
             service = new JenkinsHubIntRestService();
 
             service.setBaseUrl(getDescriptor().getHubServerInfo().getServerUrl());
             service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
                     getDescriptor().getHubServerInfo().getPassword());
-            return service;
         }
     }
 
@@ -310,10 +307,10 @@ public class PostBuildHubiScan extends Recorder {
         } else {
             listener.getLogger().println("[ERROR] : Could not find a ProcStarter to run the process!");
         }
-        byteStream = (ByteArrayOutputStream) ps.stdout();
+        ByteArrayOutputStream byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
         // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will handle
         // closing it.
-        String outputString = new String(byteStream.toByteArray(), "UTF-8");
+        String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
         listener.getLogger().println(outputString);
         if (!outputString.contains("Finished in") && !outputString.contains("with status SUCCESS")) {
             setResult(Result.UNSTABLE);
@@ -385,8 +382,7 @@ public class PostBuildHubiScan extends Recorder {
      * @throws HubConfigurationException
      */
     private void setJava(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException, HubConfigurationException {
-        EnvVars envVars = new EnvVars();
-        envVars = build.getEnvironment(listener);
+        EnvVars envVars = build.getEnvironment(listener);
         JDK javaHomeTemp = null;
         if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
             // Empty node name indicates master
@@ -439,7 +435,7 @@ public class PostBuildHubiScan extends Recorder {
                 listener.getLogger().println("[DEBUG] : Running on : master");
             } else {
                 listener.getLogger().println("[DEBUG] : Running on : " + node.getNodeName());
-                iScan = iScan.forNode(node, listener);
+                iScan = iScan.forNode(node, listener); // Need to get the Slave iScan
             }
             if (iScan.getName().equals(getiScanName())) {
                 if (iScan.getExists(node.getChannel(), listener)) {
@@ -519,9 +515,8 @@ public class PostBuildHubiScan extends Recorder {
             } else {
                 target = new FilePath(locationFile);
             }
-            String workingDirectory = getWorkingDirectory();
-            if (target.length() <= workingDirectory.length()
-                    && !workingDirectory.equals(target.getRemote()) && !target.getRemote().contains(workingDirectory)) {
+            if (target.length() <= getWorkingDirectory().length()
+                    && !getWorkingDirectory().equals(target.getRemote()) && !target.getRemote().contains(getWorkingDirectory())) {
                 throw new HubConfigurationException("Can not scan targets outside of the workspace.");
             }
 
