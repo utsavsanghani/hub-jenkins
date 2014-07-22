@@ -5,7 +5,6 @@ import hudson.util.FormValidation;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
@@ -78,29 +77,10 @@ public class PostBuildScanDescriptorTest {
     public void tearDown() {
         try {
             // This cleans up all the Projects that were created for the tests that may still be hanging around
-            HashMap<String, Object> responseMap = restHelper.getProjectMatches(PROJECT_NAME_EXISTING);
-            if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
-                ArrayList<LinkedHashMap> projectPotentialMatches = (ArrayList<LinkedHashMap>) responseMap.get("hits");
-                // More than one match found
-                if (projectPotentialMatches.size() > 1) {
-                    for (LinkedHashMap project : projectPotentialMatches) {
-                        LinkedHashMap projectFields = (LinkedHashMap) project.get("fields");
-                        if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(PROJECT_NAME_EXISTING)) {
-                            // All of the fields are ArrayLists with the value at the first position
-                            projectId = (String) ((ArrayList) projectFields.get("uuid")).get(0);
-                            tearDownProject(projectId);
-                        }
-
-                    }
-                } else if (projectPotentialMatches.size() == 1) {
-                    // Single match was found
-                    LinkedHashMap projectFields = (LinkedHashMap) projectPotentialMatches.get(0).get("fields");
-                    if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(PROJECT_NAME_EXISTING)) {
-                        // All of the fields are ArrayLists with the value at the first position
-                        projectId = (String) ((ArrayList) projectFields.get("uuid")).get(0);
-                        tearDownProject(projectId);
-                    }
-                }
+            ArrayList<LinkedHashMap<String, Object>> responseList = restHelper.getProjectMatches(PROJECT_NAME_EXISTING);
+            ArrayList<String> projectIds = restHelper.getProjectIdsFromProjectMatches(responseList, PROJECT_NAME_EXISTING);
+            for (String projectId : projectIds) {
+                tearDownProject(projectId);
             }
         } catch (Exception e) {
             e.printStackTrace();

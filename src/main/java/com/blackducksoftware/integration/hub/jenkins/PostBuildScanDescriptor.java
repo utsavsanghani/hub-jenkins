@@ -241,44 +241,24 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
                 service.setCookies(credentialUserName, credentialPassword);
 
-                HashMap<String, Object> responseMap = service.getProjectMatches(hubProjectName);
+                ArrayList<LinkedHashMap<String, Object>> responseList = service.getProjectMatches(hubProjectName);
 
-                if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
-                    ArrayList<LinkedHashMap> projectPotentialMatches = (ArrayList<LinkedHashMap>) responseMap.get("hits");
+                if (responseList.size() > 0) {
                     StringBuilder projectMatches = new StringBuilder();
-                    // More than one match found
-                    if (projectPotentialMatches.size() > 1) {
-                        for (LinkedHashMap project : projectPotentialMatches) {
-                            LinkedHashMap projectFields = (LinkedHashMap) project.get("fields");
-                            if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(hubProjectName)) {
-                                // All of the fields are ArrayLists with the value at the first position
-                                setProjectId((String) ((ArrayList) projectFields.get("uuid")).get(0));
-                                return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
-                            }
-                            // All of the fields are ArrayLists with the value at the first position
-                            if (projectMatches.length() > 0) {
-                                projectMatches.append(", " + (String) ((ArrayList) projectFields.get("name")).get(0));
-                            } else {
-                                projectMatches.append((String) ((ArrayList) projectFields.get("name")).get(0));
-                            }
-                        }
-                        // Found matches to the project name, print server Url and all the matches for this name
-                        // that were found
-                        return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getServerUrl(), projectMatches.toString()));
-
-                    } else if (projectPotentialMatches.size() == 1) {
-                        // Single match was found
-                        LinkedHashMap projectFields = (LinkedHashMap) projectPotentialMatches.get(0).get("fields");
-                        if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(hubProjectName)) {
-                            // All of the fields are ArrayLists with the value at the first position
-                            setProjectId((String) ((ArrayList) projectFields.get("uuid")).get(0));
+                    for (LinkedHashMap<String, Object> map : responseList) {
+                        if (map.get("value").equals(hubProjectName)) {
+                            setProjectId((String) map.get("uuid"));
                             return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
                         } else {
-                            projectMatches.append((String) ((ArrayList) projectFields.get("name")).get(0));
-                            return FormValidation
-                                    .error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getServerUrl(), projectMatches.toString()));
+                            // name does not match
+                            if (projectMatches.length() > 0) {
+                                projectMatches.append(", " + (String) map.get("value"));
+                            } else {
+                                projectMatches.append((String) map.get("value"));
+                            }
                         }
                     }
+                    return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getServerUrl(), projectMatches.toString()));
                 } else {
                     return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getServerUrl()));
                 }

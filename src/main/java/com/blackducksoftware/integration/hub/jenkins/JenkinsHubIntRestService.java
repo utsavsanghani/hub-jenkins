@@ -92,9 +92,9 @@ public class JenkinsHubIntRestService {
         return cookies;
     }
 
-    public HashMap<String, Object> getProjectMatches(String hubProjectName) throws IOException, BDRestException {
+    public ArrayList<LinkedHashMap<String, Object>> getProjectMatches(String hubProjectName) throws IOException, BDRestException {
 
-        String url = getBaseUrl() + "/api/v1/search/PROJECT?q=" + hubProjectName + "&limit=20";
+        String url = getBaseUrl() + "/api/v1/autocomplete/PROJECT?text=" + hubProjectName + "&limit=20";
         ClientResource resource = new ClientResource(url);
 
         resource.getRequest().setCookies(cookies);
@@ -102,7 +102,7 @@ public class JenkinsHubIntRestService {
         resource.get();
         int responseCode = resource.getResponse().getStatus().getCode();
 
-        HashMap<String, Object> responseMap = new HashMap<String, Object>();
+        ArrayList<LinkedHashMap<String, Object>> list = new ArrayList<LinkedHashMap<String, Object>>();
         if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
             Response resp = resource.getResponse();
             Reader reader = resp.getEntity().getReader();
@@ -115,11 +115,12 @@ public class JenkinsHubIntRestService {
             byte[] mapData = sb.toString().getBytes();
             // Create HashMap from the Rest response
             ObjectMapper responseMapper = new ObjectMapper();
-            responseMap = responseMapper.readValue(mapData, HashMap.class);
+            list = responseMapper.readValue(mapData, ArrayList.class);
+            // responseMap = responseMapper.readValue(mapData, HashMap.class);
         } else {
             throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
         }
-        return responseMap;
+        return list;
     }
 
     // TODO
@@ -204,8 +205,6 @@ public class JenkinsHubIntRestService {
                 } else {
                     throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
                 }
-                // TODO get assetReferenceList from scan match, if the assetEntityId matches the scan Id and the
-                // ownerEntityId matches the release Id then this scan is already mapped to this release.
 
                 if (responseMap.containsKey("items") && ((ArrayList<LinkedHashMap>) responseMap.get("items")).size() > 0) {
                     ArrayList<LinkedHashMap> scanMatchesList = (ArrayList<LinkedHashMap>) responseMap.get("items");
@@ -236,6 +235,7 @@ public class JenkinsHubIntRestService {
                                                             + (String) scanMatch.get("id")
                                                             + "'. This is already mapped to the Release with Id: '"
                                                             + releaseId + "'.");
+                                            listener.getLogger().println();
                                         }
                                     }
                                 } else {
@@ -264,6 +264,7 @@ public class JenkinsHubIntRestService {
                                                         + (String) scanMatch.get("id")
                                                         + "'. This is already mapped to the Release with Id: '"
                                                         + releaseId + "'.");
+                                        listener.getLogger().println();
                                     }
                                 }
                             } else {
@@ -280,6 +281,7 @@ public class JenkinsHubIntRestService {
                                                     + "' has Scan Location Id: '"
                                                     + scanId
                                                     + "'. BUT this Id has already been added to the list. Either this is a duplicate target or the correct scan could not be found.");
+                            listener.getLogger().println();
                         } else {
                             listener.getLogger().println(
                                     "[DEBUG] The scan target : '" + targetPath + "' has Scan Location Id: '" + scanId + "'.");
@@ -349,26 +351,26 @@ public class JenkinsHubIntRestService {
 
     }
 
-    public String getProjectIdFromProjectMatches(HashMap<String, Object> responseMap, String projectName) throws IOException, BDRestException {
-        String projectId = null;
-        if (responseMap.containsKey("hits") && ((ArrayList<LinkedHashMap>) responseMap.get("hits")).size() > 0) {
-            ArrayList<LinkedHashMap> projectPotentialMatches = (ArrayList<LinkedHashMap>) responseMap.get("hits");
-            // More than one match found
-            if (projectPotentialMatches.size() > 1) {
-                for (LinkedHashMap project : projectPotentialMatches) {
-                    LinkedHashMap projectFields = (LinkedHashMap) project.get("fields");
-                    if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(projectName)) {
-                        // All of the fields are ArrayLists with the value at the first position
-                        projectId = (String) ((ArrayList) projectFields.get("uuid")).get(0);
-                    }
-
-                }
-            } else if (projectPotentialMatches.size() == 1) {
-                // Single match was found
-                LinkedHashMap projectFields = (LinkedHashMap) projectPotentialMatches.get(0).get("fields");
-                if (((String) ((ArrayList) projectFields.get("name")).get(0)).equals(projectName)) {
-                    // All of the fields are ArrayLists with the value at the first position
-                    projectId = (String) ((ArrayList) projectFields.get("uuid")).get(0);
+    /**
+     * Gets the project Ids for every project with a name that matches exactly to the one specified.
+     * 
+     * @param responseList
+     *            ArrayList<LinkedHashMap<String, Object>>
+     * @param projectName
+     *            String
+     * @return ArrayList<String> the project Ids
+     * @throws IOException
+     * @throws BDRestException
+     */
+    public ArrayList<String> getProjectIdsFromProjectMatches(ArrayList<LinkedHashMap<String, Object>> responseList, String projectName) throws IOException,
+            BDRestException {
+        ArrayList<String> projectId = new ArrayList<String>();
+        if (responseList.size() > 0) {
+            for (LinkedHashMap map : responseList) {
+                if (map.get("value").equals(projectName)) {
+                    projectId.add((String) map.get("uuid"));
+                } else {
+                    // name does not match
                 }
             }
         }

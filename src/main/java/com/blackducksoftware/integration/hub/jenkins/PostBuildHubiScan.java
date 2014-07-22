@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.codehaus.plexus.util.StringUtils;
@@ -180,15 +181,17 @@ public class PostBuildHubiScan extends Recorder {
 
                         JenkinsHubIntRestService service = getJenkinsHubIntRestService();
 
-                        String projectId = null;
+                        ArrayList<String> projectId = null;
                         String releaseId = null;
-                        HashMap<String, Object> projectMatchesResponse = service.getProjectMatches(getHubProjectName());
-                        projectId = service.getProjectIdFromProjectMatches(projectMatchesResponse, getHubProjectName());
-                        listener.getLogger().println("[DEBUG] Project Id: '" + projectId + "'");
-                        if (StringUtils.isEmpty(projectId)) {
+                        ArrayList<LinkedHashMap<String, Object>> projectMatchesResponse = service.getProjectMatches(getHubProjectName());
+                        projectId = service.getProjectIdsFromProjectMatches(projectMatchesResponse, getHubProjectName());
+                        if (projectId == null || projectId.size() == 0) {
                             throw new BDJenkinsHubPluginException("The specified Project could not be found.");
+                        } else if (projectId.size() > 1) {
+                            throw new BDJenkinsHubPluginException("More than one Project was found with the same name.");
                         }
-                        HashMap<String, Object> releaseMatchesResponse = service.getReleaseMatchesForProjectId(projectId);
+                        listener.getLogger().println("[DEBUG] Project Id: '" + projectId.get(0) + "'");
+                        HashMap<String, Object> releaseMatchesResponse = service.getReleaseMatchesForProjectId(projectId.get(0));
                         releaseId = service.getReleaseIdFromReleaseMatches(releaseMatchesResponse, getHubProjectRelease());
                         listener.getLogger().println("[DEBUG] Release Id: '" + releaseId + "'");
                         if (StringUtils.isEmpty(releaseId)) {
@@ -209,7 +212,8 @@ public class PostBuildHubiScan extends Recorder {
                         } else {
                             listener.getLogger()
                                     .println(
-                                            "[DEBUG] These scans are already mapped to this Release or there was an issue getting the Id's for the defined scan targets.");
+                                            "[DEBUG] These scans are already mapped to Project : '" + getHubProjectName() + "', Release : '"
+                                                    + getHubProjectRelease() + "'. OR there was an issue getting the Id's for the defined scan targets.");
                         }
                     }
                 }
@@ -270,7 +274,6 @@ public class PostBuildHubiScan extends Recorder {
         cmd.add(getJava().getHome() + "/bin/java");
         cmd.add("-Done-jar.silent=true");
         cmd.add("-jar");
-        // TODO make the memory configurable at the job level
 
         if (getIScanMemory() != 256) {
             cmd.add("-Xmx" + getIScanMemory() + "m");

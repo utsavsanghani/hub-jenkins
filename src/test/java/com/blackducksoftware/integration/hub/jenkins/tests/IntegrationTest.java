@@ -272,7 +272,6 @@ public class IntegrationTest {
         Assert.assertTrue(buildOutput.contains("Finished in"));
         Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
         Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] Project Id: 'null'"));
         Assert.assertTrue(buildOutput
                 .contains("com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException: The specified Project could not be found."));
         Assert.assertTrue(buildOutput.contains("ERROR: The specified Project could not be found."));
@@ -445,8 +444,8 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput.contains("[DEBUG] Release Id:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] The scan target :"));
             Assert.assertTrue(buildOutput.contains("' has Scan Location Id: '"));
-            Assert.assertTrue(buildOutput
-                    .contains("[DEBUG] These scans are already mapped to this Release or there was an issue getting the Id's for the defined scan targets."));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] These scans are already mapped to Project : '" + PROJECT_NAME_EXISTING + "', Release : '"
+                    + PROJECT_RELEASE_EXISTING + "'. OR there was an issue getting the Id's for the defined scan targets."));
             Assert.assertTrue(buildOutput.contains("Finished running Black Duck iScans."));
         } finally {
             restHelper.deleteHubProject(projectId);
