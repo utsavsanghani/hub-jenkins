@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -191,7 +190,7 @@ public class PostBuildHubiScan extends Recorder {
                             throw new BDJenkinsHubPluginException("More than one Project was found with the same name.");
                         }
                         listener.getLogger().println("[DEBUG] Project Id: '" + projectId.get(0) + "'");
-                        HashMap<String, Object> releaseMatchesResponse = service.getReleaseMatchesForProjectId(projectId.get(0));
+                        LinkedHashMap<String, Object> releaseMatchesResponse = service.getReleaseMatchesForProjectId(projectId.get(0));
                         releaseId = service.getReleaseIdFromReleaseMatches(releaseMatchesResponse, getHubProjectRelease());
                         listener.getLogger().println("[DEBUG] Release Id: '" + releaseId + "'");
                         if (StringUtils.isEmpty(releaseId)) {

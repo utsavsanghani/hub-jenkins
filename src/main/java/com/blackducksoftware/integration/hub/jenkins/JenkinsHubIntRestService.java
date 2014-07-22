@@ -206,27 +206,25 @@ public class JenkinsHubIntRestService {
                     throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
                 }
 
-                if (responseMap.containsKey("items") && ((ArrayList<LinkedHashMap>) responseMap.get("items")).size() > 0) {
-                    ArrayList<LinkedHashMap> scanMatchesList = (ArrayList<LinkedHashMap>) responseMap.get("items");
+                if (responseMap.containsKey("items") && ((ArrayList<LinkedHashMap<String, Object>>) responseMap.get("items")).size() > 0) {
+                    ArrayList<LinkedHashMap<String, Object>> scanMatchesList = (ArrayList<LinkedHashMap<String, Object>>) responseMap.get("items");
                     // More than one match found
                     String scanId = null;
                     String path = null;
                     boolean alreadyMapped = false;
                     if (scanMatchesList.size() > 1) {
-                        LinkedHashMap latestScan = null;
+                        LinkedHashMap<String, Object> latestScan = null;
                         DateTime lastestScanTime = null;
-                        for (LinkedHashMap scanMatch : scanMatchesList) {
+                        for (LinkedHashMap<String, Object> scanMatch : scanMatchesList) {
                             path = (String) scanMatch.get("path");
                             if (targetPath.equals(path)) {
-                                ArrayList<LinkedHashMap> assetReferences = (ArrayList<LinkedHashMap>) scanMatch.get("assetReferenceList");
+                                ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) scanMatch
+                                        .get("assetReferenceList");
                                 if (assetReferences.size() > 0) {
-                                    for (LinkedHashMap assetReference : assetReferences) {
-                                        LinkedHashMap ownerEntity = (LinkedHashMap) assetReference.get("ownerEntityKey");
+                                    for (LinkedHashMap<String, Object> assetReference : assetReferences) {
+                                        LinkedHashMap<String, Object> ownerEntity = (LinkedHashMap<String, Object>) assetReference.get("ownerEntityKey");
                                         String ownerId = (String) ownerEntity.get("entityId");
-                                        if (!ownerId.equals(releaseId)) {
-                                            // Single match was found
-                                            scanId = (String) scanMatch.get("id");
-                                        } else {
+                                        if (ownerId.equals(releaseId)) {
                                             alreadyMapped = true;
                                             listener.getLogger().println(
                                                     "[DEBUG] The scan target : '"
@@ -238,24 +236,25 @@ public class JenkinsHubIntRestService {
                                             listener.getLogger().println();
                                         }
                                     }
+                                    if (!alreadyMapped) {
+                                        scanId = (String) scanMatch.get("id");
+                                    }
                                 } else {
                                     scanId = (String) scanMatch.get("id");
                                 }
                             }
                         }
                     } else if (scanMatchesList.size() == 1) {
-                        LinkedHashMap scanMatch = scanMatchesList.get(0);
+                        LinkedHashMap<String, Object> scanMatch = scanMatchesList.get(0);
                         path = (String) scanMatch.get("path");
                         if (targetPath.equals(path)) {
-                            ArrayList<LinkedHashMap> assetReferences = (ArrayList<LinkedHashMap>) scanMatch.get("assetReferenceList");
+                            ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) scanMatch
+                                    .get("assetReferenceList");
                             if (assetReferences.size() > 0) {
-                                for (LinkedHashMap assetReference : assetReferences) {
-                                    LinkedHashMap ownerEntity = (LinkedHashMap) assetReference.get("ownerEntityKey");
+                                for (LinkedHashMap<String, Object> assetReference : assetReferences) {
+                                    LinkedHashMap<String, Object> ownerEntity = (LinkedHashMap<String, Object>) assetReference.get("ownerEntityKey");
                                     String ownerId = (String) ownerEntity.get("entityId");
-                                    if (!ownerId.equals(releaseId)) {
-                                        // Single match was found
-                                        scanId = (String) scanMatch.get("id");
-                                    } else {
+                                    if (ownerId.equals(releaseId)) {
                                         alreadyMapped = true;
                                         listener.getLogger().println(
                                                 "[DEBUG] The scan target : '"
@@ -266,6 +265,9 @@ public class JenkinsHubIntRestService {
                                                         + releaseId + "'.");
                                         listener.getLogger().println();
                                     }
+                                }
+                                if (!alreadyMapped) {
+                                    scanId = (String) scanMatch.get("id");
                                 }
                             } else {
                                 scanId = (String) scanMatch.get("id");
@@ -366,7 +368,7 @@ public class JenkinsHubIntRestService {
             BDRestException {
         ArrayList<String> projectId = new ArrayList<String>();
         if (responseList.size() > 0) {
-            for (LinkedHashMap map : responseList) {
+            for (LinkedHashMap<String, Object> map : responseList) {
                 if (map.get("value").equals(projectName)) {
                     projectId.add((String) map.get("uuid"));
                 } else {
@@ -377,7 +379,7 @@ public class JenkinsHubIntRestService {
         return projectId;
     }
 
-    public HashMap<String, Object> getReleaseMatchesForProjectId(String projectId) throws IOException, BDRestException {
+    public LinkedHashMap<String, Object> getReleaseMatchesForProjectId(String projectId) throws IOException, BDRestException {
 
         Series<Cookie> cookies = getCookies();
         String url = getBaseUrl() + "/api/v1/projects/" + projectId + "/releases?limit=20";
@@ -388,7 +390,7 @@ public class JenkinsHubIntRestService {
         resource.get();
         int responseCode = resource.getResponse().getStatus().getCode();
 
-        HashMap<String, Object> responseMap = new HashMap<String, Object>();
+        LinkedHashMap<String, Object> responseMap = new LinkedHashMap<String, Object>();
         if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
 
             Response resp = resource.getResponse();
@@ -403,19 +405,19 @@ public class JenkinsHubIntRestService {
 
             // Create HashMap from the Rest response
             ObjectMapper responseMapper = new ObjectMapper();
-            responseMap = responseMapper.readValue(mapData, HashMap.class);
+            responseMap = responseMapper.readValue(mapData, LinkedHashMap.class);
         } else {
             throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
         }
         return responseMap;
     }
 
-    public String getReleaseIdFromReleaseMatches(HashMap<String, Object> responseMap, String releaseVersion) throws IOException, BDRestException {
+    public String getReleaseIdFromReleaseMatches(LinkedHashMap<String, Object> responseMap, String releaseVersion) throws IOException, BDRestException {
         String releaseId = null;
 
         if (responseMap.containsKey("items")) {
-            ArrayList<LinkedHashMap> releaseList = (ArrayList<LinkedHashMap>) responseMap.get("items");
-            for (LinkedHashMap release : releaseList) {
+            ArrayList<LinkedHashMap<String, Object>> releaseList = (ArrayList<LinkedHashMap<String, Object>>) responseMap.get("items");
+            for (LinkedHashMap<String, Object> release : releaseList) {
                 if (((String) release.get("version")).equals(releaseVersion)) {
                     releaseId = (String) release.get("id");
 
