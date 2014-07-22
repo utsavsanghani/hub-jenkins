@@ -29,6 +29,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
 
@@ -51,6 +52,8 @@ public class PostBuildHubiScan extends Recorder {
     private JDK java;
 
     private Result result;
+
+    private JenkinsHubIntRestService service = null;
 
     private boolean TEST = false;
 
@@ -81,7 +84,7 @@ public class PostBuildHubiScan extends Recorder {
         return result;
     }
 
-    public void setResult(Result result) {
+    private void setResult(Result result) {
         this.result = result;
     }
 
@@ -175,19 +178,23 @@ public class PostBuildHubiScan extends Recorder {
                         // Wait 2 seconds for the scans to be recognized in the Hub server
                         Thread.sleep(2000);
 
-                        JenkinsHubIntRestService service = new JenkinsHubIntRestService();
-                        service.setBaseUrl(getDescriptor().getHubServerInfo().getServerUrl());
-                        service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
-                                getDescriptor().getHubServerInfo().getPassword());
+                        JenkinsHubIntRestService service = getJenkinsHubIntRestService();
 
                         String projectId = null;
                         String releaseId = null;
                         HashMap<String, Object> projectMatchesResponse = service.getProjectMatches(getHubProjectName());
                         projectId = service.getProjectIdFromProjectMatches(projectMatchesResponse, getHubProjectName());
                         listener.getLogger().println("[DEBUG] Project Id: '" + projectId + "'");
+                        if (StringUtils.isEmpty(projectId)) {
+                            throw new BDJenkinsHubPluginException("The specified Project could not be found.");
+                        }
                         HashMap<String, Object> releaseMatchesResponse = service.getReleaseMatchesForProjectId(projectId);
                         releaseId = service.getReleaseIdFromReleaseMatches(releaseMatchesResponse, getHubProjectRelease());
                         listener.getLogger().println("[DEBUG] Release Id: '" + releaseId + "'");
+                        if (StringUtils.isEmpty(releaseId)) {
+                            throw new BDJenkinsHubPluginException("The specified Release could not be found in the Project.");
+                        }
+
                         List<String> scanIds = service.getScanLocationIds(listener, scanTargets, releaseId);
                         if (scanIds.size() > 0) {
                             listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
@@ -217,6 +224,19 @@ public class PostBuildHubiScan extends Recorder {
         listener.getLogger().println("Finished running Black Duck iScans.");
         build.setResult(getResult());
         return true;
+    }
+
+    public JenkinsHubIntRestService getJenkinsHubIntRestService() {
+        if (service != null) {
+            return service;
+        } else {
+            service = new JenkinsHubIntRestService();
+
+            service.setBaseUrl(getDescriptor().getHubServerInfo().getServerUrl());
+            service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
+                    getDescriptor().getHubServerInfo().getPassword());
+            return service;
+        }
     }
 
     /**
