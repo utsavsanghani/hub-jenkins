@@ -349,6 +349,111 @@ public class IntegrationTest {
     }
 
     @Test
+    public void completeRunthroughAndScanWithMappingScansAlreadyMapped() throws IOException, InterruptedException, ExecutionException, BDRestException {
+        Jenkins jenkins = j.jenkins;
+
+        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
+
+        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
+        iScanDesc.setInstallations(iScanInstall);
+
+        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+        UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
+                testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+        store.addCredentials(Domain.global(), credential);
+
+        HubServerInfo serverInfo = new HubServerInfo();
+        serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+        serverInfo.setCredentialsId(credential.getId());
+
+        IScanJobs oneScan = new IScanJobs("");
+        IScanJobs twoScan = new IScanJobs("ch-simple-web/simple-webapp/target");
+        IScanJobs threeScan = new IScanJobs("ch-simple-web/simple-webapp/target/simple-webapp.war");
+        IScanJobs[] scans = new IScanJobs[3];
+        scans[0] = oneScan;
+        scans[1] = twoScan;
+        scans[2] = threeScan;
+
+        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
+        scanDesc.setHubServerInfo(serverInfo);
+        String projectId = null;
+        try {
+            projectId = restHelper.createTestHubProject(PROJECT_NAME_EXISTING);
+            Assert.assertNotNull(projectId);
+            // Give server time to recognize the Project
+            Thread.sleep(2000);
+            boolean created = restHelper.createTestHubProjectRelease(PROJECT_RELEASE_EXISTING, projectId);
+            Assert.assertTrue(created);
+            // Give server time to recognize the Release
+            Thread.sleep(2000);
+
+            PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, 256);
+
+            FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+            project.setCustomWorkspace(testWorkspace);
+
+            project.getPublishersList().add(pbScan);
+
+            // First Run scans and maps the scans to the Project Release
+            FreeStyleBuild build = project.scheduleBuild2(0).get();
+            String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+            System.out.println(buildOutput);
+            Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36)
+                    + "'"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
+            Assert.assertTrue(buildOutput.contains("Finished in"));
+            Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
+            Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] Release Id:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput.contains("' has Scan Location Id: '"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] Linking the scan Id's to the Hub Project: '" + PROJECT_NAME_EXISTING + "', and Release: '"
+                    + PROJECT_RELEASE_EXISTING));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] Mapping the scan with id: '"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] Successfully mapped the scan with id: '"));
+            Assert.assertTrue(buildOutput.contains("Finished running Black Duck iScans."));
+
+            // Second run, scans should already be mapped
+            build = project.scheduleBuild2(0).get();
+            buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+            System.out.println(buildOutput);
+            Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36)
+                    + "'"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
+            Assert.assertTrue(buildOutput.contains("Finished in"));
+            Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
+            Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] Release Id:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput.contains("' has Scan Location Id: '"));
+            Assert.assertTrue(buildOutput
+                    .contains("[DEBUG] These scans are already mapped to this Release or there was an issue getting the Id's for the defined scan targets."));
+            Assert.assertTrue(buildOutput.contains("Finished running Black Duck iScans."));
+        } finally {
+            restHelper.deleteHubProject(projectId);
+        }
+    }
+
+    @Test
     public void scanInvalidPassword() throws IOException, InterruptedException, ExecutionException {
         Jenkins jenkins = j.jenkins;
 
