@@ -17,7 +17,6 @@ import hudson.tools.ToolDescriptor;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -332,8 +331,12 @@ public class PostBuildHubiScan extends Recorder {
                         if (log.getName().contains(fileName)) {
                             if (latestLogFile == null) {
                                 String logName = log.getName();
-                                String localhostname = InetAddress.getLocalHost().getHostName();
-                                String time = logName.replace(localhostname + "-" + fileName + "-", "");
+                                int start = logName.indexOf(fileName);
+                                // removes the hostname that ran the scan
+                                // was having issues
+                                // was getting the hostname of the machine that triggered the scan
+                                String time = logName.substring(start);
+                                time = time.replace(fileName + "-", "");
                                 time = time.replace(".log", "");
                                 time = time.substring(0, time.length() - 5);
                                 DateTimeFormatter dateStringFormat = new
@@ -343,8 +346,12 @@ public class PostBuildHubiScan extends Recorder {
                                 latestLogFile = new File(log.getRemote());
                             } else {
                                 String logName = log.getName();
-                                String localhostname = InetAddress.getLocalHost().getHostName();
-                                String time = logName.replace(localhostname + "-" + fileName + "-", "");
+                                int start = logName.indexOf(fileName);
+                                // removes the hostname that ran the scan
+                                // was having issues
+                                // was getting the hostname of the machine that triggered the scan
+                                String time = logName.substring(start);
+                                time = time.replace(fileName + "-", "");
                                 time = time.replace(".log", "");
                                 time = time.substring(0, time.length() - 5);
                                 DateTimeFormatter dateStringFormat = new
