@@ -285,6 +285,7 @@ public class PostBuildHubiScan extends Recorder {
         cmd.add("-Done-jar.silent=true");
         cmd.add("-jar");
 
+        // TODO add proxy configuration for the CLI as soon as the CLI has proxy support
         // Jenkins jenkins = Jenkins.getInstance();
         // if (jenkins != null) {
         // ProxyConfiguration proxy = jenkins.proxy;
