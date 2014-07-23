@@ -40,7 +40,7 @@ public class JenkinsHubIntRestService {
 
     private int proxyPort;
 
-    private static List<Pattern> noProxyHosts;
+    private List<Pattern> noProxyHosts;
 
     protected JenkinsHubIntRestService() {
 
