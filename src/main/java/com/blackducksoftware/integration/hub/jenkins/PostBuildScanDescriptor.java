@@ -1,6 +1,7 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
 import hudson.Extension;
+import hudson.ProxyConfiguration;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.security.ACL;
@@ -103,6 +104,18 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     public void setProjectId(String projectId) {
         this.projectId = projectId;
+    }
+
+    public void setupService(JenkinsHubIntRestService service) {
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            ProxyConfiguration proxy = jenkins.proxy;
+            if (proxy != null) {
+                service.setNoProxyHosts(Jenkins.getInstance().proxy.getNoProxyHostPatterns());
+                service.setProxyHost(Jenkins.getInstance().proxy.name);
+                service.setProxyPort(Jenkins.getInstance().proxy.port);
+            }
+        }
     }
 
     /**
@@ -230,15 +243,15 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 String credentialUserName = null;
                 String credentialPassword = null;
 
-                UsernamePasswordCredentialsImpl credential = getCredentials(getHubServerInfo().getCredentialsId());
+                UsernamePasswordCredentialsImpl credential = hubServerInfo.getCredential();
                 if (credential == null) {
                     return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
                 }
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
                 JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+                setupService(service);
                 service.setBaseUrl(getServerUrl());
-
                 service.setCookies(credentialUserName, credentialPassword);
 
                 ArrayList<LinkedHashMap<String, Object>> responseList = service.getProjectMatches(hubProjectName);
@@ -310,13 +323,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 String credentialUserName = null;
                 String credentialPassword = null;
 
-                UsernamePasswordCredentialsImpl credential = getCredentials(getHubServerInfo().getCredentialsId());
+                UsernamePasswordCredentialsImpl credential = hubServerInfo.getCredential();
                 if (credential == null) {
                     return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
                 }
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
                 JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+                setupService(service);
                 service.setBaseUrl(getServerUrl());
                 service.setCookies(credentialUserName, credentialPassword);
 
@@ -396,7 +410,17 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             String credentialUserName = null;
             String credentialPassword = null;
 
-            UsernamePasswordCredentialsImpl credential = getCredentials(hubCredentialsId);
+            UsernamePasswordCredentialsImpl credential = null;
+            AbstractProject<?, ?> project = null;
+            List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class,
+                    project, ACL.SYSTEM,
+                    Collections.<DomainRequirement> emptyList());
+            IdMatcher matcher = new IdMatcher(hubCredentialsId);
+            for (StandardCredentials c : credentials) {
+                if (matcher.matches(c) && c instanceof UsernamePasswordCredentialsImpl) {
+                    credential = (UsernamePasswordCredentialsImpl) c;
+                }
+            }
             if (credential == null) {
                 return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
             }
@@ -404,7 +428,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialPassword = credential.getPassword().getPlainText();
 
             JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+
+            setupService(service);
             service.setBaseUrl(serverUrl);
+
             int responseCode = service.setCookies(credentialUserName, credentialPassword);
 
             if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
@@ -481,7 +508,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             String credentialUserName = null;
             String credentialPassword = null;
 
-            UsernamePasswordCredentialsImpl credential = getCredentials(getHubCredentialsId());
+            UsernamePasswordCredentialsImpl credential = hubServerInfo.getCredential();
             if (credential == null) {
                 return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
             }
@@ -489,6 +516,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialPassword = credential.getPassword().getPlainText();
 
             JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+            setupService(service);
             service.setBaseUrl(getServerUrl());
             service.setCookies(credentialUserName, credentialPassword);
 
@@ -529,31 +557,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             }
         }
 
-    }
-
-    /**
-     * Retrieves the Username and Password that matches the credentialsId that you have provided.
-     * 
-     * @param hubCredentialsId
-     *            String the Credential Id that you want to use to find the matching Username and Password for
-     * @return UsernamePasswordCredentialsImpl or NULL if the Credentials could not be found, there are no credentials
-     *         stored, or the credentials that were
-     *         chosen are not a Username and Password
-     */
-    private UsernamePasswordCredentialsImpl getCredentials(String hubCredentialsId) {
-        AbstractProject<?, ?> nullProject = null;
-        List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class,
-                nullProject, ACL.SYSTEM,
-                Collections.<DomainRequirement> emptyList());
-        IdMatcher matcher = new IdMatcher(hubCredentialsId);
-        for (StandardCredentials c : credentials) {
-            if (matcher.matches(c) && c instanceof UsernamePasswordCredentialsImpl) {
-                UsernamePasswordCredentialsImpl credential = (UsernamePasswordCredentialsImpl) c;
-                return credential;
-            }
-        }
-        // Could not find the matching credentials
-        return null;
     }
 
     @Override

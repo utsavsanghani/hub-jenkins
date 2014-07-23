@@ -11,9 +11,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.sf.json.JSONObject;
 
+import org.codehaus.plexus.util.StringUtils;
+import org.restlet.Context;
 import org.restlet.Response;
 import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
@@ -32,6 +36,12 @@ public class JenkinsHubIntRestService {
 
     private String baseUrl;
 
+    private String proxyHost;
+
+    private int proxyPort;
+
+    private static List<Pattern> noProxyHosts;
+
     protected JenkinsHubIntRestService() {
 
     }
@@ -42,6 +52,63 @@ public class JenkinsHubIntRestService {
 
     public void setBaseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
+    }
+
+    public void setNoProxyHosts(List<Pattern> noProxyHosts) {
+        this.noProxyHosts = noProxyHosts;
+    }
+
+    public void setProxyPort(int proxyPort) {
+        this.proxyPort = proxyPort;
+    }
+
+    public void setProxyHost(String proxyHost) {
+        this.proxyHost = proxyHost;
+    }
+
+    private ClientResource createClientResource(String url) {
+        ClientResource resource = new ClientResource(new Context(), url);
+        if (noProxyHosts != null && !getMatchingNoProxyHostPatterns(url, noProxyHosts)) {
+            if (!StringUtils.isEmpty(proxyHost) && proxyPort != 0) {
+                resource.setFollowingRedirects(true);
+                resource.getContext().getParameters().add("proxyHost", proxyHost);
+                resource.getContext().getParameters().add("proxyPort", Integer.toString(proxyPort));
+            }
+        }
+        return resource;
+    }
+
+    /**
+     * Checks the list of user defined host names that should be connected to directly and not go through the proxy. If
+     * the hostToMatch matches any of these hose names then this method returns true.
+     * 
+     * @param hostToMatch
+     *            String the hostName to check if it is in the list of hosts that should not go through the proxy.
+     * 
+     * @return boolean
+     */
+    protected static boolean getMatchingNoProxyHostPatterns(String hostToMatch, List<Pattern> noProxyHosts) {
+        if (noProxyHosts.isEmpty()) {
+            // User did not specify any hosts to ignore the proxy
+            return false;
+        }
+        StringBuilder pattern = new StringBuilder();
+        for (Pattern p : noProxyHosts) {
+            if (pattern.length() > 0) {
+                pattern.append('|');
+            }
+            pattern.append('(');
+            pattern.append(p.pattern());
+            pattern.append(')');
+        }
+        Pattern noProxyHostPattern = Pattern.compile(pattern.toString());
+        Matcher m = noProxyHostPattern.matcher(hostToMatch);
+        boolean match = false;
+        while (m.find()) {
+            match = true;
+        }
+        return match;
+
     }
 
     /**
@@ -58,9 +125,8 @@ public class JenkinsHubIntRestService {
      */
     public int setCookies(String credentialUserName, String credentialPassword) {
         String url = getBaseUrl() + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword;
-        ClientResource resource = new ClientResource(url);
+        ClientResource resource = createClientResource(url);
         resource.setMethod(Method.POST);
-
         EmptyRepresentation rep = new EmptyRepresentation();
 
         resource.post(rep);
@@ -93,7 +159,7 @@ public class JenkinsHubIntRestService {
     public ArrayList<LinkedHashMap<String, Object>> getProjectMatches(String hubProjectName) throws IOException, BDRestException {
 
         String url = getBaseUrl() + "/api/v1/autocomplete/PROJECT?text=" + hubProjectName + "&limit=20";
-        ClientResource resource = new ClientResource(url);
+        ClientResource resource = createClientResource(url);
 
         resource.getRequest().setCookies(getCookies());
         resource.setMethod(Method.GET);
@@ -127,7 +193,7 @@ public class JenkinsHubIntRestService {
     // public String getProjectId(String hubProjectName) throws IOException, BDRestException {
     //
     // String url = getBaseUrl() + "/api/v1/projects/name/" + hubProjectName + "?projectName=" + hubProjectName;
-    // ClientResource resource = new ClientResource(url);
+    // ClientResource resource = createClientResource(url);
     //
     // resource.getRequest().setCookies(getCookies());
     // resource.setMethod(Method.GET);
@@ -179,7 +245,7 @@ public class JenkinsHubIntRestService {
         List<String> scanIds = new ArrayList<String>();
         for (String targetPath : scanTargets) {
             url = getBaseUrl() + "/api/v1/scanlocations?host=" + localhostname + "&path=" + targetPath;
-            resource = new ClientResource(url);
+            resource = createClientResource(url);
 
             resource.getRequest().setCookies(getCookies());
             resource.setMethod(Method.GET);
@@ -311,7 +377,7 @@ public class JenkinsHubIntRestService {
             for (String scanId : scanIds) {
                 listener.getLogger().println("[DEBUG] Mapping the scan with id: '" + scanId + "', to the Release with Id: '" + releaseId + "'.");
                 String url = getBaseUrl() + "/api/v1/assetreferences";
-                ClientResource resource = new ClientResource(url);
+                ClientResource resource = createClientResource(url);
 
                 resource.getRequest().setCookies(getCookies());
                 resource.setMethod(Method.POST);
@@ -383,7 +449,7 @@ public class JenkinsHubIntRestService {
     public LinkedHashMap<String, Object> getReleaseMatchesForProjectId(String projectId) throws IOException, BDRestException {
 
         String url = getBaseUrl() + "/api/v1/projects/" + projectId + "/releases?limit=20";
-        ClientResource resource = new ClientResource(url);
+        ClientResource resource = createClientResource(url);
 
         resource.getRequest().setCookies(getCookies());
         resource.setMethod(Method.GET);
@@ -432,7 +498,7 @@ public class JenkinsHubIntRestService {
     public HashMap<String, Object> createHubProject(String projectName) throws IOException, BDRestException {
 
         String url = getBaseUrl() + "/api/v1/projects";
-        ClientResource resource = new ClientResource(url);
+        ClientResource resource = createClientResource(url);
 
         resource.getRequest().setCookies(getCookies());
         resource.setMethod(Method.POST);
@@ -472,7 +538,7 @@ public class JenkinsHubIntRestService {
 
     public int createHubRelease(String projectRelease, String projectId) throws IOException, BDRestException {
         String url = getBaseUrl() + "/api/v1/releases";
-        ClientResource resource = new ClientResource(url);
+        ClientResource resource = createClientResource(url);
 
         JSONObject obj = new JSONObject();
         obj.put("projectId", projectId);

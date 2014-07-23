@@ -4,6 +4,7 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
+import hudson.ProxyConfiguration;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
@@ -22,6 +23,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+
+import jenkins.model.Jenkins;
 
 import org.codehaus.plexus.util.StringUtils;
 import org.joda.time.DateTime;
@@ -235,7 +238,15 @@ public class PostBuildHubiScan extends Recorder {
     public void setJenkinsHubIntRestService() {
         if (service == null) {
             service = new JenkinsHubIntRestService();
-
+            Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins != null) {
+                ProxyConfiguration proxy = jenkins.proxy;
+                if (proxy != null) {
+                    service.setNoProxyHosts(proxy.getNoProxyHostPatterns());
+                    service.setProxyHost(proxy.name);
+                    service.setProxyPort(proxy.port);
+                }
+            }
             service.setBaseUrl(getDescriptor().getHubServerInfo().getServerUrl());
             service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
                     getDescriptor().getHubServerInfo().getPassword());
@@ -274,6 +285,22 @@ public class PostBuildHubiScan extends Recorder {
         cmd.add("-Done-jar.silent=true");
         cmd.add("-jar");
 
+        // Jenkins jenkins = Jenkins.getInstance();
+        // if (jenkins != null) {
+        // ProxyConfiguration proxy = jenkins.proxy;
+        // if (proxy != null && proxy.getNoProxyHostPatterns() != null) {
+        // if (!JenkinsHubIntRestService.getMatchingNoProxyHostPatterns(url.getHost(), proxy.getNoProxyHostPatterns()))
+        // {
+        // if (!StringUtils.isEmpty(proxy.name) && proxy.port != 0) {
+        // System.setProperty("http.proxyHost", proxy.name);
+        // System.setProperty("http.proxyPort", Integer.toString(proxy.port));
+        // // cmd.add("-Dhttp.useProxy=true");
+        // // cmd.add("-Dhttp.proxyHost=" + proxy.name);
+        // // cmd.add("-Dhttp.proxyPort=" + proxy.port);
+        // }
+        // }
+        // }
+        // }
         if (getIScanMemory() != 256) {
             cmd.add("-Xmx" + getIScanMemory() + "m");
         } else {

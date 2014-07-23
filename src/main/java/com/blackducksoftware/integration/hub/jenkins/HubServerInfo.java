@@ -80,7 +80,7 @@ public class HubServerInfo implements Serializable {
         return creds.getPassword().getPlainText();
     }
 
-    private UsernamePasswordCredentialsImpl getCredential() {
+    protected UsernamePasswordCredentialsImpl getCredential() {
         // Only need to look up the credential when you first run a build or if the credential that the user wants to
         // use has changed.
         if (credential == null || !credential.getId().equals(hubCredentialsId)) {
