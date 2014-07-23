@@ -6,6 +6,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,8 +44,13 @@ public class JenkinsHubIntRestService {
 
     private List<Pattern> noProxyHosts;
 
-    protected JenkinsHubIntRestService() {
+    private BuildListener listener;
 
+    protected JenkinsHubIntRestService() {
+    }
+
+    public void setListener(BuildListener listener) {
+        this.listener = listener;
     }
 
     public String getBaseUrl() {
@@ -66,13 +73,25 @@ public class JenkinsHubIntRestService {
         this.proxyHost = proxyHost;
     }
 
-    private ClientResource createClientResource(String url) {
+    private ClientResource createClientResource(String url) throws MalformedURLException {
         ClientResource resource = new ClientResource(new Context(), url);
-        if (noProxyHosts != null && !getMatchingNoProxyHostPatterns(url, noProxyHosts)) {
-            if (!StringUtils.isEmpty(proxyHost) && proxyPort != 0) {
-                resource.setFollowingRedirects(true);
-                resource.getContext().getParameters().add("proxyHost", proxyHost);
-                resource.getContext().getParameters().add("proxyPort", Integer.toString(proxyPort));
+        if (noProxyHosts != null) {
+            if (!getMatchingNoProxyHostPatterns(url, noProxyHosts)) {
+                if (!StringUtils.isEmpty(proxyHost) && proxyPort != 0) {
+                    if (listener != null) {
+                        listener.getLogger().println("[DEBUG] Using proxy: '" + proxyHost + "' at Port: '" + proxyPort + "'");
+                    }
+
+                    resource.setFollowingRedirects(true);
+                    resource.getContext().getParameters().add("proxyHost", proxyHost);
+                    resource.getContext().getParameters().add("proxyPort", Integer.toString(proxyPort));
+                }
+            } else {
+                if (listener != null) {
+                    URL currUrl = new URL(url);
+                    listener.getLogger().println(
+                            "[DEBUG] Ignoring proxy: '" + proxyHost + "' at Port: '" + proxyPort + "' for the Host: '" + currUrl.getHost() + "'");
+                }
             }
         }
         return resource;
@@ -122,8 +141,9 @@ public class JenkinsHubIntRestService {
      *            String the Password for the Hub server
      * 
      * @return int Status code
+     * @throws MalformedURLException
      */
-    public int setCookies(String credentialUserName, String credentialPassword) {
+    public int setCookies(String credentialUserName, String credentialPassword) throws MalformedURLException {
         String url = getBaseUrl() + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword;
         ClientResource resource = createClientResource(url);
         resource.setMethod(Method.POST);
@@ -237,8 +257,10 @@ public class JenkinsHubIntRestService {
      * 
      * @return List<String> scan Ids
      * @throws UnknownHostException
+     * @throws MalformedURLException
      */
-    public List<String> getScanLocationIds(BuildListener listener, List<String> scanTargets, String releaseId) throws UnknownHostException {
+    public List<String> getScanLocationIds(BuildListener listener, List<String> scanTargets, String releaseId) throws UnknownHostException,
+            MalformedURLException {
         String localhostname = InetAddress.getLocalHost().getHostName();
         String url = null;
         ClientResource resource = null;
@@ -372,7 +394,7 @@ public class JenkinsHubIntRestService {
         return scanIds;
     }
 
-    public void mapScansToProjectRelease(BuildListener listener, List<String> scanIds, String releaseId) throws BDRestException {
+    public void mapScansToProjectRelease(BuildListener listener, List<String> scanIds, String releaseId) throws BDRestException, MalformedURLException {
         if (!scanIds.isEmpty()) {
             for (String scanId : scanIds) {
                 listener.getLogger().println("[DEBUG] Mapping the scan with id: '" + scanId + "', to the Release with Id: '" + releaseId + "'.");

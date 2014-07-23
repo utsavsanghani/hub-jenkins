@@ -516,7 +516,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialPassword = credential.getPassword().getPlainText();
 
             JenkinsHubIntRestService service = new JenkinsHubIntRestService();
-            setupService(service);
+            service.setNoProxyHosts(Jenkins.getInstance().proxy.getNoProxyHostPatterns());
+            service.setProxyHost(Jenkins.getInstance().proxy.name);
+            service.setProxyPort(Jenkins.getInstance().proxy.port);
             service.setBaseUrl(getServerUrl());
             service.setCookies(credentialUserName, credentialPassword);
 

@@ -285,7 +285,8 @@ public class IntegrationTest {
 
             PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, 256);
 
-            jenkins.proxy = new ProxyConfiguration("qaproxy", 3128);
+            jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST"),
+                    Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT")));
 
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -309,6 +310,8 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
             Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
+                    + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Release Id:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] The scan target :"));
@@ -365,7 +368,9 @@ public class IntegrationTest {
 
             PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, 256);
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-            jenkins.proxy = new ProxyConfiguration("qaproxy", 3128, null, null, url.getHost());
+            jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST"),
+                    Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT")), null, null, url.getHost());
+
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
 
@@ -388,6 +393,9 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
             Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
+
+            Assert.assertTrue(buildOutput.contains("[DEBUG] Ignoring proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
+                    + testProperties.getProperty("TEST_PROXY_PORT") + "' for the Host: '" + url.getHost() + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Release Id:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] The scan target :"));

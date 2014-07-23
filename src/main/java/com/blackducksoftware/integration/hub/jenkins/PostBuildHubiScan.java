@@ -19,6 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -184,7 +185,7 @@ public class PostBuildHubiScan extends Recorder {
                         // Wait 2 seconds for the scans to be recognized in the Hub server
                         Thread.sleep(2000);
 
-                        setJenkinsHubIntRestService();
+                        setJenkinsHubIntRestService(listener);
 
                         ArrayList<String> projectId = null;
                         String releaseId = null;
@@ -235,9 +236,10 @@ public class PostBuildHubiScan extends Recorder {
         return true;
     }
 
-    public void setJenkinsHubIntRestService() {
+    public void setJenkinsHubIntRestService(BuildListener listener) throws MalformedURLException {
         if (service == null) {
             service = new JenkinsHubIntRestService();
+            service.setListener(listener);
             Jenkins jenkins = Jenkins.getInstance();
             if (jenkins != null) {
                 ProxyConfiguration proxy = jenkins.proxy;
