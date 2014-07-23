@@ -17,6 +17,7 @@ import hudson.tools.ToolDescriptor;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -44,7 +45,7 @@ public class PostBuildHubiScan extends Recorder {
 
     private final String hubProjectRelease;
 
-    private final int iScanMemory;
+    private int iScanMemory;
 
     private String workingDirectory;
 
@@ -88,6 +89,9 @@ public class PostBuildHubiScan extends Recorder {
     }
 
     public int getIScanMemory() {
+        if (iScanMemory == 0) {
+            iScanMemory = DEFAULT_MEMORY;
+        }
         return iScanMemory;
     }
 
@@ -329,45 +333,49 @@ public class PostBuildHubiScan extends Recorder {
                     List<FilePath> logFiles = logFolder.list();
                     for (FilePath log : logFiles) {
                         if (log.getName().contains(fileName)) {
-                            if (latestLogFile == null) {
-                                String logName = log.getName();
-                                int start = logName.indexOf(fileName);
-                                // removes the hostname that ran the scan
-                                // was having issues
-                                // was getting the hostname of the machine that triggered the scan
-                                String time = logName.substring(start);
-                                time = time.replace(fileName + "-", "");
-                                time = time.replace(".log", "");
-                                time = time.substring(0, time.length() - 5);
-                                DateTimeFormatter dateStringFormat = new
-                                        DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-                                DateTime dateTime = dateStringFormat.parseDateTime(time);
-                                latestLogTime = dateTime;
-                                latestLogFile = new File(log.getRemote());
-                            } else {
-                                String logName = log.getName();
-                                int start = logName.indexOf(fileName);
-                                // removes the hostname that ran the scan
-                                // was having issues
-                                // was getting the hostname of the machine that triggered the scan
-                                String time = logName.substring(start);
-                                time = time.replace(fileName + "-", "");
-                                time = time.replace(".log", "");
-                                time = time.substring(0, time.length() - 5);
-                                DateTimeFormatter dateStringFormat = new
-                                        DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-                                DateTime logTime = dateStringFormat.parseDateTime(time);
+                            String hostName = InetAddress.getLocalHost().getHostName();
+                            if (log.getName().contains(hostName)) {
+                                // log file name contains the scan target, and the host name. Get the latest one.
+                                if (latestLogFile == null) {
+                                    String time = log.getName();
+                                    // removes everything from the log name except for the time stamp
+                                    time = time.replace(hostName + "-" + fileName + "-", "");
+                                    // time = time.substring(time.length() - 30, time.length());
+                                    time = time.substring(0, time.length() - 9);
 
-                                if (logTime.isAfter(latestLogTime)) {
-                                    latestLogTime = logTime;
+                                    DateTimeFormatter dateStringFormat = new
+                                            DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+                                    DateTime dateTime = dateStringFormat.parseDateTime(time);
+                                    latestLogTime = dateTime;
                                     latestLogFile = new File(log.getRemote());
+                                } else {
+                                    String time = log.getName();
+                                    // removes everything from the log name except for the time stamp
+                                    time = time.replace(hostName + "-" + fileName + "-", "");
+                                    // time = time.substring(time.length() - 30, time.length());
+                                    time = time.substring(0, time.length() - 9);
+
+                                    DateTimeFormatter dateStringFormat = new
+                                            DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+                                    DateTime logTime = dateStringFormat.parseDateTime(time);
+
+                                    if (logTime.isAfter(latestLogTime)) {
+                                        latestLogTime = logTime;
+                                        latestLogFile = new File(log.getRemote());
+                                    }
                                 }
                             }
                         }
                     }
-                    listener.getLogger().println(
-                            "For scan target : '" + target + "', you can view the iScan CLI logs at : '" + latestLogFile.getCanonicalPath());
-                    listener.getLogger().println();
+                    if (latestLogFile != null) {
+                        listener.getLogger().println(
+                                "For scan target : '" + target + "', you can view the iScan CLI logs at : '" + latestLogFile.getCanonicalPath());
+                        listener.getLogger().println();
+                    } else {
+                        listener.getLogger().println(
+                                "For scan target : '" + target + "', could not find the log file!");
+                    }
+
                 }
             }
         } else {

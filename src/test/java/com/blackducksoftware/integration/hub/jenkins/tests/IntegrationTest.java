@@ -10,6 +10,8 @@ import hudson.tools.ToolDescriptor;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
@@ -93,6 +95,23 @@ public class IntegrationTest {
         restHelper = new JenkinsHubIntTestHelper();
         restHelper.setBaseUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         restHelper.setCookies(testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+        projectCleanup();
+    }
+
+    /**
+     * Cleans up any project that may be left over from interrupted tests.
+     * 
+     * @throws BDRestException
+     * @throws IOException
+     */
+    public static void projectCleanup() throws BDRestException, IOException {
+        ArrayList<LinkedHashMap<String, Object>> responseList = restHelper.getProjectMatches(PROJECT_NAME_EXISTING);
+        ArrayList<String> ids = restHelper.getProjectIdsFromProjectMatches(responseList, PROJECT_NAME_EXISTING);
+        if (ids.size() > 0) {
+            for (String id : ids) {
+                restHelper.deleteHubProject(id);
+            }
+        }
     }
 
     @Test
