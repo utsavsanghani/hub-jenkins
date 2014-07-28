@@ -41,6 +41,8 @@ public class PostBuildHubiScan extends Recorder {
 
     private static final int DEFAULT_MEMORY = 256;
 
+    private String hubProjectId;
+
     private final IScanJobs[] scans;
 
     private final String iScanName;
@@ -247,6 +249,11 @@ public class PostBuildHubiScan extends Recorder {
                     service.setNoProxyHosts(proxy.getNoProxyHostPatterns());
                     service.setProxyHost(proxy.name);
                     service.setProxyPort(proxy.port);
+                    if (!StringUtils.isEmpty(proxy.name) && proxy.port != 0) {
+                        if (listener != null) {
+                            listener.getLogger().println("[DEBUG] Using proxy: '" + proxy.name + "' at Port: '" + proxy.port + "'");
+                        }
+                    }
                 }
             }
             service.setBaseUrl(getDescriptor().getHubServerInfo().getServerUrl());
@@ -280,7 +287,7 @@ public class PostBuildHubiScan extends Recorder {
             HubConfigurationException, InterruptedException {
 
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
-        URL url = new URL(getDescriptor().getServerUrl());
+        URL url = new URL(getDescriptor().getHubServerUrl());
 
         List<String> cmd = new ArrayList<String>();
         cmd.add(getJava().getHome() + "/bin/java");

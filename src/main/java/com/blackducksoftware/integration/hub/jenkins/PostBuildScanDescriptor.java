@@ -2,6 +2,7 @@ package com.blackducksoftware.integration.hub.jenkins;
 
 import hudson.Extension;
 import hudson.ProxyConfiguration;
+import hudson.model.AutoCompletionCandidates;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.security.ACL;
@@ -55,7 +56,7 @@ import com.cloudbees.plugins.credentials.matchers.IdMatcher;
 // point.
 public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> implements Serializable {
 
-    private static final String FORM_SERVER_URL = "serverUrl";
+    private static final String FORM_SERVER_URL = "hubServerUrl";
 
     // private static final String FORM_TIMEOUT = "timeout";
 
@@ -64,6 +65,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
     private HubServerInfo hubServerInfo;
+
+    private List<Duplicate> duplicates = new ArrayList<Duplicate>();
 
     private String projectId;
 
@@ -74,6 +77,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public PostBuildScanDescriptor() {
         super(PostBuildHubiScan.class);
         load();
+    }
+
+    public List<Duplicate> getDuplicates() {
+        return duplicates;
+    }
+
+    public void setDuplicates(List<Duplicate> duplicates) {
+        this.duplicates = duplicates;
     }
 
     /**
@@ -96,7 +107,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             return projectId;
         } else {
             // TODO When we get the api for this
-            // return getProjectId(getProjectName());
+            // JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+            // return service.getProjectId(getProjectName());
             return projectId;
         }
 
@@ -104,6 +116,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     public void setProjectId(String projectId) {
         this.projectId = projectId;
+        save(); // save the configuration whenever this field changes or else the config doesn't get updated correctly
     }
 
     public void setupService(JenkinsHubIntRestService service) {
@@ -111,9 +124,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         if (jenkins != null) {
             ProxyConfiguration proxy = jenkins.proxy;
             if (proxy != null) {
-                service.setNoProxyHosts(Jenkins.getInstance().proxy.getNoProxyHostPatterns());
-                service.setProxyHost(Jenkins.getInstance().proxy.name);
-                service.setProxyPort(Jenkins.getInstance().proxy.port);
+                service.setNoProxyHosts(proxy.getNoProxyHostPatterns());
+                service.setProxyHost(proxy.name);
+                service.setProxyPort(proxy.port);
             }
         }
     }
@@ -159,7 +172,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         boolean changed = false;
         ListBoxModel items = null;
         try {
-
             items = new ListBoxModel();
             Jenkins jenkins = Jenkins.getInstance();
             IScanDescriptor iScanDescriptor = jenkins.getDescriptorByType(IScanDescriptor.class);
@@ -218,6 +230,59 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return FormValidation.ok();
     }
 
+    public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName) throws IOException,
+            ServletException {
+        AutoCompletionCandidates potentialMatches = new AutoCompletionCandidates();
+        UsernamePasswordCredentialsImpl credential = null;
+        if (!StringUtils.isEmpty(getHubServerUrl()) || !StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
+            credential = hubServerInfo.getCredential();
+            if (credential != null) {
+                ClassLoader originalClassLoader = Thread.currentThread()
+                        .getContextClassLoader();
+                boolean changed = false;
+                try {
+                    String credentialUserName = null;
+                    String credentialPassword = null;
+                    credentialUserName = credential.getUsername();
+                    credentialPassword = credential.getPassword().getPlainText();
+
+                    JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+                    setupService(service);
+                    service.setBaseUrl(getHubServerUrl());
+                    service.setCookies(credentialUserName, credentialPassword);
+                    ArrayList<LinkedHashMap<String, Object>> responseList = service.getProjectMatches(hubProjectName);
+
+                    if (!responseList.isEmpty()) {
+                        ArrayList<String> projectNames = new ArrayList<String>();
+                        for (LinkedHashMap<String, Object> map : responseList) {
+                            if (map.get("value").equals(hubProjectName)) {
+                                if (!projectNames.contains(map.get("value"))) {
+                                    projectNames.add((String) map.get("value"));
+                                }
+                            } else {
+                                // name does not match
+                                projectNames.add((String) map.get("value"));
+                            }
+                        }
+                        if (!projectNames.isEmpty()) {
+                            for (String projectName : projectNames) {
+                                potentialMatches.add(projectName);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    // do nothing for exception
+                } finally {
+                    if (changed) {
+                        Thread.currentThread().setContextClassLoader(
+                                originalClassLoader);
+                    }
+                }
+            }
+        }
+        return potentialMatches;
+    }
+
     /**
      * Performs on-the-fly validation of the form field 'hubProjectName'. Checks to see if there is already a project in
      * the Hub with this name.
@@ -234,7 +299,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             boolean changed = false;
             try {
                 setProjectId(null);
-                if (StringUtils.isEmpty(getServerUrl())) {
+                if (StringUtils.isEmpty(getHubServerUrl())) {
                     return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
                 }
                 if (StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
@@ -251,17 +316,18 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 credentialPassword = credential.getPassword().getPlainText();
                 JenkinsHubIntRestService service = new JenkinsHubIntRestService();
                 setupService(service);
-                service.setBaseUrl(getServerUrl());
+                service.setBaseUrl(getHubServerUrl());
                 service.setCookies(credentialUserName, credentialPassword);
 
                 ArrayList<LinkedHashMap<String, Object>> responseList = service.getProjectMatches(hubProjectName);
-
                 if (!responseList.isEmpty()) {
                     StringBuilder projectMatches = new StringBuilder();
+                    ArrayList<String> projIds = new ArrayList<String>();
                     for (LinkedHashMap<String, Object> map : responseList) {
                         if (map.get("value").equals(hubProjectName)) {
-                            setProjectId((String) map.get("uuid"));
-                            return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
+                            projIds.add((String) map.get("uuid"));
+                            // setProjectId((String) map.get("uuid"));
+                            // return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
                         } else {
                             // name does not match
                             if (projectMatches.length() > 0) {
@@ -271,9 +337,26 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                             }
                         }
                     }
-                    return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getServerUrl(), projectMatches.toString()));
+                    if (projIds.size() > 1) {
+                        for (int i = 0; i < projIds.size(); i++) {
+                            List<Duplicate> dupList = new ArrayList<Duplicate>();
+                            Duplicate dup = new Duplicate();
+                            dup.setId(projIds.get(i));
+                            if (i == 1) {
+                                dup.setChecked(true);
+                            }
+                            dupList.add(dup);
+                            setDuplicates(dupList);
+                        }
+                        return FormValidation.error(Messages.HubBuildScan_getProjectExistsWithDuplicateMatches_0_(getHubServerUrl()));
+                    } else if (projIds.size() == 1) {
+                        setProjectId(projIds.get(0));
+                        return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getHubServerUrl()));
+                    } else {
+                        return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getHubServerUrl(), projectMatches.toString()));
+                    }
                 } else {
-                    return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getServerUrl()));
+                    return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getHubServerUrl()));
                 }
             } catch (Exception e) {
                 if (e.getCause() != null && e.getCause().getCause() != null) {
@@ -313,7 +396,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 if (StringUtils.isEmpty(getProjectId())) {
                     return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null));
                 }
-                if (StringUtils.isEmpty(getServerUrl())) {
+                if (StringUtils.isEmpty(getHubServerUrl())) {
                     return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
                 }
                 if (StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
@@ -331,7 +414,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 credentialPassword = credential.getPassword().getPlainText();
                 JenkinsHubIntRestService service = new JenkinsHubIntRestService();
                 setupService(service);
-                service.setBaseUrl(getServerUrl());
+                service.setBaseUrl(getHubServerUrl());
                 service.setCookies(credentialUserName, credentialPassword);
 
                 HashMap<String, Object> responseMap = service.getReleaseMatchesForProjectId(getProjectId());
@@ -394,7 +477,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return FormValidation
      * @throws ServletException
      */
-    public FormValidation doTestConnection(@QueryParameter("serverUrl") final String serverUrl,
+    public FormValidation doTestConnection(@QueryParameter("hubServerUrl") final String serverUrl,
             @QueryParameter("hubCredentialsId") final String hubCredentialsId) {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
@@ -517,7 +600,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
             JenkinsHubIntRestService service = new JenkinsHubIntRestService();
             setupService(service);
-            service.setBaseUrl(getServerUrl());
+            service.setBaseUrl(getHubServerUrl());
             service.setCookies(credentialUserName, credentialPassword);
 
             if (!projectExists) {
@@ -536,7 +619,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseCreated());
             } else if (responseCode == 401) {
                 // If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
-                return FormValidation.error(Messages.HubBuildScan_getCredentialsInValidFor_0_(getServerUrl()));
+                return FormValidation.error(Messages.HubBuildScan_getCredentialsInValidFor_0_(getHubServerUrl()));
             } else {
                 return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
             }
@@ -613,7 +696,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     // .getToolLocation()));
     // }
 
-    public String getServerUrl() {
+    public String getHubServerUrl() {
         return (hubServerInfo == null ? "" : (hubServerInfo
                 .getServerUrl() == null ? "" : hubServerInfo
                 .getServerUrl()));
@@ -630,5 +713,31 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     public String getHubCredentialsId() {
         return (hubServerInfo == null ? "" : (hubServerInfo.getCredentialsId() == null ? "" : hubServerInfo.getCredentialsId()));
+    }
+
+    public static class Duplicate {
+        private String id;
+
+        private boolean checked;
+
+        public Duplicate() {
+
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public boolean isChecked() {
+            return checked;
+        }
+
+        public void setChecked(boolean checked) {
+            this.checked = checked;
+        }
     }
 }

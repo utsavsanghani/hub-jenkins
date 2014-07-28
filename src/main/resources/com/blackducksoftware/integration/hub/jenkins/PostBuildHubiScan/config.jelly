@@ -5,12 +5,14 @@
 <f:entry field="hubProjectName" title="${%ProjectNameTitle}">
 	<f:textbox value="${instance.getHubProjectName()}"/>
 </f:entry>
+<j:forEach var="duplicate" items="${instance.duplicates}">
+		<f:radio name="checkstyle.radioDuplicates" checked="${duplicate.isChecked()}" value="${duplicate.getId()}" id="${duplicate.getId()}"/>
+</j:forEach>
 <f:entry field="hubProjectRelease" title="${%ProjectReleaseTitle}">
 	<f:textbox value="${instance.getHubProjectRelease()}"/>
 </f:entry>
 <f:validateButton title="${%CreateProject}" progress="${%CreateProjectProgress}"
          method="createHubProject" with="hubProjectName,hubProjectRelease" />
-		
 <f:entry field="iScanName" title="${%ScanInstallationsTitle}">
 	<f:select />
 </f:entry>

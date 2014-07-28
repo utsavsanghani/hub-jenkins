@@ -159,7 +159,8 @@ public class IntegrationTest {
         Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36) + "'"));
+        int end = testProperties.getProperty("TEST_HUB_SERVER_URL").length();
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, end) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
         Assert.assertTrue(buildOutput.contains("Finished in"));
         Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
@@ -223,7 +224,8 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36)
+            int end = testProperties.getProperty("TEST_HUB_SERVER_URL").length();
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, end)
                     + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
             Assert.assertTrue(buildOutput.contains("Finished in"));
@@ -304,7 +306,8 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36)
+            int end = testProperties.getProperty("TEST_HUB_SERVER_URL").length();
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, end)
                     + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
             Assert.assertTrue(buildOutput.contains("Finished in"));
@@ -388,15 +391,16 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36)
+            int end = testProperties.getProperty("TEST_HUB_SERVER_URL").length();
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, end)
                     + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
             Assert.assertTrue(buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
             Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
-
-            Assert.assertTrue(buildOutput.contains("[DEBUG] Ignoring proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
-                    + testProperties.getProperty("TEST_PROXY_PORT") + "' for the Host: '" + url.getHost() + "'"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
+                    + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] Ignoring proxy for the Host: '" + url.getHost() + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Release Id:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] The scan target :"));
@@ -455,8 +459,8 @@ public class IntegrationTest {
         Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36)
-                + "'"));
+        int end = testProperties.getProperty("TEST_HUB_SERVER_URL").length();
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, end) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
         Assert.assertTrue(buildOutput.contains("Finished in"));
         Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
@@ -518,7 +522,8 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36)
+            int end = testProperties.getProperty("TEST_HUB_SERVER_URL").length();
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, end)
                     + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
             Assert.assertTrue(buildOutput.contains("Finished in"));
@@ -594,7 +599,8 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36)
+            int end = testProperties.getProperty("TEST_HUB_SERVER_URL").length();
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, end)
                     + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
             Assert.assertTrue(buildOutput.contains("Finished in"));
@@ -623,7 +629,8 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36)
+            end = testProperties.getProperty("TEST_HUB_SERVER_URL").length();
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, end)
                     + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
             Assert.assertTrue(buildOutput.contains("Finished in"));
@@ -684,7 +691,8 @@ public class IntegrationTest {
         Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36) + "'"));
+        int end = testProperties.getProperty("TEST_HUB_SERVER_URL").length();
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, end) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
         Assert.assertTrue(buildOutput.contains("ERROR:")); // TODO replace with new iScan error message
         Assert.assertTrue(buildOutput.contains("Finished in"));
@@ -735,7 +743,8 @@ public class IntegrationTest {
         Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, 36) + "'"));
+        int end = testProperties.getProperty("TEST_HUB_SERVER_URL").length();
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + testProperties.getProperty("TEST_HUB_SERVER_URL").substring(7, end) + "'"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
         Assert.assertTrue(buildOutput.contains("ERROR:")); // TODO replace with new iScan error message
         Assert.assertTrue(buildOutput.contains("Finished in"));

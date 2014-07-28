@@ -270,6 +270,22 @@ public class Messages {
     }
 
     /**
+     * This Project exists on the Hub Server : {0}, BUT there are multiple projects with the same name.
+     * 
+     */
+    public static String HubBuildScan_getProjectExistsWithDuplicateMatches_0_(Object arg1) {
+        return holder.format("HubBuildScan_getProjectExistsWithDuplicateMatches_0_", arg1);
+    }
+
+    /**
+     * This Project exists on the Hub Server : {0}, BUT there are multiple projects with the same name.
+     * 
+     */
+    public static Localizable _HubBuildScan_getProjectExistsWithDuplicateMatches_0_(Object arg1) {
+        return new Localizable(holder, "HubBuildScan_getProjectExistsWithDuplicateMatches_0_", arg1);
+    }
+
+    /**
      * The Project and Release have been created!
      * 
      */

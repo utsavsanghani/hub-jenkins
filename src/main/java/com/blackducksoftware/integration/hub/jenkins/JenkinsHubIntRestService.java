@@ -78,11 +78,6 @@ public class JenkinsHubIntRestService {
         if (noProxyHosts != null) {
             if (!getMatchingNoProxyHostPatterns(url, noProxyHosts)) {
                 if (!StringUtils.isEmpty(proxyHost) && proxyPort != 0) {
-                    if (listener != null) {
-                        listener.getLogger().println("[DEBUG] Using proxy: '" + proxyHost + "' at Port: '" + proxyPort + "'");
-                    }
-
-                    resource.setFollowingRedirects(true);
                     resource.getContext().getParameters().add("proxyHost", proxyHost);
                     resource.getContext().getParameters().add("proxyPort", Integer.toString(proxyPort));
                 }
@@ -90,7 +85,7 @@ public class JenkinsHubIntRestService {
                 if (listener != null) {
                     URL currUrl = new URL(url);
                     listener.getLogger().println(
-                            "[DEBUG] Ignoring proxy: '" + proxyHost + "' at Port: '" + proxyPort + "' for the Host: '" + currUrl.getHost() + "'");
+                            "[DEBUG] Ignoring proxy for the Host: '" + currUrl.getHost() + "'");
                 }
             }
         }
@@ -179,6 +174,39 @@ public class JenkinsHubIntRestService {
     public ArrayList<LinkedHashMap<String, Object>> getProjectMatches(String hubProjectName) throws IOException, BDRestException {
 
         String url = getBaseUrl() + "/api/v1/autocomplete/PROJECT?text=" + hubProjectName + "&limit=20";
+        ClientResource resource = createClientResource(url);
+
+        resource.getRequest().setCookies(getCookies());
+        resource.setMethod(Method.GET);
+        resource.get();
+        int responseCode = resource.getResponse().getStatus().getCode();
+
+        if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+            ArrayList<LinkedHashMap<String, Object>> list = null;
+            Response resp = resource.getResponse();
+            Reader reader = resp.getEntity().getReader();
+            BufferedReader bufReader = new BufferedReader(reader);
+            StringBuilder sb = new StringBuilder();
+            String line = bufReader.readLine();
+            while (line != null) {
+                sb.append(line + "\n");
+                line = bufReader.readLine();
+            }
+            bufReader.close();
+            byte[] mapData = sb.toString().getBytes();
+            // Create HashMap from the Rest response
+            ObjectMapper responseMapper = new ObjectMapper();
+            list = responseMapper.readValue(mapData, ArrayList.class);
+            // responseMap = responseMapper.readValue(mapData, HashMap.class);
+            return list;
+        } else {
+            throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+        }
+    }
+
+    public ArrayList<LinkedHashMap<String, Object>> getProjectById(String projectId) throws IOException, BDRestException {
+
+        String url = getBaseUrl() + "/api/v1/projects/" + projectId;
         ClientResource resource = createClientResource(url);
 
         resource.getRequest().setCookies(getCookies());

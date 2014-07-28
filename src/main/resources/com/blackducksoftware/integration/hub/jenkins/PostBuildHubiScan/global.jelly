@@ -13,15 +13,15 @@
   -->
   
   <f:section title="${%GlobalSectionTitle}">
-	<f:entry title="${%ServerURL}" field="serverUrl"
+	<f:entry title="${%ServerURL}" field="hubServerUrl"
       description="Provide the Url for your Black Duck Hub Server">
-        <f:textbox field="serverUrl" value="${instance.serverUrl}"/>
+        <f:textbox field="hubServerUrl" value="${instance.getHubServerUrl()}"/>
     </f:entry>
     <f:entry title="${%Credentials}" field="hubCredentialsId" >
     	<c:select/>
     </f:entry>
     <f:validateButton title="${%TestConnection}" progress="${%TestConnectionProgress}"
-         method="testConnection" with="serverUrl,hubCredentialsId" />
+         method="testConnection" with="hubServerUrl,hubCredentialsId" />
          
    <!-- <f:advanced>
       <f:entry title="${%ConnectionTimeout}" field="timeout" description="in seconds" >
