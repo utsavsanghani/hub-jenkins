@@ -64,9 +64,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
-    private HubServerInfo hubServerInfo;
+    private List<String> duplicates = new ArrayList<String>();
 
-    private List<Duplicate> duplicates = new ArrayList<Duplicate>();
+    private HubServerInfo hubServerInfo;
 
     private String projectId;
 
@@ -79,12 +79,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         load();
     }
 
-    public List<Duplicate> getDuplicates() {
+    public List<String> getDuplicates() {
         return duplicates;
     }
 
-    public void setDuplicates(List<Duplicate> duplicates) {
-        this.duplicates = duplicates;
+    public void setDuplicates(List<String> dups) {
+        duplicates = dups;
     }
 
     /**
@@ -338,27 +338,26 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                         }
                     }
                     if (projIds.size() > 1) {
-                        for (int i = 0; i < projIds.size(); i++) {
-                            List<Duplicate> dupList = new ArrayList<Duplicate>();
-                            Duplicate dup = new Duplicate();
-                            dup.setId(projIds.get(i));
-                            if (i == 1) {
-                                dup.setChecked(true);
-                            }
-                            dupList.add(dup);
-                            setDuplicates(dupList);
+                        List<String> dupList = new ArrayList<String>();
+                        for (String id : projIds) {
+                            dupList.add(id);
                         }
+                        setDuplicates(dupList);
                         return FormValidation.error(Messages.HubBuildScan_getProjectExistsWithDuplicateMatches_0_(getHubServerUrl()));
                     } else if (projIds.size() == 1) {
+                        setDuplicates(null);
                         setProjectId(projIds.get(0));
                         return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getHubServerUrl()));
                     } else {
+                        setDuplicates(null);
                         return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getHubServerUrl(), projectMatches.toString()));
                     }
                 } else {
+                    setDuplicates(null);
                     return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getHubServerUrl()));
                 }
             } catch (Exception e) {
+                setDuplicates(null);
                 if (e.getCause() != null && e.getCause().getCause() != null) {
                     return FormValidation.error(e.getCause().getCause().toString());
                 } else if (e.getCause() != null) {
@@ -368,6 +367,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
 
             } finally {
+                save();
                 if (changed) {
                     Thread.currentThread().setContextClassLoader(
                             originalClassLoader);
@@ -375,6 +375,35 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             }
         }
         return FormValidation.ok();
+    }
+
+    /**
+     * Fills the duplicate Project Id drop down list. Query for the hubProjectName value so that when it is changed it
+     * will trigger this drop down list to be filled or emptied.
+     * 
+     * 
+     * @return
+     */
+    public ListBoxModel doFillDuplicateProjectIdItems() {
+        ClassLoader originalClassLoader = Thread.currentThread()
+                .getContextClassLoader();
+        boolean changed = false;
+        ListBoxModel items = null;
+        try {
+            items = new ListBoxModel();
+            List<String> dups = getDuplicates();
+            if (dups != null) {
+                for (String dup : dups) {
+                    items.add(dup);
+                }
+            }
+        } finally {
+            if (changed) {
+                Thread.currentThread().setContextClassLoader(
+                        originalClassLoader);
+            }
+        }
+        return items;
     }
 
     /**
@@ -715,12 +744,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return (hubServerInfo == null ? "" : (hubServerInfo.getCredentialsId() == null ? "" : hubServerInfo.getCredentialsId()));
     }
 
-    public static class Duplicate {
+    public static class DuplicateProject {
         private String id;
 
-        private boolean checked;
-
-        public Duplicate() {
+        public DuplicateProject() {
 
         }
 
@@ -730,14 +757,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
         public String getId() {
             return id;
-        }
-
-        public boolean isChecked() {
-            return checked;
-        }
-
-        public void setChecked(boolean checked) {
-            this.checked = checked;
         }
     }
 }

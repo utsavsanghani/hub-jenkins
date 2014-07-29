@@ -132,7 +132,7 @@ public class PostBuildHubiScanUnitTest {
         IScanInstallation[] iScanInstallations = new IScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default", null, null, 256);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default", null, null, 256, null);
 
         FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
         Assert.assertTrue(script.exists());
@@ -165,7 +165,7 @@ public class PostBuildHubiScanUnitTest {
 
         // iScan.forNode(build.getBuiltOn(), listener);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default", null, null, 256);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default", null, null, 256, null);
 
         FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
         Assert.assertTrue(script.exists());
@@ -184,7 +184,7 @@ public class PostBuildHubiScanUnitTest {
 
         IScanInstallation[] iScanInstallations = new IScanInstallation[0];
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default", null, null, 256);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default", null, null, 256, null);
 
         FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, null);
         Assert.assertTrue(script.exists());
@@ -210,7 +210,7 @@ public class PostBuildHubiScanUnitTest {
         IScanInstallation[] iScanInstallations = new IScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default", null, null, 256);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default", null, null, 256, null);
         pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
     }
 

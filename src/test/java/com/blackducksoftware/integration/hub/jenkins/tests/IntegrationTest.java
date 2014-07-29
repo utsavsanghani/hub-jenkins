@@ -141,7 +141,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256, null);
 
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
@@ -206,7 +206,7 @@ public class IntegrationTest {
             // Give server time to recognize the Release
             Thread.sleep(2000);
 
-            PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, 256);
+            PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, 256, null);
 
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -285,7 +285,7 @@ public class IntegrationTest {
             // Give server time to recognize the Release
             Thread.sleep(2000);
 
-            PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, 256);
+            PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, 256, null);
             pbScan.setTEST(true);
             jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST"),
                     Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT")));
@@ -369,7 +369,7 @@ public class IntegrationTest {
             // Give server time to recognize the Release
             Thread.sleep(2000);
 
-            PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, 256);
+            PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, 256, null);
             pbScan.setTEST(true);
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
             jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST"),
@@ -441,7 +441,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING, 256);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING, 256, null);
         pbScan.setTEST(true);
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
@@ -504,7 +504,7 @@ public class IntegrationTest {
             // Give server time to recognize the Project
             Thread.sleep(2000);
 
-            PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_NOT_EXISTING, 256);
+            PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_NOT_EXISTING, 256, null);
             pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -580,7 +580,7 @@ public class IntegrationTest {
             // Give server time to recognize the Release
             Thread.sleep(2000);
 
-            PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, 256);
+            PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, 256, null);
             pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -676,7 +676,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256, null);
 
         project.getPublishersList().add(pbScan);
 
@@ -728,7 +728,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256, null);
 
         project.getPublishersList().add(pbScan);
 
@@ -777,7 +777,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256, null);
         pbScan.setTEST(true);
 
         JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");
@@ -823,7 +823,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256);
+        PostBuildHubiScan pbScan = new PostBuildHubiScan(scans, "default", null, null, 256, null);
         pbScan.setTEST(true);
 
         JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");

@@ -2,12 +2,27 @@
 	<!-- This jelly script is used for per-project configuration. See global.jelly 
 		for a general discussion about jelly script. -->
 		
+<st:once>
+	<script type="text/javascript"
+			src="/plugin/hub-jenkins/js/HubJenkinsJavaScript.js" />
+</st:once>
+
+		
 <f:entry field="hubProjectName" title="${%ProjectNameTitle}">
-	<f:textbox value="${instance.getHubProjectName()}"/>
+	<f:textbox value="${instance.getHubProjectName()}" onchange="updateListBox(document.getElementById('duplicatesList'), document.getElementById('duplicatesList').getAttribute(fillurl))"/>
 </f:entry>
-<j:forEach var="duplicate" items="${instance.duplicates}">
-		<f:radio name="checkstyle.radioDuplicates" checked="${duplicate.isChecked()}" value="${duplicate.getId()}" id="${duplicate.getId()}"/>
-</j:forEach>
+
+<f:entry field="duplicateProjectId" title="${%DuplicateSection}">
+	<f:select id="duplicatesList"/>
+</f:entry>
+	<!-- <f:entry>
+		<j:forEach var="duplicate" items="${descriptor.getDuplicates()}">
+			<f:entry>
+				<f:radioBlock name="radioDuplicates" checked="${duplicate.checked}" title="${duplicate.getId()}"/>
+			</f:entry>
+		</j:forEach>
+	</f:entry> -->
+
 <f:entry field="hubProjectRelease" title="${%ProjectReleaseTitle}">
 	<f:textbox value="${instance.getHubProjectRelease()}"/>
 </f:entry>

@@ -173,7 +173,7 @@ public class JenkinsHubIntRestService {
 
     public ArrayList<LinkedHashMap<String, Object>> getProjectMatches(String hubProjectName) throws IOException, BDRestException {
 
-        String url = getBaseUrl() + "/api/v1/autocomplete/PROJECT?text=" + hubProjectName + "&limit=20";
+        String url = getBaseUrl() + "/api/v1/autocomplete/PROJECT?text=" + hubProjectName + "&limit=30";
         ClientResource resource = createClientResource(url);
 
         resource.getRequest().setCookies(getCookies());
@@ -498,7 +498,7 @@ public class JenkinsHubIntRestService {
 
     public LinkedHashMap<String, Object> getReleaseMatchesForProjectId(String projectId) throws IOException, BDRestException {
 
-        String url = getBaseUrl() + "/api/v1/projects/" + projectId + "/releases?limit=20";
+        String url = getBaseUrl() + "/api/v1/projects/" + projectId + "/releases?limit=30";
         ClientResource resource = createClientResource(url);
 
         resource.getRequest().setCookies(getCookies());

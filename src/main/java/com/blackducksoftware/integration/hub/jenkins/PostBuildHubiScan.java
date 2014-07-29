@@ -41,7 +41,7 @@ public class PostBuildHubiScan extends Recorder {
 
     private static final int DEFAULT_MEMORY = 256;
 
-    private String hubProjectId;
+    private String duplicateProjectId;
 
     private final IScanJobs[] scans;
 
@@ -51,7 +51,7 @@ public class PostBuildHubiScan extends Recorder {
 
     private final String hubProjectRelease;
 
-    private int iScanMemory;
+    private int iScanMemory = DEFAULT_MEMORY;
 
     private String workingDirectory;
 
@@ -64,7 +64,7 @@ public class PostBuildHubiScan extends Recorder {
     private boolean test = false;
 
     @DataBoundConstructor
-    public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease, int iScanMemory) {
+    public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease, int iScanMemory, String duplicateProjectId) {
         this.scans = scans;
         this.iScanName = iScanName;
         this.hubProjectName = hubProjectName;
@@ -74,7 +74,7 @@ public class PostBuildHubiScan extends Recorder {
         } else {
             this.iScanMemory = iScanMemory;
         }
-
+        this.duplicateProjectId = duplicateProjectId;
     }
 
     public boolean isTEST() {
@@ -107,6 +107,10 @@ public class PostBuildHubiScan extends Recorder {
 
     public String getHubProjectName() {
         return hubProjectName;
+    }
+
+    public String getDuplicateProjectId() {
+        return duplicateProjectId;
     }
 
     public IScanJobs[] getScans() {
@@ -288,7 +292,7 @@ public class PostBuildHubiScan extends Recorder {
 
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
         URL url = new URL(getDescriptor().getHubServerUrl());
-
+        PostBuildScanDescriptor desc = getDescriptor();
         List<String> cmd = new ArrayList<String>();
         cmd.add(getJava().getHome() + "/bin/java");
         cmd.add("-Done-jar.silent=true");
@@ -583,4 +587,5 @@ public class PostBuildHubiScan extends Recorder {
         }
         return true;
     }
+
 }
