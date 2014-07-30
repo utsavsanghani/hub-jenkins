@@ -9,19 +9,24 @@
 
 		
 <f:entry field="hubProjectName" title="${%ProjectNameTitle}">
-	<f:textbox value="${instance.getHubProjectName()}" onchange="updateListBox(document.getElementById('duplicatesList'), document.getElementById('duplicatesList').getAttribute(fillurl))"/>
+	<f:textbox value="${instance.getHubProjectName()}"/>
 </f:entry>
 
+
 <f:entry field="duplicateProjectId" title="${%DuplicateSection}">
-	<f:select id="duplicatesList"/>
+	<f:select id="duplicateProjectId"/>
 </f:entry>
-	<!-- <f:entry>
-		<j:forEach var="duplicate" items="${descriptor.getDuplicates()}">
-			<f:entry>
-				<f:radioBlock name="radioDuplicates" checked="${duplicate.checked}" title="${duplicate.getId()}"/>
-			</f:entry>
-		</j:forEach>
-	</f:entry> -->
+
+<!--
+	<f:dropdownList name="dups"  title="Choose Duplicate">
+		<l:renderOnDemand capture="${descriptor.getDuplicates()}" />
+                <j:forEach var="d" items="${descriptor.getDuplicates()}" varStatus="loop">
+                        <f:dropdownListBlock value="${d}"  title="${d}" >
+                        	
+                        </f:dropdownListBlock>
+                </j:forEach>
+        </f:dropdownList>
+        -->
 
 <f:entry field="hubProjectRelease" title="${%ProjectReleaseTitle}">
 	<f:textbox value="${instance.getHubProjectRelease()}"/>

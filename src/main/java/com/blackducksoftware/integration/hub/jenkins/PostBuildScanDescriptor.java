@@ -368,6 +368,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
             } finally {
                 save();
+                // load();
+                // JenkinsHubIntRestService temp = new JenkinsHubIntRestService();
+                // temp.reloadDuplicates();
                 if (changed) {
                     Thread.currentThread().setContextClassLoader(
                             originalClassLoader);
@@ -384,7 +387,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * 
      * @return
      */
-    public ListBoxModel doFillDuplicateProjectIdItems() {
+    public ListBoxModel doFillDuplicateProjectIdItems(@QueryParameter("hubProjectName") final String hubProjectName) {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -410,19 +413,23 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * Performs on-the-fly validation of the form field 'hubProjectRelease'. Checks to see if there is already a project
      * in the Hub with this name.
      * 
-     * @param value
-     *            This parameter receives the value that the user has typed.
+     * @param hubProjectRelease
+     *            This parameter receives the value that the user has typed for the Release.
+     * @param hubProjectDuplicateId
+     *            This parameter receives the value of the Project Id that the User has selected, if any.
+     * 
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckHubProjectRelease(@QueryParameter("hubProjectRelease") final String hubProjectRelease) throws IOException, ServletException {
+    public FormValidation doCheckHubProjectRelease(@QueryParameter("hubProjectRelease") final String hubProjectRelease,
+            @QueryParameter("duplicateProjectId") final String hubProjectDuplicateId) throws IOException, ServletException {
         if (hubProjectRelease.length() > 0) {
 
             ClassLoader originalClassLoader = Thread.currentThread()
                     .getContextClassLoader();
             boolean changed = false;
             try {
-                if (StringUtils.isEmpty(getProjectId())) {
+                if (StringUtils.isEmpty(getProjectId()) && StringUtils.isEmpty(hubProjectDuplicateId)) {
                     return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null));
                 }
                 if (StringUtils.isEmpty(getHubServerUrl())) {
@@ -445,14 +452,19 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 setupService(service);
                 service.setBaseUrl(getHubServerUrl());
                 service.setCookies(credentialUserName, credentialPassword);
-
-                HashMap<String, Object> responseMap = service.getReleaseMatchesForProjectId(getProjectId());
+                String idToUse = null;
+                if (!StringUtils.isEmpty(hubProjectDuplicateId)) {
+                    idToUse = hubProjectDuplicateId;
+                } else {
+                    idToUse = getProjectId();
+                }
+                HashMap<String, Object> responseMap = service.getReleaseMatchesForProjectId(idToUse);
                 StringBuilder projectReleases = new StringBuilder();
                 if (responseMap.containsKey("items")) {
                     ArrayList<LinkedHashMap> releaseList = (ArrayList<LinkedHashMap>) responseMap.get("items");
                     for (LinkedHashMap release : releaseList) {
                         if (((String) release.get("version")).equals(hubProjectRelease)) {
-                            return FormValidation.ok(Messages.HubBuildScan_getReleaseExistsIn_0_(getProjectId()));
+                            return FormValidation.ok(Messages.HubBuildScan_getReleaseExistsIn_0_(idToUse));
                         } else {
                             if (projectReleases.length() > 0) {
                                 projectReleases.append(", " + ((String) release.get("version")));
@@ -465,7 +477,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     // The Hub Api has changed and we received a JSON response that we did not expect
                     return FormValidation.error(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
                 }
-                return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(getProjectId(), projectReleases.toString()));
+                return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(idToUse, projectReleases.toString()));
             } catch (Exception e) {
                 if (e.getCause() != null && e.getCause().getCause() != null) {
                     if (e.getCause().getCause().toString().contains("(404) - Not Found")) {
@@ -585,7 +597,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @throws ServletException
      */
     public FormValidation doCreateHubProject(@QueryParameter("hubProjectName") final String hubProjectName,
-            @QueryParameter("hubProjectRelease") final String hubProjectRelease) {
+            @QueryParameter("hubProjectRelease") final String hubProjectRelease, @QueryParameter("duplicateProjectId") final String hubProjectDuplicateId) {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -600,12 +612,15 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             FormValidation projectNameCheck = doCheckHubProjectName(hubProjectName);
             String projectNonExistentMessage = Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(null, null);
             projectNonExistentMessage = projectNonExistentMessage.substring(0, 47);
+            String duplicatesMessage = Messages.HubBuildScan_getProjectExistsWithDuplicateMatches_0_(null);
+            duplicatesMessage = duplicatesMessage.substring(50, 96);
             boolean projectExists = false;
-            if (FormValidation.Kind.OK.equals(projectNameCheck.kind)) {
+            if (FormValidation.Kind.OK.equals(projectNameCheck.kind)
+                    || (FormValidation.Kind.ERROR.equals(projectNameCheck.kind) && projectNameCheck.getMessage().contains(duplicatesMessage))) {
                 // Project exists for given name
                 projectExists = true;
                 // Check if the Release for the given Project exists or not before creating it
-                FormValidation projectReleaseCheck = doCheckHubProjectRelease(hubProjectRelease);
+                FormValidation projectReleaseCheck = doCheckHubProjectRelease(hubProjectRelease, hubProjectDuplicateId);
                 String releaseNonExistentMessage = Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null);
                 releaseNonExistentMessage = releaseNonExistentMessage.substring(0, 52);
                 if (FormValidation.Kind.OK.equals(projectReleaseCheck.kind)) {
