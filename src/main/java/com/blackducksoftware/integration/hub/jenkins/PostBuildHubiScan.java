@@ -60,7 +60,7 @@ public class PostBuildHubiScan extends Recorder {
 
     private Result result;
 
-    private JenkinsHubIntRestService service = null;
+    // private JenkinsHubIntRestService service = null;
 
     private boolean test = false;
 
@@ -222,7 +222,7 @@ public class PostBuildHubiScan extends Recorder {
     }
 
     private void doScanMapping(BuildListener listener, List<String> scanTargets) throws IOException, BDRestException, BDJenkinsHubPluginException {
-        setJenkinsHubIntRestService(listener);
+        JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
 
         ArrayList<String> projectId = null;
         String projectIdToUse = null;
@@ -268,8 +268,8 @@ public class PostBuildHubiScan extends Recorder {
 
     }
 
-    public void setJenkinsHubIntRestService(BuildListener listener) throws MalformedURLException {
-        service = new JenkinsHubIntRestService();
+    public JenkinsHubIntRestService setJenkinsHubIntRestService(BuildListener listener) throws MalformedURLException {
+        JenkinsHubIntRestService service = new JenkinsHubIntRestService();
         service.setListener(listener);
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
@@ -288,6 +288,7 @@ public class PostBuildHubiScan extends Recorder {
         service.setBaseUrl(getDescriptor().getHubServerInfo().getServerUrl());
         service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
                 getDescriptor().getHubServerInfo().getPassword());
+        return service;
     }
 
     /**
