@@ -30,6 +30,22 @@ public class Messages {
     }
 
     /**
+     * Can not reach this server : {0}
+     * 
+     */
+    public static String HubBuildScan_getCanNotReachThisServer_0_(Object arg1) {
+        return holder.format("HubBuildScan_getCanNotReachThisServer_0_", arg1);
+    }
+
+    /**
+     * Can not reach this server : {0}
+     * 
+     */
+    public static Localizable _HubBuildScan_getCanNotReachThisServer_0_(Object arg1) {
+        return new Localizable(holder, "HubBuildScan_getCanNotReachThisServer_0_", arg1);
+    }
+
+    /**
      * This Project exists on the Hub Server : {0}
      * 
      */
@@ -251,22 +267,6 @@ public class Messages {
      */
     public static Localizable _HubBuildScan_getCredentialsValidFor_0_(Object arg1) {
         return new Localizable(holder, "HubBuildScan_getCredentialsValidFor_0_", arg1);
-    }
-
-    /**
-     * Can not reach this server
-     * 
-     */
-    public static String HubBuildScan_getCanNotReachThisServer() {
-        return holder.format("HubBuildScan_getCanNotReachThisServer");
-    }
-
-    /**
-     * Can not reach this server
-     * 
-     */
-    public static Localizable _HubBuildScan_getCanNotReachThisServer() {
-        return new Localizable(holder, "HubBuildScan_getCanNotReachThisServer");
     }
 
     /**

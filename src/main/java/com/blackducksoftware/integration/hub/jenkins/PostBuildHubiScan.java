@@ -210,7 +210,20 @@ public class PostBuildHubiScan extends Recorder {
                 }
             } catch (Exception e) {
                 e.printStackTrace(listener.getLogger());
-                listener.error(e.getMessage());
+                String message;
+                if (e.getCause() != null && e.getCause().getCause() != null) {
+                    message = e.getCause().getCause().toString();
+                } else if (e.getCause() != null) {
+                    message = e.getCause().toString();
+                } else {
+                    message = e.toString();
+                }
+                if (message.toLowerCase().contains("service unavailable")) {
+                    message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getDescriptor().getHubServerInfo().getServerUrl());
+                } else if (message.toLowerCase().contains("precondition failed")) {
+                    message = message + ", Check your configuration.";
+                }
+                listener.error(message);
                 setResult(Result.UNSTABLE);
             }
         } else {

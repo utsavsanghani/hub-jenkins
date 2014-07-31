@@ -223,7 +223,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             connection.getContent();
         } catch (IOException ioe) {
             return FormValidation.warning(Messages
-                    .HubBuildScan_getCanNotReachThisServer());
+                    .HubBuildScan_getCanNotReachThisServer_0_(serverUrl));
         } catch (RuntimeException e) {
             return FormValidation.error(Messages
                     .HubBuildScan_getNotAValidUrl());
@@ -359,14 +359,20 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
             } catch (Exception e) {
                 setDuplicates(null);
+                String message;
                 if (e.getCause() != null && e.getCause().getCause() != null) {
-                    return FormValidation.error(e.getCause().getCause().toString());
+                    message = e.getCause().getCause().toString();
                 } else if (e.getCause() != null) {
-                    return FormValidation.error(e.getCause().toString());
+                    message = e.getCause().toString();
                 } else {
-                    return FormValidation.error(e.toString());
+                    message = e.toString();
                 }
-
+                if (message.toLowerCase().contains("service unavailable")) {
+                    message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getHubServerUrl());
+                } else if (message.toLowerCase().contains("precondition failed")) {
+                    message = message + ", Check your configuration.";
+                }
+                return FormValidation.error(message);
             } finally {
                 // load();
                 // JenkinsHubIntRestService temp = new JenkinsHubIntRestService();
@@ -461,6 +467,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 } else {
                     idToUse = getProjectId();
                 }
+
                 HashMap<String, Object> responseMap = service.getReleaseMatchesForProjectId(idToUse);
                 StringBuilder projectReleases = new StringBuilder();
                 if (responseMap.containsKey("items")) {
@@ -482,24 +489,20 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
                 return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(idToUse, projectReleases.toString()));
             } catch (Exception e) {
+                String message;
                 if (e.getCause() != null && e.getCause().getCause() != null) {
-                    if (e.getCause().getCause().toString().contains("(404) - Not Found")) {
-
-                        return FormValidation.error(e.getCause().getCause().toString() + ", Need to provide an existing Hub Project.");
-                    }
-
-                    return FormValidation.error(e.getCause().getCause().toString());
+                    message = e.getCause().getCause().toString();
                 } else if (e.getCause() != null) {
-                    if (e.getCause().toString().contains("(404) - Not Found")) {
-                        return FormValidation.error(e.getCause().toString() + ", Need to provide an existing Hub Project.");
-                    }
-                    return FormValidation.error(e.getCause().toString());
+                    message = e.getCause().toString();
                 } else {
-                    if (e.toString().contains("(404) - Not Found")) {
-                        return FormValidation.error(e.toString() + ", Need to provide an existing Hub Project.");
-                    }
-                    return FormValidation.error(e.toString());
+                    message = e.toString();
                 }
+                if (message.toLowerCase().contains("service unavailable")) {
+                    message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getHubServerUrl());
+                } else if (message.toLowerCase().contains("precondition failed")) {
+                    message = message + ", Check your configuration.";
+                }
+                return FormValidation.error(message);
             } finally {
                 if (changed) {
                     Thread.currentThread().setContextClassLoader(
@@ -570,15 +573,20 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
             }
         } catch (Exception e) {
+            String message;
             if (e.getCause() != null && e.getCause().getCause() != null) {
-
-                return FormValidation.error(e.getCause().getCause().toString());
+                message = e.getCause().getCause().toString();
             } else if (e.getCause() != null) {
-                return FormValidation.error(e.getCause().toString());
+                message = e.getCause().toString();
             } else {
-                return FormValidation.error(e.toString());
+                message = e.toString();
             }
-
+            if (message.toLowerCase().contains("service unavailable")) {
+                message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getHubServerUrl());
+            } else if (message.toLowerCase().contains("precondition failed")) {
+                message = message + ", Check your configuration.";
+            }
+            return FormValidation.error(message);
         } finally {
             if (changed) {
                 Thread.currentThread().setContextClassLoader(
@@ -676,15 +684,20 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
             }
         } catch (Exception e) {
+            String message;
             if (e.getCause() != null && e.getCause().getCause() != null) {
-
-                return FormValidation.error(e.getCause().getCause().toString());
+                message = e.getCause().getCause().toString();
             } else if (e.getCause() != null) {
-                return FormValidation.error(e.getCause().toString());
+                message = e.getCause().toString();
             } else {
-                return FormValidation.error(e.toString());
+                message = e.toString();
             }
-
+            if (message.toLowerCase().contains("service unavailable")) {
+                message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getHubServerUrl());
+            } else if (message.toLowerCase().contains("precondition failed")) {
+                message = message + ", Check your configuration.";
+            }
+            return FormValidation.error(message);
         } finally {
             if (changed) {
                 Thread.currentThread().setContextClassLoader(

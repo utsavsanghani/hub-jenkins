@@ -64,7 +64,7 @@ public class JenkinsHubIntRestService {
     public void setNoProxyHosts(List<Pattern> noProxyHosts) {
         this.noProxyHosts = noProxyHosts;
     }
-
+    
     public List<Pattern> getNoProxyHosts() {
         return noProxyHosts;
     }
@@ -76,7 +76,7 @@ public class JenkinsHubIntRestService {
     public int getProxyPort() {
         return proxyPort;
     }
-
+    
     public void setProxyHost(String proxyHost) {
         this.proxyHost = proxyHost;
     }
