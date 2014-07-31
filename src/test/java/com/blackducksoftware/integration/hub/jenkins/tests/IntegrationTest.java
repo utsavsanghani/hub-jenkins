@@ -467,7 +467,8 @@ public class IntegrationTest {
         Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
         Assert.assertTrue(buildOutput
                 .contains("com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException: The specified Project could not be found."));
-        Assert.assertTrue(buildOutput.contains("ERROR: The specified Project could not be found."));
+        Assert.assertTrue(buildOutput
+                .contains("ERROR: com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException: The specified Project could not be found."));
         Assert.assertTrue(buildOutput.contains("Build step 'Black Duck Hub Integration' changed build result to UNSTABLE"));
         Assert.assertTrue(buildOutput.contains("Finished: UNSTABLE"));
 
@@ -533,7 +534,8 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput.contains("[DEBUG] Release Id: 'null'"));
             Assert.assertTrue(buildOutput
                     .contains("com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException: The specified Release could not be found in the Project."));
-            Assert.assertTrue(buildOutput.contains("ERROR: The specified Release could not be found in the Project."));
+            Assert.assertTrue(buildOutput
+                    .contains("ERROR: com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException: The specified Release could not be found in the Project."));
             Assert.assertTrue(buildOutput.contains("Build step 'Black Duck Hub Integration' changed build result to UNSTABLE"));
             Assert.assertTrue(buildOutput.contains("Finished: UNSTABLE"));
         } finally {
