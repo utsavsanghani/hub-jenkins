@@ -13,20 +13,9 @@
 </f:entry>
 
 
-<f:entry field="duplicateProjectId" title="${%DuplicateSection}">
+<f:entry field="duplicateHubProjectId" title="${%DuplicateSection}">
 	<f:select />
 </f:entry>
-
-<!--
-	<f:dropdownList name="dups"  title="Choose Duplicate">
-		<l:renderOnDemand capture="${descriptor.getDuplicates()}" />
-                <j:forEach var="d" items="${descriptor.getDuplicates()}" varStatus="loop">
-                        <f:dropdownListBlock value="${d}"  title="${d}" >
-                        	
-                        </f:dropdownListBlock>
-                </j:forEach>
-        </f:dropdownList>
-        -->
 
 <f:entry field="hubProjectRelease" title="${%ProjectReleaseTitle}">
 	<f:textbox value="${instance.getHubProjectRelease()}"/>

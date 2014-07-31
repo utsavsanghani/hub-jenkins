@@ -42,7 +42,7 @@ public class PostBuildHubiScan extends Recorder {
 
     public static final int DEFAULT_MEMORY = 256;
 
-    private String duplicateProjectId;
+    private String duplicateHubProjectId;
 
     private final IScanJobs[] scans;
 
@@ -65,7 +65,7 @@ public class PostBuildHubiScan extends Recorder {
     private boolean test = false;
 
     @DataBoundConstructor
-    public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease, int iScanMemory, String duplicateProjectId) {
+    public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease, int iScanMemory, String duplicateHubProjectId) {
         this.scans = scans;
         this.iScanName = iScanName;
         this.hubProjectName = hubProjectName;
@@ -75,7 +75,7 @@ public class PostBuildHubiScan extends Recorder {
         } else {
             this.iScanMemory = iScanMemory;
         }
-        this.duplicateProjectId = duplicateProjectId;
+        this.duplicateHubProjectId = duplicateHubProjectId;
     }
 
     public boolean isTEST() {
@@ -114,8 +114,8 @@ public class PostBuildHubiScan extends Recorder {
         return hubProjectName;
     }
 
-    public String getDuplicateProjectId() {
-        return duplicateProjectId;
+    public String getDuplicateHubProjectId() {
+        return duplicateHubProjectId;
     }
 
     public IScanJobs[] getScans() {
@@ -240,8 +240,8 @@ public class PostBuildHubiScan extends Recorder {
         ArrayList<String> projectId = null;
         String projectIdToUse = null;
         String releaseId = null;
-        if (!StringUtils.isEmpty(getDuplicateProjectId())) {
-            projectIdToUse = getDuplicateProjectId();
+        if (!StringUtils.isEmpty(getDuplicateHubProjectId())) {
+            projectIdToUse = getDuplicateHubProjectId();
             listener.getLogger().println("[DEBUG] Project Id: '" + projectIdToUse + "'");
         } else {
             ArrayList<LinkedHashMap<String, Object>> projectMatchesResponse = service.getProjectMatches(getHubProjectName());

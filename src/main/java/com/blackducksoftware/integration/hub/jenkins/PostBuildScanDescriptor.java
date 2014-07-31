@@ -394,7 +394,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return
      * @throws InterruptedException
      */
-    public ListBoxModel doFillDuplicateProjectIdItems(@QueryParameter("hubProjectName") final String hubProjectName) throws InterruptedException {
+    public ListBoxModel doFillDuplicateHubProjectIdItems(@QueryParameter("hubProjectName") final String hubProjectName) throws InterruptedException {
         Thread.sleep(1800); // DO NOT REMOVE
         // The sleep is so the checks can be run on the name properly before we try and populate the duplicate list
         ClassLoader originalClassLoader = Thread.currentThread()
@@ -431,7 +431,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      *         browser.
      */
     public FormValidation doCheckHubProjectRelease(@QueryParameter("hubProjectRelease") final String hubProjectRelease,
-            @QueryParameter("duplicateProjectId") final String hubProjectDuplicateId) throws IOException, ServletException {
+            @QueryParameter("duplicateHubProjectId") final String hubProjectDuplicateId) throws IOException, ServletException {
         if (hubProjectRelease.length() > 0) {
 
             ClassLoader originalClassLoader = Thread.currentThread()
@@ -608,7 +608,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @throws ServletException
      */
     public FormValidation doCreateHubProject(@QueryParameter("hubProjectName") final String hubProjectName,
-            @QueryParameter("hubProjectRelease") final String hubProjectRelease, @QueryParameter("duplicateProjectId") final String hubProjectDuplicateId) {
+            @QueryParameter("hubProjectRelease") final String hubProjectRelease, @QueryParameter("duplicateHubProjectId") final String hubProjectDuplicateId) {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
