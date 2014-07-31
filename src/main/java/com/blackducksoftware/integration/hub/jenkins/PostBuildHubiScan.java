@@ -34,6 +34,7 @@ import org.joda.time.format.DateTimeFormatterBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
 
@@ -177,10 +178,28 @@ public class PostBuildHubiScan extends Recorder {
                         if (StringUtils.isEmpty(scanJob.getScanTarget())) {
                             scanTargets.add(getWorkingDirectory());
                         } else {
-                            scanTargets.add(getWorkingDirectory() + "/" + scanJob.getScanTarget()); // Prefixes the
-                                                                                                    // targets
-                            // with the workspace
-                            // directory
+                            // make sure the target doesn't already begin with a slash or end in a slash
+                            if (scanJob.getScanTarget().startsWith("/") || scanJob.getScanTarget().startsWith("\\")) {
+                                if (scanJob.getScanTarget().endsWith("/") || scanJob.getScanTarget().endsWith("\\")) {
+                                    scanTargets.add(getWorkingDirectory() + scanJob.getScanTarget().substring(0, scanJob.getScanTarget().length() - 1));
+                                } else {
+                                    scanTargets.add(getWorkingDirectory() + scanJob.getScanTarget()); // Prefixes the
+                                                                                                      // targets with
+                                                                                                      // the workspace
+                                                                                                      // directory
+                                }
+                            } else {
+                                if (scanJob.getScanTarget().endsWith("/") || scanJob.getScanTarget().endsWith("\\")) {
+                                    scanTargets.add(getWorkingDirectory() + "/" + scanJob.getScanTarget().substring(0, scanJob.getScanTarget().length() - 1));
+                                } else {
+                                    scanTargets.add(getWorkingDirectory() + "/" + scanJob.getScanTarget()); // Prefixes
+                                                                                                            // the
+                                                                                                            // targets
+                                                                                                            // with the
+                                                                                                            // workspace
+                                                                                                            // directory
+                                }
+                            }
                         }
                     }
                     runScan(build, launcher, listener, iScanExec, scanTargets);
@@ -191,42 +210,7 @@ public class PostBuildHubiScan extends Recorder {
                         // Wait 2 seconds for the scans to be recognized in the Hub server
                         Thread.sleep(2000);
 
-                        setJenkinsHubIntRestService(listener);
-
-                        ArrayList<String> projectId = null;
-                        String releaseId = null;
-                        ArrayList<LinkedHashMap<String, Object>> projectMatchesResponse = service.getProjectMatches(getHubProjectName());
-                        projectId = service.getProjectIdsFromProjectMatches(projectMatchesResponse, getHubProjectName());
-                        if (projectId == null || projectId.isEmpty()) {
-                            throw new BDJenkinsHubPluginException("The specified Project could not be found.");
-                        } else if (projectId.size() > 1) {
-                            throw new BDJenkinsHubPluginException("More than one Project was found with the same name.");
-                        }
-                        listener.getLogger().println("[DEBUG] Project Id: '" + projectId.get(0) + "'");
-                        LinkedHashMap<String, Object> releaseMatchesResponse = service.getReleaseMatchesForProjectId(projectId.get(0));
-                        releaseId = service.getReleaseIdFromReleaseMatches(releaseMatchesResponse, getHubProjectRelease());
-                        listener.getLogger().println("[DEBUG] Release Id: '" + releaseId + "'");
-                        if (StringUtils.isEmpty(releaseId)) {
-                            throw new BDJenkinsHubPluginException("The specified Release could not be found in the Project.");
-                        }
-
-                        List<String> scanIds = service.getScanLocationIds(listener, scanTargets, releaseId);
-                        if (!scanIds.isEmpty()) {
-                            listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
-                            for (String scanId : scanIds) {
-                                listener.getLogger().println(scanId);
-                            }
-                            listener.getLogger().println(
-                                    "[DEBUG] Linking the scan Id's to the Hub Project: '" + getHubProjectName() + "', and Release: '" + getHubProjectRelease()
-                                            + "'.");
-
-                            service.mapScansToProjectRelease(listener, scanIds, releaseId);
-                        } else {
-                            listener.getLogger()
-                                    .println(
-                                            "[DEBUG] These scans are already mapped to Project : '" + getHubProjectName() + "', Release : '"
-                                                    + getHubProjectRelease() + "'. OR there was an issue getting the Id's for the defined scan targets.");
-                        }
+                        doScanMapping(listener, scanTargets);
                     }
                 }
             } catch (Exception e) {
@@ -240,6 +224,53 @@ public class PostBuildHubiScan extends Recorder {
         listener.getLogger().println("Finished running Black Duck iScans.");
         build.setResult(getResult());
         return true;
+    }
+
+    private void doScanMapping(BuildListener listener, List<String> scanTargets) throws IOException, BDRestException, BDJenkinsHubPluginException {
+        setJenkinsHubIntRestService(listener);
+
+        ArrayList<String> projectId = null;
+        String projectIdToUse = null;
+        String releaseId = null;
+        if (!StringUtils.isEmpty(getDuplicateProjectId())) {
+            projectIdToUse = getDuplicateProjectId();
+            listener.getLogger().println("[DEBUG] Project Id: '" + projectIdToUse + "'");
+        } else {
+            ArrayList<LinkedHashMap<String, Object>> projectMatchesResponse = service.getProjectMatches(getHubProjectName());
+            projectId = service.getProjectIdsFromProjectMatches(projectMatchesResponse, getHubProjectName());
+            if (projectId == null || projectId.isEmpty()) {
+                throw new BDJenkinsHubPluginException("The specified Project could not be found.");
+            } else if (projectId.size() > 1) {
+                throw new BDJenkinsHubPluginException("More than one Project was found with the same name.");
+            }
+            listener.getLogger().println("[DEBUG] Project Id: '" + projectId.get(0) + "'");
+            projectIdToUse = projectId.get(0);
+        }
+
+        LinkedHashMap<String, Object> releaseMatchesResponse = service.getReleaseMatchesForProjectId(projectIdToUse);
+        releaseId = service.getReleaseIdFromReleaseMatches(releaseMatchesResponse, getHubProjectRelease());
+        listener.getLogger().println("[DEBUG] Release Id: '" + releaseId + "'");
+        if (StringUtils.isEmpty(releaseId)) {
+            throw new BDJenkinsHubPluginException("The specified Release could not be found in the Project.");
+        }
+        List<String> scanIds = service.getScanLocationIds(listener, scanTargets, releaseId);
+        if (!scanIds.isEmpty()) {
+            listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
+            for (String scanId : scanIds) {
+                listener.getLogger().println(scanId);
+            }
+            listener.getLogger().println(
+                    "[DEBUG] Linking the scan Id's to the Hub Project: '" + getHubProjectName() + "', and Release: '" + getHubProjectRelease()
+                            + "'.");
+
+            service.mapScansToProjectRelease(listener, scanIds, releaseId);
+        } else {
+            listener.getLogger()
+                    .println(
+                            "[DEBUG] These scans are already mapped to Project : '" + getHubProjectName() + "', Release : '"
+                                    + getHubProjectRelease() + "'. OR there was an issue getting the Id's for the defined scan targets.");
+        }
+
     }
 
     public void setJenkinsHubIntRestService(BuildListener listener) throws MalformedURLException {
@@ -369,45 +400,7 @@ public class PostBuildHubiScan extends Recorder {
                             logFolder = file;
                         }
                     }
-                    File latestLogFile = null;
-                    DateTime latestLogTime = null;
-                    List<FilePath> logFiles = logFolder.list();
-                    for (FilePath log : logFiles) {
-                        if (log.getName().contains(fileName)) {
-                            String hostName = InetAddress.getLocalHost().getHostName();
-                            if (log.getName().contains(hostName)) {
-                                // log file name contains the scan target, and the host name. Get the latest one.
-                                if (latestLogFile == null) {
-                                    String time = log.getName();
-                                    // removes everything from the log name except for the time stamp
-                                    time = time.replace(hostName + "-" + fileName + "-", "");
-                                    // time = time.substring(time.length() - 30, time.length());
-                                    time = time.substring(0, time.length() - 9);
-
-                                    DateTimeFormatter dateStringFormat = new
-                                            DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-                                    DateTime dateTime = dateStringFormat.parseDateTime(time);
-                                    latestLogTime = dateTime;
-                                    latestLogFile = new File(log.getRemote());
-                                } else {
-                                    String time = log.getName();
-                                    // removes everything from the log name except for the time stamp
-                                    time = time.replace(hostName + "-" + fileName + "-", "");
-                                    // time = time.substring(time.length() - 30, time.length());
-                                    time = time.substring(0, time.length() - 9);
-
-                                    DateTimeFormatter dateStringFormat = new
-                                            DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-                                    DateTime logTime = dateStringFormat.parseDateTime(time);
-
-                                    if (logTime.isAfter(latestLogTime)) {
-                                        latestLogTime = logTime;
-                                        latestLogFile = new File(log.getRemote());
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    File latestLogFile = getLogFileForScan(fileName, logFolder);
                     if (latestLogFile != null) {
                         listener.getLogger().println(
                                 "For scan target : '" + target + "', you can view the iScan CLI logs at : '" + latestLogFile.getCanonicalPath());
@@ -422,6 +415,49 @@ public class PostBuildHubiScan extends Recorder {
         } else {
             listener.getLogger().println("[ERROR] : Could not find a ProcStarter to run the process!");
         }
+    }
+
+    private File getLogFileForScan(String fileName, FilePath logFolder) throws IOException, InterruptedException {
+        File latestLogFile = null;
+        DateTime latestLogTime = null;
+        List<FilePath> logFiles = logFolder.list();
+        for (FilePath log : logFiles) {
+            if (log.getName().contains(fileName)) {
+                String hostName = InetAddress.getLocalHost().getHostName();
+                if (log.getName().contains(hostName)) {
+                    // log file name contains the scan target, and the host name. Get the latest one.
+                    if (latestLogFile == null) {
+                        String time = log.getName();
+                        // removes everything from the log name except for the time stamp
+                        time = time.replace(hostName + "-" + fileName + "-", "");
+                        // time = time.substring(time.length() - 30, time.length());
+                        time = time.substring(0, time.length() - 9);
+
+                        DateTimeFormatter dateStringFormat = new
+                                DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+                        DateTime dateTime = dateStringFormat.parseDateTime(time);
+                        latestLogTime = dateTime;
+                        latestLogFile = new File(log.getRemote());
+                    } else {
+                        String time = log.getName();
+                        // removes everything from the log name except for the time stamp
+                        time = time.replace(hostName + "-" + fileName + "-", "");
+                        // time = time.substring(time.length() - 30, time.length());
+                        time = time.substring(0, time.length() - 9);
+
+                        DateTimeFormatter dateStringFormat = new
+                                DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+                        DateTime logTime = dateStringFormat.parseDateTime(time);
+
+                        if (logTime.isAfter(latestLogTime)) {
+                            latestLogTime = logTime;
+                            latestLogFile = new File(log.getRemote());
+                        }
+                    }
+                }
+            }
+        }
+        return latestLogFile;
     }
 
     public JDK getJava() {
