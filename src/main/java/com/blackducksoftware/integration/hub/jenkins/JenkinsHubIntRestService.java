@@ -65,12 +65,24 @@ public class JenkinsHubIntRestService {
         this.noProxyHosts = noProxyHosts;
     }
 
+    public List<Pattern> getNoProxyHosts() {
+        return noProxyHosts;
+    }
+
     public void setProxyPort(int proxyPort) {
         this.proxyPort = proxyPort;
     }
 
+    public int getProxyPort() {
+        return proxyPort;
+    }
+
     public void setProxyHost(String proxyHost) {
         this.proxyHost = proxyHost;
+    }
+
+    public String getProxyHost() {
+        return proxyHost;
     }
 
     private ClientResource createClientResource(String url) throws MalformedURLException {

@@ -52,7 +52,7 @@ public class PostBuildHubiScan extends Recorder {
 
     private final String hubProjectRelease;
 
-    private int iScanMemory = DEFAULT_MEMORY;
+    private int iScanMemory;
 
     private String workingDirectory;
 
@@ -269,27 +269,25 @@ public class PostBuildHubiScan extends Recorder {
     }
 
     public void setJenkinsHubIntRestService(BuildListener listener) throws MalformedURLException {
-        if (service == null) {
-            service = new JenkinsHubIntRestService();
-            service.setListener(listener);
-            Jenkins jenkins = Jenkins.getInstance();
-            if (jenkins != null) {
-                ProxyConfiguration proxy = jenkins.proxy;
-                if (proxy != null) {
-                    service.setNoProxyHosts(proxy.getNoProxyHostPatterns());
-                    service.setProxyHost(proxy.name);
-                    service.setProxyPort(proxy.port);
-                    if (!StringUtils.isEmpty(proxy.name) && proxy.port != 0) {
-                        if (listener != null) {
-                            listener.getLogger().println("[DEBUG] Using proxy: '" + proxy.name + "' at Port: '" + proxy.port + "'");
-                        }
+        service = new JenkinsHubIntRestService();
+        service.setListener(listener);
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            ProxyConfiguration proxy = jenkins.proxy;
+            if (proxy != null) {
+                service.setNoProxyHosts(proxy.getNoProxyHostPatterns());
+                service.setProxyHost(proxy.name);
+                service.setProxyPort(proxy.port);
+                if (!StringUtils.isEmpty(proxy.name) && proxy.port != 0) {
+                    if (listener != null) {
+                        listener.getLogger().println("[DEBUG] Using proxy: '" + proxy.name + "' at Port: '" + proxy.port + "'");
                     }
                 }
             }
-            service.setBaseUrl(getDescriptor().getHubServerInfo().getServerUrl());
-            service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
-                    getDescriptor().getHubServerInfo().getPassword());
         }
+        service.setBaseUrl(getDescriptor().getHubServerInfo().getServerUrl());
+        service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
+                getDescriptor().getHubServerInfo().getPassword());
     }
 
     /**

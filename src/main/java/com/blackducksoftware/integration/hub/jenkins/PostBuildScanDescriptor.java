@@ -389,7 +389,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @throws InterruptedException
      */
     public ListBoxModel doFillDuplicateProjectIdItems(@QueryParameter("hubProjectName") final String hubProjectName) throws InterruptedException {
-        Thread.sleep(1750); // DO NOT REMOVE
+        Thread.sleep(1800); // DO NOT REMOVE
         // The sleep is so the checks can be run on the name properly before we try and populate the duplicate list
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
