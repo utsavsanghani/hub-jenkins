@@ -710,8 +710,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return Messages.HubBuildScan_getDisplayName();
     }
 
-    // TODO Do we need this validation? The default is the workspace of the job, which is always valid since the
-    // workspace gets created when the build starts
     // /**
     // * Performs on-the-fly validation of the scans targets
     // *
@@ -722,8 +720,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     // */
     // public FormValidation doCheckScanTarget(@QueryParameter String value)
     // throws IOException, ServletException {
-    // if (value.length() == 0) {
-    // return FormValidation.error("Please set a target to scan");
+    // if (value.startsWith("/") || value.startsWith("\\")) {
+    // return FormValidation.warning("");
+    // }
+    // if (value.endsWith("/") || value.endsWith("\\")) {
+    // return FormValidation.warning("");
     // }
     // return FormValidation.ok();
     // }

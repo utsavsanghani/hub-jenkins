@@ -252,7 +252,7 @@ public class PostBuildScanDescriptorTest {
         Assert.assertEquals(Messages.HubBuildScan_getProjectAndReleaseCreated(), form.getMessage());
         Thread.sleep(3000);
         FormValidation form2 = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, null);
-        Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
+        Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
         Assert.assertEquals(Messages.HubBuildScan_getProjectAndReleaseExist(), form2.getMessage());
         // } finally {
         // tearDownProject(projectId);

@@ -40,7 +40,7 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissing
 
 public class PostBuildHubiScan extends Recorder {
 
-    private static final int DEFAULT_MEMORY = 256;
+    public static final int DEFAULT_MEMORY = 256;
 
     private String duplicateProjectId;
 
@@ -93,6 +93,10 @@ public class PostBuildHubiScan extends Recorder {
 
     private void setResult(Result result) {
         this.result = result;
+    }
+
+    public int geDefaultIScanMemory() {
+        return DEFAULT_MEMORY;
     }
 
     public int getIScanMemory() {
@@ -178,28 +182,19 @@ public class PostBuildHubiScan extends Recorder {
                         if (StringUtils.isEmpty(scanJob.getScanTarget())) {
                             scanTargets.add(getWorkingDirectory());
                         } else {
+                            String target = scanJob.getScanTarget();
                             // make sure the target doesn't already begin with a slash or end in a slash
-                            if (scanJob.getScanTarget().startsWith("/") || scanJob.getScanTarget().startsWith("\\")) {
-                                if (scanJob.getScanTarget().endsWith("/") || scanJob.getScanTarget().endsWith("\\")) {
-                                    scanTargets.add(getWorkingDirectory() + scanJob.getScanTarget().substring(0, scanJob.getScanTarget().length() - 1));
-                                } else {
-                                    scanTargets.add(getWorkingDirectory() + scanJob.getScanTarget()); // Prefixes the
-                                                                                                      // targets with
-                                                                                                      // the workspace
-                                                                                                      // directory
-                                }
+                            // removes the slash if the target begins or ends with one
+                            if (target.startsWith("/") || target.startsWith("\\")) {
+                                target = getWorkingDirectory() + target;
                             } else {
-                                if (scanJob.getScanTarget().endsWith("/") || scanJob.getScanTarget().endsWith("\\")) {
-                                    scanTargets.add(getWorkingDirectory() + "/" + scanJob.getScanTarget().substring(0, scanJob.getScanTarget().length() - 1));
-                                } else {
-                                    scanTargets.add(getWorkingDirectory() + "/" + scanJob.getScanTarget()); // Prefixes
-                                                                                                            // the
-                                                                                                            // targets
-                                                                                                            // with the
-                                                                                                            // workspace
-                                                                                                            // directory
-                                }
+                                target = getWorkingDirectory() + "/" + target;
+
                             }
+                            if (target.endsWith("/") || target.endsWith("\\")) {
+                                target = target.substring(0, target.length() - 1);
+                            }
+                            scanTargets.add(target);
                         }
                     }
                     runScan(build, launcher, listener, iScanExec, scanTargets);
