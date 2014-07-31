@@ -24,25 +24,25 @@ public class HubServerInfo implements Serializable {
 
     private UsernamePasswordCredentialsImpl credential;
 
-    private long timeout;
+    // private long timeout;
 
     public HubServerInfo() {
     }
 
-    public HubServerInfo(String serverUrl, String hubCredentialsId, long timeout) {
+    public HubServerInfo(String serverUrl, String hubCredentialsId) {
         super();
         this.serverUrl = serverUrl;
         this.hubCredentialsId = hubCredentialsId;
-        this.timeout = timeout;
+        // this.timeout = timeout;
     }
 
-    public long getTimeout() {
-        return timeout;
-    }
-
-    public void setTimeout(long timeout) {
-        this.timeout = timeout;
-    }
+    // public long getTimeout() {
+    // return timeout;
+    // }
+    //
+    // public void setTimeout(long timeout) {
+    // this.timeout = timeout;
+    // }
 
     public String getServerUrl() {
         return serverUrl;
@@ -80,7 +80,7 @@ public class HubServerInfo implements Serializable {
         return creds.getPassword().getPlainText();
     }
 
-    private UsernamePasswordCredentialsImpl getCredential() {
+    protected UsernamePasswordCredentialsImpl getCredential() {
         // Only need to look up the credential when you first run a build or if the credential that the user wants to
         // use has changed.
         if (credential == null || !credential.getId().equals(hubCredentialsId)) {
@@ -90,26 +90,18 @@ public class HubServerInfo implements Serializable {
                     Collections.<DomainRequirement> emptyList());
             IdMatcher matcher = new IdMatcher(hubCredentialsId);
             for (StandardCredentials c : credentials) {
-                if (matcher.matches(c)) {
-                    if (c instanceof UsernamePasswordCredentialsImpl) {
-                        UsernamePasswordCredentialsImpl credential = (UsernamePasswordCredentialsImpl) c;
-                        this.credential = credential;
-                    }
+                if (matcher.matches(c) && c instanceof UsernamePasswordCredentialsImpl) {
+                    credential = (UsernamePasswordCredentialsImpl) c;
                 }
             }
         }
         return credential;
     }
 
-    /*
-     * (non-JSDoc)
-     * 
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
-        return "HubServerInfo [serverUrl=" + serverUrl + ", hubCredentialsId=" + hubCredentialsId + ", credential=" + credential + ", timeout=" + timeout
-                + "]";
+        return "HubServerInfo [serverUrl=" + serverUrl + ", hubCredentialsId=" + hubCredentialsId + ", credential=" + credential + "]";
+        // + ", timeout=" + timeout + "]";
     }
 
 }

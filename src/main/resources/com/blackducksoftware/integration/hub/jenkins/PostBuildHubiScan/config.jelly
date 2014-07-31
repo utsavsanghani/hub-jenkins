@@ -2,10 +2,33 @@
 	<!-- This jelly script is used for per-project configuration. See global.jelly 
 		for a general discussion about jelly script. -->
 		
+<st:once>
+	<script type="text/javascript"
+			src="/plugin/hub-jenkins/js/HubJenkinsJavaScript.js" />
+</st:once>
+
 		
-<f:entry field="iScanName" title="Choose iScan Installation">
+<f:entry field="hubProjectName" title="${%ProjectNameTitle}">
+	<f:textbox value="${instance.getHubProjectName()}"/>
+</f:entry>
+
+
+<f:entry field="duplicateHubProjectId" title="${%DuplicateSection}">
 	<f:select />
-</f:entry>		
+</f:entry>
+
+<f:entry field="hubProjectRelease" title="${%ProjectReleaseTitle}">
+	<f:textbox value="${instance.getHubProjectRelease()}"/>
+</f:entry>
+<f:validateButton title="${%CreateProject}" progress="${%CreateProjectProgress}"
+         method="createHubProject" with="hubProjectName,hubProjectRelease,duplicateProjectId" />
+<f:entry field="iScanName" title="${%ScanInstallationsTitle}">
+	<f:select />
+</f:entry>
+<f:entry field="iScanMemory" title="${%MemoryAllocation}">
+	<f:textbox value="${instance.getIScanMemory()}" default="${instance.geDefaultIScanMemory()}" />
+</f:entry>
+		
 <f:block>
 	<f:repeatable var="scans" items="${instance.scans}" add="${%AddScan}" minimum="1">
 		<table style="width:100%" id="hubBlackDuckTable">

@@ -4,42 +4,118 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
+import hudson.ProxyConfiguration;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.JDK;
+import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Recorder;
 import hudson.tools.ToolDescriptor;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
+import jenkins.model.Jenkins;
+
 import org.codehaus.plexus.util.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
 
 public class PostBuildHubiScan extends Recorder {
 
-    private IScanJobs[] scans;
+    public static final int DEFAULT_MEMORY = 256;
 
-    private String iScanName;
+    private String duplicateHubProjectId;
+
+    private final IScanJobs[] scans;
+
+    private final String iScanName;
+
+    private final String hubProjectName;
+
+    private final String hubProjectRelease;
+
+    private int iScanMemory;
 
     private String workingDirectory;
 
     private JDK java;
 
+    private Result result;
+
+    // private JenkinsHubIntRestService service = null;
+
+    private boolean test = false;
+
     @DataBoundConstructor
-    public PostBuildHubiScan(IScanJobs[] scans, String iScanName) {
+    public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease, int iScanMemory, String duplicateHubProjectId) {
         this.scans = scans;
         this.iScanName = iScanName;
+        this.hubProjectName = hubProjectName;
+        this.hubProjectRelease = hubProjectRelease;
+        if (iScanMemory == 0) {
+            this.iScanMemory = DEFAULT_MEMORY;
+        } else {
+            this.iScanMemory = iScanMemory;
+        }
+        this.duplicateHubProjectId = duplicateHubProjectId;
+    }
+
+    public boolean isTEST() {
+        return test;
+    }
+
+    // Set to true run the integration test without running the actual iScan.
+    public void setTEST(boolean tEST) {
+        test = tEST;
+    }
+
+    public Result getResult() {
+        return result;
+    }
+
+    private void setResult(Result result) {
+        this.result = result;
+    }
+
+    public int geDefaultIScanMemory() {
+        return DEFAULT_MEMORY;
+    }
+
+    public int getIScanMemory() {
+        if (iScanMemory == 0) {
+            iScanMemory = DEFAULT_MEMORY;
+        }
+        return iScanMemory;
+    }
+
+    public String getHubProjectRelease() {
+        return hubProjectRelease;
+    }
+
+    public String getHubProjectName() {
+        return hubProjectName;
+    }
+
+    public String getDuplicateHubProjectId() {
+        return duplicateHubProjectId;
     }
 
     public IScanJobs[] getScans() {
@@ -85,7 +161,7 @@ public class PostBuildHubiScan extends Recorder {
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher,
             BuildListener listener) throws InterruptedException, IOException {
-        Result result = build.getResult();
+        setResult(build.getResult());
         if (result.equals(Result.SUCCESS)) {
             try {
                 listener.getLogger().println("Starting Black Duck iScans...");
@@ -100,26 +176,132 @@ public class PostBuildHubiScan extends Recorder {
                     setWorkingDirectory(build.getWorkspace().getRemote()); // This should work on master and
                                                                            // slaves
                     setJava(build, listener);
-                    FilePath iScanScript = getIScanScript(iScanTools, listener, build);
+                    FilePath iScanExec = getIScanCLI(iScanTools, listener, build);
                     List<String> scanTargets = new ArrayList<String>();
                     for (IScanJobs scanJob : getScans()) {
-                        scanTargets.add(getWorkingDirectory() + "/" + scanJob.getScanTarget()); // Prefixes the targets
-                                                                                                // with the workspace
-                                                                                                // directory
-                    }
-                    runScan(build, launcher, listener, iScanScript, scanTargets);
-                }
+                        if (StringUtils.isEmpty(scanJob.getScanTarget())) {
+                            scanTargets.add(getWorkingDirectory());
+                        } else {
+                            String target = scanJob.getScanTarget();
+                            // make sure the target doesn't already begin with a slash or end in a slash
+                            // removes the slash if the target begins or ends with one
+                            if (target.startsWith("/") || target.startsWith("\\")) {
+                                target = getWorkingDirectory() + target;
+                            } else {
+                                target = getWorkingDirectory() + "/" + target;
 
+                            }
+                            if (target.endsWith("/") || target.endsWith("\\")) {
+                                target = target.substring(0, target.length() - 1);
+                            }
+                            scanTargets.add(target);
+                        }
+                    }
+                    runScan(build, launcher, listener, iScanExec, scanTargets);
+
+                    // Only map the scans to a Project Release if the Project name and Project Release have been
+                    // configured
+                    if (!StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectRelease())) {
+                        // Wait 2 seconds for the scans to be recognized in the Hub server
+                        Thread.sleep(2000);
+
+                        doScanMapping(listener, scanTargets);
+                    }
+                }
             } catch (Exception e) {
                 e.printStackTrace(listener.getLogger());
-                listener.error(e.getMessage());
-                result = Result.UNSTABLE;
+                String message;
+                if (e.getCause() != null && e.getCause().getCause() != null) {
+                    message = e.getCause().getCause().toString();
+                } else if (e.getCause() != null) {
+                    message = e.getCause().toString();
+                } else {
+                    message = e.toString();
+                }
+                if (message.toLowerCase().contains("service unavailable")) {
+                    message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getDescriptor().getHubServerInfo().getServerUrl());
+                } else if (message.toLowerCase().contains("precondition failed")) {
+                    message = message + ", Check your configuration.";
+                }
+                listener.error(message);
+                setResult(Result.UNSTABLE);
             }
         } else {
             listener.getLogger().println("Build was not successful. Will not run Black Duck iScans.");
         }
-        build.setResult(result);
+        listener.getLogger().println("Finished running Black Duck iScans.");
+        build.setResult(getResult());
         return true;
+    }
+
+    private void doScanMapping(BuildListener listener, List<String> scanTargets) throws IOException, BDRestException, BDJenkinsHubPluginException {
+        JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
+
+        ArrayList<String> projectId = null;
+        String projectIdToUse = null;
+        String releaseId = null;
+        if (!StringUtils.isEmpty(getDuplicateHubProjectId())) {
+            projectIdToUse = getDuplicateHubProjectId();
+            listener.getLogger().println("[DEBUG] Project Id: '" + projectIdToUse + "'");
+        } else {
+            ArrayList<LinkedHashMap<String, Object>> projectMatchesResponse = service.getProjectMatches(getHubProjectName());
+            projectId = service.getProjectIdsFromProjectMatches(projectMatchesResponse, getHubProjectName());
+            if (projectId == null || projectId.isEmpty()) {
+                throw new BDJenkinsHubPluginException("The specified Project could not be found.");
+            } else if (projectId.size() > 1) {
+                throw new BDJenkinsHubPluginException("More than one Project was found with the same name.");
+            }
+            listener.getLogger().println("[DEBUG] Project Id: '" + projectId.get(0) + "'");
+            projectIdToUse = projectId.get(0);
+        }
+
+        LinkedHashMap<String, Object> releaseMatchesResponse = service.getReleaseMatchesForProjectId(projectIdToUse);
+        releaseId = service.getReleaseIdFromReleaseMatches(releaseMatchesResponse, getHubProjectRelease());
+        listener.getLogger().println("[DEBUG] Release Id: '" + releaseId + "'");
+        if (StringUtils.isEmpty(releaseId)) {
+            throw new BDJenkinsHubPluginException("The specified Release could not be found in the Project.");
+        }
+        List<String> scanIds = service.getScanLocationIds(listener, scanTargets, releaseId);
+        if (!scanIds.isEmpty()) {
+            listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
+            for (String scanId : scanIds) {
+                listener.getLogger().println(scanId);
+            }
+            listener.getLogger().println(
+                    "[DEBUG] Linking the scan Id's to the Hub Project: '" + getHubProjectName() + "', and Release: '" + getHubProjectRelease()
+                            + "'.");
+
+            service.mapScansToProjectRelease(listener, scanIds, releaseId);
+        } else {
+            listener.getLogger()
+                    .println(
+                            "[DEBUG] These scans are already mapped to Project : '" + getHubProjectName() + "', Release : '"
+                                    + getHubProjectRelease() + "'. OR there was an issue getting the Id's for the defined scan targets.");
+        }
+
+    }
+
+    public JenkinsHubIntRestService setJenkinsHubIntRestService(BuildListener listener) throws MalformedURLException {
+        JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+        service.setListener(listener);
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            ProxyConfiguration proxy = jenkins.proxy;
+            if (proxy != null) {
+                service.setNoProxyHosts(proxy.getNoProxyHostPatterns());
+                service.setProxyHost(proxy.name);
+                service.setProxyPort(proxy.port);
+                if (!StringUtils.isEmpty(proxy.name) && proxy.port != 0) {
+                    if (listener != null) {
+                        listener.getLogger().println("[DEBUG] Using proxy: '" + proxy.name + "' at Port: '" + proxy.port + "'");
+                    }
+                }
+            }
+        }
+        service.setBaseUrl(getDescriptor().getHubServerInfo().getServerUrl());
+        service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
+                getDescriptor().getHubServerInfo().getPassword());
+        return service;
     }
 
     /**
@@ -133,7 +315,7 @@ public class PostBuildHubiScan extends Recorder {
      *            Launcher
      * @param listener
      *            BuildListener
-     * @param iScanScript
+     * @param iScanExec
      *            FilePath
      * @param scanTargets
      *            List<String>
@@ -142,44 +324,147 @@ public class PostBuildHubiScan extends Recorder {
      * @throws HubConfigurationException
      * @throws InterruptedException
      */
-    private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanScript, List<String> scanTargets) throws IOException,
+    private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanExec, List<String> scanTargets)
+            throws IOException,
             HubConfigurationException, InterruptedException {
 
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
-        // Use a substring of the host url because the http:// is not currently needed in the definition.
-        // String[] cmdCreds = { iScanScript.getRemote(),
-        // "--host", getDescriptor().getServerUrl().substring(7)
-        // , "--username", getDescriptor().getHubServerInfo().getUsername()
-        // , "--password", getDescriptor().getHubServerInfo().getPassword() };
+        URL url = new URL(getDescriptor().getHubServerUrl());
+        PostBuildScanDescriptor desc = getDescriptor();
         List<String> cmd = new ArrayList<String>();
-        cmd.add(iScanScript.getRemote());
+        cmd.add(getJava().getHome() + "/bin/java");
+        cmd.add("-Done-jar.silent=true");
+        cmd.add("-jar");
+
+        // TODO add proxy configuration for the CLI as soon as the CLI has proxy support
+        // Jenkins jenkins = Jenkins.getInstance();
+        // if (jenkins != null) {
+        // ProxyConfiguration proxy = jenkins.proxy;
+        // if (proxy != null && proxy.getNoProxyHostPatterns() != null) {
+        // if (!JenkinsHubIntRestService.getMatchingNoProxyHostPatterns(url.getHost(), proxy.getNoProxyHostPatterns()))
+        // {
+        // if (!StringUtils.isEmpty(proxy.name) && proxy.port != 0) {
+        // System.setProperty("http.proxyHost", proxy.name);
+        // System.setProperty("http.proxyPort", Integer.toString(proxy.port));
+        // // cmd.add("-Dhttp.useProxy=true");
+        // // cmd.add("-Dhttp.proxyHost=" + proxy.name);
+        // // cmd.add("-Dhttp.proxyPort=" + proxy.port);
+        // }
+        // }
+        // }
+        // }
+        if (getIScanMemory() != 256) {
+            cmd.add("-Xmx" + getIScanMemory() + "m");
+        } else {
+            cmd.add("-Xmx" + DEFAULT_MEMORY + "m");
+        }
+        cmd.add(iScanExec.getRemote());
         cmd.add("--host");
-        cmd.add(getDescriptor().getServerUrl().substring(7));
+        cmd.add(url.getHost());
+        listener.getLogger().println("[DEBUG] : Using this Hub Url : '" + url.getHost() + "'");
         cmd.add("--username");
         cmd.add(getDescriptor().getHubServerInfo().getUsername());
         cmd.add("--password");
         cmd.add(getDescriptor().getHubServerInfo().getPassword());
+        if (url.getPort() != -1) {
+            cmd.add("--port");
+            cmd.add(Integer.toString(url.getPort()));
+        }
+
+        if (isTEST()) {
+            cmd.add("--dryRun");
+        }
         for (String target : scanTargets) {
             cmd.add(target);
         }
         listener.getLogger().println("[DEBUG] : Using this java installation : " + getJava().getName() + " : " +
                 getJava().getHome());
-        // String[] cmd = ObjectArrays.concat(cmdCreds, scanTargets, String.class);
-
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ProcStarter ps = launcher.launch();
+        if (ps != null) {
+            ps.envs(build.getEnvironment(listener));
+            ps.cmds(cmd);
+            ps.stdout(byteStream);
+            ps.join();
 
-        ps.envs(build.getEnvironment(listener));
-        ps.cmds(cmd);
-        ps.stdout(listener);
-        ps.join();
+            ByteArrayOutputStream byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
+            // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will handle
+            // closing it.
+            String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
+            listener.getLogger().println(outputString);
+            if (!outputString.contains("Finished in") && !outputString.contains("with status SUCCESS")) {
+                setResult(Result.UNSTABLE);
+            } else {
+                for (String target : scanTargets) {
+                    File scanTargetFile = new File(target);
+                    String fileName = scanTargetFile.getName();
 
-        OutputStream outputStream = ps.stdout();
-        PrintStream printOutStream = new PrintStream(outputStream);
-        printOutStream.println();
-        printOutStream.flush();
-        // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will handle
-        // closing it.
+                    FilePath libFolder = iScanExec.getParent();
+                    List<FilePath> files = libFolder.list();
+                    FilePath logFolder = null;
+                    for (FilePath file : files) {
+                        if (file.getName().contains("log")) {
+                            logFolder = file;
+                        }
+                    }
+                    File latestLogFile = getLogFileForScan(fileName, logFolder);
+                    if (latestLogFile != null) {
+                        listener.getLogger().println(
+                                "For scan target : '" + target + "', you can view the iScan CLI logs at : '" + latestLogFile.getCanonicalPath());
+                        listener.getLogger().println();
+                    } else {
+                        listener.getLogger().println(
+                                "For scan target : '" + target + "', could not find the log file!");
+                    }
 
+                }
+            }
+        } else {
+            listener.getLogger().println("[ERROR] : Could not find a ProcStarter to run the process!");
+        }
+    }
+
+    private File getLogFileForScan(String fileName, FilePath logFolder) throws IOException, InterruptedException {
+        File latestLogFile = null;
+        DateTime latestLogTime = null;
+        List<FilePath> logFiles = logFolder.list();
+        for (FilePath log : logFiles) {
+            if (log.getName().contains(fileName)) {
+                String hostName = InetAddress.getLocalHost().getHostName();
+                if (log.getName().contains(hostName)) {
+                    // log file name contains the scan target, and the host name. Get the latest one.
+                    if (latestLogFile == null) {
+                        String time = log.getName();
+                        // removes everything from the log name except for the time stamp
+                        time = time.replace(hostName + "-" + fileName + "-", "");
+                        // time = time.substring(time.length() - 30, time.length());
+                        time = time.substring(0, time.length() - 9);
+
+                        DateTimeFormatter dateStringFormat = new
+                                DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+                        DateTime dateTime = dateStringFormat.parseDateTime(time);
+                        latestLogTime = dateTime;
+                        latestLogFile = new File(log.getRemote());
+                    } else {
+                        String time = log.getName();
+                        // removes everything from the log name except for the time stamp
+                        time = time.replace(hostName + "-" + fileName + "-", "");
+                        // time = time.substring(time.length() - 30, time.length());
+                        time = time.substring(0, time.length() - 9);
+
+                        DateTimeFormatter dateStringFormat = new
+                                DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+                        DateTime logTime = dateStringFormat.parseDateTime(time);
+
+                        if (logTime.isAfter(latestLogTime)) {
+                            latestLogTime = logTime;
+                            latestLogFile = new File(log.getRemote());
+                        }
+                    }
+                }
+            }
+        }
+        return latestLogFile;
     }
 
     public JDK getJava() {
@@ -195,21 +480,30 @@ public class PostBuildHubiScan extends Recorder {
      *            BuildListener
      * @throws IOException
      * @throws InterruptedException
+     * @throws HubConfigurationException
      */
-    private void setJava(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
-        EnvVars envVars = new EnvVars();
-        envVars = build.getEnvironment(listener);
+    private void setJava(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException, HubConfigurationException {
+        EnvVars envVars = build.getEnvironment(listener);
         JDK javaHomeTemp = null;
-        javaHomeTemp = build.getProject().getJDK();
         if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
             // Empty node name indicates master
             javaHomeTemp = build.getProject().getJDK();
         } else {
-            javaHomeTemp = javaHomeTemp.forNode(build.getBuiltOn(), listener);
+            javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), listener);
         }
         if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
+            listener.getLogger().println("Could not find the specified Java installation, checking the JAVA_HOME variable.");
+            if (envVars.get("JAVA_HOME") == null) {
+                throw new HubConfigurationException("Need to define a JAVA_HOME or select an installed JDK.");
+            }
             // In case the user did not select a java installation, set to the environment variable JAVA_HOME
             javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
+        }
+        // FIXME look for the java executable and make sure it exists
+        File javaExecFile = new File(javaHomeTemp.getHome());
+        FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), javaExecFile.getCanonicalPath());
+        if (!javaExec.exists()) {
+            throw new HubConfigurationException("Could not find the specified Java installation at: " + javaExec.getRemote());
         }
         java = javaHomeTemp;
     }
@@ -232,36 +526,35 @@ public class PostBuildHubiScan extends Recorder {
      * @throws InterruptedException
      * @throws HubConfigurationException
      */
-    public FilePath getIScanScript(IScanInstallation[] iScanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
+    public FilePath getIScanCLI(IScanInstallation[] iScanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
             InterruptedException, HubConfigurationException {
-        File locationFile = null;
-        FilePath iScanScript = null;
+        FilePath iScanExec = null;
         for (IScanInstallation iScan : iScanTools) {
-            if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
+            Node node = build.getBuiltOn();
+            if (StringUtils.isEmpty(node.getNodeName())) {
                 // Empty node name indicates master
-                listener.getLogger().println("[DEBUG] : master");
+                listener.getLogger().println("[DEBUG] : Running on : master");
             } else {
-                listener.getLogger().println("[DEBUG] : " + build.getBuiltOn().getNodeName());
-                iScan = iScan.forNode(build.getBuiltOn(), listener);
+                listener.getLogger().println("[DEBUG] : Running on : " + node.getNodeName());
+                iScan = iScan.forNode(node, listener); // Need to get the Slave iScan
             }
             if (iScan.getName().equals(getiScanName())) {
-                locationFile = new File(iScan.getHome() + "/bin/scan.cli.sh");
-                iScanScript = new FilePath(build.getBuiltOn().getChannel(), locationFile.getCanonicalPath());
+                if (iScan.getExists(node.getChannel(), listener)) {
+                    iScanExec = iScan.getCLI(node.getChannel());
+                    listener.getLogger().println(
+                            "[DEBUG] : Using this iScan CLI at : " + iScanExec.getRemote());
+                } else {
+                    listener.getLogger().println("[ERROR] : Could not find the CLI file in : " + iScan.getHome());
+                    throw new IScanToolMissingException("Could not find the CLI file to execute at : '" + iScan.getHome() + "'");
+                }
             }
         }
-        if (iScanScript == null) {
+        if (iScanExec == null) {
             // Should not get here unless there are no iScan Installations defined
             // But we check this just in case
             throw new HubConfigurationException("You need to select which iScan installation to use.");
         }
-        if (!iScanScript.exists()) {
-            listener.getLogger().println("[ERROR] : Script doesn't exist : " + iScanScript.getRemote());
-            throw new IScanToolMissingException("Could not find the script file to execute.");
-        } else {
-            listener.getLogger().println(
-                    "[DEBUG] : Using this iScan script at : " + iScanScript.getRemote());
-        }
-        return iScanScript;
+        return iScanExec;
     }
 
     /**
@@ -279,7 +572,7 @@ public class PostBuildHubiScan extends Recorder {
      * @throws HubConfigurationException
      */
     public boolean validateConfiguration(IScanInstallation[] iScanTools, IScanJobs[] scans) throws IScanToolMissingException, HubConfigurationException {
-        if (iScanTools[0] == null) {
+        if (iScanTools == null || iScanTools.length == 0 || iScanTools[0] == null) {
             throw new IScanToolMissingException("Could not find an iScan Installation to use.");
         }
         if (scans == null || scans.length == 0) {
@@ -288,10 +581,10 @@ public class PostBuildHubiScan extends Recorder {
         if (!getDescriptor().getHubServerInfo().isPluginConfigured()) {
             // If plugin is not Configured, we try to find out what is missing.
             if (StringUtils.isEmpty(getDescriptor().getHubServerInfo().getServerUrl())) {
-                throw new HubConfigurationException("Could not find any targets to scan.");
+                throw new HubConfigurationException("No Hub URL was provided.");
             }
             if (StringUtils.isEmpty(getDescriptor().getHubServerInfo().getCredentialsId())) {
-                throw new HubConfigurationException("Could not find any targets to scan.");
+                throw new HubConfigurationException("No credentials could be found to connect to the Hub.");
             }
         }
         // No exceptions were thrown so return true
@@ -323,7 +616,8 @@ public class PostBuildHubiScan extends Recorder {
             } else {
                 target = new FilePath(locationFile);
             }
-            if (!target.getRemote().equals(getWorkingDirectory()) && !target.getRemote().contains(getWorkingDirectory())) {
+            if (target.length() <= getWorkingDirectory().length()
+                    && !getWorkingDirectory().equals(target.getRemote()) && !target.getRemote().contains(getWorkingDirectory())) {
                 throw new HubConfigurationException("Can not scan targets outside of the workspace.");
             }
 
@@ -336,4 +630,5 @@ public class PostBuildHubiScan extends Recorder {
         }
         return true;
     }
+
 }

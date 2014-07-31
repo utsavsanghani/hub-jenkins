@@ -74,6 +74,7 @@
 	<repositories>
 		<repository>
 			<id>repo.jenkins-ci.org</id>
+			<name>jenkins</name>
 			<url>http://repo.jenkins-ci.org/public/</url>
 		</repository>
 		<!-- Need the integration repo before the other protex repos in order 
@@ -91,14 +92,36 @@
 			</snapshots>
 		</repository>
 		<repository>
-			<id>lame.blackducksoftware.com</id>
-			<name>product-protex</name>
-			<url>http://lame.blackducksoftware.com:8081/artifactory/product-protex</url>
+			<id>hub</id>
+			<name>hub</name>
+			<url>http://lame.blackducksoftware.com:8081/artifactory/simple/bds-suite-repo</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
 			<snapshots>
-				<enabled>false</enabled>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>third party libs</id>
+			<name>bds-approved-thirdparty-libs</name>
+			<url>http://lame.blackducksoftware.com:8081/artifactory/simple/bds-approved-thirdparty-libs/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>bds local snapshots</id>
+			<name>bds-snapshot-local</name>
+			<url>http://lame.blackducksoftware.com:8081/artifactory/simple/bds-snapshot-local/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
 			</snapshots>
 		</repository>
 		<!-- repository> <id>bd-staging</id> <name>blackduck-staging-repos</name> 
@@ -127,9 +150,37 @@
 	
 	<dependencies>
 		<dependency>
+    		<groupId>joda-time</groupId>
+    		<artifactId>joda-time</artifactId>
+    		<version>2.3</version>
+		</dependency>
+		<dependency>
+    		<groupId>com.fasterxml.jackson.core</groupId>
+    		<artifactId>jackson-databind</artifactId>
+    		<version>2.4.1</version>
+		</dependency>
+		<dependency>
+  			<groupId>org.restlet.jse</groupId>
+  			<artifactId>org.restlet</artifactId>
+  			<version>2.2-RC4</version>
+		</dependency>
+		<!-- This dependency allows for proxy configuration per Client Resource -->
+		<dependency>
+			<groupId>org.restlet.jse</groupId>
+			<artifactId>org.restlet.ext.httpclient</artifactId>
+			<version>2.2.1</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-all</artifactId>
 			<version>1.9.5</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.10</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -160,12 +211,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.kohsuke.stapler</groupId>
-			<artifactId>stapler</artifactId>
-			<version>1.188</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.kohsuke.stapler</groupId>
 			<artifactId>json-lib</artifactId>
 			<version>2.1-rev6</version>
 			<scope>provided</scope>
@@ -180,17 +225,17 @@
 				<configuration>
 					<classpathContainers>
 						<classpathContainer>
-							org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6
+							org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/Java 7
 						</classpathContainer>
 					</classpathContainers>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.7</source>
+					<target>1.7</target>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.jenkins-ci.tools</groupId>
 				<artifactId>maven-hpi-plugin</artifactId>
-				<version>1.95</version>
+				<version>1.106</version>
 				<configuration>
 					<pluginFirstClassLoader>false</pluginFirstClassLoader>
 				</configuration>
@@ -228,7 +273,7 @@
 					<configuration>
 						<classpathContainers>
 							<classpathContainer>
-								org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6
+								org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/Java 7
 							</classpathContainer>
 						</classpathContainers>
 					</configuration>

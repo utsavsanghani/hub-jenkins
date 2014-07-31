@@ -2,15 +2,19 @@ package com.blackducksoftware.integration.hub.jenkins;
 
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
+import hudson.model.BuildListener;
 import hudson.model.EnvironmentSpecific;
 import hudson.model.TaskListener;
 import hudson.model.Descriptor;
 import hudson.model.Node;
+import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeSpecific;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolProperty;
 import hudson.tools.ToolInstallation;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -37,6 +41,84 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
     @Override
     public IScanDescriptor getDescriptor() {
         return (IScanDescriptor) super.getDescriptor();
+    }
+
+    /**
+     * Checks if the executable exists
+     * 
+     * @param channel
+     *            VirtualChannel to find the executable on master or slave
+     * 
+     * @return true if executable is found, false otherwise
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public boolean getExists(VirtualChannel channel, BuildListener listener) throws IOException, InterruptedException {
+        File homeFile = new File(getHome());
+        FilePath homeFilePath = new FilePath(channel, homeFile.getCanonicalPath());
+        // find the lib folder in the iScan directory
+        listener.getLogger().println("[DEBUG] iScan directory: " + homeFilePath.getRemote());
+        List<FilePath> files = homeFilePath.listDirectories();
+        if (files != null) {
+            listener.getLogger().println("[DEBUG] directories in the iScan directory: " + files.size());
+            if (!files.isEmpty()) {
+                FilePath libFolder = null;
+                for (FilePath iScanDirectory : files) {
+                    if ("lib".equalsIgnoreCase(iScanDirectory.getName())) {
+                        libFolder = iScanDirectory;
+                    }
+                }
+                if (libFolder == null) {
+                    return false;
+                }
+                listener.getLogger().println("[DEBUG] iScan lib directory: " + libFolder.getRemote());
+                FilePath[] cliFiles = libFolder.list("scan.cli*.jar");
+                FilePath iScanScript = null;
+                if (cliFiles == null) {
+                    return false;
+                } else {
+                    for (FilePath file : cliFiles) {
+                        listener.getLogger().println("[DEBUG] iScan lib file: " + file.getRemote());
+                        if (file.getName().contains("scan.cli")) {
+                            iScanScript = file;
+                        }
+                    }
+                }
+                return iScanScript.exists();
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Returns the executable file of the installation
+     * 
+     * @param channel
+     *            VirtualChannel to find the executable on master or slave
+     * 
+     * @return FilePath
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public FilePath getCLI(VirtualChannel channel) throws IOException, InterruptedException {
+        File homeFile = new File(getHome() + "/lib");
+        FilePath homeFilePath = new FilePath(channel, homeFile.getCanonicalPath());
+        if (homeFilePath.exists()) {
+
+            FilePath[] files = homeFilePath.list("scan.cli*.jar");
+            FilePath iScanScript = null;
+            for (FilePath file : files) {
+                if (file.getName().contains("scan.cli")) {
+                    iScanScript = file;
+                }
+            }
+            return iScanScript;
+        } else {
+            return null;
+        }
     }
 
     @Extension
