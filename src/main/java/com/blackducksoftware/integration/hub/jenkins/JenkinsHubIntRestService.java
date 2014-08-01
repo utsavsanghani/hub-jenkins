@@ -183,21 +183,6 @@ public class JenkinsHubIntRestService {
         return cookies;
     }
 
-    // public int reloadDuplicates() throws MalformedURLException {
-    // String url =
-    // "http://localhost:8080/job/test free style project/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildHubiScan/fillDuplicateProjectIdItems?hubProjectName=something";
-    // ClientResource resource = createClientResource(url);
-    // resource.setMethod(Method.POST);
-    //
-    // JSONObject obj = new JSONObject();
-    // obj.put("hubProjectName", "not null");
-    //
-    // EmptyRepresentation rep = new EmptyRepresentation();
-    //
-    // resource.post(rep);
-    // return resource.getResponse().getStatus().getCode();
-    // }
-
     public ArrayList<LinkedHashMap<String, Object>> getProjectMatches(String hubProjectName) throws IOException, BDRestException {
 
         String url = getBaseUrl() + "/api/v1/autocomplete/PROJECT?text=" + hubProjectName + "&limit=30";
