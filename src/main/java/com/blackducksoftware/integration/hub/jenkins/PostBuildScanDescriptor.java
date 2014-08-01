@@ -608,7 +608,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @throws ServletException
      */
     public FormValidation doCreateHubProject(@QueryParameter("hubProjectName") final String hubProjectName,
-            @QueryParameter("hubProjectRelease") final String hubProjectRelease, @QueryParameter("duplicateHubProjectId") final String hubProjectDuplicateId) {
+            @QueryParameter("hubProjectRelease") final String hubProjectRelease, @QueryParameter("duplicateHubProjectId") final String duplicateHubProjectId) {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -632,7 +632,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 // Project exists for given name
                 projectExists = true;
                 // Check if the Release for the given Project exists or not before creating it
-                FormValidation projectReleaseCheck = doCheckHubProjectRelease(hubProjectRelease, hubProjectDuplicateId);
+                FormValidation projectReleaseCheck = doCheckHubProjectRelease(hubProjectRelease, duplicateHubProjectId);
                 String releaseNonExistentMessage = Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null);
                 releaseNonExistentMessage = releaseNonExistentMessage.substring(0, 52);
                 if (FormValidation.Kind.OK.equals(projectReleaseCheck.kind)) {
@@ -670,8 +670,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
             }
             int responseCode = 0;
-            if (!StringUtils.isEmpty(hubProjectDuplicateId) && projectExists) {
-                responseCode = service.createHubRelease(hubProjectRelease, hubProjectDuplicateId);
+            if (!StringUtils.isEmpty(duplicateHubProjectId) && projectExists) {
+                responseCode = service.createHubRelease(hubProjectRelease, duplicateHubProjectId);
             } else {
                 responseCode = service.createHubRelease(hubProjectRelease, getProjectId());
             }

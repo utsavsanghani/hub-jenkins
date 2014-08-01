@@ -395,28 +395,42 @@ public class PostBuildHubiScan extends Recorder {
             if (!outputString.contains("Finished in") && !outputString.contains("with status SUCCESS")) {
                 setResult(Result.UNSTABLE);
             } else {
-                for (String target : scanTargets) {
-                    File scanTargetFile = new File(target);
-                    String fileName = scanTargetFile.getName();
+                try {
+                    for (String target : scanTargets) {
+                        File scanTargetFile = new File(target);
+                        String fileName = scanTargetFile.getName();
 
-                    FilePath libFolder = iScanExec.getParent();
-                    List<FilePath> files = libFolder.list();
-                    FilePath logFolder = null;
-                    for (FilePath file : files) {
-                        if (file.getName().contains("log")) {
-                            logFolder = file;
+                        FilePath libFolder = iScanExec.getParent();
+                        List<FilePath> files = libFolder.list();
+                        FilePath logFolder = null;
+                        for (FilePath file : files) {
+                            if (file.getName().contains("log")) {
+                                logFolder = file;
+                            }
                         }
-                    }
-                    File latestLogFile = getLogFileForScan(fileName, logFolder);
-                    if (latestLogFile != null) {
-                        listener.getLogger().println(
-                                "For scan target : '" + target + "', you can view the iScan CLI logs at : '" + latestLogFile.getCanonicalPath());
-                        listener.getLogger().println();
-                    } else {
-                        listener.getLogger().println(
-                                "For scan target : '" + target + "', could not find the log file!");
-                    }
+                        File latestLogFile = getLogFileForScan(fileName, logFolder);
+                        if (latestLogFile != null) {
+                            listener.getLogger().println(
+                                    "For scan target : '" + target + "', you can view the iScan CLI logs at : '" + latestLogFile.getCanonicalPath());
+                            listener.getLogger().println();
+                        } else {
+                            listener.getLogger().println(
+                                    "For scan target : '" + target + "', could not find the log file!");
+                        }
 
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace(listener.getLogger());
+                    String message;
+                    if (e.getCause() != null && e.getCause().getCause() != null) {
+                        message = e.getCause().getCause().toString();
+                    } else if (e.getCause() != null) {
+                        message = e.getCause().toString();
+                    } else {
+                        message = e.toString();
+                    }
+                    listener.error(message);
+                    setResult(Result.UNSTABLE);
                 }
             }
         } else {
@@ -431,34 +445,38 @@ public class PostBuildHubiScan extends Recorder {
         for (FilePath log : logFiles) {
             if (log.getName().contains(fileName)) {
                 String hostName = InetAddress.getLocalHost().getHostName();
-                if (log.getName().contains(hostName)) {
-                    // log file name contains the scan target, and the host name. Get the latest one.
-                    if (latestLogFile == null) {
-                        String time = log.getName();
-                        // removes everything from the log name except for the time stamp
-                        time = time.replace(hostName + "-" + fileName + "-", "");
-                        // time = time.substring(time.length() - 30, time.length());
-                        time = time.substring(0, time.length() - 9);
+                String logName = log.getName();
+                if (logName.contains(hostName)) {
+                    // remove the host name
+                    logName = logName.replace(hostName + "-", "");
+                    int end = logName.length() - 31;
+                    if (logName.substring(0, end).equals(fileName)) {
+                        // remove the filename
+                        logName = logName.replace(fileName + "-", "");
 
-                        DateTimeFormatter dateStringFormat = new
-                                DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-                        DateTime dateTime = dateStringFormat.parseDateTime(time);
-                        latestLogTime = dateTime;
-                        latestLogFile = new File(log.getRemote());
-                    } else {
-                        String time = log.getName();
-                        // removes everything from the log name except for the time stamp
-                        time = time.replace(hostName + "-" + fileName + "-", "");
-                        // time = time.substring(time.length() - 30, time.length());
-                        time = time.substring(0, time.length() - 9);
+                        // log file name contains the scan target, and the host name. Get the latest one.
+                        if (latestLogFile == null) {
+                            String time = logName;
+                            // remove the -0400.log from the log file name
+                            time = time.substring(0, time.length() - 9);
 
-                        DateTimeFormatter dateStringFormat = new
-                                DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-                        DateTime logTime = dateStringFormat.parseDateTime(time);
-
-                        if (logTime.isAfter(latestLogTime)) {
-                            latestLogTime = logTime;
+                            DateTimeFormatter dateStringFormat = new
+                                    DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+                            DateTime dateTime = dateStringFormat.parseDateTime(time);
+                            latestLogTime = dateTime;
                             latestLogFile = new File(log.getRemote());
+                        } else {
+                            String time = logName;
+                            time = time.substring(0, time.length() - 9);
+
+                            DateTimeFormatter dateStringFormat = new
+                                    DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+                            DateTime logTime = dateStringFormat.parseDateTime(time);
+
+                            if (logTime.isAfter(latestLogTime)) {
+                                latestLogTime = logTime;
+                                latestLogFile = new File(log.getRemote());
+                            }
                         }
                     }
                 }

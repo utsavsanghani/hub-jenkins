@@ -2,12 +2,6 @@
 	<!-- This jelly script is used for per-project configuration. See global.jelly 
 		for a general discussion about jelly script. -->
 		
-<st:once>
-	<script type="text/javascript"
-			src="/plugin/hub-jenkins/js/HubJenkinsJavaScript.js" />
-</st:once>
-
-		
 <f:entry field="hubProjectName" title="${%ProjectNameTitle}">
 	<f:textbox value="${instance.getHubProjectName()}"/>
 </f:entry>
@@ -21,7 +15,7 @@
 	<f:textbox value="${instance.getHubProjectRelease()}"/>
 </f:entry>
 <f:validateButton title="${%CreateProject}" progress="${%CreateProjectProgress}"
-         method="createHubProject" with="hubProjectName,hubProjectRelease,duplicateProjectId" />
+         method="createHubProject" with="hubProjectName,hubProjectRelease,duplicateHubProjectId" />
 <f:entry field="iScanName" title="${%ScanInstallationsTitle}">
 	<f:select />
 </f:entry>

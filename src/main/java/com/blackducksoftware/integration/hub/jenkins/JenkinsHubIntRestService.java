@@ -64,7 +64,7 @@ public class JenkinsHubIntRestService {
     public void setNoProxyHosts(List<Pattern> noProxyHosts) {
         this.noProxyHosts = noProxyHosts;
     }
-    
+
     public List<Pattern> getNoProxyHosts() {
         return noProxyHosts;
     }
@@ -76,7 +76,7 @@ public class JenkinsHubIntRestService {
     public int getProxyPort() {
         return proxyPort;
     }
-    
+
     public void setProxyHost(String proxyHost) {
         this.proxyHost = proxyHost;
     }
@@ -322,6 +322,8 @@ public class JenkinsHubIntRestService {
         List<String> scanIds = new ArrayList<String>();
         for (String targetPath : scanTargets) {
             url = getBaseUrl() + "/api/v1/scanlocations?host=" + localhostname + "&path=" + targetPath;
+            listener.getLogger().println(
+                    "[DEBUG] Checking for the scan location with Host name: '" + localhostname + "' and Path: '" + targetPath + "'");
             resource = createClientResource(url);
 
             resource.getRequest().setCookies(getCookies());
@@ -439,6 +441,9 @@ public class JenkinsHubIntRestService {
                                     "[ERROR] No Scan Location Id could be found for the scan target : '" + targetPath + "'.");
                         }
                     }
+                } else {
+                    listener.getLogger().println(
+                            "[ERROR] No Scan Location Id could be found for the scan target : '" + targetPath + "'.");
                 }
             } catch (IOException e) {
                 e.printStackTrace(listener.getLogger());
