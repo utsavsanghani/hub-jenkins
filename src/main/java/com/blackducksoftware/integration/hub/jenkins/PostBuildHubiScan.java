@@ -344,11 +344,13 @@ public class PostBuildHubiScan extends Recorder {
         // if (!JenkinsHubIntRestService.getMatchingNoProxyHostPatterns(url.getHost(), proxy.getNoProxyHostPatterns()))
         // {
         // if (!StringUtils.isEmpty(proxy.name) && proxy.port != 0) {
-        // System.setProperty("http.proxyHost", proxy.name);
-        // System.setProperty("http.proxyPort", Integer.toString(proxy.port));
+        // // System.setProperty("http.proxyHost", proxy.name);
+        // // System.setProperty("http.proxyPort", Integer.toString(proxy.port));
         // // cmd.add("-Dhttp.useProxy=true");
-        // // cmd.add("-Dhttp.proxyHost=" + proxy.name);
-        // // cmd.add("-Dhttp.proxyPort=" + proxy.port);
+        // cmd.add("-Dblackduck.hub.proxy.host=" + proxy.name);
+        // cmd.add("-Dblackduck.hub.proxy.port=" + proxy.port);
+        // System.setProperty("blackduck.hub.proxy.host", proxy.name);
+        // System.setProperty("blackduck.hub.proxy.port", Integer.toString(proxy.port));
         // }
         // }
         // }
