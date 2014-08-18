@@ -12,7 +12,6 @@ import javax.servlet.ServletException;
 
 import junit.framework.Assert;
 
-import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -71,25 +70,19 @@ public class PostBuildScanDescriptorTest {
         restHelper = new JenkinsHubIntTestHelper();
         restHelper.setBaseUrl(url);
         restHelper.setCookies(user, pass);
+        projectCleanup();
     }
 
-    @After
-    public void tearDown() {
+    public static void projectCleanup() {
         try {
             // This cleans up all the Projects that were created for the tests that may still be hanging around
             ArrayList<LinkedHashMap<String, Object>> responseList = restHelper.getProjectMatches(PROJECT_NAME_EXISTING);
             ArrayList<String> projectIds = restHelper.getProjectIdsFromProjectMatches(responseList, PROJECT_NAME_EXISTING);
-            for (String projectId : projectIds) {
-                tearDownProject(projectId);
+            if (projectIds.size() > 0) {
+                for (String projectId : projectIds) {
+                    restHelper.deleteHubProject(projectId);
+                }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void tearDownProject(String projectId) {
-        try {
-            restHelper.deleteHubProject(projectId);
         } catch (Exception e) {
             e.printStackTrace();
         }
