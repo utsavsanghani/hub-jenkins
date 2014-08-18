@@ -413,7 +413,7 @@ public class PostBuildHubiScan extends Recorder {
                         File latestLogFile = getLogFileForScan(fileName, logFolder);
                         if (latestLogFile != null) {
                             listener.getLogger().println(
-                                    "For scan target : '" + target + "', you can view the iScan CLI logs at : '" + latestLogFile.getCanonicalPath());
+                                    "For scan target : '" + target + "', you can view the iScan CLI logs at : '" + latestLogFile.getCanonicalPath() + "'");
                             listener.getLogger().println();
                         } else {
                             listener.getLogger().println(

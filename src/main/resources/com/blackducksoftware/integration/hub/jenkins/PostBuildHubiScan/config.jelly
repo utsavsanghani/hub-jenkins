@@ -20,7 +20,7 @@
 	<f:select />
 </f:entry>
 <f:entry field="iScanMemory" title="${%MemoryAllocation}">
-	<f:textbox value="${instance.getIScanMemory()}" default="${instance.geDefaultIScanMemory()}" />
+	<f:textbox value="${instance.getIScanMemory()}" default="${instance.defaultIScanMemory()}" />
 </f:entry>
 		
 <f:block>
