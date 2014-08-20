@@ -201,7 +201,7 @@ public class PostBuildHubiScan extends Recorder {
 
                     // Only map the scans to a Project Release if the Project name and Project Release have been
                     // configured
-                    if (!StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectRelease())) {
+                    if (getResult().equals(Result.SUCCESS) && !StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectRelease())) {
                         // Wait 2 seconds for the scans to be recognized in the Hub server
                         Thread.sleep(2000);
 
@@ -394,7 +394,9 @@ public class PostBuildHubiScan extends Recorder {
             // closing it.
             String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
             listener.getLogger().println(outputString);
-            if (!outputString.contains("Finished in") && !outputString.contains("with status SUCCESS")) {
+            if (!outputString.contains("Finished in") || !outputString.contains("with status SUCCESS")) {
+                setResult(Result.UNSTABLE);
+            } else if (outputString.contains("ERROR")) {
                 setResult(Result.UNSTABLE);
             } else {
                 try {
