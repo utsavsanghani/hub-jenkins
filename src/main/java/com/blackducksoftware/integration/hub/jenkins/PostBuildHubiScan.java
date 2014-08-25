@@ -182,7 +182,9 @@ public class PostBuildHubiScan extends Recorder {
                         if (StringUtils.isEmpty(scanJob.getScanTarget())) {
                             scanTargets.add(getWorkingDirectory());
                         } else {
-                            String target = scanJob.getScanTarget();
+                            // trim the target so there are no false whitespaces at the beginning or end of the target
+                            // path
+                            String target = scanJob.getScanTarget().trim();
                             // make sure the target doesn't already begin with a slash or end in a slash
                             // removes the slash if the target begins or ends with one
                             if (target.startsWith("/") || target.startsWith("\\")) {
@@ -202,8 +204,9 @@ public class PostBuildHubiScan extends Recorder {
                     // Only map the scans to a Project Release if the Project name and Project Release have been
                     // configured
                     if (getResult().equals(Result.SUCCESS) && !StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectRelease())) {
-                        // Wait 2 seconds for the scans to be recognized in the Hub server
-                        Thread.sleep(2000);
+                        // Wait 5 seconds for the scans to be recognized in the Hub server
+                        listener.getLogger().println("Waiting a few seconds for the scans to be recognized by the Hub server.");
+                        Thread.sleep(5000);
 
                         doScanMapping(listener, scanTargets);
                     }

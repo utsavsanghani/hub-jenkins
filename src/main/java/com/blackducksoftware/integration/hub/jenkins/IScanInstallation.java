@@ -131,7 +131,7 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
 
         @Override
         public String getDisplayName() {
-            return "iScan";
+            return "BlackDuck Scan";
         }
 
         @Override

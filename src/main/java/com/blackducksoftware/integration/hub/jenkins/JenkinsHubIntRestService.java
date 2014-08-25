@@ -347,7 +347,13 @@ public class JenkinsHubIntRestService {
                     if (scanMatchesList.size() > 1) {
                         for (LinkedHashMap<String, Object> scanMatch : scanMatchesList) {
                             path = (String) scanMatch.get("path");
-                            if (targetPath.equals(path)) {
+
+                            listener.getLogger().println("[DEBUG] Comparing target : '" + targetPath + "' with path : '" + path + "'.");
+
+                            // trim the path, this way there should be no whitespaces to intefere with the comparison
+                            if (targetPath.equals(path.trim())) {
+                                listener.getLogger().println("[DEBUG] MATCHED!");
+
                                 ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) scanMatch
                                         .get("assetReferenceList");
                                 if (!assetReferences.isEmpty()) {
@@ -377,7 +383,12 @@ public class JenkinsHubIntRestService {
                     } else if (scanMatchesList.size() == 1) {
                         LinkedHashMap<String, Object> scanMatch = scanMatchesList.get(0);
                         path = (String) scanMatch.get("path");
-                        if (targetPath.equals(path)) {
+
+                        listener.getLogger().println("[DEBUG] Comparing target : '" + targetPath + "' with path : '" + path + "'.");
+                        // trim the path, this way there should be no whitespaces to intefere with the comparison
+                        if (targetPath.equals(path.trim())) {
+                            listener.getLogger().println("[DEBUG] MATCHED!");
+
                             ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) scanMatch
                                     .get("assetReferenceList");
                             if (!assetReferences.isEmpty()) {
