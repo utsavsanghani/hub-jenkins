@@ -151,20 +151,20 @@ public class IntegrationTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
-        Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
+        Assert.assertTrue(buildOutput.contains("Starting Black Duck BlackDuck Scan..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib directory:"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
         URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + url.getHost()));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
         Assert.assertTrue(buildOutput.contains("Finished in"));
         Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
-        Assert.assertTrue(buildOutput.contains("Finished running Black Duck iScans."));
+        Assert.assertTrue(buildOutput.contains("Finished running Black Duck Scans."));
     }
 
     @Test
@@ -216,20 +216,20 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
+            Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + url.getHost()));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
             Assert.assertTrue(buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
+            Assert.assertTrue(buildOutput.contains("', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Release Id:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] The scan target :"));
@@ -239,7 +239,7 @@ public class IntegrationTest {
                     + PROJECT_RELEASE_EXISTING));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Mapping the scan with id: '"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Successfully mapped the scan with id: '"));
-            Assert.assertTrue(buildOutput.contains("Finished running Black Duck iScans."));
+            Assert.assertTrue(buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
         }
@@ -297,20 +297,20 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
+            Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + url.getHost()));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
             Assert.assertTrue(buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
+            Assert.assertTrue(buildOutput.contains("', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
@@ -322,7 +322,7 @@ public class IntegrationTest {
                     + PROJECT_RELEASE_EXISTING));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Mapping the scan with id: '"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Successfully mapped the scan with id: '"));
-            Assert.assertTrue(buildOutput.contains("Finished running Black Duck iScans."));
+            Assert.assertTrue(buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
         }
@@ -381,19 +381,19 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
+            Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + url.getHost()));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
             Assert.assertTrue(buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
+            Assert.assertTrue(buildOutput.contains("', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Ignoring proxy for the Host: '" + url.getHost() + "'"));
@@ -406,7 +406,7 @@ public class IntegrationTest {
                     + PROJECT_RELEASE_EXISTING));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Mapping the scan with id: '"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Successfully mapped the scan with id: '"));
-            Assert.assertTrue(buildOutput.contains("Finished running Black Duck iScans."));
+            Assert.assertTrue(buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
         }
@@ -447,20 +447,20 @@ public class IntegrationTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
-        Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
+        Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib directory:"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
         URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + url.getHost()));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
         Assert.assertTrue(buildOutput.contains("Finished in"));
         Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
-        Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
+        Assert.assertTrue(buildOutput.contains("', you can view the BlackDuck Scan CLI logs at :"));
         Assert.assertTrue(buildOutput
                 .contains("com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException: The specified Project could not be found."));
         Assert.assertTrue(buildOutput
@@ -511,20 +511,20 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
+            Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + url.getHost()));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
             Assert.assertTrue(buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
+            Assert.assertTrue(buildOutput.contains("', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Release Id: 'null'"));
             Assert.assertTrue(buildOutput
@@ -588,20 +588,20 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
+            Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + url.getHost()));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
             Assert.assertTrue(buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
+            Assert.assertTrue(buildOutput.contains("', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Release Id:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] The scan target :"));
@@ -611,32 +611,32 @@ public class IntegrationTest {
                     + PROJECT_RELEASE_EXISTING));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Mapping the scan with id: '"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Successfully mapped the scan with id: '"));
-            Assert.assertTrue(buildOutput.contains("Finished running Black Duck iScans."));
+            Assert.assertTrue(buildOutput.contains("Finished running Black Duck Scans."));
 
             // Second run, scans should already be mapped
             build = project.scheduleBuild2(0).get();
             buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
+            Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
-            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib directory:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
+            Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + url.getHost()));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
             Assert.assertTrue(buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput.contains("', you can view the iScan CLI logs at :"));
+            Assert.assertTrue(buildOutput.contains("', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] Release Id:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] The scan target :"));
             Assert.assertTrue(buildOutput.contains("' has Scan Location Id: '"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] These scans are already mapped to Project : '" + PROJECT_NAME_EXISTING + "', Release : '"
                     + PROJECT_RELEASE_EXISTING + "'. OR there was an issue getting the Id's for the defined scan targets."));
-            Assert.assertTrue(buildOutput.contains("Finished running Black Duck iScans."));
+            Assert.assertTrue(buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
         }
@@ -677,21 +677,21 @@ public class IntegrationTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
-        Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
+        Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib directory:"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
         URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + url.getHost()));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
-        Assert.assertTrue(buildOutput.contains("ERROR:")); // TODO replace with new iScan error message
+        Assert.assertTrue(buildOutput.contains("ERROR:")); // TODO replace with new BlackDuck Scan error message
         Assert.assertTrue(buildOutput.contains("Finished in"));
         Assert.assertTrue(buildOutput.contains("with status FAILURE"));
-        Assert.assertTrue(buildOutput.contains("Finished running Black Duck iScans."));
+        Assert.assertTrue(buildOutput.contains("Finished running Black Duck Scans."));
     }
 
     @Test
@@ -729,21 +729,21 @@ public class IntegrationTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
-        Assert.assertTrue(buildOutput.contains("Starting Black Duck iScans..."));
+        Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib file:"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this iScan CLI at : "));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));
         URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this Hub Url : '" + url.getHost()));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this java installation : "));
-        Assert.assertTrue(buildOutput.contains("ERROR:")); // TODO replace with new iScan error message
+        Assert.assertTrue(buildOutput.contains("ERROR:")); // TODO replace with new BlackDuck Scan error message
         Assert.assertTrue(buildOutput.contains("Finished in"));
         Assert.assertTrue(buildOutput.contains("with status FAILURE"));
-        Assert.assertTrue(buildOutput.contains("Finished running Black Duck iScans."));
+        Assert.assertTrue(buildOutput.contains("Finished running Black Duck Scans."));
     }
 
     @Test

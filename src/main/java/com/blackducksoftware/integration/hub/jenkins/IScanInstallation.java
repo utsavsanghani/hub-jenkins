@@ -57,10 +57,10 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
         File homeFile = new File(getHome());
         FilePath homeFilePath = new FilePath(channel, homeFile.getCanonicalPath());
         // find the lib folder in the iScan directory
-        listener.getLogger().println("[DEBUG] iScan directory: " + homeFilePath.getRemote());
+        listener.getLogger().println("[DEBUG] BlackDuck Scan directory: " + homeFilePath.getRemote());
         List<FilePath> files = homeFilePath.listDirectories();
         if (files != null) {
-            listener.getLogger().println("[DEBUG] directories in the iScan directory: " + files.size());
+            listener.getLogger().println("[DEBUG] directories in the BlackDuck Scan directory: " + files.size());
             if (!files.isEmpty()) {
                 FilePath libFolder = null;
                 for (FilePath iScanDirectory : files) {
@@ -71,14 +71,14 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
                 if (libFolder == null) {
                     return false;
                 }
-                listener.getLogger().println("[DEBUG] iScan lib directory: " + libFolder.getRemote());
+                listener.getLogger().println("[DEBUG] BlackDuck Scan lib directory: " + libFolder.getRemote());
                 FilePath[] cliFiles = libFolder.list("scan.cli*.jar");
                 FilePath iScanScript = null;
                 if (cliFiles == null) {
                     return false;
                 } else {
                     for (FilePath file : cliFiles) {
-                        listener.getLogger().println("[DEBUG] iScan lib file: " + file.getRemote());
+                        listener.getLogger().println("[DEBUG] BlackDuck Scan lib file: " + file.getRemote());
                         if (file.getName().contains("scan.cli")) {
                             iScanScript = file;
                         }

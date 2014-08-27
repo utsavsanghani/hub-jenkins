@@ -164,7 +164,7 @@ public class PostBuildHubiScan extends Recorder {
         setResult(build.getResult());
         if (result.equals(Result.SUCCESS)) {
             try {
-                listener.getLogger().println("Starting Black Duck iScans...");
+                listener.getLogger().println("Starting BlackDuck Scans...");
 
                 IScanInstallation[] iScanTools = null;
                 ToolDescriptor<IScanInstallation> iScanDescriptor = (ToolDescriptor<IScanInstallation>) build.getDescriptorByName(IScanInstallation.class
@@ -418,7 +418,8 @@ public class PostBuildHubiScan extends Recorder {
                         File latestLogFile = getLogFileForScan(fileName, logFolder);
                         if (latestLogFile != null) {
                             listener.getLogger().println(
-                                    "For scan target : '" + target + "', you can view the iScan CLI logs at : '" + latestLogFile.getCanonicalPath() + "'");
+                                    "For scan target : '" + target + "', you can view the BlackDuck Scan CLI logs at : '" + latestLogFile.getCanonicalPath()
+                                            + "'");
                             listener.getLogger().println();
                         } else {
                             listener.getLogger().println(
@@ -567,7 +568,7 @@ public class PostBuildHubiScan extends Recorder {
                 if (iScan.getExists(node.getChannel(), listener)) {
                     iScanExec = iScan.getCLI(node.getChannel());
                     listener.getLogger().println(
-                            "[DEBUG] : Using this iScan CLI at : " + iScanExec.getRemote());
+                            "[DEBUG] : Using this BlackDuck Scan CLI at : " + iScanExec.getRemote());
                 } else {
                     listener.getLogger().println("[ERROR] : Could not find the CLI file in : " + iScan.getHome());
                     throw new IScanToolMissingException("Could not find the CLI file to execute at : '" + iScan.getHome() + "'");
@@ -577,7 +578,7 @@ public class PostBuildHubiScan extends Recorder {
         if (iScanExec == null) {
             // Should not get here unless there are no iScan Installations defined
             // But we check this just in case
-            throw new HubConfigurationException("You need to select which iScan installation to use.");
+            throw new HubConfigurationException("You need to select which BlackDuck Scan installation to use.");
         }
         return iScanExec;
     }
