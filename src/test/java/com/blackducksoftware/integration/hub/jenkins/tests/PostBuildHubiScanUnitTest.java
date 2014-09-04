@@ -88,7 +88,8 @@ public class PostBuildHubiScanUnitTest {
         when(mockpbScan.getWorkingDirectory()).thenReturn(workspace.getCanonicalPath());
         String[] scanTargets = { createdFolder.getCanonicalPath(), createdFile.getCanonicalPath() };
         Assert.assertTrue(mockpbScan.validateScanTargets(listener, null, Arrays.asList(scanTargets)));
-        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Scan target exists at : "));
+        String output = byteOutput.toString("UTF-8");
+        Assert.assertTrue(output.contains("[DEBUG] : Scan target exists at : "));
     }
 
     @Test
@@ -137,8 +138,9 @@ public class PostBuildHubiScanUnitTest {
         FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
-        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Running on : master"));
-        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Using this iScan CLI at : "));
+        String output = byteOutput.toString("UTF-8");
+        Assert.assertTrue(output.contains("[DEBUG] : Running on : master"));
+        Assert.assertTrue(output.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
     }
 
     @Test
@@ -170,8 +172,9 @@ public class PostBuildHubiScanUnitTest {
         FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
-        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Running on : testSlave"));
-        Assert.assertTrue(byteOutput.toString("UTF-8").contains("[DEBUG] : Using this iScan CLI at : "));
+        String output = byteOutput.toString("UTF-8");
+        Assert.assertTrue(output.contains("[DEBUG] : Running on : testSlave"));
+        Assert.assertTrue(output.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
     }
 
     @Test
@@ -180,7 +183,7 @@ public class PostBuildHubiScanUnitTest {
         // selected, and with the script existing
 
         exception.expect(HubConfigurationException.class);
-        exception.expectMessage("You need to select which iScan installation to use.");
+        exception.expectMessage("You need to select which BlackDuck Scan installation to use.");
 
         IScanInstallation[] iScanInstallations = new IScanInstallation[0];
 

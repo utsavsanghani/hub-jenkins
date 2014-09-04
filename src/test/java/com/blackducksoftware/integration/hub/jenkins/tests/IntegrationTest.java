@@ -151,7 +151,7 @@ public class IntegrationTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
-        Assert.assertTrue(buildOutput.contains("Starting Black Duck BlackDuck Scan..."));
+        Assert.assertTrue(buildOutput.contains("Starting BlackDuck Scans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
@@ -216,7 +216,7 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
+            Assert.assertTrue(buildOutput.contains("Starting BlackDuck Scans..."));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
@@ -297,7 +297,7 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
+            Assert.assertTrue(buildOutput.contains("Starting BlackDuck Scans..."));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
@@ -381,7 +381,7 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
+            Assert.assertTrue(buildOutput.contains("Starting BlackDuck Scans..."));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
@@ -447,7 +447,7 @@ public class IntegrationTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
-        Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
+        Assert.assertTrue(buildOutput.contains("Starting BlackDuck Scans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
@@ -511,7 +511,7 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
+            Assert.assertTrue(buildOutput.contains("Starting BlackDuck Scans..."));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
@@ -588,7 +588,7 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
+            Assert.assertTrue(buildOutput.contains("Starting BlackDuck Scans..."));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
@@ -617,7 +617,7 @@ public class IntegrationTest {
             build = project.scheduleBuild2(0).get();
             buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
+            Assert.assertTrue(buildOutput.contains("Starting BlackDuck Scans..."));
             Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
             Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
@@ -677,7 +677,7 @@ public class IntegrationTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
-        Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
+        Assert.assertTrue(buildOutput.contains("Starting BlackDuck Scans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
@@ -729,11 +729,11 @@ public class IntegrationTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
-        Assert.assertTrue(buildOutput.contains("Starting Black Duck Scans..."));
+        Assert.assertTrue(buildOutput.contains("Starting BlackDuck Scans..."));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Running on : master"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] iScan directory:"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the iScan directory"));
-        Assert.assertTrue(buildOutput.contains("[DEBUG] iScan lib directory:"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
+        Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib directory:"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
         Assert.assertTrue(buildOutput.contains("[DEBUG] : Scan target exists at :"));

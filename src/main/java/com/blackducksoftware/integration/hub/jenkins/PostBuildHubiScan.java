@@ -230,9 +230,9 @@ public class PostBuildHubiScan extends Recorder {
                 setResult(Result.UNSTABLE);
             }
         } else {
-            listener.getLogger().println("Build was not successful. Will not run Black Duck iScans.");
+            listener.getLogger().println("Build was not successful. Will not run Black Duck Scans.");
         }
-        listener.getLogger().println("Finished running Black Duck iScans.");
+        listener.getLogger().println("Finished running Black Duck Scans.");
         build.setResult(getResult());
         return true;
     }
