@@ -81,9 +81,9 @@
 			to pull Java 6 over Java 7 compiled versions (and to not get the CXF-bundle 
 			via blackduck-cxf-utilities) -->
 		<repository>
-			<id>integration</id>
+			<id>bds-artifactory</id>
 			<name>integrations</name>
-			<url>http://lame:8081/artifactory/integration</url>
+			<url>http://artifactory.blackducksoftware.com:8081/artifactory/integration</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -92,9 +92,9 @@
 			</snapshots>
 		</repository>
 		<repository>
-			<id>hub</id>
+			<id>lame.blackducksoftware.com</id>
 			<name>hub</name>
-			<url>http://lame.blackducksoftware.com:8081/artifactory/simple/bds-suite-repo</url>
+			<url>http://artifactory.blackducksoftware.com:8081/artifactory/simple/bds-suite-repo</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>

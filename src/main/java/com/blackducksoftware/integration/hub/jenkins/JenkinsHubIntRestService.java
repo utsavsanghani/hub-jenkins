@@ -306,7 +306,7 @@ public class JenkinsHubIntRestService {
         ClientResource resource = null;
         List<String> scanIds = new ArrayList<String>();
         for (String targetPath : scanTargets) {
-            url = getBaseUrl() + "/api/v1/scanlocations?host=" + localhostname + "&path=" + targetPath;
+            url = getBaseUrl() + "/api/v1/scan-locations?host=" + localhostname + "&path=" + targetPath;
             listener.getLogger().println(
                     "[DEBUG] Checking for the scan location with Host name: '" + localhostname + "' and Path: '" + targetPath + "'");
             resource = createClientResource(url);
@@ -454,7 +454,7 @@ public class JenkinsHubIntRestService {
         if (!scanIds.isEmpty()) {
             for (String scanId : scanIds) {
                 listener.getLogger().println("[DEBUG] Mapping the scan with id: '" + scanId + "', to the Release with Id: '" + releaseId + "'.");
-                String url = getBaseUrl() + "/api/v1/assetreferences";
+                String url = getBaseUrl() + "/api/v1/asset-references";
                 ClientResource resource = createClientResource(url);
 
                 resource.getRequest().setCookies(getCookies());
