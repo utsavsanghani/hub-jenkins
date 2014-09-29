@@ -430,15 +430,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckHubProjectRelease(@QueryParameter("hubProjectRelease") final String hubProjectRelease,
-            @QueryParameter("duplicateHubProjectId") final String hubProjectDuplicateId) throws IOException, ServletException {
+    public FormValidation doCheckHubProjectRelease(@QueryParameter("hubProjectRelease") final String hubProjectRelease) throws IOException, ServletException {
         if (hubProjectRelease.length() > 0) {
 
             ClassLoader originalClassLoader = Thread.currentThread()
                     .getContextClassLoader();
             boolean changed = false;
             try {
-                if (StringUtils.isEmpty(getProjectId()) && StringUtils.isEmpty(hubProjectDuplicateId)) {
+                if (StringUtils.isEmpty(getProjectId())) {
                     return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null));
                 }
                 if (StringUtils.isEmpty(getHubServerUrl())) {
@@ -462,11 +461,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 service.setBaseUrl(getHubServerUrl());
                 service.setCookies(credentialUserName, credentialPassword);
                 String idToUse = null;
-                if (!StringUtils.isEmpty(hubProjectDuplicateId)) {
-                    idToUse = hubProjectDuplicateId;
-                } else {
-                    idToUse = getProjectId();
-                }
+                idToUse = getProjectId();
 
                 HashMap<String, Object> responseMap = service.getReleaseMatchesForProjectId(idToUse);
                 StringBuilder projectReleases = new StringBuilder();
@@ -608,7 +603,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @throws ServletException
      */
     public FormValidation doCreateHubProject(@QueryParameter("hubProjectName") final String hubProjectName,
-            @QueryParameter("hubProjectRelease") final String hubProjectRelease, @QueryParameter("duplicateHubProjectId") final String duplicateHubProjectId) {
+            @QueryParameter("hubProjectRelease") final String hubProjectRelease) {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -632,7 +627,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 // Project exists for given name
                 projectExists = true;
                 // Check if the Release for the given Project exists or not before creating it
-                FormValidation projectReleaseCheck = doCheckHubProjectRelease(hubProjectRelease, duplicateHubProjectId);
+                FormValidation projectReleaseCheck = doCheckHubProjectRelease(hubProjectRelease);
                 String releaseNonExistentMessage = Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null);
                 releaseNonExistentMessage = releaseNonExistentMessage.substring(0, 52);
                 if (FormValidation.Kind.OK.equals(projectReleaseCheck.kind)) {
@@ -670,11 +665,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
             }
             int responseCode = 0;
-            if (!StringUtils.isEmpty(duplicateHubProjectId) && projectExists) {
-                responseCode = service.createHubRelease(hubProjectRelease, duplicateHubProjectId);
-            } else {
-                responseCode = service.createHubRelease(hubProjectRelease, getProjectId());
-            }
+            responseCode = service.createHubRelease(hubProjectRelease, getProjectId());
             if (responseCode == 201) {
                 return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseCreated());
             } else if (responseCode == 401) {

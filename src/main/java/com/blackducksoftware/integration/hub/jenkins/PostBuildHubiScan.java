@@ -42,8 +42,6 @@ public class PostBuildHubiScan extends Recorder {
 
     public static final int DEFAULT_MEMORY = 256;
 
-    private String duplicateHubProjectId;
-
     private final IScanJobs[] scans;
 
     private final String iScanName;
@@ -65,7 +63,7 @@ public class PostBuildHubiScan extends Recorder {
     private boolean test = false;
 
     @DataBoundConstructor
-    public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease, int iScanMemory, String duplicateHubProjectId) {
+    public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease, int iScanMemory) {
         this.scans = scans;
         this.iScanName = iScanName;
         this.hubProjectName = hubProjectName;
@@ -75,7 +73,6 @@ public class PostBuildHubiScan extends Recorder {
         } else {
             this.iScanMemory = iScanMemory;
         }
-        this.duplicateHubProjectId = duplicateHubProjectId;
     }
 
     public boolean isTEST() {
@@ -112,10 +109,6 @@ public class PostBuildHubiScan extends Recorder {
 
     public String getHubProjectName() {
         return hubProjectName;
-    }
-
-    public String getDuplicateHubProjectId() {
-        return duplicateHubProjectId;
     }
 
     public IScanJobs[] getScans() {
@@ -243,20 +236,15 @@ public class PostBuildHubiScan extends Recorder {
         ArrayList<String> projectId = null;
         String projectIdToUse = null;
         String releaseId = null;
-        if (!StringUtils.isEmpty(getDuplicateHubProjectId())) {
-            projectIdToUse = getDuplicateHubProjectId();
-            listener.getLogger().println("[DEBUG] Project Id: '" + projectIdToUse + "'");
-        } else {
-            ArrayList<LinkedHashMap<String, Object>> projectMatchesResponse = service.getProjectMatches(getHubProjectName());
-            projectId = service.getProjectIdsFromProjectMatches(projectMatchesResponse, getHubProjectName());
-            if (projectId == null || projectId.isEmpty()) {
-                throw new BDJenkinsHubPluginException("The specified Project could not be found.");
-            } else if (projectId.size() > 1) {
-                throw new BDJenkinsHubPluginException("More than one Project was found with the same name.");
-            }
-            listener.getLogger().println("[DEBUG] Project Id: '" + projectId.get(0) + "'");
-            projectIdToUse = projectId.get(0);
+        ArrayList<LinkedHashMap<String, Object>> projectMatchesResponse = service.getProjectMatches(getHubProjectName());
+        projectId = service.getProjectIdsFromProjectMatches(projectMatchesResponse, getHubProjectName());
+        if (projectId == null || projectId.isEmpty()) {
+            throw new BDJenkinsHubPluginException("The specified Project could not be found.");
+        } else if (projectId.size() > 1) {
+            throw new BDJenkinsHubPluginException("More than one Project was found with the same name.");
         }
+        listener.getLogger().println("[DEBUG] Project Id: '" + projectId.get(0) + "'");
+        projectIdToUse = projectId.get(0);
 
         LinkedHashMap<String, Object> releaseMatchesResponse = service.getReleaseMatchesForProjectId(projectIdToUse);
         releaseId = service.getReleaseIdFromReleaseMatches(releaseMatchesResponse, getHubProjectRelease());
