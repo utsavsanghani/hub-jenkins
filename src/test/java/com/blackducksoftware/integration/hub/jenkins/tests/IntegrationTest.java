@@ -83,7 +83,7 @@ public class IntegrationTest {
         basePath = IntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf(File.separator + "target"));
         basePath = basePath + File.separator + "test-workspace";
-        iScanInstallPath = basePath + File.separator + "scan.cli-1.16.0-SNAPSHOT";
+        iScanInstallPath = basePath + File.separator + "scan.cli-1.15.1-SNAPSHOT";
         testWorkspace = basePath + File.separator + "workspace";
 
         testProperties = new Properties();
@@ -866,14 +866,20 @@ public class IntegrationTest {
 
         JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");
 
-        // build.getProject().getJDK(); Will return null if the jdk doesn't exist.
+        // build.getProject().getJDK(); // Will return null if the jdk doesn't exist.
 
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
         project.setJDK(nonexistentJDK);
         project.getPublishersList().add(pbScan);
 
+        EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
+        EnvVars envVars = prop.getEnvVars();
+        envVars.put("JAVA_HOME", "");
+        j.jenkins.getGlobalNodeProperties().add(prop);
+
         FreeStyleBuild build = project.scheduleBuild2(0).get();
+
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
 
         System.out.println(buildOutput);

@@ -128,6 +128,7 @@ public class PostBuildHubiScan extends Recorder {
     }
 
     // http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }
@@ -507,7 +508,7 @@ public class PostBuildHubiScan extends Recorder {
         }
         if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
             listener.getLogger().println("Could not find the specified Java installation, checking the JAVA_HOME variable.");
-            if (envVars.get("JAVA_HOME") == null) {
+            if (envVars.get("JAVA_HOME") == null || envVars.get("JAVA_HOME") == "") {
                 throw new HubConfigurationException("Need to define a JAVA_HOME or select an installed JDK.");
             }
             // In case the user did not select a java installation, set to the environment variable JAVA_HOME
