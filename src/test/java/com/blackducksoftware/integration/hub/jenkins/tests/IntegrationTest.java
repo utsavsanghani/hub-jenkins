@@ -83,7 +83,7 @@ public class IntegrationTest {
         basePath = IntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf(File.separator + "target"));
         basePath = basePath + File.separator + "test-workspace";
-        iScanInstallPath = basePath + File.separator + "scan.cli-1.15.1-SNAPSHOT";
+        iScanInstallPath = basePath + File.separator + "scan.cli-1.15.2-SNAPSHOT";
         testWorkspace = basePath + File.separator + "workspace";
 
         testProperties = new Properties();
@@ -248,22 +248,19 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutputList.get(27).contains("[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutputList.get(28).contains("[DEBUG] Release Id:"));
             Assert.assertTrue(buildOutputList.get(29).contains("[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutputList.get(34).contains("[DEBUG] The scan target :"));
-            Assert.assertTrue(buildOutputList.get(34).contains("' has Scan Location Id: '"));
+            Assert.assertTrue(buildOutputList.get(33).contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutputList.get(33).contains("' has Scan Location Id:"));
             Assert.assertTrue(buildOutputList.get(39).contains("[DEBUG] The scan target :"));
-            Assert.assertTrue(buildOutputList.get(39).contains("' has Scan Location Id: '"));
-            Assert.assertTrue(buildOutputList.get(43).contains("[DEBUG] The scan target :"));
-            Assert.assertTrue(buildOutputList.get(43).contains("' has Scan Location Id: '"));
-            Assert.assertTrue(buildOutputList.get(44).contains("[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutputList.get(48).contains(
-                    "[DEBUG] Linking the scan Id's to the Hub Project: '" + PROJECT_NAME_EXISTING + "', and Release: '"
-                            + PROJECT_RELEASE_EXISTING));
-            Assert.assertTrue(buildOutputList.get(49).contains("[DEBUG] Mapping the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(50).contains("[DEBUG] Successfully mapped the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(51).contains("[DEBUG] Mapping the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(52).contains("[DEBUG] Successfully mapped the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(53).contains("[DEBUG] Mapping the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(54).contains("[DEBUG] Successfully mapped the scan with id: '"));
+            Assert.assertTrue(buildOutputList.get(39).contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutputList.get(44).contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutputList.get(44).contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutputList.get(45).contains("[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutputList.get(49).contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutputList.get(50).contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutputList.get(51).contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutputList.get(52).contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutputList.get(53).contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutputList.get(54).contains("[DEBUG] Successfully mapped the scan with id:"));
             Assert.assertTrue(buildOutputList.get(55).contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
@@ -346,22 +343,19 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutputList.get(28).contains("[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutputList.get(29).contains("[DEBUG] Release Id:"));
             Assert.assertTrue(buildOutputList.get(30).contains("[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutputList.get(35).contains("[DEBUG] The scan target :"));
-            Assert.assertTrue(buildOutputList.get(35).contains("' has Scan Location Id: '"));
+            Assert.assertTrue(buildOutputList.get(34).contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutputList.get(34).contains("' has Scan Location Id:"));
             Assert.assertTrue(buildOutputList.get(40).contains("[DEBUG] The scan target :"));
-            Assert.assertTrue(buildOutputList.get(40).contains("' has Scan Location Id: '"));
-            Assert.assertTrue(buildOutputList.get(44).contains("[DEBUG] The scan target :"));
-            Assert.assertTrue(buildOutputList.get(44).contains("' has Scan Location Id: '"));
-            Assert.assertTrue(buildOutputList.get(45).contains("[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutputList.get(49).contains(
-                    "[DEBUG] Linking the scan Id's to the Hub Project: '" + PROJECT_NAME_EXISTING + "', and Release: '"
-                            + PROJECT_RELEASE_EXISTING));
-            Assert.assertTrue(buildOutputList.get(50).contains("[DEBUG] Mapping the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(51).contains("[DEBUG] Successfully mapped the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(52).contains("[DEBUG] Mapping the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(53).contains("[DEBUG] Successfully mapped the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(54).contains("[DEBUG] Mapping the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(55).contains("[DEBUG] Successfully mapped the scan with id: '"));
+            Assert.assertTrue(buildOutputList.get(40).contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutputList.get(45).contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutputList.get(45).contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutputList.get(46).contains("[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutputList.get(50).contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutputList.get(51).contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutputList.get(52).contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutputList.get(53).contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutputList.get(54).contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutputList.get(55).contains("[DEBUG] Successfully mapped the scan with id:"));
             Assert.assertTrue(buildOutputList.get(56).contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
@@ -446,22 +440,20 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutputList.get(32).contains("[DEBUG] Release Id:"));
             Assert.assertTrue(buildOutputList.get(33).contains("[DEBUG] Checking for the scan location with Host name:"));
 
-            Assert.assertTrue(buildOutputList.get(39).contains("[DEBUG] The scan target :"));
-            Assert.assertTrue(buildOutputList.get(39).contains("' has Scan Location Id: '"));
+            Assert.assertTrue(buildOutputList.get(38).contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutputList.get(38).contains("' has Scan Location Id:"));
             Assert.assertTrue(buildOutputList.get(45).contains("[DEBUG] The scan target :"));
-            Assert.assertTrue(buildOutputList.get(45).contains("' has Scan Location Id: '"));
-            Assert.assertTrue(buildOutputList.get(50).contains("[DEBUG] The scan target :"));
-            Assert.assertTrue(buildOutputList.get(50).contains("' has Scan Location Id: '"));
-            Assert.assertTrue(buildOutputList.get(51).contains("[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutputList.get(55).contains(
-                    "[DEBUG] Linking the scan Id's to the Hub Project: '" + PROJECT_NAME_EXISTING + "', and Release: '"
-                            + PROJECT_RELEASE_EXISTING));
-            Assert.assertTrue(buildOutputList.get(56).contains("[DEBUG] Mapping the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(58).contains("[DEBUG] Successfully mapped the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(59).contains("[DEBUG] Mapping the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(61).contains("[DEBUG] Successfully mapped the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(62).contains("[DEBUG] Mapping the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(64).contains("[DEBUG] Successfully mapped the scan with id: '"));
+            Assert.assertTrue(buildOutputList.get(45).contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutputList.get(51).contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutputList.get(51).contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutputList.get(52).contains("[DEBUG] These scan Id's were found for the scan targets."));
+
+            Assert.assertTrue(buildOutputList.get(56).contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutputList.get(58).contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutputList.get(59).contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutputList.get(61).contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutputList.get(62).contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutputList.get(64).contains("[DEBUG] Successfully mapped the scan with id:"));
             Assert.assertTrue(buildOutputList.get(65).contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
@@ -675,23 +667,20 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutputList.get(27).contains("[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutputList.get(28).contains("[DEBUG] Release Id:"));
             Assert.assertTrue(buildOutputList.get(29).contains("[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutputList.get(34).contains("[DEBUG] The scan target :"));
-            Assert.assertTrue(buildOutputList.get(34).contains("' has Scan Location Id: '"));
+            Assert.assertTrue(buildOutputList.get(33).contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutputList.get(33).contains("' has Scan Location Id:"));
             Assert.assertTrue(buildOutputList.get(39).contains("[DEBUG] The scan target :"));
-            Assert.assertTrue(buildOutputList.get(39).contains("' has Scan Location Id: '"));
-            Assert.assertTrue(buildOutputList.get(43).contains("[DEBUG] The scan target :"));
-            Assert.assertTrue(buildOutputList.get(43).contains("' has Scan Location Id: '"));
+            Assert.assertTrue(buildOutputList.get(39).contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutputList.get(44).contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutputList.get(44).contains("' has Scan Location Id:"));
 
-            Assert.assertTrue(buildOutputList.get(44).contains("[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutputList.get(48).contains(
-                    "[DEBUG] Linking the scan Id's to the Hub Project: '" + PROJECT_NAME_EXISTING + "', and Release: '"
-                            + PROJECT_RELEASE_EXISTING));
-            Assert.assertTrue(buildOutputList.get(49).contains("[DEBUG] Mapping the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(50).contains("[DEBUG] Successfully mapped the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(51).contains("[DEBUG] Mapping the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(52).contains("[DEBUG] Successfully mapped the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(53).contains("[DEBUG] Mapping the scan with id: '"));
-            Assert.assertTrue(buildOutputList.get(54).contains("[DEBUG] Successfully mapped the scan with id: '"));
+            Assert.assertTrue(buildOutputList.get(45).contains("[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutputList.get(49).contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutputList.get(50).contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutputList.get(51).contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutputList.get(52).contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutputList.get(53).contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutputList.get(54).contains("[DEBUG] Successfully mapped the scan with id:"));
             Assert.assertTrue(buildOutputList.get(55).contains("Finished running Black Duck Scans."));
 
             // Second run, scans should already be mapped
@@ -719,10 +708,9 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutputList.get(27).contains("[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutputList.get(28).contains("[DEBUG] Release Id:"));
             Assert.assertTrue(buildOutputList.get(29).contains("[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutputList.get(47).contains(
-                    "[DEBUG] These scans are already mapped to Project : '" + PROJECT_NAME_EXISTING + "', Release : '"
-                            + PROJECT_RELEASE_EXISTING + "'. OR there was an issue getting the Id's for the defined scan targets."));
-            Assert.assertTrue(buildOutputList.get(48).contains("Finished running Black Duck Scans."));
+            Assert.assertTrue(buildOutputList.get(50).contains(
+                    "[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutputList.get(57).contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
         }

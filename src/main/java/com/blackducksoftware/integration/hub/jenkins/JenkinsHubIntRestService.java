@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -295,200 +297,83 @@ public class JenkinsHubIntRestService {
      * @param releaseId
      *            String
      * 
-     * @return List<String> scan Ids
+     * @return Map<Boolean, String> scan Ids
      * @throws UnknownHostException
      * @throws MalformedURLException
+     * @throws InterruptedException
+     * @throws BDRestException
      */
-    public List<String> getScanLocationIds(BuildListener listener, List<String> scanTargets, String releaseId) throws UnknownHostException,
-            MalformedURLException {
-        String localhostname = InetAddress.getLocalHost().getHostName();
-        String url = null;
-        ClientResource resource = null;
-        List<String> scanIds = new ArrayList<String>();
+    public Map<String, Boolean> getScanLocationIds(BuildListener listener, List<String> scanTargets, String releaseId) throws UnknownHostException,
+            MalformedURLException, InterruptedException, BDRestException {
+        HashMap<String, Boolean> scanLocationIds = new HashMap<String, Boolean>();
         for (String targetPath : scanTargets) {
-            // FIXME Need to change this to /api/v1/scan-locations?host= soon
-            url = getBaseUrl() + "/api/v1/scanlocations?host=" + localhostname + "&path=" + targetPath;
+            String url = null;
+            ClientResource resource = null;
+            String localhostname = InetAddress.getLocalHost().getHostName();
+            url = baseUrl + "/api/v1/scanlocations?host=" + localhostname + "&path=" + targetPath;
             listener.getLogger().println(
                     "[DEBUG] Checking for the scan location with Host name: '" + localhostname + "' and Path: '" + targetPath + "'");
+
             resource = createClientResource(url);
 
             resource.getRequest().setCookies(getCookies());
             resource.setMethod(Method.GET);
-            resource.get();
 
-            int responseCode = resource.getResponse().getStatus().getCode();
-            try {
-                HashMap<String, Object> responseMap = null;
-                if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-                    Response resp = resource.getResponse();
-                    Reader reader = resp.getEntity().getReader();
-                    BufferedReader bufReader = new BufferedReader(reader);
-                    StringBuilder sb = new StringBuilder();
-                    String line = bufReader.readLine();
-                    while (line != null) {
-                        sb.append(line + "\n");
-                        line = bufReader.readLine();
-                    }
-                    bufReader.close();
-                    byte[] mapData = sb.toString().getBytes();
+            ScanLocationHandler handler = new ScanLocationHandler(listener);
 
-                    // Create HashMap from the Rest response
-                    ObjectMapper responseMapper = new ObjectMapper();
-                    responseMap = responseMapper.readValue(mapData, HashMap.class);
-                } else {
-                    throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
-                }
+            handler.getScanLocationIdWithRetry(resource, targetPath, releaseId, scanLocationIds);
 
-                if (responseMap.containsKey("items") && ((ArrayList<LinkedHashMap<String, Object>>) responseMap.get("items")).size() > 0) {
-                    ArrayList<LinkedHashMap<String, Object>> scanMatchesList = (ArrayList<LinkedHashMap<String, Object>>) responseMap.get("items");
-                    // More than one match found
-                    String scanId = null;
-                    String path = null;
-                    boolean alreadyMapped = false;
-                    if (scanMatchesList.size() > 1) {
-                        for (LinkedHashMap<String, Object> scanMatch : scanMatchesList) {
-                            path = (String) scanMatch.get("path");
+        }
+        return scanLocationIds;
+    }
 
-                            listener.getLogger().println("[DEBUG] Comparing target : '" + targetPath + "' with path : '" + path + "'.");
+    public void mapScansToProjectRelease(BuildListener listener, Map<String, Boolean> scanLocationIds, String releaseId) throws BDRestException,
+            MalformedURLException {
+        if (!scanLocationIds.isEmpty()) {
+            for (Entry<String, Boolean> scanId : scanLocationIds.entrySet()) {
+                if (!scanId.getValue()) {
+                    // This scan location has not yet been mapped to the project/release
+                    listener.getLogger().println(
+                            "[DEBUG] Mapping the scan location with id: '" + scanId.getKey() + "', to the Release with Id: '" + releaseId + "'.");
+                    // FIXME Need to change this to /api/v1/asset-references soon
+                    String url = getBaseUrl() + "/api/v1/assetreferences";
+                    ClientResource resource = createClientResource(url);
 
-                            // trim the path, this way there should be no whitespaces to intefere with the comparison
-                            if (targetPath.equals(path.trim())) {
-                                listener.getLogger().println("[DEBUG] MATCHED!");
+                    resource.getRequest().setCookies(getCookies());
+                    resource.setMethod(Method.POST);
 
-                                ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) scanMatch
-                                        .get("assetReferenceList");
-                                if (!assetReferences.isEmpty()) {
-                                    for (LinkedHashMap<String, Object> assetReference : assetReferences) {
-                                        LinkedHashMap<String, Object> ownerEntity = (LinkedHashMap<String, Object>) assetReference.get("ownerEntityKey");
-                                        String ownerId = (String) ownerEntity.get("entityId");
-                                        if (ownerId.equals(releaseId)) {
-                                            alreadyMapped = true;
-                                            listener.getLogger().println(
-                                                    "[DEBUG] The scan target : '"
-                                                            + targetPath
-                                                            + "' has Scan Location Id: '"
-                                                            + (String) scanMatch.get("id")
-                                                            + "'. This is already mapped to the Release with Id: '"
-                                                            + releaseId + "'.");
-                                            listener.getLogger().println();
-                                        }
-                                    }
-                                    if (!alreadyMapped) {
-                                        scanId = (String) scanMatch.get("id");
-                                    }
-                                } else {
-                                    scanId = (String) scanMatch.get("id");
-                                }
-                            }
-                        }
-                    } else if (scanMatchesList.size() == 1) {
-                        LinkedHashMap<String, Object> scanMatch = scanMatchesList.get(0);
-                        path = (String) scanMatch.get("path");
+                    JSONObject obj = new JSONObject();
 
-                        listener.getLogger().println("[DEBUG] Comparing target : '" + targetPath + "' with path : '" + path + "'.");
-                        // trim the path, this way there should be no whitespaces to intefere with the comparison
-                        if (targetPath.equals(path.trim())) {
-                            listener.getLogger().println("[DEBUG] MATCHED!");
+                    JSONObject ownerEntity = new JSONObject();
+                    ownerEntity.put("entityId", releaseId);
+                    // this is the release location
+                    ownerEntity.put("entityType", "RL");
 
-                            ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) scanMatch
-                                    .get("assetReferenceList");
-                            if (!assetReferences.isEmpty()) {
-                                for (LinkedHashMap<String, Object> assetReference : assetReferences) {
-                                    LinkedHashMap<String, Object> ownerEntity = (LinkedHashMap<String, Object>) assetReference.get("ownerEntityKey");
-                                    String ownerId = (String) ownerEntity.get("entityId");
-                                    if (ownerId.equals(releaseId)) {
-                                        alreadyMapped = true;
-                                        listener.getLogger().println(
-                                                "[DEBUG] The scan target : '"
-                                                        + targetPath
-                                                        + "' has Scan Location Id: '"
-                                                        + (String) scanMatch.get("id")
-                                                        + "'. This is already mapped to the Release with Id: '"
-                                                        + releaseId + "'.");
-                                        listener.getLogger().println();
-                                    }
-                                }
-                                if (!alreadyMapped) {
-                                    scanId = (String) scanMatch.get("id");
-                                }
-                            } else {
-                                scanId = (String) scanMatch.get("id");
-                            }
-                        }
-                    }
-                    if (scanId != null) {
-                        if (scanIds.contains(scanId)) {
-                            listener.getLogger()
-                                    .println(
-                                            "[DEBUG] The scan target : '"
-                                                    + targetPath
-                                                    + "' has Scan Location Id: '"
-                                                    + scanId
-                                                    + "'. BUT this Id has already been added to the list. Either this is a duplicate target or the correct scan could not be found.");
-                            listener.getLogger().println();
-                        } else {
-                            listener.getLogger().println(
-                                    "[DEBUG] The scan target : '" + targetPath + "' has Scan Location Id: '" + scanId + "'.");
-                            scanIds.add(scanId);
-                        }
+                    JSONObject assetEntity = new JSONObject();
+                    assetEntity.put("entityId", scanId.getKey());
+                    // this is the code location
+                    assetEntity.put("entityType", "CL");
 
+                    obj.put("ownerEntityKey", ownerEntity);
+                    obj.put("assetEntityKey", assetEntity);
+
+                    StringRepresentation stringRep = new StringRepresentation(obj.toString());
+                    stringRep.setMediaType(MediaType.APPLICATION_JSON);
+                    resource.post(stringRep);
+                    int responseCode = resource.getResponse().getStatus().getCode();
+
+                    // HashMap<String, Object> responseMap = new HashMap<String, Object>();
+                    if (responseCode == 201) {
+                        // Successful mapping
+                        listener.getLogger()
+                                .println(
+                                        "[DEBUG] Successfully mapped the scan with id: '" + scanId.getKey() + "', to the Release with Id: '" + releaseId + "'.");
                     } else {
-                        if (!alreadyMapped) {
-                            listener.getLogger().println(
-                                    "[ERROR] No Scan Location Id could be found for the scan target : '" + targetPath + "'.");
-                        }
+                        throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
                     }
                 } else {
                     listener.getLogger().println(
-                            "[ERROR] No Scan Location Id could be found for the scan target : '" + targetPath + "'.");
-                }
-            } catch (IOException e) {
-                e.printStackTrace(listener.getLogger());
-            } catch (BDRestException e) {
-                e.printStackTrace(listener.getLogger());
-            }
-        }
-        return scanIds;
-    }
-
-    public void mapScansToProjectRelease(BuildListener listener, List<String> scanIds, String releaseId) throws BDRestException, MalformedURLException {
-        if (!scanIds.isEmpty()) {
-            for (String scanId : scanIds) {
-                listener.getLogger().println("[DEBUG] Mapping the scan with id: '" + scanId + "', to the Release with Id: '" + releaseId + "'.");
-                // FIXME Need to change this to /api/v1/asset-references soon
-                String url = getBaseUrl() + "/api/v1/assetreferences";
-                ClientResource resource = createClientResource(url);
-
-                resource.getRequest().setCookies(getCookies());
-                resource.setMethod(Method.POST);
-
-                JSONObject obj = new JSONObject();
-
-                JSONObject ownerEntity = new JSONObject();
-                ownerEntity.put("entityId", releaseId);
-                // this is the release location
-                ownerEntity.put("entityType", "RL");
-
-                JSONObject assetEntity = new JSONObject();
-                assetEntity.put("entityId", scanId);
-                // this is the code location
-                assetEntity.put("entityType", "CL");
-
-                obj.put("ownerEntityKey", ownerEntity);
-                obj.put("assetEntityKey", assetEntity);
-
-                StringRepresentation stringRep = new StringRepresentation(obj.toString());
-                stringRep.setMediaType(MediaType.APPLICATION_JSON);
-                resource.post(stringRep);
-                int responseCode = resource.getResponse().getStatus().getCode();
-
-                // HashMap<String, Object> responseMap = new HashMap<String, Object>();
-                if (responseCode == 201) {
-                    // Successful mapping
-                    listener.getLogger()
-                            .println("[DEBUG] Successfully mapped the scan with id: '" + scanId + "', to the Release with Id: '" + releaseId + "'.");
-                } else {
-                    throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+                            "[DEBUG] The scan location with id: '" + scanId.getKey() + "', is already mapped to the Release with Id: '" + releaseId + "'.");
                 }
             }
         }
