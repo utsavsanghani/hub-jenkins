@@ -44,7 +44,7 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.cloudbees.plugins.credentials.matchers.IdMatcher;
 
 /**
- * Descriptor for {@link CodeCenterBuildWrapper}. Used as a singleton. The
+ * Descriptor for {@link PostBuildHubiScan}. Used as a singleton. The
  * class is marked as public so that it can be accessed from views.
  * 
  * <p>
