@@ -203,7 +203,7 @@ public class PostBuildHubiScan extends Recorder {
                         listener.getLogger().println("Waiting a few seconds for the scans to be recognized by the Hub server.");
                         Thread.sleep(5000);
 
-                        doScanMapping(listener, scanTargets);
+                        doScanMapping(build, listener, scanTargets);
                     }
                 }
             } catch (Exception e) {
@@ -232,7 +232,8 @@ public class PostBuildHubiScan extends Recorder {
         return true;
     }
 
-    private void doScanMapping(BuildListener listener, List<String> scanTargets) throws IOException, BDRestException, BDJenkinsHubPluginException,
+    private void doScanMapping(AbstractBuild build, BuildListener listener, List<String> scanTargets) throws IOException, BDRestException,
+            BDJenkinsHubPluginException,
             InterruptedException {
         JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
 
@@ -255,7 +256,7 @@ public class PostBuildHubiScan extends Recorder {
         if (StringUtils.isEmpty(releaseId)) {
             throw new BDJenkinsHubPluginException("The specified Release could not be found in the Project.");
         }
-        Map<String, Boolean> scanLocationIds = service.getScanLocationIds(listener, scanTargets, releaseId);
+        Map<String, Boolean> scanLocationIds = service.getScanLocationIds(build, listener, scanTargets, releaseId);
         if (!scanLocationIds.isEmpty()) {
             listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
             for (Entry<String, Boolean> scanId : scanLocationIds.entrySet()) {

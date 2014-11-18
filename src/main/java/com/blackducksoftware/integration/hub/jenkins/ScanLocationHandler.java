@@ -1,6 +1,8 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
 import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.model.AbstractBuild;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -39,7 +41,8 @@ public class ScanLocationHandler {
      * @throws InterruptedException
      * @throws BDRestException
      */
-    public void getScanLocationIdWithRetry(ClientResource resource, String targetPath, String releaseId, Map<String, Boolean> scanLocationIds)
+    public void getScanLocationIdWithRetry(AbstractBuild build, ClientResource resource, String targetPath, String releaseId,
+            Map<String, Boolean> scanLocationIds)
             throws UnknownHostException, MalformedURLException, InterruptedException, BDRestException {
 
         if (resource == null) {
@@ -55,6 +58,10 @@ public class ScanLocationHandler {
         long start = System.currentTimeMillis();
         int i = 0;
         while (!matchFound) {
+            if (build.getResult().equals(Result.ABORTED)) {
+                throw new BDRestException("Can not find the Scan Location, the current Build was aborted. Try again later.");
+            }
+
             i++;
 
             listener.getLogger().println("Attempt # " + i + " to get the Scan Location for : '" + targetPath + "'.");

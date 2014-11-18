@@ -1,6 +1,7 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
 import hudson.model.BuildListener;
+import hudson.model.AbstractBuild;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -303,7 +304,8 @@ public class JenkinsHubIntRestService {
      * @throws InterruptedException
      * @throws BDRestException
      */
-    public Map<String, Boolean> getScanLocationIds(BuildListener listener, List<String> scanTargets, String releaseId) throws UnknownHostException,
+    public Map<String, Boolean> getScanLocationIds(AbstractBuild build, BuildListener listener, List<String> scanTargets, String releaseId)
+            throws UnknownHostException,
             MalformedURLException, InterruptedException, BDRestException {
         HashMap<String, Boolean> scanLocationIds = new HashMap<String, Boolean>();
         for (String targetPath : scanTargets) {
@@ -321,7 +323,7 @@ public class JenkinsHubIntRestService {
 
             ScanLocationHandler handler = new ScanLocationHandler(listener);
 
-            handler.getScanLocationIdWithRetry(resource, targetPath, releaseId, scanLocationIds);
+            handler.getScanLocationIdWithRetry(build, resource, targetPath, releaseId, scanLocationIds);
 
         }
         return scanLocationIds;
