@@ -44,7 +44,7 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.cloudbees.plugins.credentials.matchers.IdMatcher;
 
 /**
- * Descriptor for {@link CodeCenterBuildWrapper}. Used as a singleton. The
+ * Descriptor for {@link PostBuildHubiScan}. Used as a singleton. The
  * class is marked as public so that it can be accessed from views.
  * 
  * <p>
@@ -64,8 +64,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
-    private List<String> duplicates = new ArrayList<String>();
-
     private HubServerInfo hubServerInfo;
 
     private String projectId;
@@ -77,15 +75,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public PostBuildScanDescriptor() {
         super(PostBuildHubiScan.class);
         load();
-    }
-
-    public List<String> getDuplicates() {
-        return duplicates;
-    }
-
-    public void setDuplicates(List<String> dups) {
-        duplicates = dups;
-        save();
     }
 
     /**
@@ -339,26 +328,17 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                         }
                     }
                     if (projIds.size() > 1) {
-                        List<String> dupList = new ArrayList<String>();
-                        for (String id : projIds) {
-                            dupList.add(id);
-                        }
-                        setDuplicates(dupList);
                         return FormValidation.warning(Messages.HubBuildScan_getProjectExistsWithDuplicateMatches_0_(getHubServerUrl()));
                     } else if (projIds.size() == 1) {
-                        setDuplicates(null);
                         setProjectId(projIds.get(0));
                         return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getHubServerUrl()));
                     } else {
-                        setDuplicates(null);
                         return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getHubServerUrl(), projectMatches.toString()));
                     }
                 } else {
-                    setDuplicates(null);
                     return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getHubServerUrl()));
                 }
             } catch (Exception e) {
-                setDuplicates(null);
                 String message;
                 if (e.getCause() != null && e.getCause().getCause() != null) {
                     message = e.getCause().getCause().toString();
@@ -374,9 +354,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
                 return FormValidation.error(message);
             } finally {
-                // load();
-                // JenkinsHubIntRestService temp = new JenkinsHubIntRestService();
-                // temp.reloadDuplicates();
                 if (changed) {
                     Thread.currentThread().setContextClassLoader(
                             originalClassLoader);
@@ -387,46 +364,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     /**
-     * Fills the duplicate Project Id drop down list. Query for the hubProjectName value so that when it is changed it
-     * will trigger this drop down list to be filled or emptied.
-     * 
-     * 
-     * @return
-     * @throws InterruptedException
-     */
-    public ListBoxModel doFillDuplicateHubProjectIdItems(@QueryParameter("hubProjectName") final String hubProjectName) throws InterruptedException {
-        Thread.sleep(1800); // DO NOT REMOVE
-        // The sleep is so the checks can be run on the name properly before we try and populate the duplicate list
-        ClassLoader originalClassLoader = Thread.currentThread()
-                .getContextClassLoader();
-        boolean changed = false;
-        ListBoxModel items = null;
-        try {
-            items = new ListBoxModel();
-            List<String> dups = getDuplicates();
-            if (dups != null) {
-                for (String dup : dups) {
-                    items.add(dup);
-                }
-            }
-        } finally {
-            if (changed) {
-                Thread.currentThread().setContextClassLoader(
-                        originalClassLoader);
-            }
-        }
-        return items;
-    }
-
-    /**
      * Performs on-the-fly validation of the form field 'hubProjectRelease'. Checks to see if there is already a project
      * in the Hub with this name.
      * 
      * @param hubProjectRelease
      *            This parameter receives the value that the user has typed for the Release.
-     * @param hubProjectDuplicateId
-     *            This parameter receives the value of the Project Id that the User has selected, if any.
-     * 
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
@@ -619,11 +561,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             FormValidation projectNameCheck = doCheckHubProjectName(hubProjectName);
             String projectNonExistentMessage = Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(null, null);
             projectNonExistentMessage = projectNonExistentMessage.substring(0, 47);
-            String duplicatesMessage = Messages.HubBuildScan_getProjectExistsWithDuplicateMatches_0_(null);
-            duplicatesMessage = duplicatesMessage.substring(50, 96);
             boolean projectExists = false;
             if (FormValidation.Kind.OK.equals(projectNameCheck.kind)
-                    || (FormValidation.Kind.WARNING.equals(projectNameCheck.kind) && projectNameCheck.getMessage().contains(duplicatesMessage))) {
+                    || (FormValidation.Kind.WARNING.equals(projectNameCheck.kind))) {
                 // Project exists for given name
                 projectExists = true;
                 // Check if the Release for the given Project exists or not before creating it
@@ -770,21 +710,5 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     public String getHubCredentialsId() {
         return (hubServerInfo == null ? "" : (hubServerInfo.getCredentialsId() == null ? "" : hubServerInfo.getCredentialsId()));
-    }
-
-    public static class DuplicateProject {
-        private String id;
-
-        public DuplicateProject() {
-
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
-
-        public String getId() {
-            return id;
-        }
     }
 }

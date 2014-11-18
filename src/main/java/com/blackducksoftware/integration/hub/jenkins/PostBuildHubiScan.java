@@ -24,6 +24,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import jenkins.model.Jenkins;
 
@@ -128,7 +130,6 @@ public class PostBuildHubiScan extends Recorder {
     }
 
     // http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
-    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }
@@ -168,7 +169,7 @@ public class PostBuildHubiScan extends Recorder {
                     // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any
                     // file even outside of the Jenkins directories
                     setWorkingDirectory(build.getWorkspace().getRemote()); // This should work on master and
-                                                                           // slaves
+                    // slaves
                     setJava(build, listener);
                     FilePath iScanExec = getIScanCLI(iScanTools, listener, build);
                     List<String> scanTargets = new ArrayList<String>();
@@ -202,7 +203,7 @@ public class PostBuildHubiScan extends Recorder {
                         listener.getLogger().println("Waiting a few seconds for the scans to be recognized by the Hub server.");
                         Thread.sleep(5000);
 
-                        doScanMapping(listener, scanTargets);
+                        doScanMapping(build, listener, scanTargets);
                     }
                 }
             } catch (Exception e) {
@@ -231,7 +232,9 @@ public class PostBuildHubiScan extends Recorder {
         return true;
     }
 
-    private void doScanMapping(BuildListener listener, List<String> scanTargets) throws IOException, BDRestException, BDJenkinsHubPluginException {
+    private void doScanMapping(AbstractBuild build, BuildListener listener, List<String> scanTargets) throws IOException, BDRestException,
+            BDJenkinsHubPluginException,
+            InterruptedException {
         JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
 
         ArrayList<String> projectId = null;
@@ -253,22 +256,18 @@ public class PostBuildHubiScan extends Recorder {
         if (StringUtils.isEmpty(releaseId)) {
             throw new BDJenkinsHubPluginException("The specified Release could not be found in the Project.");
         }
-        List<String> scanIds = service.getScanLocationIds(listener, scanTargets, releaseId);
-        if (!scanIds.isEmpty()) {
+        Map<String, Boolean> scanLocationIds = service.getScanLocationIds(build, listener, scanTargets, releaseId);
+        if (!scanLocationIds.isEmpty()) {
             listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
-            for (String scanId : scanIds) {
-                listener.getLogger().println(scanId);
+            for (Entry<String, Boolean> scanId : scanLocationIds.entrySet()) {
+                listener.getLogger().println(scanId.getKey());
             }
-            listener.getLogger().println(
-                    "[DEBUG] Linking the scan Id's to the Hub Project: '" + getHubProjectName() + "', and Release: '" + getHubProjectRelease()
-                            + "'.");
 
-            service.mapScansToProjectRelease(listener, scanIds, releaseId);
+            service.mapScansToProjectRelease(listener, scanLocationIds, releaseId);
         } else {
             listener.getLogger()
                     .println(
-                            "[DEBUG] These scans are already mapped to Project : '" + getHubProjectName() + "', Release : '"
-                                    + getHubProjectRelease() + "'. OR there was an issue getting the Id's for the defined scan targets.");
+                            "[DEBUG] There was an issue getting the Scan Location Id's for the defined scan targets.");
         }
 
     }
