@@ -31,6 +31,7 @@ import org.restlet.data.Method;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.ClientResource;
+import org.restlet.resource.ResourceException;
 import org.restlet.util.Series;
 
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
@@ -466,59 +467,73 @@ public class JenkinsHubIntRestService {
 
         String url = getBaseUrl() + "/api/v1/projects";
         ClientResource resource = createClientResource(url);
-
-        resource.getRequest().setCookies(getCookies());
-        resource.setMethod(Method.POST);
-
-        JSONObject obj = new JSONObject();
-        obj.put("name", projectName);
-
-        StringRepresentation stringRep = new StringRepresentation(obj.toString());
-        stringRep.setMediaType(MediaType.APPLICATION_JSON);
-
-        resource.post(stringRep);
-        int responseCode = resource.getResponse().getStatus().getCode();
-
         HashMap<String, Object> responseMap = null;
-        if (responseCode == 201) {
+        try {
+            resource.getRequest().setCookies(getCookies());
+            resource.setMethod(Method.POST);
 
-            Response resp = resource.getResponse();
-            Reader reader = resp.getEntity().getReader();
-            BufferedReader bufReader = new BufferedReader(reader);
-            StringBuilder sb = new StringBuilder();
-            String line = bufReader.readLine();
-            while (line != null) {
-                sb.append(line + "\n");
-                line = bufReader.readLine();
+            JSONObject obj = new JSONObject();
+            obj.put("name", projectName);
+
+            StringRepresentation stringRep = new StringRepresentation(obj.toString());
+            stringRep.setMediaType(MediaType.APPLICATION_JSON);
+
+            resource.post(stringRep);
+            int responseCode = resource.getResponse().getStatus().getCode();
+
+            if (responseCode == 201) {
+
+                Response resp = resource.getResponse();
+                Reader reader = resp.getEntity().getReader();
+                BufferedReader bufReader = new BufferedReader(reader);
+                StringBuilder sb = new StringBuilder();
+                String line = bufReader.readLine();
+                while (line != null) {
+                    sb.append(line + "\n");
+                    line = bufReader.readLine();
+                }
+                bufReader.close();
+                byte[] mapData = sb.toString().getBytes();
+
+                // Create HashMap from the Rest response
+                ObjectMapper responseMapper = new ObjectMapper();
+                responseMap = responseMapper.readValue(mapData, HashMap.class);
+            } else {
+                throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
             }
-            bufReader.close();
-            byte[] mapData = sb.toString().getBytes();
-
-            // Create HashMap from the Rest response
-            ObjectMapper responseMapper = new ObjectMapper();
-            responseMap = responseMapper.readValue(mapData, HashMap.class);
-        } else {
-            throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+        } catch (ResourceException e) {
+            org.restlet.Response r = resource.getResponse();
+            System.out.println(e.getStatus().toString());
+            System.out.println(r.getEntityAsText());
         }
+
         return responseMap;
     }
 
     public int createHubRelease(String projectRelease, String projectId) throws IOException, BDRestException {
         String url = getBaseUrl() + "/api/v1/releases";
         ClientResource resource = createClientResource(url);
+        int responseCode;
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("projectId", projectId);
+            obj.put("version", projectRelease);
+            obj.put("phase", "DEVELOPMENT");
+            obj.put("distribution", "EXTERNAL");
 
-        JSONObject obj = new JSONObject();
-        obj.put("projectId", projectId);
-        obj.put("version", projectRelease);
+            resource.getRequest().setCookies(getCookies());
+            resource.setMethod(Method.POST);
+            StringRepresentation stringRep = new StringRepresentation(obj.toString());
+            stringRep.setMediaType(MediaType.APPLICATION_JSON);
 
-        resource.getRequest().setCookies(getCookies());
-        resource.setMethod(Method.POST);
-        StringRepresentation stringRep = new StringRepresentation(obj.toString());
-        stringRep.setMediaType(MediaType.APPLICATION_JSON);
-
-        resource.post(stringRep);
-        int responseCode = resource.getResponse().getStatus().getCode();
-
+            resource.post(stringRep);
+            responseCode = resource.getResponse().getStatus().getCode();
+        } catch (ResourceException e) {
+            org.restlet.Response r = resource.getResponse();
+            System.out.println(e.getStatus().toString());
+            System.out.println(r.getEntityAsText());
+            responseCode = resource.getResponse().getStatus().getCode();
+        }
         return responseCode;
     }
 }

@@ -608,12 +608,16 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             responseCode = service.createHubRelease(hubProjectRelease, getProjectId());
             if (responseCode == 201) {
                 return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseCreated());
+            } else if (responseCode == 412) {
+
+                return FormValidation.error(Messages.HubBuildScan_getProjectReleaseCreationProblem());
             } else if (responseCode == 401) {
                 // If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
                 return FormValidation.error(Messages.HubBuildScan_getCredentialsInValidFor_0_(getHubServerUrl()));
             } else {
                 return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
             }
+
         } catch (Exception e) {
             String message;
             if (e.getCause() != null && e.getCause().getCause() != null) {

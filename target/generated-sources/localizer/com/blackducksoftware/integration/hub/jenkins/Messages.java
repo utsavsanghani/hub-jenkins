@@ -158,6 +158,22 @@ public class Messages {
     }
 
     /**
+     * Either this Project or Release already exist.
+     * 
+     */
+    public static String HubBuildScan_getProjectReleaseCreationProblem() {
+        return holder.format("HubBuildScan_getProjectReleaseCreationProblem");
+    }
+
+    /**
+     * Either this Project or Release already exist.
+     * 
+     */
+    public static Localizable _HubBuildScan_getProjectReleaseCreationProblem() {
+        return new Localizable(holder, "HubBuildScan_getProjectReleaseCreationProblem");
+    }
+
+    /**
      * The Project and Release specified already exist!
      * 
      */
@@ -222,22 +238,6 @@ public class Messages {
     }
 
     /**
-     * Expected a different JSON response from the server, the Hub API's may have changed, Or the response was mapped incorrectly.
-     * 
-     */
-    public static String HubBuildScan_getIncorrectMappingOfServerResponse() {
-        return holder.format("HubBuildScan_getIncorrectMappingOfServerResponse");
-    }
-
-    /**
-     * Expected a different JSON response from the server, the Hub API's may have changed, Or the response was mapped incorrectly.
-     * 
-     */
-    public static Localizable _HubBuildScan_getIncorrectMappingOfServerResponse() {
-        return new Localizable(holder, "HubBuildScan_getIncorrectMappingOfServerResponse");
-    }
-
-    /**
      * Need to provide a Project release.
      * 
      */
@@ -251,6 +251,22 @@ public class Messages {
      */
     public static Localizable _HubBuildScan_getProvideProjectRelease() {
         return new Localizable(holder, "HubBuildScan_getProvideProjectRelease");
+    }
+
+    /**
+     * Expected a different JSON response from the server, the Hub API's may have changed, Or the response was mapped incorrectly.
+     * 
+     */
+    public static String HubBuildScan_getIncorrectMappingOfServerResponse() {
+        return holder.format("HubBuildScan_getIncorrectMappingOfServerResponse");
+    }
+
+    /**
+     * Expected a different JSON response from the server, the Hub API's may have changed, Or the response was mapped incorrectly.
+     * 
+     */
+    public static Localizable _HubBuildScan_getIncorrectMappingOfServerResponse() {
+        return new Localizable(holder, "HubBuildScan_getIncorrectMappingOfServerResponse");
     }
 
     /**

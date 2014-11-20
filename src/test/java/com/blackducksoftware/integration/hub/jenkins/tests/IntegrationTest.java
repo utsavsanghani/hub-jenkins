@@ -83,7 +83,7 @@ public class IntegrationTest {
         basePath = IntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf(File.separator + "target"));
         basePath = basePath + File.separator + "test-workspace";
-        iScanInstallPath = basePath + File.separator + "scan.cli-1.15.2-SNAPSHOT";
+        iScanInstallPath = basePath + File.separator + "scan.cli-1.17.0-SNAPSHOT";
         testWorkspace = basePath + File.separator + "workspace";
 
         testProperties = new Properties();
