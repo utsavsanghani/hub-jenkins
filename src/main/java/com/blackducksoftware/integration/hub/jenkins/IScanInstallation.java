@@ -54,8 +54,7 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
      * @throws InterruptedException
      */
     public boolean getExists(VirtualChannel channel, BuildListener listener) throws IOException, InterruptedException {
-        File homeFile = new File(getHome());
-        FilePath homeFilePath = new FilePath(channel, homeFile.getCanonicalPath());
+        FilePath homeFilePath = new FilePath(channel, getHome());
         // find the lib folder in the iScan directory
         listener.getLogger().println("[DEBUG] BlackDuck Scan directory: " + homeFilePath.getRemote());
         List<FilePath> files = homeFilePath.listDirectories();

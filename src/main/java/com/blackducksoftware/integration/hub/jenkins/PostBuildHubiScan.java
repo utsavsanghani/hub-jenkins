@@ -142,14 +142,14 @@ public class PostBuildHubiScan extends Recorder {
     /**
      * Overrides the Recorder perform method. This is the method that gets called by Jenkins to run as a Post Build
      * Action
-     * 
+     *
      * @param build
      *            AbstractBuild
      * @param launcher
      *            Launcher
      * @param listener
      *            BuildListener
-     * 
+     *
      * @throws IOException
      * @throws InterruptedException
      */
@@ -299,7 +299,7 @@ public class PostBuildHubiScan extends Recorder {
      * Validates that the target of the scanJob exists, creates a ProcessBuilder to run the shellscript and passes in
      * the necessarry arguments, sets the JAVA_HOME of the Process Builder to the one that the User chose, starts the
      * process and prints out all stderr and stdout to the Console Output.
-     * 
+     *
      * @param build
      *            AbstractBuild
      * @param launcher
@@ -310,7 +310,7 @@ public class PostBuildHubiScan extends Recorder {
      *            FilePath
      * @param scanTargets
      *            List<String>
-     * 
+     *
      * @throws IOException
      * @throws HubConfigurationException
      * @throws InterruptedException
@@ -352,6 +352,8 @@ public class PostBuildHubiScan extends Recorder {
             cmd.add("-Xmx" + DEFAULT_MEMORY + "m");
         }
         cmd.add(iScanExec.getRemote());
+        cmd.add("--scheme");
+        cmd.add(url.getProtocol());
         cmd.add("--host");
         cmd.add(url.getHost());
         listener.getLogger().println("[DEBUG] : Using this Hub Url : '" + url.getHost() + "'");
@@ -487,7 +489,7 @@ public class PostBuildHubiScan extends Recorder {
 
     /**
      * Sets the Java Home that is to be used for running the Shell script
-     * 
+     *
      * @param build
      *            AbstractBuild
      * @param listener
@@ -499,11 +501,16 @@ public class PostBuildHubiScan extends Recorder {
     private void setJava(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException, HubConfigurationException {
         EnvVars envVars = build.getEnvironment(listener);
         JDK javaHomeTemp = null;
+        listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName());
         if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
+            listener.getLogger().println("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
             // Empty node name indicates master
             javaHomeTemp = build.getProject().getJDK();
+            listener.getLogger().println("JDK  : " + javaHomeTemp.getHome());
         } else {
+            listener.getLogger().println("Getting Node Jdk on node  : " + build.getBuiltOn().getNodeName());
             javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), listener);
+            listener.getLogger().println("JDK  : " + javaHomeTemp.getHome());
         }
         if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
             listener.getLogger().println("Could not find the specified Java installation, checking the JAVA_HOME variable.");
@@ -513,12 +520,12 @@ public class PostBuildHubiScan extends Recorder {
             // In case the user did not select a java installation, set to the environment variable JAVA_HOME
             javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
         }
-        // FIXME look for the java executable and make sure it exists
-        File javaExecFile = new File(javaHomeTemp.getHome());
-        FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), javaExecFile.getCanonicalPath());
-        if (!javaExec.exists()) {
-            throw new HubConfigurationException("Could not find the specified Java installation at: " + javaExec.getRemote());
-        }
+        // // FIXME look for the java executable and make sure it exists
+        // FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), javaHomeTemp.getHome());
+        // if (!javaExec.exists()) {
+        // throw new HubConfigurationException("Could not find the specified Java installation at: " +
+        // javaExec.getRemote());
+        // }
         java = javaHomeTemp;
     }
 
@@ -526,14 +533,14 @@ public class PostBuildHubiScan extends Recorder {
      * Looks through the iScanInstallations to find the one that the User chose, then looks for the scan.cli.sh in the
      * bin folder of the directory defined by the Installation.
      * It then checks that the File exists.
-     * 
+     *
      * @param iScanTools
      *            IScanInstallation[] User defined iScan installations
      * @param listener
      *            BuildListener
      * @param build
      *            AbstractBuild
-     * 
+     *
      * @return File the scan.cli.sh
      * @throws IScanToolMissingException
      * @throws IOException
@@ -574,14 +581,14 @@ public class PostBuildHubiScan extends Recorder {
     /**
      * Validates that the Plugin is configured correctly. Checks that the User has defined an iScan tool, a Hub server
      * URL, a Credential, and that there are at least one scan Target/Job defined in the Build
-     * 
+     *
      * @param iScanTools
      *            IScanInstallation[] User defined iScan installations
      * @param scans
      *            IScanJobs[] the iScan jobs defined in the Job config
-     * 
+     *
      * @return True if everything is configured correctly
-     * 
+     *
      * @throws IScanToolMissingException
      * @throws HubConfigurationException
      */
@@ -607,14 +614,14 @@ public class PostBuildHubiScan extends Recorder {
 
     /**
      * Validates that all scan targets exist
-     * 
+     *
      * @param listener
      *            BuildListener
      * @param channel
      *            VirtualChannel
      * @param scanTargets
      *            List<String>
-     * 
+     *
      * @return
      * @throws IOException
      * @throws HubConfigurationException
@@ -626,7 +633,7 @@ public class PostBuildHubiScan extends Recorder {
             File locationFile = new File(currTarget);
             FilePath target = null;
             if (channel != null) {
-                target = new FilePath(channel, locationFile.getCanonicalPath());
+                target = new FilePath(channel, currTarget);
             } else {
                 target = new FilePath(locationFile);
             }
