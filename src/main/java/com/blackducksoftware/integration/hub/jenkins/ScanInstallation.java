@@ -23,19 +23,19 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-public class IScanInstallation extends ToolInstallation implements NodeSpecific<IScanInstallation>, EnvironmentSpecific<IScanInstallation> {
+public class ScanInstallation extends ToolInstallation implements NodeSpecific<ScanInstallation>, EnvironmentSpecific<ScanInstallation> {
 
     @DataBoundConstructor
-    public IScanInstallation(String name, String home, List<? extends ToolProperty<?>> properties) {
+    public ScanInstallation(String name, String home, List<? extends ToolProperty<?>> properties) {
         super(name, home, properties);
     }
 
-    public IScanInstallation forEnvironment(EnvVars environment) {
-        return new IScanInstallation(getName(), environment.expand(getHome()), getProperties().toList());
+    public ScanInstallation forEnvironment(EnvVars environment) {
+        return new ScanInstallation(getName(), environment.expand(getHome()), getProperties().toList());
     }
 
-    public IScanInstallation forNode(Node node, TaskListener log) throws IOException, InterruptedException {
-        return new IScanInstallation(getName(), translateFor(node, log), getProperties().toList());
+    public ScanInstallation forNode(Node node, TaskListener log) throws IOException, InterruptedException {
+        return new ScanInstallation(getName(), translateFor(node, log), getProperties().toList());
     }
 
     @Override
@@ -121,7 +121,7 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
     }
 
     @Extension
-    public static final class IScanDescriptor extends ToolDescriptor<IScanInstallation> {
+    public static final class IScanDescriptor extends ToolDescriptor<ScanInstallation> {
 
         public IScanDescriptor() {
             setInstallations();
@@ -134,8 +134,8 @@ public class IScanInstallation extends ToolInstallation implements NodeSpecific<
         }
 
         @Override
-        public IScanInstallation newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            return (IScanInstallation) super.newInstance(req, formData.getJSONObject("IScanInstallation"));
+        public ScanInstallation newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+            return (ScanInstallation) super.newInstance(req, formData.getJSONObject("IScanInstallation"));
         }
 
         @Override

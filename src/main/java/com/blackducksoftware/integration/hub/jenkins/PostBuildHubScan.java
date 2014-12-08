@@ -40,19 +40,19 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
 
-public class PostBuildHubiScan extends Recorder {
+public class PostBuildHubScan extends Recorder {
 
     public static final int DEFAULT_MEMORY = 256;
 
-    private final IScanJobs[] scans;
+    private final ScanJobs[] scans;
 
-    private final String iScanName;
+    private final String scanName;
 
     private final String hubProjectName;
 
     private final String hubProjectRelease;
 
-    private int iScanMemory;
+    private Integer scanMemory;
 
     private String workingDirectory;
 
@@ -65,15 +65,23 @@ public class PostBuildHubiScan extends Recorder {
     private boolean test = false;
 
     @DataBoundConstructor
-    public PostBuildHubiScan(IScanJobs[] scans, String iScanName, String hubProjectName, String hubProjectRelease, int iScanMemory) {
+    public PostBuildHubScan(ScanJobs[] scans, String scanName, String hubProjectName, String hubProjectRelease, String scanMemory) {
         this.scans = scans;
-        this.iScanName = iScanName;
+        this.scanName = scanName;
         this.hubProjectName = hubProjectName;
         this.hubProjectRelease = hubProjectRelease;
-        if (iScanMemory == 0) {
-            this.iScanMemory = DEFAULT_MEMORY;
+        Integer memory = 0;
+        try {
+            memory = Integer.valueOf(scanMemory);
+        } catch (NumberFormatException e) {
+            // return FormValidation.error(Messages
+            // .HubBuildScan_getInvalidMemoryString());
+        }
+
+        if (memory == 0) {
+            this.scanMemory = DEFAULT_MEMORY;
         } else {
-            this.iScanMemory = iScanMemory;
+            this.scanMemory = memory;
         }
     }
 
@@ -94,15 +102,15 @@ public class PostBuildHubiScan extends Recorder {
         this.result = result;
     }
 
-    public int geDefaultIScanMemory() {
-        return DEFAULT_MEMORY;
+    public String geDefaultMemory() {
+        return String.valueOf(DEFAULT_MEMORY);
     }
 
-    public int getIScanMemory() {
-        if (iScanMemory == 0) {
-            iScanMemory = DEFAULT_MEMORY;
+    public String getScanMemory() {
+        if (scanMemory == 0) {
+            scanMemory = DEFAULT_MEMORY;
         }
-        return iScanMemory;
+        return String.valueOf(scanMemory);
     }
 
     public String getHubProjectRelease() {
@@ -113,12 +121,12 @@ public class PostBuildHubiScan extends Recorder {
         return hubProjectName;
     }
 
-    public IScanJobs[] getScans() {
+    public ScanJobs[] getScans() {
         return scans;
     }
 
-    public String getiScanName() {
-        return iScanName;
+    public String getScanName() {
+        return scanName;
     }
 
     public String getWorkingDirectory() {
@@ -161,19 +169,22 @@ public class PostBuildHubiScan extends Recorder {
             try {
                 listener.getLogger().println("Starting BlackDuck Scans...");
 
-                IScanInstallation[] iScanTools = null;
-                ToolDescriptor<IScanInstallation> iScanDescriptor = (ToolDescriptor<IScanInstallation>) build.getDescriptorByName(IScanInstallation.class
+                ScanInstallation[] iScanTools = null;
+                ToolDescriptor<ScanInstallation> iScanDescriptor = (ToolDescriptor<ScanInstallation>) build.getDescriptorByName(ScanInstallation.class
                         .getSimpleName());
                 iScanTools = iScanDescriptor.getInstallations();
                 if (validateConfiguration(iScanTools, getScans())) {
                     // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any
                     // file even outside of the Jenkins directories
-                    setWorkingDirectory(build.getWorkspace().getRemote()); // This should work on master and
+
+                    // FIXME getRemote returning the wrong Path
+                    File workspace = new File(build.getWorkspace().getRemote());
+                    setWorkingDirectory(workspace.getCanonicalPath()); // This should work on master and
                     // slaves
                     setJava(build, listener);
                     FilePath iScanExec = getIScanCLI(iScanTools, listener, build);
                     List<String> scanTargets = new ArrayList<String>();
-                    for (IScanJobs scanJob : getScans()) {
+                    for (ScanJobs scanJob : getScans()) {
                         if (StringUtils.isEmpty(scanJob.getScanTarget())) {
                             scanTargets.add(getWorkingDirectory());
                         } else {
@@ -233,8 +244,8 @@ public class PostBuildHubiScan extends Recorder {
     }
 
     private void doScanMapping(AbstractBuild build, BuildListener listener, List<String> scanTargets) throws IOException, BDRestException,
-            BDJenkinsHubPluginException,
-            InterruptedException {
+    BDJenkinsHubPluginException,
+    InterruptedException {
         JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
 
         ArrayList<String> projectId = null;
@@ -266,8 +277,8 @@ public class PostBuildHubiScan extends Recorder {
             service.mapScansToProjectRelease(listener, scanLocationIds, releaseId);
         } else {
             listener.getLogger()
-                    .println(
-                            "[DEBUG] There was an issue getting the Scan Location Id's for the defined scan targets.");
+            .println(
+                    "[DEBUG] There was an issue getting the Scan Location Id's for the defined scan targets.");
         }
 
     }
@@ -346,8 +357,8 @@ public class PostBuildHubiScan extends Recorder {
         // }
         // }
         // }
-        if (getIScanMemory() != 256) {
-            cmd.add("-Xmx" + getIScanMemory() + "m");
+        if (scanMemory != 256) {
+            cmd.add("-Xmx" + scanMemory + "m");
         } else {
             cmd.add("-Xmx" + DEFAULT_MEMORY + "m");
         }
@@ -409,7 +420,7 @@ public class PostBuildHubiScan extends Recorder {
                         if (latestLogFile != null) {
                             listener.getLogger().println(
                                     "For scan target : '" + target + "', you can view the BlackDuck Scan CLI logs at : '" + latestLogFile.getCanonicalPath()
-                                            + "'");
+                                    + "'");
                             listener.getLogger().println();
                         } else {
                             listener.getLogger().println(
@@ -547,10 +558,10 @@ public class PostBuildHubiScan extends Recorder {
      * @throws InterruptedException
      * @throws HubConfigurationException
      */
-    public FilePath getIScanCLI(IScanInstallation[] iScanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
-            InterruptedException, HubConfigurationException {
+    public FilePath getIScanCLI(ScanInstallation[] iScanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
+    InterruptedException, HubConfigurationException {
         FilePath iScanExec = null;
-        for (IScanInstallation iScan : iScanTools) {
+        for (ScanInstallation iScan : iScanTools) {
             Node node = build.getBuiltOn();
             if (StringUtils.isEmpty(node.getNodeName())) {
                 // Empty node name indicates master
@@ -559,7 +570,7 @@ public class PostBuildHubiScan extends Recorder {
                 listener.getLogger().println("[DEBUG] : Running on : " + node.getNodeName());
                 iScan = iScan.forNode(node, listener); // Need to get the Slave iScan
             }
-            if (iScan.getName().equals(getiScanName())) {
+            if (iScan.getName().equals(getScanName())) {
                 if (iScan.getExists(node.getChannel(), listener)) {
                     iScanExec = iScan.getCLI(node.getChannel());
                     listener.getLogger().println(
@@ -592,7 +603,7 @@ public class PostBuildHubiScan extends Recorder {
      * @throws IScanToolMissingException
      * @throws HubConfigurationException
      */
-    public boolean validateConfiguration(IScanInstallation[] iScanTools, IScanJobs[] scans) throws IScanToolMissingException, HubConfigurationException {
+    public boolean validateConfiguration(ScanInstallation[] iScanTools, ScanJobs[] scans) throws IScanToolMissingException, HubConfigurationException {
         if (iScanTools == null || iScanTools.length == 0 || iScanTools[0] == null) {
             throw new IScanToolMissingException("Could not find an iScan Installation to use.");
         }
@@ -628,7 +639,7 @@ public class PostBuildHubiScan extends Recorder {
      * @throws InterruptedException
      */
     public boolean validateScanTargets(BuildListener listener, VirtualChannel channel, List<String> scanTargets) throws IOException, HubConfigurationException,
-            InterruptedException {
+    InterruptedException {
         for (String currTarget : scanTargets) {
             File locationFile = new File(currTarget);
             FilePath target = null;

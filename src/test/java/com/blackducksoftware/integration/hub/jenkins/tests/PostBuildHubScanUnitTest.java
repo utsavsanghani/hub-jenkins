@@ -27,15 +27,15 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.IScanJobs;
+import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.IScanInstallation;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildHubiScan;
+import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
 import com.google.common.base.Charsets;
 
-public class PostBuildHubiScanUnitTest {
+public class PostBuildHubScanUnitTest {
 
     private static final String TEST_CLI_PATH = "/lib/scan.cli-1.17.0-SNAPSHOT-standalone.jar";
 
@@ -83,7 +83,7 @@ public class PostBuildHubiScanUnitTest {
     public void testValidateScanTargetsTwoExistingInWorkspace() throws IOException, HubConfigurationException, InterruptedException {
         File createdFolder = folder.newFolder("newfolder");
         File createdFile = folder.newFile("myfilefile.txt");
-        PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class, Mockito.CALLS_REAL_METHODS);
+        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class, Mockito.CALLS_REAL_METHODS);
         File workspace = new File(createdFolder.getCanonicalPath() + "/..");
         when(mockpbScan.getWorkingDirectory()).thenReturn(workspace.getCanonicalPath());
         String[] scanTargets = { createdFolder.getCanonicalPath(), createdFile.getCanonicalPath() };
@@ -96,7 +96,7 @@ public class PostBuildHubiScanUnitTest {
     public void testValidateScanTargetsTwoNotExisting() throws IOException, HubConfigurationException, InterruptedException {
         exception.expect(IOException.class);
         exception.expectMessage("Scan target could not be found :");
-        PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class, Mockito.CALLS_REAL_METHODS);
+        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class, Mockito.CALLS_REAL_METHODS);
         when(mockpbScan.getWorkingDirectory()).thenReturn("/");
         String[] scanTargets = { "/ASSERT/NOT/EXISTING", "/RE-ASSERT/Not/EXISTING" };
         mockpbScan.validateScanTargets(listener, null, Arrays.asList(scanTargets));
@@ -109,7 +109,7 @@ public class PostBuildHubiScanUnitTest {
         File createdFolder = folder.newFolder("newfolder");
         File testWorkspace = folder.newFolder("workspace");
         File createdFile = folder.newFile("myfilefile.txt");
-        PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class, Mockito.CALLS_REAL_METHODS);
+        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class, Mockito.CALLS_REAL_METHODS);
         when(mockpbScan.getWorkingDirectory()).thenReturn(testWorkspace.getCanonicalPath());
         String[] scanTargets = { createdFolder.getCanonicalPath(), createdFile.getCanonicalPath() };
         mockpbScan.validateScanTargets(listener, null, Arrays.asList(scanTargets));
@@ -129,11 +129,11 @@ public class PostBuildHubiScanUnitTest {
         Node node = slave;
         when(mockBuild.getBuiltOn()).thenReturn(node);
 
-        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
-        IScanInstallation[] iScanInstallations = new IScanInstallation[1];
+        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default", null, null, 256);
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, "256");
 
         FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
         Assert.assertTrue(script.exists());
@@ -156,18 +156,18 @@ public class PostBuildHubiScanUnitTest {
         when(mockBuild.getBuiltOn()).thenReturn(node);
 
         // IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
-        IScanInstallation mockIScanInstall = mock(IScanInstallation.class);
+        ScanInstallation mockIScanInstall = mock(ScanInstallation.class);
         when(mockIScanInstall.getName()).thenReturn("default");
         when(mockIScanInstall.getHome()).thenReturn(iScanInstallPath);
         when(mockIScanInstall.forNode(Mockito.any(Node.class), Mockito.any(BuildListener.class))).thenReturn(mockIScanInstall);
         when(mockIScanInstall.getCLI(Mockito.any(VirtualChannel.class))).thenCallRealMethod();
         when(mockIScanInstall.getExists(Mockito.any(VirtualChannel.class), Mockito.any(BuildListener.class))).thenCallRealMethod();
-        IScanInstallation[] iScanInstallations = new IScanInstallation[1];
+        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = mockIScanInstall;
 
         // iScan.forNode(build.getBuiltOn(), listener);
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default", null, null, 256);
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, "256");
 
         FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
         Assert.assertTrue(script.exists());
@@ -185,9 +185,9 @@ public class PostBuildHubiScanUnitTest {
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("You need to select which BlackDuck Scan installation to use.");
 
-        IScanInstallation[] iScanInstallations = new IScanInstallation[0];
+        ScanInstallation[] iScanInstallations = new ScanInstallation[0];
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default", null, null, 256);
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, "256");
 
         FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, null);
         Assert.assertTrue(script.exists());
@@ -209,11 +209,11 @@ public class PostBuildHubiScanUnitTest {
         Node node = slave;
         when(mockBuild.getBuiltOn()).thenReturn(node);
 
-        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath + "/FAKE/PATH/scan.cli.jar", null);
-        IScanInstallation[] iScanInstallations = new IScanInstallation[1];
+        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath + "/FAKE/PATH/scan.cli.jar", null);
+        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        PostBuildHubiScan pbScan = new PostBuildHubiScan(null, "default", null, null, 256);
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, "256");
         pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
     }
 
@@ -228,16 +228,16 @@ public class PostBuildHubiScanUnitTest {
         hubServerInfo.setServerUrl(VALID_SERVERURL);
         descriptor.setHubServerInfo(hubServerInfo);
 
-        PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class);
+        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
         when(mockpbScan.getDescriptor()).thenReturn(descriptor);
-        when(mockpbScan.validateConfiguration(Mockito.any(IScanInstallation[].class), Mockito.any(IScanJobs[].class))).thenCallRealMethod();
+        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
 
-        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
-        IScanInstallation[] iScanInstallations = new IScanInstallation[1];
+        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        IScanJobs oneScan = new IScanJobs(basePath);
-        IScanJobs[] scans = new IScanJobs[1];
+        ScanJobs oneScan = new ScanJobs(basePath);
+        ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
         Assert.assertTrue(mockpbScan.validateConfiguration(iScanInstallations, scans));
@@ -250,13 +250,13 @@ public class PostBuildHubiScanUnitTest {
         exception.expect(IScanToolMissingException.class);
         exception.expectMessage("Could not find an iScan Installation to use.");
 
-        PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class);
-        when(mockpbScan.validateConfiguration(Mockito.any(IScanInstallation[].class), Mockito.any(IScanJobs[].class))).thenCallRealMethod();
+        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
+        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
 
-        IScanInstallation[] iScanInstallations = new IScanInstallation[0];
+        ScanInstallation[] iScanInstallations = new ScanInstallation[0];
 
-        IScanJobs oneScan = new IScanJobs(basePath);
-        IScanJobs[] scans = new IScanJobs[1];
+        ScanJobs oneScan = new ScanJobs(basePath);
+        ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
         Assert.assertTrue(mockpbScan.validateConfiguration(iScanInstallations, scans));
@@ -269,11 +269,11 @@ public class PostBuildHubiScanUnitTest {
         exception.expect(IScanToolMissingException.class);
         exception.expectMessage("Could not find an iScan Installation to use.");
 
-        PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class);
-        when(mockpbScan.validateConfiguration(Mockito.any(IScanInstallation[].class), Mockito.any(IScanJobs[].class))).thenCallRealMethod();
+        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
+        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
 
-        IScanJobs oneScan = new IScanJobs(basePath);
-        IScanJobs[] scans = new IScanJobs[1];
+        ScanJobs oneScan = new ScanJobs(basePath);
+        ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
         Assert.assertTrue(mockpbScan.validateConfiguration(null, scans));
@@ -286,14 +286,14 @@ public class PostBuildHubiScanUnitTest {
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("Could not find any targets to scan.");
 
-        PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class);
-        when(mockpbScan.validateConfiguration(Mockito.any(IScanInstallation[].class), Mockito.any(IScanJobs[].class))).thenCallRealMethod();
+        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
+        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
 
-        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
-        IScanInstallation[] iScanInstallations = new IScanInstallation[1];
+        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        IScanJobs[] scans = new IScanJobs[0];
+        ScanJobs[] scans = new ScanJobs[0];
 
         Assert.assertTrue(mockpbScan.validateConfiguration(iScanInstallations, scans));
     }
@@ -305,11 +305,11 @@ public class PostBuildHubiScanUnitTest {
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("Could not find any targets to scan.");
 
-        PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class);
-        when(mockpbScan.validateConfiguration(Mockito.any(IScanInstallation[].class), Mockito.any(IScanJobs[].class))).thenCallRealMethod();
+        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
+        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
 
-        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
-        IScanInstallation[] iScanInstallations = new IScanInstallation[1];
+        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
         Assert.assertTrue(mockpbScan.validateConfiguration(iScanInstallations, null));
@@ -328,16 +328,16 @@ public class PostBuildHubiScanUnitTest {
         hubServerInfo.setServerUrl("");
         descriptor.setHubServerInfo(hubServerInfo);
 
-        PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class);
+        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
         when(mockpbScan.getDescriptor()).thenReturn(descriptor);
-        when(mockpbScan.validateConfiguration(Mockito.any(IScanInstallation[].class), Mockito.any(IScanJobs[].class))).thenCallRealMethod();
+        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
 
-        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
-        IScanInstallation[] iScanInstallations = new IScanInstallation[1];
+        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        IScanJobs oneScan = new IScanJobs(basePath);
-        IScanJobs[] scans = new IScanJobs[1];
+        ScanJobs oneScan = new ScanJobs(basePath);
+        ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
         Assert.assertTrue(mockpbScan.validateConfiguration(iScanInstallations, scans));
@@ -356,16 +356,16 @@ public class PostBuildHubiScanUnitTest {
         hubServerInfo.setServerUrl(null);
         descriptor.setHubServerInfo(hubServerInfo);
 
-        PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class);
+        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
         when(mockpbScan.getDescriptor()).thenReturn(descriptor);
-        when(mockpbScan.validateConfiguration(Mockito.any(IScanInstallation[].class), Mockito.any(IScanJobs[].class))).thenCallRealMethod();
+        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
 
-        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
-        IScanInstallation[] iScanInstallations = new IScanInstallation[1];
+        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        IScanJobs oneScan = new IScanJobs(basePath);
-        IScanJobs[] scans = new IScanJobs[1];
+        ScanJobs oneScan = new ScanJobs(basePath);
+        ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
         Assert.assertTrue(mockpbScan.validateConfiguration(iScanInstallations, scans));
@@ -384,16 +384,16 @@ public class PostBuildHubiScanUnitTest {
         hubServerInfo.setServerUrl(VALID_SERVERURL);
         descriptor.setHubServerInfo(hubServerInfo);
 
-        PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class);
+        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
         when(mockpbScan.getDescriptor()).thenReturn(descriptor);
-        when(mockpbScan.validateConfiguration(Mockito.any(IScanInstallation[].class), Mockito.any(IScanJobs[].class))).thenCallRealMethod();
+        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
 
-        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
-        IScanInstallation[] iScanInstallations = new IScanInstallation[1];
+        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        IScanJobs oneScan = new IScanJobs(basePath);
-        IScanJobs[] scans = new IScanJobs[1];
+        ScanJobs oneScan = new ScanJobs(basePath);
+        ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
         mockpbScan.validateConfiguration(iScanInstallations, scans);
@@ -412,16 +412,16 @@ public class PostBuildHubiScanUnitTest {
         hubServerInfo.setServerUrl(VALID_SERVERURL);
         descriptor.setHubServerInfo(hubServerInfo);
 
-        PostBuildHubiScan mockpbScan = mock(PostBuildHubiScan.class);
+        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
         when(mockpbScan.getDescriptor()).thenReturn(descriptor);
-        when(mockpbScan.validateConfiguration(Mockito.any(IScanInstallation[].class), Mockito.any(IScanJobs[].class))).thenCallRealMethod();
+        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
 
-        IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
-        IScanInstallation[] iScanInstallations = new IScanInstallation[1];
+        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        IScanJobs oneScan = new IScanJobs(basePath);
-        IScanJobs[] scans = new IScanJobs[1];
+        ScanJobs oneScan = new ScanJobs(basePath);
+        ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
         mockpbScan.validateConfiguration(iScanInstallations, scans);

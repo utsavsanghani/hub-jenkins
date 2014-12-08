@@ -3,23 +3,23 @@
 		for a general discussion about jelly script. -->
 		
 <f:entry field="hubProjectName" title="${%ProjectNameTitle}">
-	<f:textbox value="${instance.getHubProjectName()}"/>
+	<f:textbox value="${it.getHubProjectName()}"/>
 </f:entry>
 
 <f:entry field="hubProjectRelease" title="${%ProjectReleaseTitle}">
-	<f:textbox value="${instance.getHubProjectRelease()}"/>
+	<f:textbox value="${it.getHubProjectRelease()}"/>
 </f:entry>
 <f:validateButton title="${%CreateProject}" progress="${%CreateProjectProgress}"
          method="createHubProject" with="hubProjectName,hubProjectRelease" />
-<f:entry field="iScanName" title="${%ScanInstallationsTitle}">
+<f:entry field="scanName" title="${%ScanInstallationsTitle}">
 	<f:select />
 </f:entry>
-<f:entry field="iScanMemory" title="${%MemoryAllocation}">
-	<f:textbox value="${instance.getIScanMemory()}" default="${instance.defaultIScanMemory()}" />
+<f:entry field="scanMemory" title="${%MemoryAllocation}">
+	<f:textbox value="${it.scanMemory}" default="256"/>
 </f:entry>
 		
 <f:block>
-	<f:repeatable var="scans" items="${instance.scans}" add="${%AddScan}" minimum="1">
+	<f:repeatable var="scans" items="${it.scans}" add="${%AddScan}" minimum="1">
 		<table style="width:100%" id="hubBlackDuckTable">
 				<f:entry title="${%ScanTarget}" field="scanTarget">
               		<f:textbox value="${scans.getScanTarget()}"/>

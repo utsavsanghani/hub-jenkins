@@ -32,7 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import com.blackducksoftware.integration.hub.jenkins.IScanInstallation.IScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -44,9 +44,9 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.cloudbees.plugins.credentials.matchers.IdMatcher;
 
 /**
- * Descriptor for {@link PostBuildHubiScan}. Used as a singleton. The
+ * Descriptor for {@link PostBuildHubScan}. Used as a singleton. The
  * class is marked as public so that it can be accessed from views.
- * 
+ *
  * <p>
  * See <tt>src/main/resources/hudson/plugins/hello_world/HelloWorldBuilder/*.jelly</tt> for the actual HTML fragment for
  * the configuration screen.
@@ -73,7 +73,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * load() in the constructor.
      */
     public PostBuildScanDescriptor() {
-        super(PostBuildHubiScan.class);
+        super(PostBuildHubScan.class);
         load();
     }
 
@@ -121,9 +121,27 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         }
     }
 
+    // TODO Unit test this
+    public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") String scanMemory)
+            throws IOException, ServletException {
+        if (scanMemory.length() == 0) {
+            return FormValidation.error(Messages
+                    .HubBuildScan_getNeedMemory());
+        }
+
+        try {
+            Integer.valueOf(scanMemory);
+        } catch (NumberFormatException e) {
+            return FormValidation.error(Messages
+                    .HubBuildScan_getInvalidMemoryString());
+        }
+
+        return FormValidation.ok();
+    }
+
     /**
      * Fills the Credential drop down list in the global config
-     * 
+     *
      * @return
      */
     public ListBoxModel doFillHubCredentialsIdItems() {
@@ -153,10 +171,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     /**
      * Fills the iScan drop down list in the job config
-     * 
+     *
      * @return
      */
-    public ListBoxModel doFillIScanNameItems() {
+    public ListBoxModel doFillScanNameItems() {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -166,8 +184,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             Jenkins jenkins = Jenkins.getInstance();
             IScanDescriptor iScanDescriptor = jenkins.getDescriptorByType(IScanDescriptor.class);
 
-            IScanInstallation[] iScanInstallations = iScanDescriptor.getInstallations();
-            for (IScanInstallation iScan : iScanInstallations) {
+            ScanInstallation[] iScanInstallations = iScanDescriptor.getInstallations();
+            for (ScanInstallation iScan : iScanInstallations) {
                 items.add(iScan.getName());
             }
 
@@ -182,7 +200,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     /**
      * Performs on-the-fly validation of the form field 'serverUrl'.
-     * 
+     *
      * @param value
      *            This parameter receives the value that the user has typed.
      * @return Indicates the outcome of the validation. This is sent to the
@@ -276,7 +294,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     /**
      * Performs on-the-fly validation of the form field 'hubProjectName'. Checks to see if there is already a project in
      * the Hub with this name.
-     * 
+     *
      * @param hubProjectName
      *            This parameter receives the value that the user has typed.
      * @return Indicates the outcome of the validation. This is sent to the
@@ -366,7 +384,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     /**
      * Performs on-the-fly validation of the form field 'hubProjectRelease'. Checks to see if there is already a project
      * in the Hub with this name.
-     * 
+     *
      * @param hubProjectRelease
      *            This parameter receives the value that the user has typed for the Release.
      * @return Indicates the outcome of the validation. This is sent to the
@@ -452,8 +470,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     /**
      * Validates that the URL, Username, and Password are correct for connecting to the Hub Server.
-     * 
-     * 
+     *
+     *
      * @param serverUrl
      *            String
      * @param hubCredentialsId
@@ -535,8 +553,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     /**
      * Validates that the URL, Username, and Password are correct for connecting to the Hub Server.
-     * 
-     * 
+     *
+     *
      * @param serverUrl
      *            String
      * @param hubCredentialsId

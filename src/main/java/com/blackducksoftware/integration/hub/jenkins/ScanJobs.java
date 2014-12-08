@@ -2,11 +2,11 @@ package com.blackducksoftware.integration.hub.jenkins;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class IScanJobs {
+public class ScanJobs {
     private final String scanTarget;
 
     @DataBoundConstructor
-    public IScanJobs(String scanTarget) {
+    public ScanJobs(String scanTarget) {
         this.scanTarget = scanTarget;
     }
 

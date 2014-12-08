@@ -238,6 +238,22 @@ public class Messages {
     }
 
     /**
+     * The memory provided is not a valid amount
+     * 
+     */
+    public static String HubBuildScan_getInvalidMemoryString() {
+        return holder.format("HubBuildScan_getInvalidMemoryString");
+    }
+
+    /**
+     * The memory provided is not a valid amount
+     * 
+     */
+    public static Localizable _HubBuildScan_getInvalidMemoryString() {
+        return new Localizable(holder, "HubBuildScan_getInvalidMemoryString");
+    }
+
+    /**
      * Need to provide a Project release.
      * 
      */
@@ -331,6 +347,22 @@ public class Messages {
      */
     public static Localizable _HubBuildScan_getDisplayName() {
         return new Localizable(holder, "HubBuildScan_getDisplayName");
+    }
+
+    /**
+     * Need to provide some memory for the scan
+     * 
+     */
+    public static String HubBuildScan_getNeedMemory() {
+        return holder.format("HubBuildScan_getNeedMemory");
+    }
+
+    /**
+     * Need to provide some memory for the scan
+     * 
+     */
+    public static Localizable _HubBuildScan_getNeedMemory() {
+        return new Localizable(holder, "HubBuildScan_getNeedMemory");
     }
 
 }

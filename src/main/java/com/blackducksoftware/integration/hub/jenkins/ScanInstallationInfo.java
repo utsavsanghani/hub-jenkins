@@ -2,14 +2,14 @@ package com.blackducksoftware.integration.hub.jenkins;
 
 import java.io.Serializable;
 
-public class IScanInstallationInfo implements Serializable {
+public class ScanInstallationInfo implements Serializable {
 
     private String toolLocation;
 
-    public IScanInstallationInfo() {
+    public ScanInstallationInfo() {
     }
 
-    public IScanInstallationInfo(String toolLocation) {
+    public ScanInstallationInfo(String toolLocation) {
         super();
         this.toolLocation = toolLocation;
     }

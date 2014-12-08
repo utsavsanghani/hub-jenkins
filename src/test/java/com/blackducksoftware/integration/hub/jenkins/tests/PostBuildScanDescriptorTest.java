@@ -327,4 +327,30 @@ public class PostBuildScanDescriptorTest {
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null));
     }
 
+    @Test
+    public void testCheckInvalidMemory() throws IOException, ServletException, BDRestException {
+        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+        FormValidation form = descriptor.doCheckScanMemory("This is not an Integer");
+        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getInvalidMemoryString());
+    }
+
+    @Test
+    public void testCheckNoMemory() throws IOException, ServletException, BDRestException {
+        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+        FormValidation form = descriptor.doCheckScanMemory("");
+        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getNeedMemory());
+    }
+
+    @Test
+    public void testCheckValidMemory() throws IOException, ServletException, BDRestException {
+        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+        FormValidation form = descriptor.doCheckScanMemory("512");
+        Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+    }
+
 }
