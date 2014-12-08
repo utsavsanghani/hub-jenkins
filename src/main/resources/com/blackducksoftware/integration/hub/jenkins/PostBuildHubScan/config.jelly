@@ -15,14 +15,14 @@
 	<f:select />
 </f:entry>
 <f:entry field="scanMemory" title="${%MemoryAllocation}">
-	<f:textbox value="${it.scanMemory}" default="256"/>
+	<f:textbox value="${it.scanMemory}" default="4096"/>
 </f:entry>
 		
 <f:block>
-	<f:repeatable var="scans" items="${it.scans}" add="${%AddScan}" minimum="1">
+	<f:repeatable field="scans" add="${%AddScan}" minimum="1">
 		<table style="width:100%" id="hubBlackDuckTable">
 				<f:entry title="${%ScanTarget}" field="scanTarget">
-              		<f:textbox value="${scans.getScanTarget()}"/>
+              		<f:textbox/>
             	</f:entry>
       	</table>
       	<f:repeatableDeleteButton value="${%DeleteScan}"/>

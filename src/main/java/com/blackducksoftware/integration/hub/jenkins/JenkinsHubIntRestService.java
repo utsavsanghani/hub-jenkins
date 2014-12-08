@@ -6,7 +6,6 @@ import hudson.model.AbstractBuild;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -111,10 +110,10 @@ public class JenkinsHubIntRestService {
     /**
      * Checks the list of user defined host names that should be connected to directly and not go through the proxy. If
      * the hostToMatch matches any of these hose names then this method returns true.
-     * 
+     *
      * @param hostToMatch
      *            String the hostName to check if it is in the list of hosts that should not go through the proxy.
-     * 
+     *
      * @return boolean
      */
     protected static boolean getMatchingNoProxyHostPatterns(String hostToMatch, List<Pattern> noProxyHosts) {
@@ -143,14 +142,14 @@ public class JenkinsHubIntRestService {
 
     /**
      * Gets the cookie for the Authorized connection to the Hub server. Returns the response code from the connection.
-     * 
+     *
      * @param serverUrl
      *            String the Url for the Hub server
      * @param credentialUserName
      *            String the Username for the Hub server
      * @param credentialPassword
      *            String the Password for the Hub server
-     * 
+     *
      * @return int Status code
      * @throws MalformedURLException
      */
@@ -291,14 +290,14 @@ public class JenkinsHubIntRestService {
      * Gets the scan Id for each scan target, it searches the list of scans and gets the latest scan id for the scan
      * matching the hostname and path. If the matching scans are already mapped to the Release then that id will not be
      * returned in the list.
-     * 
+     *
      * @param listener
      *            BuildListener
      * @param scanTargets
      *            List<String>
      * @param releaseId
      *            String
-     * 
+     *
      * @return Map<Boolean, String> scan Ids
      * @throws UnknownHostException
      * @throws MalformedURLException
@@ -312,10 +311,20 @@ public class JenkinsHubIntRestService {
         for (String targetPath : scanTargets) {
             String url = null;
             ClientResource resource = null;
-            String localhostname = InetAddress.getLocalHost().getHostName();
-            url = baseUrl + "/api/v1/scanlocations?host=" + localhostname + "&path=" + targetPath;
+            listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName()); // FIXME temp logs
+            String localHostName = "";
+            try {
+                localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
+            } catch (IOException e) {
+                listener.error("Problem getting the Local Host name : " + e.getMessage());
+                e.printStackTrace(listener.getLogger());
+            }
+            if (localHostName == null || localHostName.length() == 0) {
+                return null;
+            }
+            url = baseUrl + "/api/v1/scanlocations?host=" + localHostName + "&path=" + targetPath;
             listener.getLogger().println(
-                    "[DEBUG] Checking for the scan location with Host name: '" + localhostname + "' and Path: '" + targetPath + "'");
+                    "[DEBUG] Checking for the scan location with Host name: '" + localHostName + "' and Path: '" + targetPath + "'");
 
             resource = createClientResource(url);
 
@@ -331,7 +340,7 @@ public class JenkinsHubIntRestService {
     }
 
     public void mapScansToProjectRelease(BuildListener listener, Map<String, Boolean> scanLocationIds, String releaseId) throws BDRestException,
-            MalformedURLException {
+    MalformedURLException {
         if (!scanLocationIds.isEmpty()) {
             for (Entry<String, Boolean> scanId : scanLocationIds.entrySet()) {
                 if (!scanId.getValue()) {
@@ -369,8 +378,8 @@ public class JenkinsHubIntRestService {
                     if (responseCode == 201) {
                         // Successful mapping
                         listener.getLogger()
-                                .println(
-                                        "[DEBUG] Successfully mapped the scan with id: '" + scanId.getKey() + "', to the Release with Id: '" + releaseId + "'.");
+                        .println(
+                                "[DEBUG] Successfully mapped the scan with id: '" + scanId.getKey() + "', to the Release with Id: '" + releaseId + "'.");
                     } else {
                         throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
                     }
@@ -389,7 +398,7 @@ public class JenkinsHubIntRestService {
 
     /**
      * Gets the project Ids for every project with a name that matches exactly to the one specified.
-     * 
+     *
      * @param responseList
      *            ArrayList<LinkedHashMap<String, Object>>
      * @param projectName
@@ -399,7 +408,7 @@ public class JenkinsHubIntRestService {
      * @throws BDRestException
      */
     public ArrayList<String> getProjectIdsFromProjectMatches(ArrayList<LinkedHashMap<String, Object>> responseList, String projectName) throws IOException,
-            BDRestException {
+    BDRestException {
         ArrayList<String> projectId = new ArrayList<String>();
         if (!responseList.isEmpty()) {
             for (LinkedHashMap<String, Object> map : responseList) {
@@ -536,4 +545,5 @@ public class JenkinsHubIntRestService {
         }
         return responseCode;
     }
+
 }

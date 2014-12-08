@@ -32,7 +32,7 @@ public class ScanLocationHandler {
 
     /**
      * Will attempt to retrieve the scanLocation with the current hostname and target path. If this cannot be found then
-     * 
+     *
      * @param targetPath
      * @param releaseId
      * @return
@@ -43,7 +43,7 @@ public class ScanLocationHandler {
      */
     public void getScanLocationIdWithRetry(AbstractBuild build, ClientResource resource, String targetPath, String releaseId,
             Map<String, Boolean> scanLocationIds)
-            throws UnknownHostException, MalformedURLException, InterruptedException, BDRestException {
+                    throws UnknownHostException, MalformedURLException, InterruptedException, BDRestException {
 
         if (resource == null) {
             throw new IllegalArgumentException("Need to provide a ClientResource in order to get the ScanLocation");
@@ -71,7 +71,7 @@ public class ScanLocationHandler {
             }
             long end = System.currentTimeMillis() - start;
             if (end > 300 * 1000) { // This should check if the loop has been running for 5 minutes. If it has, the
-                                    // exception is thrown.
+                // exception is thrown.
                 throw new BDRestException("Can not find the Scan Location after 5 minutes. Try again later.");
             }
             long minutes = TimeUnit.MILLISECONDS.toMinutes(end);
@@ -203,4 +203,5 @@ public class ScanLocationHandler {
         }
 
     }
+
 }

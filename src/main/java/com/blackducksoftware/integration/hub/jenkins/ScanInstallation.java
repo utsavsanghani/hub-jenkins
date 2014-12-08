@@ -45,10 +45,10 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
 
     /**
      * Checks if the executable exists
-     * 
+     *
      * @param channel
      *            VirtualChannel to find the executable on master or slave
-     * 
+     *
      * @return true if executable is found, false otherwise
      * @throws IOException
      * @throws InterruptedException
@@ -94,10 +94,10 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
 
     /**
      * Returns the executable file of the installation
-     * 
+     *
      * @param channel
      *            VirtualChannel to find the executable on master or slave
-     * 
+     *
      * @return FilePath
      * @throws IOException
      * @throws InterruptedException
@@ -123,9 +123,21 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
     @Extension
     public static final class IScanDescriptor extends ToolDescriptor<ScanInstallation> {
 
+        private ScanInstallation[] installations = new ScanInstallation[0];
+
         public IScanDescriptor() {
-            setInstallations();
             load();
+        }
+
+        @Override
+        public void setInstallations(ScanInstallation... installations) {
+            this.installations = installations;
+            save();
+        }
+
+        @Override
+        public ScanInstallation[] getInstallations() {
+            return installations;
         }
 
         @Override

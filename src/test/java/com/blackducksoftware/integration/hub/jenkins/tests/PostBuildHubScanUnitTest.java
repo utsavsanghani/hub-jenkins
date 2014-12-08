@@ -27,10 +27,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
+import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
 import com.google.common.base.Charsets;
@@ -133,9 +133,9 @@ public class PostBuildHubScanUnitTest {
         ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, "256");
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, "4096");
 
-        FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
+        FilePath script = pbScan.getScanCLI(iScanInstallations, listener, mockBuild);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
         String output = byteOutput.toString("UTF-8");
@@ -167,9 +167,9 @@ public class PostBuildHubScanUnitTest {
 
         // iScan.forNode(build.getBuiltOn(), listener);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, "256");
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, "4096");
 
-        FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
+        FilePath script = pbScan.getScanCLI(iScanInstallations, listener, mockBuild);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
         String output = byteOutput.toString("UTF-8");
@@ -187,9 +187,9 @@ public class PostBuildHubScanUnitTest {
 
         ScanInstallation[] iScanInstallations = new ScanInstallation[0];
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, "256");
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, "4096");
 
-        FilePath script = pbScan.getIScanCLI(iScanInstallations, listener, null);
+        FilePath script = pbScan.getScanCLI(iScanInstallations, listener, null);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
     }
@@ -213,8 +213,8 @@ public class PostBuildHubScanUnitTest {
         ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, "256");
-        pbScan.getIScanCLI(iScanInstallations, listener, mockBuild);
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, "4096");
+        pbScan.getScanCLI(iScanInstallations, listener, mockBuild);
     }
 
     // validateConfiguration
@@ -248,7 +248,7 @@ public class PostBuildHubScanUnitTest {
         // validateConfiguration with no IScanInstallations and correct IScanJobs
 
         exception.expect(IScanToolMissingException.class);
-        exception.expectMessage("Could not find an iScan Installation to use.");
+        exception.expectMessage("Could not find an Black Duck Scan Installation to use.");
 
         PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
         when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
@@ -267,7 +267,7 @@ public class PostBuildHubScanUnitTest {
         // validateConfiguration with null IScanInstallations and correct IScanJobs
 
         exception.expect(IScanToolMissingException.class);
-        exception.expectMessage("Could not find an iScan Installation to use.");
+        exception.expectMessage("Could not find an Black Duck Scan Installation to use.");
 
         PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
         when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();

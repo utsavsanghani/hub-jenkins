@@ -18,7 +18,6 @@ import hudson.tools.ToolDescriptor;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -42,7 +41,7 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissing
 
 public class PostBuildHubScan extends Recorder {
 
-    public static final int DEFAULT_MEMORY = 256;
+    public static final int DEFAULT_MEMORY = 4096;
 
     private final ScanJobs[] scans;
 
@@ -168,11 +167,12 @@ public class PostBuildHubScan extends Recorder {
         if (result.equals(Result.SUCCESS)) {
             try {
                 listener.getLogger().println("Starting BlackDuck Scans...");
-
+                listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName()); // FIXME temp logs
                 ScanInstallation[] iScanTools = null;
                 ToolDescriptor<ScanInstallation> iScanDescriptor = (ToolDescriptor<ScanInstallation>) build.getDescriptorByName(ScanInstallation.class
                         .getSimpleName());
-                iScanTools = iScanDescriptor.getInstallations();
+                iScanTools = iScanDescriptor.getInstallations(); // TODO possible error, need to get remote
+                // installations?
                 if (validateConfiguration(iScanTools, getScans())) {
                     // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any
                     // file even outside of the Jenkins directories
@@ -182,7 +182,7 @@ public class PostBuildHubScan extends Recorder {
                     setWorkingDirectory(workspace.getCanonicalPath()); // This should work on master and
                     // slaves
                     setJava(build, listener);
-                    FilePath iScanExec = getIScanCLI(iScanTools, listener, build);
+                    FilePath iScanExec = getScanCLI(iScanTools, listener, build);
                     List<String> scanTargets = new ArrayList<String>();
                     for (ScanJobs scanJob : getScans()) {
                         if (StringUtils.isEmpty(scanJob.getScanTarget())) {
@@ -247,7 +247,7 @@ public class PostBuildHubScan extends Recorder {
     BDJenkinsHubPluginException,
     InterruptedException {
         JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
-
+        listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName()); // FIXME temp logs
         ArrayList<String> projectId = null;
         String projectIdToUse = null;
         String releaseId = null;
@@ -268,7 +268,7 @@ public class PostBuildHubScan extends Recorder {
             throw new BDJenkinsHubPluginException("The specified Release could not be found in the Project.");
         }
         Map<String, Boolean> scanLocationIds = service.getScanLocationIds(build, listener, scanTargets, releaseId);
-        if (!scanLocationIds.isEmpty()) {
+        if (scanLocationIds != null && !scanLocationIds.isEmpty()) {
             listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
             for (Entry<String, Boolean> scanId : scanLocationIds.entrySet()) {
                 listener.getLogger().println(scanId.getKey());
@@ -329,7 +329,7 @@ public class PostBuildHubScan extends Recorder {
     private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanExec, List<String> scanTargets)
             throws IOException,
             HubConfigurationException, InterruptedException {
-
+        listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName()); // FIXME temp logs
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
         URL url = new URL(getDescriptor().getHubServerUrl());
         PostBuildScanDescriptor desc = getDescriptor();
@@ -416,7 +416,15 @@ public class PostBuildHubScan extends Recorder {
                                 logFolder = file;
                             }
                         }
-                        File latestLogFile = getLogFileForScan(fileName, logFolder);
+                        String localHostName = "";
+                        try {
+                            localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
+                        } catch (IOException e) {
+                            listener.error("Problem getting the Local Host name : " + e.getMessage());
+                            e.printStackTrace(listener.getLogger());
+                        }
+
+                        File latestLogFile = getLogFileForScan(localHostName, fileName, logFolder);
                         if (latestLogFile != null) {
                             listener.getLogger().println(
                                     "For scan target : '" + target + "', you can view the BlackDuck Scan CLI logs at : '" + latestLogFile.getCanonicalPath()
@@ -447,17 +455,16 @@ public class PostBuildHubScan extends Recorder {
         }
     }
 
-    private File getLogFileForScan(String fileName, FilePath logFolder) throws IOException, InterruptedException {
+    private File getLogFileForScan(String localHostName, String fileName, FilePath logFolder) throws IOException, InterruptedException {
         File latestLogFile = null;
         DateTime latestLogTime = null;
         List<FilePath> logFiles = logFolder.list();
         for (FilePath log : logFiles) {
             if (log.getName().contains(fileName)) {
-                String hostName = InetAddress.getLocalHost().getHostName();
                 String logName = log.getName();
-                if (logName.contains(hostName)) {
+                if (logName.contains(localHostName)) {
                     // remove the host name
-                    logName = logName.replace(hostName + "-", "");
+                    logName = logName.replace(localHostName + "-", "");
                     int end = logName.length() - 31;
                     if (logName.substring(0, end).equals(fileName)) {
                         // remove the filename
@@ -512,7 +519,7 @@ public class PostBuildHubScan extends Recorder {
     private void setJava(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException, HubConfigurationException {
         EnvVars envVars = build.getEnvironment(listener);
         JDK javaHomeTemp = null;
-        listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName());
+        listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName()); // FIXME temp logs
         if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
             listener.getLogger().println("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
             // Empty node name indicates master
@@ -532,16 +539,16 @@ public class PostBuildHubScan extends Recorder {
             javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
         }
         // // FIXME look for the java executable and make sure it exists
-        // FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), javaHomeTemp.getHome());
-        // if (!javaExec.exists()) {
-        // throw new HubConfigurationException("Could not find the specified Java installation at: " +
-        // javaExec.getRemote());
-        // }
+        FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), javaHomeTemp.getHome());
+        if (!javaExec.exists()) {
+            throw new HubConfigurationException("Could not find the specified Java installation at: " +
+                    javaExec.getRemote());
+        }
         java = javaHomeTemp;
     }
 
     /**
-     * Looks through the iScanInstallations to find the one that the User chose, then looks for the scan.cli.sh in the
+     * Looks through the ScanInstallations to find the one that the User chose, then looks for the scan.cli.sh in the
      * bin folder of the directory defined by the Installation.
      * It then checks that the File exists.
      *
@@ -558,10 +565,11 @@ public class PostBuildHubScan extends Recorder {
      * @throws InterruptedException
      * @throws HubConfigurationException
      */
-    public FilePath getIScanCLI(ScanInstallation[] iScanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
+    public FilePath getScanCLI(ScanInstallation[] scanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
     InterruptedException, HubConfigurationException {
         FilePath iScanExec = null;
-        for (ScanInstallation iScan : iScanTools) {
+        for (ScanInstallation iScan : scanTools) {
+            listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName()); // FIXME temp logs
             Node node = build.getBuiltOn();
             if (StringUtils.isEmpty(node.getNodeName())) {
                 // Empty node name indicates master
@@ -605,7 +613,7 @@ public class PostBuildHubScan extends Recorder {
      */
     public boolean validateConfiguration(ScanInstallation[] iScanTools, ScanJobs[] scans) throws IScanToolMissingException, HubConfigurationException {
         if (iScanTools == null || iScanTools.length == 0 || iScanTools[0] == null) {
-            throw new IScanToolMissingException("Could not find an iScan Installation to use.");
+            throw new IScanToolMissingException("Could not find an Black Duck Scan Installation to use.");
         }
         if (scans == null || scans.length == 0) {
             throw new HubConfigurationException("Could not find any targets to scan.");
