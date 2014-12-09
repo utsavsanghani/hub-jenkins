@@ -167,17 +167,25 @@ public class PostBuildHubScan extends Recorder {
         if (result.equals(Result.SUCCESS)) {
             try {
                 listener.getLogger().println("Starting BlackDuck Scans...");
-                listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName()); // FIXME temp logs
+
+                String localHostName = "";
+                try {
+                    localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
+                } catch (IOException e) {
+                    listener.error("Problem getting the Local Host name : " + e.getMessage());
+                    e.printStackTrace(listener.getLogger());
+                }
+                listener.getLogger().println("Hub Plugin running on machine : " + localHostName);
+
                 ScanInstallation[] iScanTools = null;
                 ToolDescriptor<ScanInstallation> iScanDescriptor = (ToolDescriptor<ScanInstallation>) build.getDescriptorByName(ScanInstallation.class
                         .getSimpleName());
-                iScanTools = iScanDescriptor.getInstallations(); // TODO possible error, need to get remote
+                iScanTools = iScanDescriptor.getInstallations();
                 // installations?
                 if (validateConfiguration(iScanTools, getScans())) {
                     // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any
                     // file even outside of the Jenkins directories
 
-                    // FIXME getRemote returning the wrong Path
                     File workspace = new File(build.getWorkspace().getRemote());
                     setWorkingDirectory(workspace.getCanonicalPath()); // This should work on master and
                     // slaves
@@ -247,7 +255,6 @@ public class PostBuildHubScan extends Recorder {
     BDJenkinsHubPluginException,
     InterruptedException {
         JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
-        listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName()); // FIXME temp logs
         ArrayList<String> projectId = null;
         String projectIdToUse = null;
         String releaseId = null;
@@ -329,7 +336,6 @@ public class PostBuildHubScan extends Recorder {
     private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanExec, List<String> scanTargets)
             throws IOException,
             HubConfigurationException, InterruptedException {
-        listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName()); // FIXME temp logs
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
         URL url = new URL(getDescriptor().getHubServerUrl());
         PostBuildScanDescriptor desc = getDescriptor();
@@ -519,16 +525,15 @@ public class PostBuildHubScan extends Recorder {
     private void setJava(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException, HubConfigurationException {
         EnvVars envVars = build.getEnvironment(listener);
         JDK javaHomeTemp = null;
-        listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName()); // FIXME temp logs
         if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
             listener.getLogger().println("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
             // Empty node name indicates master
             javaHomeTemp = build.getProject().getJDK();
-            listener.getLogger().println("JDK  : " + javaHomeTemp.getHome());
+            listener.getLogger().println("JDK home : " + javaHomeTemp.getHome());
         } else {
-            listener.getLogger().println("Getting Node Jdk on node  : " + build.getBuiltOn().getNodeName());
+            listener.getLogger().println("Getting Jdk on node  : " + build.getBuiltOn().getNodeName());
             javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), listener);
-            listener.getLogger().println("JDK  : " + javaHomeTemp.getHome());
+            listener.getLogger().println("JDK home : " + javaHomeTemp.getHome());
         }
         if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
             listener.getLogger().println("Could not find the specified Java installation, checking the JAVA_HOME variable.");
@@ -538,7 +543,6 @@ public class PostBuildHubScan extends Recorder {
             // In case the user did not select a java installation, set to the environment variable JAVA_HOME
             javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
         }
-        // // FIXME look for the java executable and make sure it exists
         FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), javaHomeTemp.getHome());
         if (!javaExec.exists()) {
             throw new HubConfigurationException("Could not find the specified Java installation at: " +
@@ -569,7 +573,6 @@ public class PostBuildHubScan extends Recorder {
     InterruptedException, HubConfigurationException {
         FilePath iScanExec = null;
         for (ScanInstallation iScan : scanTools) {
-            listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName()); // FIXME temp logs
             Node node = build.getBuiltOn();
             if (StringUtils.isEmpty(node.getNodeName())) {
                 // Empty node name indicates master

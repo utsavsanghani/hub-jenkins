@@ -311,7 +311,6 @@ public class JenkinsHubIntRestService {
         for (String targetPath : scanTargets) {
             String url = null;
             ClientResource resource = null;
-            listener.getLogger().println("Node : " + build.getBuiltOn().getNodeName()); // FIXME temp logs
             String localHostName = "";
             try {
                 localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
@@ -340,7 +339,7 @@ public class JenkinsHubIntRestService {
     }
 
     public void mapScansToProjectRelease(BuildListener listener, Map<String, Boolean> scanLocationIds, String releaseId) throws BDRestException,
-    MalformedURLException {
+            MalformedURLException {
         if (!scanLocationIds.isEmpty()) {
             for (Entry<String, Boolean> scanId : scanLocationIds.entrySet()) {
                 if (!scanId.getValue()) {
@@ -378,8 +377,8 @@ public class JenkinsHubIntRestService {
                     if (responseCode == 201) {
                         // Successful mapping
                         listener.getLogger()
-                        .println(
-                                "[DEBUG] Successfully mapped the scan with id: '" + scanId.getKey() + "', to the Release with Id: '" + releaseId + "'.");
+                                .println(
+                                        "[DEBUG] Successfully mapped the scan with id: '" + scanId.getKey() + "', to the Release with Id: '" + releaseId + "'.");
                     } else {
                         throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
                     }
@@ -408,7 +407,7 @@ public class JenkinsHubIntRestService {
      * @throws BDRestException
      */
     public ArrayList<String> getProjectIdsFromProjectMatches(ArrayList<LinkedHashMap<String, Object>> responseList, String projectName) throws IOException,
-    BDRestException {
+            BDRestException {
         ArrayList<String> projectId = new ArrayList<String>();
         if (!responseList.isEmpty()) {
             for (LinkedHashMap<String, Object> map : responseList) {

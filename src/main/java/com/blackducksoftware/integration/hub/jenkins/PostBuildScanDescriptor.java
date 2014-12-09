@@ -121,7 +121,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         }
     }
 
-    // TODO Unit test this
     public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") String scanMemory)
             throws IOException, ServletException {
         if (scanMemory.length() == 0) {
@@ -229,7 +228,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName) throws IOException,
-            ServletException {
+    ServletException {
         AutoCompletionCandidates potentialMatches = new AutoCompletionCandidates();
         UsernamePasswordCredentialsImpl credential = null;
         if (!StringUtils.isEmpty(getHubServerUrl()) || !StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
@@ -708,7 +707,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public String getHubServerUrl() {
         return (hubServerInfo == null ? "" : (hubServerInfo
                 .getServerUrl() == null ? "" : hubServerInfo
-                .getServerUrl()));
+                        .getServerUrl()));
     }
 
     // public long getTimeout() {
