@@ -187,8 +187,16 @@ public class PostBuildHubScan extends Recorder {
                     // file even outside of the Jenkins directories
 
                     File workspace = new File(build.getWorkspace().getRemote());
-                    setWorkingDirectory(workspace.getCanonicalPath()); // This should work on master and
-                    // slaves
+
+                    String workingDirectory = "";
+                    try {
+                        workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(workspace));
+                    } catch (IOException e) {
+                        listener.error("Problem getting the working directory on this node. Error : " + e.getMessage());
+                        e.printStackTrace(listener.getLogger());
+                    }
+                    listener.getLogger().println("Node workspace " + workingDirectory);
+                    setWorkingDirectory(workingDirectory);
                     setJava(build, listener);
                     FilePath iScanExec = getScanCLI(iScanTools, listener, build);
                     List<String> scanTargets = new ArrayList<String>();
@@ -252,8 +260,8 @@ public class PostBuildHubScan extends Recorder {
     }
 
     private void doScanMapping(AbstractBuild build, BuildListener listener, List<String> scanTargets) throws IOException, BDRestException,
-    BDJenkinsHubPluginException,
-    InterruptedException {
+            BDJenkinsHubPluginException,
+            InterruptedException {
         JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
         ArrayList<String> projectId = null;
         String projectIdToUse = null;
@@ -284,8 +292,8 @@ public class PostBuildHubScan extends Recorder {
             service.mapScansToProjectRelease(listener, scanLocationIds, releaseId);
         } else {
             listener.getLogger()
-            .println(
-                    "[DEBUG] There was an issue getting the Scan Location Id's for the defined scan targets.");
+                    .println(
+                            "[DEBUG] There was an issue getting the Scan Location Id's for the defined scan targets.");
         }
 
     }
@@ -434,7 +442,7 @@ public class PostBuildHubScan extends Recorder {
                         if (latestLogFile != null) {
                             listener.getLogger().println(
                                     "For scan target : '" + target + "', you can view the BlackDuck Scan CLI logs at : '" + latestLogFile.getCanonicalPath()
-                                    + "'");
+                                            + "'");
                             listener.getLogger().println();
                         } else {
                             listener.getLogger().println(
@@ -570,7 +578,7 @@ public class PostBuildHubScan extends Recorder {
      * @throws HubConfigurationException
      */
     public FilePath getScanCLI(ScanInstallation[] scanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
-    InterruptedException, HubConfigurationException {
+            InterruptedException, HubConfigurationException {
         FilePath iScanExec = null;
         for (ScanInstallation iScan : scanTools) {
             Node node = build.getBuiltOn();
@@ -650,7 +658,7 @@ public class PostBuildHubScan extends Recorder {
      * @throws InterruptedException
      */
     public boolean validateScanTargets(BuildListener listener, VirtualChannel channel, List<String> scanTargets) throws IOException, HubConfigurationException,
-    InterruptedException {
+            InterruptedException {
         for (String currTarget : scanTargets) {
             File locationFile = new File(currTarget);
             FilePath target = null;
