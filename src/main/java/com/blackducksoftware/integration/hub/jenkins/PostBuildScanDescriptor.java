@@ -145,26 +145,16 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return
      */
     public ListBoxModel doFillHubCredentialsIdItems() {
-        ClassLoader originalClassLoader = Thread.currentThread()
-                .getContextClassLoader();
-        boolean changed = false;
+
         ListBoxModel boxModel = null;
-        try {
 
-            // Code copied from
-            // https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
-            CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
-            AbstractProject<?, ?> project = null; // Dont want to limit the search to a particular project for the drop
-            // down menu
-            boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher,
-                    CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
-
-        } finally {
-            if (changed) {
-                Thread.currentThread().setContextClassLoader(
-                        originalClassLoader);
-            }
-        }
+        // Code copied from
+        // https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
+        CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
+        AbstractProject<?, ?> project = null; // Dont want to limit the search to a particular project for the drop
+        // down menu
+        boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher,
+                CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
 
         return boxModel;
     }
