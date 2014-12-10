@@ -146,15 +146,28 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public ListBoxModel doFillHubCredentialsIdItems() {
 
         ListBoxModel boxModel = null;
+        ClassLoader originalClassLoader = Thread.currentThread()
+                .getContextClassLoader();
+        boolean changed = false;
+        try {
+            if (PostBuildScanDescriptor.class.getClassLoader() != originalClassLoader) {
+                changed = true;
+                Thread.currentThread().setContextClassLoader(PostBuildScanDescriptor.class.getClassLoader());
+            }
 
-        // Code copied from
-        // https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
-        CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
-        AbstractProject<?, ?> project = null; // Dont want to limit the search to a particular project for the drop
-        // down menu
-        boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher,
-                CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
-
+            // Code copied from
+            // https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
+            CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
+            AbstractProject<?, ?> project = null; // Dont want to limit the search to a particular project for the drop
+            // down menu
+            boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher,
+                    CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, Collections.<DomainRequirement> emptyList()));
+        } finally {
+            if (changed) {
+                Thread.currentThread().setContextClassLoader(
+                        originalClassLoader);
+            }
+        }
         return boxModel;
     }
 
@@ -228,7 +241,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName) throws IOException,
-    ServletException {
+            ServletException {
         AutoCompletionCandidates potentialMatches = new AutoCompletionCandidates();
         UsernamePasswordCredentialsImpl credential = null;
         if (!StringUtils.isEmpty(getHubServerUrl()) || !StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
@@ -707,7 +720,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public String getHubServerUrl() {
         return (hubServerInfo == null ? "" : (hubServerInfo
                 .getServerUrl() == null ? "" : hubServerInfo
-                        .getServerUrl()));
+                .getServerUrl()));
     }
 
     // public long getTimeout() {
