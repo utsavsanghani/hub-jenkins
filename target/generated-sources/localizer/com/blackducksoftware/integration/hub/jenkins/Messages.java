@@ -318,6 +318,22 @@ public class Messages {
     }
 
     /**
+     * The scan target is empty, the entire workspace will be scanned
+     * 
+     */
+    public static String HubBuildScan_getWorkspaceWillBeScanned() {
+        return holder.format("HubBuildScan_getWorkspaceWillBeScanned");
+    }
+
+    /**
+     * The scan target is empty, the entire workspace will be scanned
+     * 
+     */
+    public static Localizable _HubBuildScan_getWorkspaceWillBeScanned() {
+        return new Localizable(holder, "HubBuildScan_getWorkspaceWillBeScanned");
+    }
+
+    /**
      * The Project and Release have been created!
      * 
      */

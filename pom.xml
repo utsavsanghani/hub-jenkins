@@ -241,15 +241,33 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>add-source</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<!-- Add so Eclipse m2e can pick those up - 
+								     if you see a error in eclipse about this click and select discover 
+								       to install the m2e mapping for this maven plugin -->
+								<source>${project.build.directory}/generated-sources/localizer/</source>
+								<source>${project.build.directory}/generated-sources/annotations/</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-eclipse-plugin</artifactId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
 				<configuration>
-					<classpathContainers>
-						<classpathContainer>
-							org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/Java
-							7
-						</classpathContainer>
-					</classpathContainers>
+					<!-- put your configurations here -->
 					<source>1.7</source>
 					<target>1.7</target>
 				</configuration>
@@ -296,9 +314,11 @@
 						<classpathContainers>
 							<classpathContainer>
 								org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/Java
-								7
+								SE 7
 							</classpathContainer>
 						</classpathContainers>
+						<source>1.7</source>
+						<target>1.7</target>
 					</configuration>
 				</plugin>
 			</plugins>
