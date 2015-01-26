@@ -137,6 +137,7 @@ public class PostBuildHubScan extends Recorder {
     }
 
     // http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }
@@ -149,14 +150,14 @@ public class PostBuildHubScan extends Recorder {
     /**
      * Overrides the Recorder perform method. This is the method that gets called by Jenkins to run as a Post Build
      * Action
-     *
+     * 
      * @param build
      *            AbstractBuild
      * @param launcher
      *            Launcher
      * @param listener
      *            BuildListener
-     *
+     * 
      * @throws IOException
      * @throws InterruptedException
      */
@@ -325,7 +326,7 @@ public class PostBuildHubScan extends Recorder {
      * Validates that the target of the scanJob exists, creates a ProcessBuilder to run the shellscript and passes in
      * the necessarry arguments, sets the JAVA_HOME of the Process Builder to the one that the User chose, starts the
      * process and prints out all stderr and stdout to the Console Output.
-     *
+     * 
      * @param build
      *            AbstractBuild
      * @param launcher
@@ -336,7 +337,7 @@ public class PostBuildHubScan extends Recorder {
      *            FilePath
      * @param scanTargets
      *            List<String>
-     *
+     * 
      * @throws IOException
      * @throws HubConfigurationException
      * @throws InterruptedException
@@ -521,7 +522,7 @@ public class PostBuildHubScan extends Recorder {
 
     /**
      * Sets the Java Home that is to be used for running the Shell script
-     *
+     * 
      * @param build
      *            AbstractBuild
      * @param listener
@@ -563,14 +564,14 @@ public class PostBuildHubScan extends Recorder {
      * Looks through the ScanInstallations to find the one that the User chose, then looks for the scan.cli.sh in the
      * bin folder of the directory defined by the Installation.
      * It then checks that the File exists.
-     *
+     * 
      * @param iScanTools
      *            IScanInstallation[] User defined iScan installations
      * @param listener
      *            BuildListener
      * @param build
      *            AbstractBuild
-     *
+     * 
      * @return File the scan.cli.sh
      * @throws IScanToolMissingException
      * @throws IOException
@@ -592,6 +593,11 @@ public class PostBuildHubScan extends Recorder {
             if (iScan.getName().equals(getScanName())) {
                 if (iScan.getExists(node.getChannel(), listener)) {
                     iScanExec = iScan.getCLI(node.getChannel());
+                    if (iScanExec == null) {
+                        // Should not get here unless there are no iScan Installations defined
+                        // But we check this just in case
+                        throw new HubConfigurationException("You need to select which BlackDuck Scan installation to use.");
+                    }
                     listener.getLogger().println(
                             "[DEBUG] : Using this BlackDuck Scan CLI at : " + iScanExec.getRemote());
                 } else {
@@ -611,14 +617,14 @@ public class PostBuildHubScan extends Recorder {
     /**
      * Validates that the Plugin is configured correctly. Checks that the User has defined an iScan tool, a Hub server
      * URL, a Credential, and that there are at least one scan Target/Job defined in the Build
-     *
+     * 
      * @param iScanTools
      *            IScanInstallation[] User defined iScan installations
      * @param scans
      *            IScanJobs[] the iScan jobs defined in the Job config
-     *
+     * 
      * @return True if everything is configured correctly
-     *
+     * 
      * @throws IScanToolMissingException
      * @throws HubConfigurationException
      */
@@ -644,14 +650,14 @@ public class PostBuildHubScan extends Recorder {
 
     /**
      * Validates that all scan targets exist
-     *
+     * 
      * @param listener
      *            BuildListener
      * @param channel
      *            VirtualChannel
      * @param scanTargets
      *            List<String>
-     *
+     * 
      * @return
      * @throws IOException
      * @throws HubConfigurationException
