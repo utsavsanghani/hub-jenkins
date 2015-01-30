@@ -268,8 +268,8 @@
 				<version>3.1</version>
 				<configuration>
 					<!-- put your configurations here -->
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>1.6</source>
+					<target>1.6</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -314,11 +314,11 @@
 						<classpathContainers>
 							<classpathContainer>
 								org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/Java
-								SE 7
+								SE 6
 							</classpathContainer>
 						</classpathContainers>
-						<source>1.7</source>
-						<target>1.7</target>
+						<source>1.6</source>
+						<target>1.6</target>
 					</configuration>
 				</plugin>
 			</plugins>

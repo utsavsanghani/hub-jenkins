@@ -1,6 +1,7 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
 import hudson.EnvVars;
+import hudson.ExtensionList;
 import hudson.ProxyConfiguration;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Descriptor;
@@ -130,7 +131,7 @@ public class IntegrationTest {
         Jenkins jenkins = j.jenkins;
 
         ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
-
+       
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
 

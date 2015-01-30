@@ -24,7 +24,12 @@ import org.kohsuke.stapler.StaplerRequest;
 
 public class ScanInstallation extends ToolInstallation implements NodeSpecific<ScanInstallation>, EnvironmentSpecific<ScanInstallation> {
 
-    @DataBoundConstructor
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	@DataBoundConstructor
     public ScanInstallation(String name, String home, List<? extends ToolProperty<?>> properties) {
         super(name, home, properties);
     }
@@ -139,7 +144,7 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
     }
 
     @Extension
-    public static final class IScanDescriptor extends ToolDescriptor<ScanInstallation> {
+    public static class IScanDescriptor extends ToolDescriptor<ScanInstallation> {
 
         private ScanInstallation[] installations = new ScanInstallation[0];
 
