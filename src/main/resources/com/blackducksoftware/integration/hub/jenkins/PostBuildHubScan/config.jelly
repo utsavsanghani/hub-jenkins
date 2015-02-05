@@ -21,7 +21,7 @@
 <f:block>
 	<f:repeatable field="scans" add="${%AddScan}" minimum="1">
 		<table style="width:100%" id="hubBlackDuckTable">
-				<f:entry title="${%ScanTarget}" field="scanTarget">
+				<f:entry title="${%ScanTarget}" field="scanTarget" help="/plugin/hub-jenkins/help/help-scanTarget.html">
               		<f:textbox/>
             	</f:entry>
       	</table>
