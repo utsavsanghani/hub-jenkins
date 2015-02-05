@@ -46,6 +46,22 @@ public class Messages {
     }
 
     /**
+     * Could not find the Project with the Name : {0}
+     * 
+     */
+    public static String HubBuildScan_getCouldNotFindProject_0_(Object arg1) {
+        return holder.format("HubBuildScan_getCouldNotFindProject_0_", arg1);
+    }
+
+    /**
+     * Could not find the Project with the Name : {0}
+     * 
+     */
+    public static Localizable _HubBuildScan_getCouldNotFindProject_0_(Object arg1) {
+        return new Localizable(holder, "HubBuildScan_getCouldNotFindProject_0_", arg1);
+    }
+
+    /**
      * This Project exists on the Hub Server : {0}
      * 
      */
@@ -190,6 +206,54 @@ public class Messages {
     }
 
     /**
+     * This Project does not exist or there is a problem connecting to the Hub server
+     * 
+     */
+    public static String HubBuildScan_getProjectNonExistingOrTroubleConnecting_() {
+        return holder.format("HubBuildScan_getProjectNonExistingOrTroubleConnecting_");
+    }
+
+    /**
+     * This Project does not exist or there is a problem connecting to the Hub server
+     * 
+     */
+    public static Localizable _HubBuildScan_getProjectNonExistingOrTroubleConnecting_() {
+        return new Localizable(holder, "HubBuildScan_getProjectNonExistingOrTroubleConnecting_");
+    }
+
+    /**
+     * The Project Name contains a variable. The Name will be resolved and handled during the build.
+     * 
+     */
+    public static String HubBuildScan_getProjectNameContainsVariable() {
+        return holder.format("HubBuildScan_getProjectNameContainsVariable");
+    }
+
+    /**
+     * The Project Name contains a variable. The Name will be resolved and handled during the build.
+     * 
+     */
+    public static Localizable _HubBuildScan_getProjectNameContainsVariable() {
+        return new Localizable(holder, "HubBuildScan_getProjectNameContainsVariable");
+    }
+
+    /**
+     * The Project Version contains a variable. The Version will be resolved and handled during the build.
+     * 
+     */
+    public static String HubBuildScan_getProjectVersionContainsVariable() {
+        return holder.format("HubBuildScan_getProjectVersionContainsVariable");
+    }
+
+    /**
+     * The Project Version contains a variable. The Version will be resolved and handled during the build.
+     * 
+     */
+    public static Localizable _HubBuildScan_getProjectVersionContainsVariable() {
+        return new Localizable(holder, "HubBuildScan_getProjectVersionContainsVariable");
+    }
+
+    /**
      * Could not connect to the Hub server with the Given Url and credentials. Error Code:  {0}
      * 
      */
@@ -219,6 +283,22 @@ public class Messages {
      */
     public static Localizable _HubBuildScan_getVersionExistsIn_0_(Object arg1) {
         return new Localizable(holder, "HubBuildScan_getVersionExistsIn_0_", arg1);
+    }
+
+    /**
+     * The Project Name or Version contains a variable. They will be resolved and handled during the build.
+     * 
+     */
+    public static String HubBuildScan_getProjectNameOrVersionContainsVariable() {
+        return holder.format("HubBuildScan_getProjectNameOrVersionContainsVariable");
+    }
+
+    /**
+     * The Project Name or Version contains a variable. They will be resolved and handled during the build.
+     * 
+     */
+    public static Localizable _HubBuildScan_getProjectNameOrVersionContainsVariable() {
+        return new Localizable(holder, "HubBuildScan_getProjectNameOrVersionContainsVariable");
     }
 
     /**

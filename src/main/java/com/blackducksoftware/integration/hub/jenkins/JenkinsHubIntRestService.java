@@ -252,39 +252,47 @@ public class JenkinsHubIntRestService {
         }
     }
 
-    // TODO
-    // public String getProjectId(String hubProjectName) throws IOException, BDRestException {
-    //
-    // String url = getBaseUrl() + "/api/v1/projects/name/" + hubProjectName + "?projectName=" + hubProjectName;
-    // ClientResource resource = createClientResource(url);
-    //
-    // resource.getRequest().setCookies(getCookies());
-    // resource.setMethod(Method.GET);
-    // resource.get();
-    // int responseCode = resource.getResponse().getStatus().getCode();
-    //
-    // HashMap<String, Object> responseMap = new HashMap<String, Object>();
-    // if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-    // Response resp = resource.getResponse();
-    // Reader reader = resp.getEntity().getReader();
-    // BufferedReader bufReader = new BufferedReader(reader);
-    // StringBuilder sb = new StringBuilder();
-    // String line = bufReader.readLine();
-    // while (line != null) {
-    // sb.append(line + "\n");
-    // line = bufReader.readLine();
-    // }
-    // bufReader.close();
-    // byte[] mapData = sb.toString().getBytes();
-    // // Create HashMap from the Rest response
-    // ObjectMapper responseMapper = new ObjectMapper();
-    // responseMap = responseMapper.readValue(mapData, HashMap.class);
-    // } else {
-    // throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
-    // }
-    // // TODO parse the response and Return the project Id
-    // return null;
-    // }
+    public String getProjectId(String hubProjectName) throws IOException, BDRestException {
+
+        String url = getBaseUrl() + "/api/v1/projects?name=" + hubProjectName;
+        ClientResource resource = createClientResource(url);
+        try {
+            resource.getRequest().setCookies(getCookies());
+            resource.setMethod(Method.GET);
+            resource.get();
+            int responseCode = resource.getResponse().getStatus().getCode();
+
+            HashMap<String, Object> responseMap = new HashMap<String, Object>();
+            if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+                Response resp = resource.getResponse();
+                Reader reader = resp.getEntity().getReader();
+                BufferedReader bufReader = new BufferedReader(reader);
+                StringBuilder sb = new StringBuilder();
+                String line = bufReader.readLine();
+                while (line != null) {
+                    sb.append(line + "\n");
+                    line = bufReader.readLine();
+                }
+                bufReader.close();
+                byte[] mapData = sb.toString().getBytes();
+                // Create HashMap from the Rest response
+                ObjectMapper responseMapper = new ObjectMapper();
+                responseMap = responseMapper.readValue(mapData, HashMap.class);
+
+                if (!responseMap.containsKey("id")) {
+                    // The Hub Api has changed and we received a JSON response that we did not expect
+                    throw new BDRestException(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
+                } else {
+                    return (String) responseMap.get("id");
+                }
+
+            } else {
+                throw new BDRestException(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_());
+            }
+        } catch (ResourceException e) {
+            throw new BDRestException(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_(), e);
+        }
+    }
 
     /**
      * Gets the scan Id for each scan target, it searches the list of scans and gets the latest scan id for the scan

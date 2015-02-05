@@ -1,6 +1,8 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
 import hudson.Extension;
+import hudson.Plugin;
+import hudson.PluginWrapper;
 import hudson.ProxyConfiguration;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.AbstractProject;
@@ -33,6 +35,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -66,8 +69,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private HubServerInfo hubServerInfo;
 
-    private String projectId;
-
     /**
      * In order to load the persisted global configuration, you have to call
      * load() in the constructor.
@@ -92,21 +93,18 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         this.hubServerInfo = hubServerInfo;
     }
 
-    public String getProjectId() {
-        if (projectId != null) {
-            return projectId;
-        } else {
-            // TODO When we get the api for this
-            // JenkinsHubIntRestService service = new JenkinsHubIntRestService();
-            // return service.getProjectId(getProjectName());
-            return projectId;
-        }
-
+    public String getPluginVersion() {
+        Plugin p = Jenkins.getInstance().getPlugin("hub-jenkins");
+        PluginWrapper pw = p.getWrapper();
+        return pw.getVersion();
     }
 
-    public void setProjectId(String projectId) {
-        this.projectId = projectId;
-        save(); // save the configuration whenever this field changes or else the config doesn't get updated correctly
+    public String getDefaultProjectName() {
+        return "${JOB_NAME}";
+    }
+
+    public String getDefaultProjectVersion() {
+        return "<unnamed>";
     }
 
     public void setupService(JenkinsHubIntRestService service) {
@@ -308,13 +306,17 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     .getContextClassLoader();
             boolean changed = false;
             try {
-                setProjectId(null);
                 if (StringUtils.isEmpty(getHubServerUrl())) {
                     return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
                 }
                 if (StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
                     return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
                 }
+                if (hubProjectName.matches("(\\$\\{.*\\}){1,}")) {
+                    return FormValidation
+                            .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
+                }
+
                 String credentialUserName = null;
                 String credentialPassword = null;
 
@@ -350,7 +352,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     if (projIds.size() > 1) {
                         return FormValidation.warning(Messages.HubBuildScan_getProjectExistsWithDuplicateMatches_0_(getHubServerUrl()));
                     } else if (projIds.size() == 1) {
-                        setProjectId(projIds.get(0));
                         return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getHubServerUrl()));
                     } else {
                         return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getHubServerUrl(), projectMatches.toString()));
@@ -392,21 +393,23 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion) throws IOException, ServletException {
+    public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion,
+            @QueryParameter("hubProjectName") final String hubProjectName) throws IOException, ServletException {
         if (hubProjectVersion.length() > 0) {
 
             ClassLoader originalClassLoader = Thread.currentThread()
                     .getContextClassLoader();
             boolean changed = false;
             try {
-                if (StringUtils.isEmpty(getProjectId())) {
-                    return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(null, null));
-                }
                 if (StringUtils.isEmpty(getHubServerUrl())) {
                     return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
                 }
                 if (StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
                     return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
+                }
+                if (hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
+                    return FormValidation
+                            .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
                 }
 
                 String credentialUserName = null;
@@ -423,7 +426,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 service.setBaseUrl(getHubServerUrl());
                 service.setCookies(credentialUserName, credentialPassword);
                 String idToUse = null;
-                idToUse = getProjectId();
+                try {
+                    idToUse = service.getProjectId(hubProjectName);
+                } catch (BDRestException e) {
+                    return FormValidation.error(e.getMessage());
+                }
 
                 HashMap<String, Object> responseMap = service.getVersionMatchesForProjectId(idToUse);
                 StringBuilder projectVersions = new StringBuilder();
@@ -571,11 +578,16 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         boolean changed = false;
         try {
             save();
+
             if (StringUtils.isEmpty(hubProjectName)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
             }
             if (StringUtils.isEmpty(hubProjectVersion)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
+            }
+            if (hubProjectName.matches("(\\$\\{.*\\}){1,}") || hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
+                return FormValidation
+                        .warning(Messages.HubBuildScan_getProjectNameOrVersionContainsVariable());
             }
             // Check if the Project with the given name exists or not before creating it
             FormValidation projectNameCheck = doCheckHubProjectName(hubProjectName);
@@ -587,7 +599,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 // Project exists for given name
                 projectExists = true;
                 // Check if the Version for the given Project exists or not before creating it
-                FormValidation projectVersionCheck = doCheckHubProjectVersion(hubProjectVersion);
+                FormValidation projectVersionCheck = doCheckHubProjectVersion(hubProjectVersion, hubProjectName);
                 String versionNonExistentMessage = Messages.HubBuildScan_getVersionNonExistingIn_0_(null, null);
                 versionNonExistentMessage = versionNonExistentMessage.substring(0, 52);
                 if (FormValidation.Kind.OK.equals(projectVersionCheck.kind)) {
@@ -614,18 +626,22 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             service.setBaseUrl(getHubServerUrl());
             service.setCookies(credentialUserName, credentialPassword);
 
+            String projectId = null;
             if (!projectExists) {
                 HashMap<String, Object> responseMap = service.createHubProject(hubProjectName);
-                if (responseMap.containsKey("id")) {
-                    String id = (String) responseMap.get("id");
-                    setProjectId(id);
-                } else {
+                if (!responseMap.containsKey("id")) {
                     // The Hub Api has changed and we received a JSON response that we did not expect
                     return FormValidation.error(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
+                } else {
+                    projectId = (String) responseMap.get("id");
                 }
             }
+            if (projectId == null) {
+                projectId = service.getProjectId(hubProjectName);
+            }
+
             int responseCode = 0;
-            responseCode = service.createHubVersion(hubProjectVersion, getProjectId());
+            responseCode = service.createHubVersion(hubProjectVersion, projectId);
             if (responseCode == 201) {
                 return FormValidation.ok(Messages.HubBuildScan_getProjectAndVersionCreated());
             } else if (responseCode == 412) {

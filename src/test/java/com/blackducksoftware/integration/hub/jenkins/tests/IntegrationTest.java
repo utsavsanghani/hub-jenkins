@@ -439,10 +439,7 @@ public class IntegrationTest {
         Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
         Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
         Assert.assertTrue(buildOutputList
-                .contains("com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException: The specified Project could not be found."));
-        Assert.assertTrue(buildOutputList
-                .contains(
-                "ERROR: com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException: The specified Project could not be found."));
+                .contains("ERROR: The specified Project could not be found. "));
         Assert.assertTrue(listContainsSubString(buildOutputList, "Build step 'Black Duck Hub Integration' changed build result to UNSTABLE"));
         Assert.assertTrue(listContainsSubString(buildOutputList, "Finished: UNSTABLE"));
 

@@ -1,5 +1,7 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
@@ -45,8 +47,6 @@ public class PostBuildScanDescriptorTest {
     private static JenkinsHubIntTestHelper restHelper;
 
     private static PostBuildScanDescriptor descriptor;
-
-    private static String projectId;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -169,7 +169,7 @@ public class PostBuildScanDescriptorTest {
 
         try {
             FormValidation form = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
-            projectId = descriptor.getProjectId();
+
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
             Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectAndVersionCreated());
 
@@ -180,11 +180,11 @@ public class PostBuildScanDescriptorTest {
             Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
             Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectExistsIn_0_(testProperties.getProperty("TEST_HUB_SERVER_URL")));
 
-            FormValidation form3 = descriptor.doCheckHubProjectVersion(PROJECT_RELEASE_EXISTING);
-            Assert.assertEquals(FormValidation.Kind.OK, form3.kind);
-            Assert.assertEquals(form3.getMessage(), Messages.HubBuildScan_getVersionExistsIn_0_(projectId));
+            FormValidation form3 = descriptor.doCheckHubProjectVersion(PROJECT_RELEASE_EXISTING, PROJECT_NAME_EXISTING);
+            assertEquals(FormValidation.Kind.OK, form3.kind);
+            assertTrue(form3.getMessage().contains(Messages.HubBuildScan_getVersionExistsIn_0_(null).substring(0, 42)));
         } finally {
-            restHelper.deleteHubProject(projectId);
+            restHelper.deleteHubProject(restHelper.getProjectId(PROJECT_NAME_EXISTING));
         }
 
     }
@@ -208,7 +208,6 @@ public class PostBuildScanDescriptorTest {
         try {
             Thread.sleep(3000);
             FormValidation form = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
-            projectId = descriptor.getProjectId();
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
             Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectAndVersionCreated());
             Thread.sleep(3000);
@@ -216,7 +215,7 @@ public class PostBuildScanDescriptorTest {
             Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
             Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectAndVersionCreated());
         } finally {
-            restHelper.deleteHubProject(projectId);
+            restHelper.deleteHubProject(restHelper.getProjectId(PROJECT_NAME_EXISTING));
         }
     }
 
@@ -240,7 +239,6 @@ public class PostBuildScanDescriptorTest {
         try {
             Thread.sleep(3000);
             FormValidation form = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
-            projectId = descriptor.getProjectId();
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
             Assert.assertEquals(Messages.HubBuildScan_getProjectAndVersionCreated(), form.getMessage());
             Thread.sleep(3000);
@@ -248,7 +246,7 @@ public class PostBuildScanDescriptorTest {
             Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
             Assert.assertEquals(Messages.HubBuildScan_getProjectAndVersionExist(), form2.getMessage());
         } finally {
-            restHelper.deleteHubProject(projectId);
+            restHelper.deleteHubProject(restHelper.getProjectId(PROJECT_NAME_EXISTING));
         }
     }
 
@@ -293,15 +291,14 @@ public class PostBuildScanDescriptorTest {
 
         try {
             FormValidation form = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING);
-            projectId = descriptor.getProjectId();
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
             Assert.assertEquals(Messages.HubBuildScan_getProjectAndVersionCreated(), form.getMessage());
             Thread.sleep(2000);
-            FormValidation form2 = descriptor.doCheckHubProjectVersion(PROJECT_RELEASE_NOT_EXISTING);
+            FormValidation form2 = descriptor.doCheckHubProjectVersion(PROJECT_RELEASE_NOT_EXISTING, PROJECT_NAME_EXISTING);
             Assert.assertEquals(FormValidation.Kind.ERROR, form2.kind);
             Assert.assertTrue(form2.getMessage().contains(Messages.HubBuildScan_getVersionNonExistingIn_0_(null, null).substring(0, 52)));
         } finally {
-            restHelper.deleteHubProject(projectId);
+            restHelper.deleteHubProject(restHelper.getProjectId(PROJECT_NAME_EXISTING));
         }
     }
 
@@ -322,9 +319,9 @@ public class PostBuildScanDescriptorTest {
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         descriptor.setHubServerInfo(hubServerInfo);
 
-        FormValidation form = descriptor.doCheckHubProjectVersion(PROJECT_RELEASE_EXISTING);
+        FormValidation form = descriptor.doCheckHubProjectVersion(PROJECT_RELEASE_EXISTING, PROJECT_NAME_EXISTING);
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getVersionNonExistingIn_0_(null, null));
+        Assert.assertEquals(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_(), form.getMessage());
     }
 
     @Test

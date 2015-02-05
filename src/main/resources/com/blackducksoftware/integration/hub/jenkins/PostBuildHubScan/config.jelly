@@ -3,11 +3,11 @@
 		for a general discussion about jelly script. -->
 		
 <f:entry field="hubProjectName" title="${%ProjectNameTitle}">
-	<f:textbox value="${it.getHubProjectName()}"/>
+	<f:textbox value="${it.getHubProjectName()}" default="${descriptor.getDefaultProjectName()}"/>
 </f:entry>
 
 <f:entry field="hubProjectVersion" title="${%ProjectVersionTitle}">
-	<f:textbox value="${it.getHubProjectVersion()}"/>
+	<f:textbox value="${it.getHubProjectVersion()}" default="${descriptor.getDefaultProjectVersion()}"/>
 </f:entry>
 <f:validateButton title="${%CreateProject}" progress="${%CreateProjectProgress}"
          method="createHubProject" with="hubProjectName,hubProjectVersion" />

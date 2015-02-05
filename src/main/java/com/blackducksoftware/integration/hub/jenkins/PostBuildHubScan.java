@@ -4,6 +4,7 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
+import hudson.Util;
 import hudson.ProxyConfiguration;
 import hudson.model.BuildListener;
 import hudson.model.Result;
@@ -229,32 +230,50 @@ public class PostBuildHubScan extends Recorder {
                             scanTargets.add(target);
                         }
                     }
+                    String projectName = null;
+                    String projectVersion = null;
+
+                    if (!StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectVersion())) {
+                        EnvVars variables = build.getEnvironment(listener);
+
+                        projectName = handleVariableReplacement(build, listener, variables, getHubProjectName());
+                        projectVersion = handleVariableReplacement(build, listener, variables, getHubProjectVersion());
+
+                    }
+
+                    printConfiguration(build, listener, projectName, projectVersion, scanTargets);
+
                     runScan(build, launcher, listener, iScanExec, scanTargets);
 
                     // Only map the scans to a Project Version if the Project name and Project Version have been
                     // configured
-                    if (getResult().equals(Result.SUCCESS) && !StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectName())) {
+                    if (getResult().equals(Result.SUCCESS) && !StringUtils.isEmpty(projectName) && !StringUtils.isEmpty(projectVersion)) {
                         // Wait 5 seconds for the scans to be recognized in the Hub server
                         listener.getLogger().println("Waiting a few seconds for the scans to be recognized by the Hub server.");
                         Thread.sleep(5000);
 
-                        doScanMapping(build, listener, scanTargets);
+                        doScanMapping(build, listener, projectName, projectVersion, scanTargets);
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace(listener.getLogger());
                 String message;
-                if (e.getCause() != null && e.getCause().getCause() != null) {
-                    message = e.getCause().getCause().toString();
-                } else if (e.getCause() != null) {
-                    message = e.getCause().toString();
+                if (e.getMessage().contains("Project could not be found")) {
+                    message = e.getMessage();
                 } else {
-                    message = e.toString();
-                }
-                if (message.toLowerCase().contains("service unavailable")) {
-                    message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getDescriptor().getHubServerInfo().getServerUrl());
-                } else if (message.toLowerCase().contains("precondition failed")) {
-                    message = message + ", Check your configuration.";
+
+                    if (e.getCause() != null && e.getCause().getCause() != null) {
+                        message = e.getCause().getCause().toString();
+                    } else if (e.getCause() != null) {
+                        message = e.getCause().toString();
+                    } else {
+                        message = e.toString();
+                    }
+                    if (message.toLowerCase().contains("service unavailable")) {
+                        message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getDescriptor().getHubServerInfo().getServerUrl());
+                    } else if (message.toLowerCase().contains("precondition failed")) {
+                        message = message + ", Check your configuration.";
+                    }
                 }
                 listener.error(message);
                 setResult(Result.UNSTABLE);
@@ -267,25 +286,25 @@ public class PostBuildHubScan extends Recorder {
         return true;
     }
 
-    private void doScanMapping(AbstractBuild build, BuildListener listener, List<String> scanTargets) throws IOException, BDRestException,
+    private void doScanMapping(AbstractBuild build, BuildListener listener, String projectName, String projectVersion, List<String> scanTargets)
+            throws IOException, BDRestException,
             BDJenkinsHubPluginException,
             InterruptedException {
         JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
-        ArrayList<String> projectId = null;
-        String projectIdToUse = null;
+        String projectId = null;
         String versionId = null;
-        ArrayList<LinkedHashMap<String, Object>> projectMatchesResponse = service.getProjectMatches(getHubProjectName());
-        projectId = service.getProjectIdsFromProjectMatches(projectMatchesResponse, getHubProjectName());
-        if (projectId == null || projectId.isEmpty()) {
-            throw new BDJenkinsHubPluginException("The specified Project could not be found.");
-        } else if (projectId.size() > 1) {
-            throw new BDJenkinsHubPluginException("More than one Project was found with the same name.");
+        try {
+            projectId = service.getProjectId(projectName);
+        } catch (BDRestException e) {
+            throw new BDJenkinsHubPluginException("The specified Project could not be found. ", e);
         }
-        listener.getLogger().println("[DEBUG] Project Id: '" + projectId.get(0) + "'");
-        projectIdToUse = projectId.get(0);
+        if (StringUtils.isEmpty(projectId)) {
+            throw new BDJenkinsHubPluginException("The specified Project could not be found.");
+        }
+        listener.getLogger().println("[DEBUG] Project Id: '" + projectId + "'");
 
-        LinkedHashMap<String, Object> versionMatchesResponse = service.getVersionMatchesForProjectId(projectIdToUse);
-        versionId = service.getVersionIdFromMatches(versionMatchesResponse, getHubProjectVersion());
+        LinkedHashMap<String, Object> versionMatchesResponse = service.getVersionMatchesForProjectId(projectId);
+        versionId = service.getVersionIdFromMatches(versionMatchesResponse, projectVersion);
         listener.getLogger().println("[DEBUG] Version Id: '" + versionId + "'");
         if (StringUtils.isEmpty(versionId)) {
             throw new BDJenkinsHubPluginException("The specified Version could not be found in the Project.");
@@ -327,6 +346,59 @@ public class PostBuildHubScan extends Recorder {
         service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
                 getDescriptor().getHubServerInfo().getPassword());
         return service;
+    }
+
+    /**
+     *
+     * @param build
+     *            AbstractBuild
+     * @param variables
+     *            Map of variables
+     * @param value
+     *            String to check for variables
+     * @return the new Value with the variables replaced
+     */
+    public String handleVariableReplacement(AbstractBuild build, BuildListener listener, Map<String, String> variables, String value) {
+        if (value != null) {
+
+            String newValue = Util.replaceMacro(value, variables);
+
+            if (newValue.contains("$")) {
+                listener.error("Variable was not properly replaced. Value : " + value + ", Result : " + newValue);
+                listener.error("Make sure the variable has been properly defined.");
+                build.setResult(Result.UNSTABLE);
+            }
+            return newValue;
+        } else {
+            return null;
+        }
+    }
+
+    public void printConfiguration(AbstractBuild build, BuildListener listener, String projectName, String projectVersion, List<String> scanTargets)
+            throws IOException,
+            InterruptedException {
+        listener.getLogger().println(
+                "Initializing - Hub Jenkins Plugin - "
+                        + getDescriptor().getPluginVersion());
+        listener.getLogger().println("-> Running on : " + build.getBuiltOn().getChannel().call(new GetHostName()));
+        listener.getLogger().println("-> Using Url : " + getDescriptor().getHubServerInfo().getServerUrl());
+        listener.getLogger().println("-> Using Username : " + getDescriptor().getHubServerInfo().getUsername());
+        listener.getLogger().println(
+                "-> Using Build Full Name : " + build.getFullDisplayName());
+        listener.getLogger().println(
+                "-> Using Build Number : " + build.getNumber());
+        listener.getLogger().println(
+                "-> Using Build Workspace Path : "
+                        + build.getWorkspace().getRemote());
+        listener.getLogger().println(
+                "-> Using Hub Project Name : " + projectName + ", Version : " + projectVersion);
+
+        listener.getLogger().println(
+                "-> Scanning the following targets  : ");
+        for (String target : scanTargets) {
+            listener.getLogger().println(
+                    "-> " + target);
+        }
     }
 
     /**
