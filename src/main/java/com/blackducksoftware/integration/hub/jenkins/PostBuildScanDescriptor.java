@@ -384,23 +384,23 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     /**
-     * Performs on-the-fly validation of the form field 'hubProjectRelease'. Checks to see if there is already a project
+     * Performs on-the-fly validation of the form field 'hubProjectVersion'. Checks to see if there is already a project
      * in the Hub with this name.
      *
-     * @param hubProjectRelease
-     *            This parameter receives the value that the user has typed for the Release.
+     * @param hubProjectVersion
+     *            This parameter receives the value that the user has typed for the Version.
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckHubProjectRelease(@QueryParameter("hubProjectRelease") final String hubProjectRelease) throws IOException, ServletException {
-        if (hubProjectRelease.length() > 0) {
+    public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion) throws IOException, ServletException {
+        if (hubProjectVersion.length() > 0) {
 
             ClassLoader originalClassLoader = Thread.currentThread()
                     .getContextClassLoader();
             boolean changed = false;
             try {
                 if (StringUtils.isEmpty(getProjectId())) {
-                    return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null));
+                    return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(null, null));
                 }
                 if (StringUtils.isEmpty(getHubServerUrl())) {
                     return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
@@ -425,18 +425,18 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 String idToUse = null;
                 idToUse = getProjectId();
 
-                HashMap<String, Object> responseMap = service.getReleaseMatchesForProjectId(idToUse);
-                StringBuilder projectReleases = new StringBuilder();
+                HashMap<String, Object> responseMap = service.getVersionMatchesForProjectId(idToUse);
+                StringBuilder projectVersions = new StringBuilder();
                 if (responseMap.containsKey("items")) {
-                    ArrayList<LinkedHashMap> releaseList = (ArrayList<LinkedHashMap>) responseMap.get("items");
-                    for (LinkedHashMap release : releaseList) {
-                        if (((String) release.get("version")).equals(hubProjectRelease)) {
-                            return FormValidation.ok(Messages.HubBuildScan_getReleaseExistsIn_0_(idToUse));
+                    ArrayList<LinkedHashMap> versionList = (ArrayList<LinkedHashMap>) responseMap.get("items");
+                    for (LinkedHashMap release : versionList) {
+                        if (((String) release.get("version")).equals(hubProjectVersion)) {
+                            return FormValidation.ok(Messages.HubBuildScan_getVersionExistsIn_0_(idToUse));
                         } else {
-                            if (projectReleases.length() > 0) {
-                                projectReleases.append(", " + ((String) release.get("version")));
+                            if (projectVersions.length() > 0) {
+                                projectVersions.append(", " + ((String) release.get("version")));
                             } else {
-                                projectReleases.append((String) release.get("version"));
+                                projectVersions.append((String) release.get("version"));
                             }
                         }
                     }
@@ -444,7 +444,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     // The Hub Api has changed and we received a JSON response that we did not expect
                     return FormValidation.error(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
                 }
-                return FormValidation.error(Messages.HubBuildScan_getReleaseNonExistingIn_0_(idToUse, projectReleases.toString()));
+                return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(idToUse, projectVersions.toString()));
             } catch (Exception e) {
                 String message;
                 if (e.getCause() != null && e.getCause().getCause() != null) {
@@ -565,7 +565,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @throws ServletException
      */
     public FormValidation doCreateHubProject(@QueryParameter("hubProjectName") final String hubProjectName,
-            @QueryParameter("hubProjectRelease") final String hubProjectRelease) {
+            @QueryParameter("hubProjectVersion") final String hubProjectVersion) {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -574,8 +574,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             if (StringUtils.isEmpty(hubProjectName)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
             }
-            if (StringUtils.isEmpty(hubProjectRelease)) {
-                return FormValidation.error(Messages.HubBuildScan_getProvideProjectRelease());
+            if (StringUtils.isEmpty(hubProjectVersion)) {
+                return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
             }
             // Check if the Project with the given name exists or not before creating it
             FormValidation projectNameCheck = doCheckHubProjectName(hubProjectName);
@@ -586,14 +586,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     || (FormValidation.Kind.WARNING.equals(projectNameCheck.kind))) {
                 // Project exists for given name
                 projectExists = true;
-                // Check if the Release for the given Project exists or not before creating it
-                FormValidation projectReleaseCheck = doCheckHubProjectRelease(hubProjectRelease);
-                String releaseNonExistentMessage = Messages.HubBuildScan_getReleaseNonExistingIn_0_(null, null);
-                releaseNonExistentMessage = releaseNonExistentMessage.substring(0, 52);
-                if (FormValidation.Kind.OK.equals(projectReleaseCheck.kind)) {
-                    return FormValidation.warning(Messages.HubBuildScan_getProjectAndReleaseExist());
-                } else if (!FormValidation.Kind.ERROR.equals(projectReleaseCheck.kind) && !projectReleaseCheck.getMessage().contains(releaseNonExistentMessage)) {
-                    return FormValidation.error(projectReleaseCheck.getMessage());
+                // Check if the Version for the given Project exists or not before creating it
+                FormValidation projectVersionCheck = doCheckHubProjectVersion(hubProjectVersion);
+                String versionNonExistentMessage = Messages.HubBuildScan_getVersionNonExistingIn_0_(null, null);
+                versionNonExistentMessage = versionNonExistentMessage.substring(0, 52);
+                if (FormValidation.Kind.OK.equals(projectVersionCheck.kind)) {
+                    return FormValidation.warning(Messages.HubBuildScan_getProjectAndVersionExist());
+                } else if (!FormValidation.Kind.ERROR.equals(projectVersionCheck.kind) && !projectVersionCheck.getMessage().contains(versionNonExistentMessage)) {
+                    return FormValidation.error(projectVersionCheck.getMessage());
                 }
             } else if (!FormValidation.Kind.ERROR.equals(projectNameCheck.kind) && !projectNameCheck.getMessage().contains(projectNonExistentMessage)) {
                 return FormValidation.error(projectNameCheck.getMessage());
@@ -625,12 +625,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
             }
             int responseCode = 0;
-            responseCode = service.createHubRelease(hubProjectRelease, getProjectId());
+            responseCode = service.createHubVersion(hubProjectVersion, getProjectId());
             if (responseCode == 201) {
-                return FormValidation.ok(Messages.HubBuildScan_getProjectAndReleaseCreated());
+                return FormValidation.ok(Messages.HubBuildScan_getProjectAndVersionCreated());
             } else if (responseCode == 412) {
 
-                return FormValidation.error(Messages.HubBuildScan_getProjectReleaseCreationProblem());
+                return FormValidation.error(Messages.HubBuildScan_getProjectVersionCreationProblem());
             } else if (responseCode == 401) {
                 // If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
                 return FormValidation.error(Messages.HubBuildScan_getCredentialsInValidFor_0_(getHubServerUrl()));

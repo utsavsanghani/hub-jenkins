@@ -6,11 +6,11 @@
 	<f:textbox value="${it.getHubProjectName()}"/>
 </f:entry>
 
-<f:entry field="hubProjectRelease" title="${%ProjectReleaseTitle}">
-	<f:textbox value="${it.getHubProjectRelease()}"/>
+<f:entry field="hubProjectVersion" title="${%ProjectVersionTitle}">
+	<f:textbox value="${it.getHubProjectVersion()}"/>
 </f:entry>
 <f:validateButton title="${%CreateProject}" progress="${%CreateProjectProgress}"
-         method="createHubProject" with="hubProjectName,hubProjectRelease" />
+         method="createHubProject" with="hubProjectName,hubProjectVersion" />
 <f:entry field="scanName" title="${%ScanInstallationsTitle}">
 	<f:select />
 </f:entry>

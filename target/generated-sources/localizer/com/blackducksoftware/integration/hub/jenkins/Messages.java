@@ -78,19 +78,19 @@ public class Messages {
     }
 
     /**
-     * This Release does not exist in the Project with Id : {0}, BUT these releases were found : {1}
+     * The Project and Version specified already exist!
      * 
      */
-    public static String HubBuildScan_getReleaseNonExistingIn_0_(Object arg1, Object arg2) {
-        return holder.format("HubBuildScan_getReleaseNonExistingIn_0_", arg1, arg2);
+    public static String HubBuildScan_getProjectAndVersionExist() {
+        return holder.format("HubBuildScan_getProjectAndVersionExist");
     }
 
     /**
-     * This Release does not exist in the Project with Id : {0}, BUT these releases were found : {1}
+     * The Project and Version specified already exist!
      * 
      */
-    public static Localizable _HubBuildScan_getReleaseNonExistingIn_0_(Object arg1, Object arg2) {
-        return new Localizable(holder, "HubBuildScan_getReleaseNonExistingIn_0_", arg1, arg2);
+    public static Localizable _HubBuildScan_getProjectAndVersionExist() {
+        return new Localizable(holder, "HubBuildScan_getProjectAndVersionExist");
     }
 
     /**
@@ -142,6 +142,22 @@ public class Messages {
     }
 
     /**
+     * Either this Project or Version already exist.
+     * 
+     */
+    public static String HubBuildScan_getProjectVersionCreationProblem() {
+        return holder.format("HubBuildScan_getProjectVersionCreationProblem");
+    }
+
+    /**
+     * Either this Project or Version already exist.
+     * 
+     */
+    public static Localizable _HubBuildScan_getProjectVersionCreationProblem() {
+        return new Localizable(holder, "HubBuildScan_getProjectVersionCreationProblem");
+    }
+
+    /**
      * Please set a Server URL
      * 
      */
@@ -155,54 +171,6 @@ public class Messages {
      */
     public static Localizable _HubBuildScan_getPleaseSetServerUrl() {
         return new Localizable(holder, "HubBuildScan_getPleaseSetServerUrl");
-    }
-
-    /**
-     * Either this Project or Release already exist.
-     * 
-     */
-    public static String HubBuildScan_getProjectReleaseCreationProblem() {
-        return holder.format("HubBuildScan_getProjectReleaseCreationProblem");
-    }
-
-    /**
-     * Either this Project or Release already exist.
-     * 
-     */
-    public static Localizable _HubBuildScan_getProjectReleaseCreationProblem() {
-        return new Localizable(holder, "HubBuildScan_getProjectReleaseCreationProblem");
-    }
-
-    /**
-     * The Project and Release specified already exist!
-     * 
-     */
-    public static String HubBuildScan_getProjectAndReleaseExist() {
-        return holder.format("HubBuildScan_getProjectAndReleaseExist");
-    }
-
-    /**
-     * The Project and Release specified already exist!
-     * 
-     */
-    public static Localizable _HubBuildScan_getProjectAndReleaseExist() {
-        return new Localizable(holder, "HubBuildScan_getProjectAndReleaseExist");
-    }
-
-    /**
-     * This Release exists in the Project with Id : {0}
-     * 
-     */
-    public static String HubBuildScan_getReleaseExistsIn_0_(Object arg1) {
-        return holder.format("HubBuildScan_getReleaseExistsIn_0_", arg1);
-    }
-
-    /**
-     * This Release exists in the Project with Id : {0}
-     * 
-     */
-    public static Localizable _HubBuildScan_getReleaseExistsIn_0_(Object arg1) {
-        return new Localizable(holder, "HubBuildScan_getReleaseExistsIn_0_", arg1);
     }
 
     /**
@@ -238,6 +206,22 @@ public class Messages {
     }
 
     /**
+     * This Version exists in the Project with Id : {0}
+     * 
+     */
+    public static String HubBuildScan_getVersionExistsIn_0_(Object arg1) {
+        return holder.format("HubBuildScan_getVersionExistsIn_0_", arg1);
+    }
+
+    /**
+     * This Version exists in the Project with Id : {0}
+     * 
+     */
+    public static Localizable _HubBuildScan_getVersionExistsIn_0_(Object arg1) {
+        return new Localizable(holder, "HubBuildScan_getVersionExistsIn_0_", arg1);
+    }
+
+    /**
      * The memory provided is not a valid amount
      * 
      */
@@ -251,22 +235,6 @@ public class Messages {
      */
     public static Localizable _HubBuildScan_getInvalidMemoryString() {
         return new Localizable(holder, "HubBuildScan_getInvalidMemoryString");
-    }
-
-    /**
-     * Need to provide a Project release.
-     * 
-     */
-    public static String HubBuildScan_getProvideProjectRelease() {
-        return holder.format("HubBuildScan_getProvideProjectRelease");
-    }
-
-    /**
-     * Need to provide a Project release.
-     * 
-     */
-    public static Localizable _HubBuildScan_getProvideProjectRelease() {
-        return new Localizable(holder, "HubBuildScan_getProvideProjectRelease");
     }
 
     /**
@@ -302,6 +270,22 @@ public class Messages {
     }
 
     /**
+     * The Project and Version have been created!
+     * 
+     */
+    public static String HubBuildScan_getProjectAndVersionCreated() {
+        return holder.format("HubBuildScan_getProjectAndVersionCreated");
+    }
+
+    /**
+     * The Project and Version have been created!
+     * 
+     */
+    public static Localizable _HubBuildScan_getProjectAndVersionCreated() {
+        return new Localizable(holder, "HubBuildScan_getProjectAndVersionCreated");
+    }
+
+    /**
      * This Project exists on the Hub Server : {0}, BUT there are multiple projects with the same name.
      * 
      */
@@ -334,19 +318,19 @@ public class Messages {
     }
 
     /**
-     * The Project and Release have been created!
+     * This Version does not exist in the Project with Id : {0}, BUT these versions were found : {1}
      * 
      */
-    public static String HubBuildScan_getProjectAndReleaseCreated() {
-        return holder.format("HubBuildScan_getProjectAndReleaseCreated");
+    public static String HubBuildScan_getVersionNonExistingIn_0_(Object arg1, Object arg2) {
+        return holder.format("HubBuildScan_getVersionNonExistingIn_0_", arg1, arg2);
     }
 
     /**
-     * The Project and Release have been created!
+     * This Version does not exist in the Project with Id : {0}, BUT these versions were found : {1}
      * 
      */
-    public static Localizable _HubBuildScan_getProjectAndReleaseCreated() {
-        return new Localizable(holder, "HubBuildScan_getProjectAndReleaseCreated");
+    public static Localizable _HubBuildScan_getVersionNonExistingIn_0_(Object arg1, Object arg2) {
+        return new Localizable(holder, "HubBuildScan_getVersionNonExistingIn_0_", arg1, arg2);
     }
 
     /**
@@ -363,6 +347,22 @@ public class Messages {
      */
     public static Localizable _HubBuildScan_getDisplayName() {
         return new Localizable(holder, "HubBuildScan_getDisplayName");
+    }
+
+    /**
+     * Need to provide a Project version.
+     * 
+     */
+    public static String HubBuildScan_getProvideProjectVersion() {
+        return holder.format("HubBuildScan_getProvideProjectVersion");
+    }
+
+    /**
+     * Need to provide a Project version.
+     * 
+     */
+    public static Localizable _HubBuildScan_getProvideProjectVersion() {
+        return new Localizable(holder, "HubBuildScan_getProvideProjectVersion");
     }
 
     /**

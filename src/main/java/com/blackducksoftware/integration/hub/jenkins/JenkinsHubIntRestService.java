@@ -288,14 +288,14 @@ public class JenkinsHubIntRestService {
 
     /**
      * Gets the scan Id for each scan target, it searches the list of scans and gets the latest scan id for the scan
-     * matching the hostname and path. If the matching scans are already mapped to the Release then that id will not be
+     * matching the hostname and path. If the matching scans are already mapped to the Version then that id will not be
      * returned in the list.
      *
      * @param listener
      *            BuildListener
      * @param scanTargets
      *            List<String>
-     * @param releaseId
+     * @param versionId
      *            String
      *
      * @return Map<Boolean, String> scan Ids
@@ -304,7 +304,7 @@ public class JenkinsHubIntRestService {
      * @throws InterruptedException
      * @throws BDRestException
      */
-    public Map<String, Boolean> getScanLocationIds(AbstractBuild build, BuildListener listener, List<String> scanTargets, String releaseId)
+    public Map<String, Boolean> getScanLocationIds(AbstractBuild build, BuildListener listener, List<String> scanTargets, String versionId)
             throws UnknownHostException,
             MalformedURLException, InterruptedException, BDRestException {
         HashMap<String, Boolean> scanLocationIds = new HashMap<String, Boolean>();
@@ -332,20 +332,20 @@ public class JenkinsHubIntRestService {
 
             ScanLocationHandler handler = new ScanLocationHandler(listener);
 
-            handler.getScanLocationIdWithRetry(build, resource, targetPath, releaseId, scanLocationIds);
+            handler.getScanLocationIdWithRetry(build, resource, targetPath, versionId, scanLocationIds);
 
         }
         return scanLocationIds;
     }
 
-    public void mapScansToProjectRelease(BuildListener listener, Map<String, Boolean> scanLocationIds, String releaseId) throws BDRestException,
+    public void mapScansToProjectVersion(BuildListener listener, Map<String, Boolean> scanLocationIds, String versionId) throws BDRestException,
             MalformedURLException {
         if (!scanLocationIds.isEmpty()) {
             for (Entry<String, Boolean> scanId : scanLocationIds.entrySet()) {
                 if (!scanId.getValue()) {
-                    // This scan location has not yet been mapped to the project/release
+                    // This scan location has not yet been mapped to the project/version
                     listener.getLogger().println(
-                            "[DEBUG] Mapping the scan location with id: '" + scanId.getKey() + "', to the Release with Id: '" + releaseId + "'.");
+                            "[DEBUG] Mapping the scan location with id: '" + scanId.getKey() + "', to the Version with Id: '" + versionId + "'.");
                     // FIXME Need to change this to /api/v1/asset-references soon
                     String url = getBaseUrl() + "/api/v1/assetreferences";
                     ClientResource resource = createClientResource(url);
@@ -356,8 +356,8 @@ public class JenkinsHubIntRestService {
                     JSONObject obj = new JSONObject();
 
                     JSONObject ownerEntity = new JSONObject();
-                    ownerEntity.put("entityId", releaseId);
-                    // this is the release location
+                    ownerEntity.put("entityId", versionId);
+                    // this is the version location
                     ownerEntity.put("entityType", "RL");
 
                     JSONObject assetEntity = new JSONObject();
@@ -378,18 +378,18 @@ public class JenkinsHubIntRestService {
                         // Successful mapping
                         listener.getLogger()
                                 .println(
-                                        "[DEBUG] Successfully mapped the scan with id: '" + scanId.getKey() + "', to the Release with Id: '" + releaseId + "'.");
+                                        "[DEBUG] Successfully mapped the scan with id: '" + scanId.getKey() + "', to the Version with Id: '" + versionId + "'.");
                     } else {
                         throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
                     }
                 } else {
                     listener.getLogger().println(
-                            "[DEBUG] The scan location with id: '" + scanId.getKey() + "', is already mapped to the Release with Id: '" + releaseId + "'.");
+                            "[DEBUG] The scan location with id: '" + scanId.getKey() + "', is already mapped to the Version with Id: '" + versionId + "'.");
                 }
             }
         }
         else {
-            listener.getLogger().println("[DEBUG] Could not find any scan Id's to map to the Release.");
+            listener.getLogger().println("[DEBUG] Could not find any scan Id's to map to the Version.");
         }
         // return responseMap;
 
@@ -422,7 +422,7 @@ public class JenkinsHubIntRestService {
         return projectId;
     }
 
-    public LinkedHashMap<String, Object> getReleaseMatchesForProjectId(String projectId) throws IOException, BDRestException {
+    public LinkedHashMap<String, Object> getVersionMatchesForProjectId(String projectId) throws IOException, BDRestException {
 
         String url = getBaseUrl() + "/api/v1/projects/" + projectId + "/releases?limit=30";
         ClientResource resource = createClientResource(url);
@@ -456,19 +456,19 @@ public class JenkinsHubIntRestService {
         return responseMap;
     }
 
-    public String getReleaseIdFromReleaseMatches(LinkedHashMap<String, Object> responseMap, String releaseVersion) throws IOException, BDRestException {
-        String releaseId = null;
+    public String getVersionIdFromMatches(LinkedHashMap<String, Object> responseMap, String releaseVersion) throws IOException, BDRestException {
+        String versionId = null;
 
         if (responseMap.containsKey("items")) {
-            ArrayList<LinkedHashMap<String, Object>> releaseList = (ArrayList<LinkedHashMap<String, Object>>) responseMap.get("items");
-            for (LinkedHashMap<String, Object> release : releaseList) {
+            ArrayList<LinkedHashMap<String, Object>> versionList = (ArrayList<LinkedHashMap<String, Object>>) responseMap.get("items");
+            for (LinkedHashMap<String, Object> release : versionList) {
                 if (((String) release.get("version")).equals(releaseVersion)) {
-                    releaseId = (String) release.get("id");
+                    versionId = (String) release.get("id");
 
                 }
             }
         }
-        return releaseId;
+        return versionId;
     }
 
     public HashMap<String, Object> createHubProject(String projectName) throws IOException, BDRestException {
@@ -518,14 +518,14 @@ public class JenkinsHubIntRestService {
         return responseMap;
     }
 
-    public int createHubRelease(String projectRelease, String projectId) throws IOException, BDRestException {
+    public int createHubVersion(String projectVersion, String projectId) throws IOException, BDRestException {
         String url = getBaseUrl() + "/api/v1/releases";
         ClientResource resource = createClientResource(url);
         int responseCode;
         try {
             JSONObject obj = new JSONObject();
             obj.put("projectId", projectId);
-            obj.put("version", projectRelease);
+            obj.put("version", projectVersion);
             obj.put("phase", "DEVELOPMENT");
             obj.put("distribution", "EXTERNAL");
 

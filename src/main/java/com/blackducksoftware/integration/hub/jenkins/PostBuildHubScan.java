@@ -49,7 +49,11 @@ public class PostBuildHubScan extends Recorder {
 
     private final String hubProjectName;
 
-    private final String hubProjectRelease;
+    private String hubProjectVersion;
+
+    // Old variable, renaming to hubProjectVersion
+    // need to keep this around for now for migration purposes
+    private String hubProjectRelease;
 
     private Integer scanMemory;
 
@@ -64,11 +68,11 @@ public class PostBuildHubScan extends Recorder {
     private boolean test = false;
 
     @DataBoundConstructor
-    public PostBuildHubScan(ScanJobs[] scans, String scanName, String hubProjectName, String hubProjectRelease, String scanMemory) {
+    public PostBuildHubScan(ScanJobs[] scans, String scanName, String hubProjectName, String hubProjectVersion, String scanMemory) {
         this.scans = scans;
         this.scanName = scanName;
         this.hubProjectName = hubProjectName;
-        this.hubProjectRelease = hubProjectRelease;
+        this.hubProjectVersion = hubProjectVersion;
         Integer memory = 0;
         try {
             memory = Integer.valueOf(scanMemory);
@@ -112,8 +116,11 @@ public class PostBuildHubScan extends Recorder {
         return String.valueOf(scanMemory);
     }
 
-    public String getHubProjectRelease() {
-        return hubProjectRelease;
+    public String getHubProjectVersion() {
+        if (hubProjectVersion == null && hubProjectRelease != null) {
+            hubProjectVersion = hubProjectRelease;
+        }
+        return hubProjectVersion;
     }
 
     public String getHubProjectName() {
@@ -150,14 +157,14 @@ public class PostBuildHubScan extends Recorder {
     /**
      * Overrides the Recorder perform method. This is the method that gets called by Jenkins to run as a Post Build
      * Action
-     * 
+     *
      * @param build
      *            AbstractBuild
      * @param launcher
      *            Launcher
      * @param listener
      *            BuildListener
-     * 
+     *
      * @throws IOException
      * @throws InterruptedException
      */
@@ -224,9 +231,9 @@ public class PostBuildHubScan extends Recorder {
                     }
                     runScan(build, launcher, listener, iScanExec, scanTargets);
 
-                    // Only map the scans to a Project Release if the Project name and Project Release have been
+                    // Only map the scans to a Project Version if the Project name and Project Version have been
                     // configured
-                    if (getResult().equals(Result.SUCCESS) && !StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectRelease())) {
+                    if (getResult().equals(Result.SUCCESS) && !StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectName())) {
                         // Wait 5 seconds for the scans to be recognized in the Hub server
                         listener.getLogger().println("Waiting a few seconds for the scans to be recognized by the Hub server.");
                         Thread.sleep(5000);
@@ -266,7 +273,7 @@ public class PostBuildHubScan extends Recorder {
         JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
         ArrayList<String> projectId = null;
         String projectIdToUse = null;
-        String releaseId = null;
+        String versionId = null;
         ArrayList<LinkedHashMap<String, Object>> projectMatchesResponse = service.getProjectMatches(getHubProjectName());
         projectId = service.getProjectIdsFromProjectMatches(projectMatchesResponse, getHubProjectName());
         if (projectId == null || projectId.isEmpty()) {
@@ -277,20 +284,20 @@ public class PostBuildHubScan extends Recorder {
         listener.getLogger().println("[DEBUG] Project Id: '" + projectId.get(0) + "'");
         projectIdToUse = projectId.get(0);
 
-        LinkedHashMap<String, Object> releaseMatchesResponse = service.getReleaseMatchesForProjectId(projectIdToUse);
-        releaseId = service.getReleaseIdFromReleaseMatches(releaseMatchesResponse, getHubProjectRelease());
-        listener.getLogger().println("[DEBUG] Release Id: '" + releaseId + "'");
-        if (StringUtils.isEmpty(releaseId)) {
-            throw new BDJenkinsHubPluginException("The specified Release could not be found in the Project.");
+        LinkedHashMap<String, Object> versionMatchesResponse = service.getVersionMatchesForProjectId(projectIdToUse);
+        versionId = service.getVersionIdFromMatches(versionMatchesResponse, getHubProjectVersion());
+        listener.getLogger().println("[DEBUG] Version Id: '" + versionId + "'");
+        if (StringUtils.isEmpty(versionId)) {
+            throw new BDJenkinsHubPluginException("The specified Version could not be found in the Project.");
         }
-        Map<String, Boolean> scanLocationIds = service.getScanLocationIds(build, listener, scanTargets, releaseId);
+        Map<String, Boolean> scanLocationIds = service.getScanLocationIds(build, listener, scanTargets, versionId);
         if (scanLocationIds != null && !scanLocationIds.isEmpty()) {
             listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
             for (Entry<String, Boolean> scanId : scanLocationIds.entrySet()) {
                 listener.getLogger().println(scanId.getKey());
             }
 
-            service.mapScansToProjectRelease(listener, scanLocationIds, releaseId);
+            service.mapScansToProjectVersion(listener, scanLocationIds, versionId);
         } else {
             listener.getLogger()
                     .println(
@@ -326,7 +333,7 @@ public class PostBuildHubScan extends Recorder {
      * Validates that the target of the scanJob exists, creates a ProcessBuilder to run the shellscript and passes in
      * the necessarry arguments, sets the JAVA_HOME of the Process Builder to the one that the User chose, starts the
      * process and prints out all stderr and stdout to the Console Output.
-     * 
+     *
      * @param build
      *            AbstractBuild
      * @param launcher
@@ -337,7 +344,7 @@ public class PostBuildHubScan extends Recorder {
      *            FilePath
      * @param scanTargets
      *            List<String>
-     * 
+     *
      * @throws IOException
      * @throws HubConfigurationException
      * @throws InterruptedException
@@ -522,7 +529,7 @@ public class PostBuildHubScan extends Recorder {
 
     /**
      * Sets the Java Home that is to be used for running the Shell script
-     * 
+     *
      * @param build
      *            AbstractBuild
      * @param listener
@@ -564,14 +571,14 @@ public class PostBuildHubScan extends Recorder {
      * Looks through the ScanInstallations to find the one that the User chose, then looks for the scan.cli.sh in the
      * bin folder of the directory defined by the Installation.
      * It then checks that the File exists.
-     * 
+     *
      * @param iScanTools
      *            IScanInstallation[] User defined iScan installations
      * @param listener
      *            BuildListener
      * @param build
      *            AbstractBuild
-     * 
+     *
      * @return File the scan.cli.sh
      * @throws IScanToolMissingException
      * @throws IOException
@@ -617,14 +624,14 @@ public class PostBuildHubScan extends Recorder {
     /**
      * Validates that the Plugin is configured correctly. Checks that the User has defined an iScan tool, a Hub server
      * URL, a Credential, and that there are at least one scan Target/Job defined in the Build
-     * 
+     *
      * @param iScanTools
      *            IScanInstallation[] User defined iScan installations
      * @param scans
      *            IScanJobs[] the iScan jobs defined in the Job config
-     * 
+     *
      * @return True if everything is configured correctly
-     * 
+     *
      * @throws IScanToolMissingException
      * @throws HubConfigurationException
      */
@@ -650,14 +657,14 @@ public class PostBuildHubScan extends Recorder {
 
     /**
      * Validates that all scan targets exist
-     * 
+     *
      * @param listener
      *            BuildListener
      * @param channel
      *            VirtualChannel
      * @param scanTargets
      *            List<String>
-     * 
+     *
      * @return
      * @throws IOException
      * @throws HubConfigurationException

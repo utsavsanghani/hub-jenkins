@@ -21,7 +21,7 @@ public class JenkinsHubIntTestHelper extends JenkinsHubIntRestService {
 
     /**
      * Delete HubProject. For test purposes only!
-     * 
+     *
      * @param projectId
      *            String
      * @return boolean true if deleted successfully
@@ -51,7 +51,7 @@ public class JenkinsHubIntTestHelper extends JenkinsHubIntRestService {
 
     /**
      * Create Hub Project. For test purposes only!
-     * 
+     *
      * @param projectId
      *            String
      * @return String projectId
@@ -76,23 +76,23 @@ public class JenkinsHubIntTestHelper extends JenkinsHubIntRestService {
     }
 
     /**
-     * Create Hub Project Release. For test purposes only!
-     * 
+     * Create Hub Project Version. For test purposes only!
+     *
      * @param projectId
      *            String
      * @return boolean true if created successfully
      * @throws BDRestException
      * @throws IOException
      */
-    public boolean createTestHubProjectRelease(String hubProjectRelease, String projectId) throws IOException, BDRestException {
+    public boolean createTestHubProjectVersion(String hubProjectVersion, String projectId) throws IOException, BDRestException {
         if (StringUtils.isEmpty(projectId)) {
             return false;
         }
-        if (StringUtils.isEmpty(hubProjectRelease)) {
+        if (StringUtils.isEmpty(hubProjectVersion)) {
             return false;
         }
         int responseCode = 0;
-        responseCode = createHubRelease(hubProjectRelease, projectId);
+        responseCode = createHubVersion(hubProjectVersion, projectId);
         if (responseCode != 201) {
             return false;
         }

@@ -34,16 +34,16 @@ public class ScanLocationHandler {
      * Will attempt to retrieve the scanLocation with the current hostname and target path. If this cannot be found then
      *
      * @param targetPath
-     * @param releaseId
+     * @param versionId
      * @return
      * @throws UnknownHostException
      * @throws MalformedURLException
      * @throws InterruptedException
      * @throws BDRestException
      */
-    public void getScanLocationIdWithRetry(AbstractBuild build, ClientResource resource, String targetPath, String releaseId,
+    public void getScanLocationIdWithRetry(AbstractBuild build, ClientResource resource, String targetPath, String versionId,
             Map<String, Boolean> scanLocationIds)
-                    throws UnknownHostException, MalformedURLException, InterruptedException, BDRestException {
+            throws UnknownHostException, MalformedURLException, InterruptedException, BDRestException {
 
         if (resource == null) {
             throw new IllegalArgumentException("Need to provide a ClientResource in order to get the ScanLocation");
@@ -51,8 +51,8 @@ public class ScanLocationHandler {
         if (StringUtils.isEmpty(targetPath)) {
             throw new IllegalArgumentException("Need to provide the targetPath of the ScanLocation.");
         }
-        if (StringUtils.isEmpty(releaseId)) {
-            throw new IllegalArgumentException("Need to provide the releaseId to make sure the mapping hasn't alredy been done.");
+        if (StringUtils.isEmpty(versionId)) {
+            throw new IllegalArgumentException("Need to provide the versionId to make sure the mapping hasn't alredy been done.");
         }
         boolean matchFound = false;
         long start = System.currentTimeMillis();
@@ -65,7 +65,7 @@ public class ScanLocationHandler {
             i++;
 
             listener.getLogger().println("Attempt # " + i + " to get the Scan Location for : '" + targetPath + "'.");
-            matchFound = scanLocationRetrieval(resource, targetPath, releaseId, scanLocationIds);
+            matchFound = scanLocationRetrieval(resource, targetPath, versionId, scanLocationIds);
             if (matchFound) {
                 break;
             }
@@ -87,7 +87,7 @@ public class ScanLocationHandler {
 
     }
 
-    private boolean scanLocationRetrieval(ClientResource resource, String targetPath, String releaseId, Map<String, Boolean> scanLocationIds) {
+    private boolean scanLocationRetrieval(ClientResource resource, String targetPath, String versionId, Map<String, Boolean> scanLocationIds) {
         boolean matchFound = false;
         resource.get();
 
@@ -129,7 +129,7 @@ public class ScanLocationHandler {
                         if (targetPath.equals(path.trim())) {
                             listener.getLogger().println("[DEBUG] MATCHED!");
                             matchFound = true;
-                            handleScanLocationMatch(scanLocationIds, scanMatch, targetPath, releaseId);
+                            handleScanLocationMatch(scanLocationIds, scanMatch, targetPath, versionId);
                             break;
                         }
                     }
@@ -141,7 +141,7 @@ public class ScanLocationHandler {
                     if (targetPath.equals(path.trim())) {
                         listener.getLogger().println("[DEBUG] MATCHED!");
                         matchFound = true;
-                        handleScanLocationMatch(scanLocationIds, scanMatch, targetPath, releaseId);
+                        handleScanLocationMatch(scanLocationIds, scanMatch, targetPath, versionId);
 
                     }
                 }
@@ -169,14 +169,14 @@ public class ScanLocationHandler {
         return matchFound;
     }
 
-    private void handleScanLocationMatch(Map<String, Boolean> scanLocationIds, LinkedHashMap<String, Object> scanMatch, String targetPath, String releaseId) {
+    private void handleScanLocationMatch(Map<String, Boolean> scanLocationIds, LinkedHashMap<String, Object> scanMatch, String targetPath, String versionId) {
         ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) scanMatch
                 .get("assetReferenceList");
         if (!assetReferences.isEmpty()) {
             for (LinkedHashMap<String, Object> assetReference : assetReferences) {
                 LinkedHashMap<String, Object> ownerEntity = (LinkedHashMap<String, Object>) assetReference.get("ownerEntityKey");
                 String ownerId = (String) ownerEntity.get("entityId");
-                if (ownerId.equals(releaseId)) {
+                if (ownerId.equals(versionId)) {
                     String scanId = (String) scanMatch.get("id");
                     scanLocationIds.put(scanId, true);
                     listener.getLogger().println(
@@ -184,8 +184,8 @@ public class ScanLocationHandler {
                                     + targetPath
                                     + "' has Scan Location Id: '"
                                     + scanId
-                                    + "'. This is already mapped to the Release with Id: '"
-                                    + releaseId + "'.");
+                                    + "'. This is already mapped to the Version with Id: '"
+                                    + versionId + "'.");
                     listener.getLogger().println();
                 } else {
                     String scanId = (String) scanMatch.get("id");

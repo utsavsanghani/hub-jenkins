@@ -1,7 +1,6 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
 import hudson.EnvVars;
-import hudson.ExtensionList;
 import hudson.ProxyConfiguration;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Descriptor;
@@ -34,11 +33,11 @@ import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -131,7 +130,7 @@ public class IntegrationTest {
         Jenkins jenkins = j.jenkins;
 
         ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
-       
+
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
 
@@ -212,9 +211,9 @@ public class IntegrationTest {
             Assert.assertNotNull(projectId);
             // Give server time to recognize the Project
             Thread.sleep(2000);
-            boolean created = restHelper.createTestHubProjectRelease(PROJECT_RELEASE_EXISTING, projectId);
+            boolean created = restHelper.createTestHubProjectVersion(PROJECT_RELEASE_EXISTING, projectId);
             Assert.assertTrue(created);
-            // Give server time to recognize the Release
+            // Give server time to recognize the Version
             Thread.sleep(2000);
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, "4096");
@@ -233,7 +232,7 @@ public class IntegrationTest {
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Release Id:"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
@@ -280,9 +279,9 @@ public class IntegrationTest {
             Assert.assertNotNull(projectId);
             // Give server time to recognize the Project
             Thread.sleep(2000);
-            boolean created = restHelper.createTestHubProjectRelease(PROJECT_RELEASE_EXISTING, projectId);
+            boolean created = restHelper.createTestHubProjectVersion(PROJECT_RELEASE_EXISTING, projectId);
             Assert.assertTrue(created);
-            // Give server time to recognize the Release
+            // Give server time to recognize the Version
             Thread.sleep(2000);
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, "4096");
@@ -306,7 +305,7 @@ public class IntegrationTest {
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Release Id:"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
@@ -354,9 +353,9 @@ public class IntegrationTest {
             Assert.assertNotNull(projectId);
             // Give server time to recognize the Project
             Thread.sleep(2000);
-            boolean created = restHelper.createTestHubProjectRelease(PROJECT_RELEASE_EXISTING, projectId);
+            boolean created = restHelper.createTestHubProjectVersion(PROJECT_RELEASE_EXISTING, projectId);
             Assert.assertTrue(created);
-            // Give server time to recognize the Release
+            // Give server time to recognize the Version
             Thread.sleep(2000);
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, "4096");
@@ -383,7 +382,7 @@ public class IntegrationTest {
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Ignoring proxy for the Host: '" + url.getHost() + "'"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Release Id:"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
@@ -450,7 +449,7 @@ public class IntegrationTest {
     }
 
     @Test
-    public void completeRunthroughAndScanWithMappingToNonExistentRelease() throws IOException, InterruptedException, ExecutionException, BDRestException {
+    public void completeRunthroughAndScanWithMappingToNonExistentVersion() throws IOException, InterruptedException, ExecutionException, BDRestException {
         Jenkins jenkins = j.jenkins;
 
         ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
@@ -498,13 +497,13 @@ public class IntegrationTest {
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Release Id: 'null'"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id: 'null'"));
             Assert.assertTrue(buildOutputList
                     .contains(
-                    "com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException: The specified Release could not be found in the Project."));
+                    "com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException: The specified Version could not be found in the Project."));
             Assert.assertTrue(buildOutputList
                     .contains(
-                    "ERROR: com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException: The specified Release could not be found in the Project."));
+                    "ERROR: com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException: The specified Version could not be found in the Project."));
             Assert.assertTrue(listContainsSubString(buildOutputList, "Build step 'Black Duck Hub Integration' changed build result to UNSTABLE"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "Finished: UNSTABLE"));
         } finally {
@@ -546,9 +545,9 @@ public class IntegrationTest {
             Assert.assertNotNull(projectId);
             // Give server time to recognize the Project
             Thread.sleep(2000);
-            boolean created = restHelper.createTestHubProjectRelease(PROJECT_RELEASE_EXISTING, projectId);
+            boolean created = restHelper.createTestHubProjectVersion(PROJECT_RELEASE_EXISTING, projectId);
             Assert.assertTrue(created);
-            // Give server time to recognize the Release
+            // Give server time to recognize the Version
             Thread.sleep(2000);
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, "4096");
@@ -558,7 +557,7 @@ public class IntegrationTest {
 
             project.getPublishersList().add(pbScan);
 
-            // First Run scans and maps the scans to the Project Release
+            // First Run scans and maps the scans to the Project Version
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
@@ -568,7 +567,7 @@ public class IntegrationTest {
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Release Id:"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
@@ -588,12 +587,12 @@ public class IntegrationTest {
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Release Id:"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Release Id:"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] These scan Id's were found for the scan targets."));
             Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
