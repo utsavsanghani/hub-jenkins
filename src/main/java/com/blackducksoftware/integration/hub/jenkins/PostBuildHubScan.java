@@ -314,8 +314,15 @@ public class PostBuildHubScan extends Recorder {
                             projectId = service.createHubProject(projectName);
                             listener.getLogger().println("[DEBUG] Project created!");
 
-                            versionId = service.createHubVersion(projectVersion, projectId);
-                            listener.getLogger().println("[DEBUG] Version created!");
+                            // We check if the version exists first even though we just created the project
+                            // The user might have specified the default version, in which case it already exists
+                            LinkedHashMap<String, Object> versionMatchesResponse = service.getVersionMatchesForProjectId(projectId);
+                            versionId = service.getVersionIdFromMatches(versionMatchesResponse, projectVersion);
+                            if (versionId == null) {
+                                versionId = service.createHubVersion(projectVersion, projectId);
+                                listener.getLogger().println("[DEBUG] Version created!");
+                            }
+
                         } catch (BDRestException e1) {
                             if (e1.getResource() != null) {
                                 listener.getLogger().println("[ERROR] Status : " + e1.getResource().getStatus().getCode());
