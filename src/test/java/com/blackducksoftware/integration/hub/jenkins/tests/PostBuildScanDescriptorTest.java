@@ -251,6 +251,41 @@ public class PostBuildScanDescriptorTest {
     }
 
     @Test
+    public void testCreateProjectVariables() throws Exception {
+        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+        FormValidation form = descriptor.doCreateHubProject("${JOB_NAME}", PROJECT_RELEASE_EXISTING);
+
+        Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNameOrVersionContainsVariable());
+
+        FormValidation form2 = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, "${BUILD_NUMBER}");
+
+        Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
+        Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectNameOrVersionContainsVariable());
+
+        FormValidation form3 = descriptor.doCreateHubProject("${JOB_NAME}", "${BUILD_NUMBER}");
+
+        Assert.assertEquals(FormValidation.Kind.WARNING, form3.kind);
+        Assert.assertEquals(form3.getMessage(), Messages.HubBuildScan_getProjectNameOrVersionContainsVariable());
+
+    }
+
+    @Test
+    public void testCheckForProjectNameVariable() throws IOException, ServletException, BDRestException {
+        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+        HubServerInfo hubServerInfo = new HubServerInfo();
+        hubServerInfo.setCredentialsId("FAKE ID");
+        hubServerInfo.setServerUrl("FAKE SERVER");
+        descriptor.setHubServerInfo(hubServerInfo);
+
+        FormValidation form = descriptor.doCheckHubProjectName("${JOB_NAME}");
+        Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNameContainsVariable());
+    }
+
+    @Test
     public void testCheckForProjectNameNotExistent() throws IOException, ServletException, BDRestException {
         PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
@@ -300,6 +335,23 @@ public class PostBuildScanDescriptorTest {
         } finally {
             restHelper.deleteHubProject(restHelper.getProjectId(PROJECT_NAME_EXISTING));
         }
+    }
+
+    @Test
+    public void testCheckForReleaseNameVariable() throws IOException, ServletException, BDRestException {
+        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        HubServerInfo hubServerInfo = new HubServerInfo();
+        hubServerInfo.setCredentialsId("FAKE ID");
+        hubServerInfo.setServerUrl("FAKE SERVER");
+        descriptor.setHubServerInfo(hubServerInfo);
+
+        FormValidation form = descriptor.doCheckHubProjectVersion("${BUILD_NUMBER}", null);
+        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProvideProjectName());
+
+        FormValidation form2 = descriptor.doCheckHubProjectVersion("${BUILD_NUMBER}", PROJECT_NAME_EXISTING);
+        Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
+        Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectVersionContainsVariable());
     }
 
     @Test

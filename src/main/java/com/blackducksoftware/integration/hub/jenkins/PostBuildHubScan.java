@@ -236,8 +236,8 @@ public class PostBuildHubScan extends Recorder {
                     if (!StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectVersion())) {
                         EnvVars variables = build.getEnvironment(listener);
 
-                        projectName = handleVariableReplacement(build, listener, variables, getHubProjectName());
-                        projectVersion = handleVariableReplacement(build, listener, variables, getHubProjectVersion());
+                        projectName = handleVariableReplacement(variables, getHubProjectName());
+                        projectVersion = handleVariableReplacement(variables, getHubProjectVersion());
 
                     }
 
@@ -255,6 +255,10 @@ public class PostBuildHubScan extends Recorder {
                         doScanMapping(build, listener, projectName, projectVersion, scanTargets);
                     }
                 }
+            } catch (BDJenkinsHubPluginException e) {
+                listener.error(e.getMessage());
+                e.printStackTrace(listener.getLogger());
+                setResult(Result.UNSTABLE);
             } catch (Exception e) {
                 e.printStackTrace(listener.getLogger());
                 String message;
@@ -291,24 +295,94 @@ public class PostBuildHubScan extends Recorder {
             BDJenkinsHubPluginException,
             InterruptedException {
         JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
+
+        // /////////////////////////////////////////// Handling the Project name and Version
+        // if either is a variable, they are retrieved or created accordingly
         String projectId = null;
         String versionId = null;
-        try {
-            projectId = service.getProjectId(projectName);
-        } catch (BDRestException e) {
-            throw new BDJenkinsHubPluginException("The specified Project could not be found. ", e);
+
+        if (getHubProjectName().matches("(\\$\\{.*\\}){1,}")) {
+            // project name is a variable
+            try {
+                projectId = service.getProjectId(projectName);
+            } catch (BDRestException e) {
+                if (e.getResource() != null) {
+                    if (e.getResource().getResponse().getStatus().getCode() == 404) {
+                        // Project was not found, try to create it
+                        try {
+
+                            projectId = service.createHubProject(projectName);
+                            listener.getLogger().println("[DEBUG] Project created!");
+
+                            versionId = service.createHubVersion(projectVersion, projectId);
+                            listener.getLogger().println("[DEBUG] Version created!");
+                        } catch (BDRestException e1) {
+                            if (e1.getResource() != null) {
+                                listener.getLogger().println("[ERROR] Status : " + e1.getResource().getStatus().getCode());
+                                listener.getLogger().println("[ERROR] Response : " + e1.getResource().getResponse().getEntityAsText());
+                            }
+                            throw new BDJenkinsHubPluginException("Problem creating the Project or Version. ", e1);
+                        }
+                    } else {
+                        if (e.getResource() != null) {
+                            listener.getLogger().println("[ERROR] Status : " + e.getResource().getStatus().getCode());
+                            listener.getLogger().println("[ERROR] Response : " + e.getResource().getResponse().getEntityAsText());
+                        }
+                        throw new BDJenkinsHubPluginException("Problem getting the Project Id. ", e);
+                    }
+                }
+            }
+        } else {
+            try {
+                projectId = service.getProjectId(projectName);
+            } catch (BDRestException e) {
+                throw new BDJenkinsHubPluginException("The specified Project could not be found. ", e);
+            }
         }
         if (StringUtils.isEmpty(projectId)) {
             throw new BDJenkinsHubPluginException("The specified Project could not be found.");
         }
+
         listener.getLogger().println("[DEBUG] Project Id: '" + projectId + "'");
 
-        LinkedHashMap<String, Object> versionMatchesResponse = service.getVersionMatchesForProjectId(projectId);
-        versionId = service.getVersionIdFromMatches(versionMatchesResponse, projectVersion);
-        listener.getLogger().println("[DEBUG] Version Id: '" + versionId + "'");
+        if (getHubProjectVersion().matches("(\\$\\{.*\\}){1,}") && versionId == null) {
+            // project version is a variable and the project was already existing
+            // if the project were just created then the versionId would not be null
+            try {
+                versionId = service.createHubVersion(projectVersion, projectId);
+                listener.getLogger().println("[DEBUG] Version created!");
+            } catch (BDRestException e1) {
+                if (e1.getResource() != null) {
+                    listener.getLogger().println("[ERROR] Status : " + e1.getResource().getStatus().getCode());
+                    listener.getLogger().println("[ERROR] Response : " + e1.getResource().getResponse().getEntityAsText());
+                }
+                throw new BDJenkinsHubPluginException("Problem creating the Version. ", e1);
+            }
+        } else {
+            LinkedHashMap<String, Object> versionMatchesResponse = service.getVersionMatchesForProjectId(projectId);
+            versionId = service.getVersionIdFromMatches(versionMatchesResponse, projectVersion);
+            if (getHubProjectName().matches("(\\$\\{.*\\}){1,}")) {
+                // Project Name was a variable. If the version doesn't exist we must create it here
+                if (versionId == null) {
+                    try {
+                        versionId = service.createHubVersion(projectVersion, projectId);
+                        listener.getLogger().println("[DEBUG] Version created!");
+                    } catch (BDRestException e1) {
+                        if (e1.getResource() != null) {
+                            listener.getLogger().println("[ERROR] Status : " + e1.getResource().getStatus().getCode());
+                            listener.getLogger().println("[ERROR] Response : " + e1.getResource().getResponse().getEntityAsText());
+                        }
+                        throw new BDJenkinsHubPluginException("Problem creating the Version. ", e1);
+                    }
+                }
+            }
+        }
         if (StringUtils.isEmpty(versionId)) {
             throw new BDJenkinsHubPluginException("The specified Version could not be found in the Project.");
         }
+        listener.getLogger().println("[DEBUG] Version Id: '" + versionId + "'");
+        // /////////////////////////////////////////// END Handling the Project name and Version
+
         Map<String, Boolean> scanLocationIds = service.getScanLocationIds(build, listener, scanTargets, versionId);
         if (scanLocationIds != null && !scanLocationIds.isEmpty()) {
             listener.getLogger().println("[DEBUG] These scan Id's were found for the scan targets.");
@@ -350,23 +424,21 @@ public class PostBuildHubScan extends Recorder {
 
     /**
      *
-     * @param build
-     *            AbstractBuild
      * @param variables
      *            Map of variables
      * @param value
      *            String to check for variables
      * @return the new Value with the variables replaced
+     * @throws BDJenkinsHubPluginException
      */
-    public String handleVariableReplacement(AbstractBuild build, BuildListener listener, Map<String, String> variables, String value) {
+    public String handleVariableReplacement(Map<String, String> variables, String value) throws BDJenkinsHubPluginException {
         if (value != null) {
 
             String newValue = Util.replaceMacro(value, variables);
 
             if (newValue.contains("$")) {
-                listener.error("Variable was not properly replaced. Value : " + value + ", Result : " + newValue);
-                listener.error("Make sure the variable has been properly defined.");
-                build.setResult(Result.UNSTABLE);
+                throw new BDJenkinsHubPluginException("Variable was not properly replaced. Value : " + value + ", Result : " + newValue
+                        + ". Make sure the variable has been properly defined.");
             }
             return newValue;
         } else {

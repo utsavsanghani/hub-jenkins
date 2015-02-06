@@ -190,32 +190,35 @@ public class JenkinsHubIntRestService {
 
         String url = getBaseUrl() + "/api/v1/autocomplete/PROJECT?text=" + hubProjectName + "&limit=30";
         ClientResource resource = createClientResource(url);
+        try {
+            resource.getRequest().setCookies(getCookies());
+            resource.setMethod(Method.GET);
+            resource.get();
+            int responseCode = resource.getResponse().getStatus().getCode();
 
-        resource.getRequest().setCookies(getCookies());
-        resource.setMethod(Method.GET);
-        resource.get();
-        int responseCode = resource.getResponse().getStatus().getCode();
-
-        if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-            ArrayList<LinkedHashMap<String, Object>> list = null;
-            Response resp = resource.getResponse();
-            Reader reader = resp.getEntity().getReader();
-            BufferedReader bufReader = new BufferedReader(reader);
-            StringBuilder sb = new StringBuilder();
-            String line = bufReader.readLine();
-            while (line != null) {
-                sb.append(line + "\n");
-                line = bufReader.readLine();
+            if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+                ArrayList<LinkedHashMap<String, Object>> list = null;
+                Response resp = resource.getResponse();
+                Reader reader = resp.getEntity().getReader();
+                BufferedReader bufReader = new BufferedReader(reader);
+                StringBuilder sb = new StringBuilder();
+                String line = bufReader.readLine();
+                while (line != null) {
+                    sb.append(line + "\n");
+                    line = bufReader.readLine();
+                }
+                bufReader.close();
+                byte[] mapData = sb.toString().getBytes();
+                // Create HashMap from the Rest response
+                ObjectMapper responseMapper = new ObjectMapper();
+                list = responseMapper.readValue(mapData, ArrayList.class);
+                // responseMap = responseMapper.readValue(mapData, HashMap.class);
+                return list;
+            } else {
+                throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode), resource);
             }
-            bufReader.close();
-            byte[] mapData = sb.toString().getBytes();
-            // Create HashMap from the Rest response
-            ObjectMapper responseMapper = new ObjectMapper();
-            list = responseMapper.readValue(mapData, ArrayList.class);
-            // responseMap = responseMapper.readValue(mapData, HashMap.class);
-            return list;
-        } else {
-            throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+        } catch (ResourceException e) {
+            throw new BDRestException("Problem connecting to the Hub server provided.", e, resource);
         }
     }
 
@@ -223,32 +226,35 @@ public class JenkinsHubIntRestService {
 
         String url = getBaseUrl() + "/api/v1/projects/" + projectId;
         ClientResource resource = createClientResource(url);
+        try {
+            resource.getRequest().setCookies(getCookies());
+            resource.setMethod(Method.GET);
+            resource.get();
+            int responseCode = resource.getResponse().getStatus().getCode();
 
-        resource.getRequest().setCookies(getCookies());
-        resource.setMethod(Method.GET);
-        resource.get();
-        int responseCode = resource.getResponse().getStatus().getCode();
-
-        if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-            ArrayList<LinkedHashMap<String, Object>> list = null;
-            Response resp = resource.getResponse();
-            Reader reader = resp.getEntity().getReader();
-            BufferedReader bufReader = new BufferedReader(reader);
-            StringBuilder sb = new StringBuilder();
-            String line = bufReader.readLine();
-            while (line != null) {
-                sb.append(line + "\n");
-                line = bufReader.readLine();
+            if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+                ArrayList<LinkedHashMap<String, Object>> list = null;
+                Response resp = resource.getResponse();
+                Reader reader = resp.getEntity().getReader();
+                BufferedReader bufReader = new BufferedReader(reader);
+                StringBuilder sb = new StringBuilder();
+                String line = bufReader.readLine();
+                while (line != null) {
+                    sb.append(line + "\n");
+                    line = bufReader.readLine();
+                }
+                bufReader.close();
+                byte[] mapData = sb.toString().getBytes();
+                // Create HashMap from the Rest response
+                ObjectMapper responseMapper = new ObjectMapper();
+                list = responseMapper.readValue(mapData, ArrayList.class);
+                // responseMap = responseMapper.readValue(mapData, HashMap.class);
+                return list;
+            } else {
+                throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode), resource);
             }
-            bufReader.close();
-            byte[] mapData = sb.toString().getBytes();
-            // Create HashMap from the Rest response
-            ObjectMapper responseMapper = new ObjectMapper();
-            list = responseMapper.readValue(mapData, ArrayList.class);
-            // responseMap = responseMapper.readValue(mapData, HashMap.class);
-            return list;
-        } else {
-            throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+        } catch (ResourceException e) {
+            throw new BDRestException("Problem connecting to the Hub server provided.", e, resource);
         }
     }
 
@@ -281,16 +287,16 @@ public class JenkinsHubIntRestService {
 
                 if (!responseMap.containsKey("id")) {
                     // The Hub Api has changed and we received a JSON response that we did not expect
-                    throw new BDRestException(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
+                    throw new BDRestException(Messages.HubBuildScan_getIncorrectMappingOfServerResponse(), resource);
                 } else {
                     return (String) responseMap.get("id");
                 }
 
             } else {
-                throw new BDRestException(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_());
+                throw new BDRestException(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_(), resource);
             }
         } catch (ResourceException e) {
-            throw new BDRestException(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_(), e);
+            throw new BDRestException(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_(), e, resource);
         }
     }
 
@@ -316,90 +322,98 @@ public class JenkinsHubIntRestService {
             throws UnknownHostException,
             MalformedURLException, InterruptedException, BDRestException {
         HashMap<String, Boolean> scanLocationIds = new HashMap<String, Boolean>();
-        for (String targetPath : scanTargets) {
-            String url = null;
-            ClientResource resource = null;
-            String localHostName = "";
-            try {
-                localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
-            } catch (IOException e) {
-                listener.error("Problem getting the Local Host name : " + e.getMessage());
-                e.printStackTrace(listener.getLogger());
+        ClientResource resource = null;
+        String url = null;
+        String localHostName = "";
+        try {
+            for (String targetPath : scanTargets) {
+                try {
+                    localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
+                } catch (IOException e) {
+                    listener.error("Problem getting the Local Host name : " + e.getMessage());
+                    e.printStackTrace(listener.getLogger());
+                }
+                if (localHostName == null || localHostName.length() == 0) {
+                    return null;
+                }
+                url = baseUrl + "/api/v1/scanlocations?host=" + localHostName + "&path=" + targetPath;
+                listener.getLogger().println(
+                        "[DEBUG] Checking for the scan location with Host name: '" + localHostName + "' and Path: '" + targetPath + "'");
+
+                resource = createClientResource(url);
+
+                resource.getRequest().setCookies(getCookies());
+                resource.setMethod(Method.GET);
+
+                ScanLocationHandler handler = new ScanLocationHandler(listener);
+
+                handler.getScanLocationIdWithRetry(build, resource, targetPath, versionId, scanLocationIds);
+
             }
-            if (localHostName == null || localHostName.length() == 0) {
-                return null;
-            }
-            url = baseUrl + "/api/v1/scanlocations?host=" + localHostName + "&path=" + targetPath;
-            listener.getLogger().println(
-                    "[DEBUG] Checking for the scan location with Host name: '" + localHostName + "' and Path: '" + targetPath + "'");
-
-            resource = createClientResource(url);
-
-            resource.getRequest().setCookies(getCookies());
-            resource.setMethod(Method.GET);
-
-            ScanLocationHandler handler = new ScanLocationHandler(listener);
-
-            handler.getScanLocationIdWithRetry(build, resource, targetPath, versionId, scanLocationIds);
-
+        } catch (ResourceException e) {
+            throw new BDRestException("Problem connecting to the Hub server provided.", e, resource);
         }
         return scanLocationIds;
     }
 
     public void mapScansToProjectVersion(BuildListener listener, Map<String, Boolean> scanLocationIds, String versionId) throws BDRestException,
             MalformedURLException {
-        if (!scanLocationIds.isEmpty()) {
-            for (Entry<String, Boolean> scanId : scanLocationIds.entrySet()) {
-                if (!scanId.getValue()) {
-                    // This scan location has not yet been mapped to the project/version
-                    listener.getLogger().println(
-                            "[DEBUG] Mapping the scan location with id: '" + scanId.getKey() + "', to the Version with Id: '" + versionId + "'.");
-                    // FIXME Need to change this to /api/v1/asset-references soon
-                    String url = getBaseUrl() + "/api/v1/assetreferences";
-                    ClientResource resource = createClientResource(url);
+        // FIXME Need to change this to /api/v1/asset-references soon
+        String url = getBaseUrl() + "/api/v1/assetreferences";
+        ClientResource resource = createClientResource(url);
+        try {
+            if (!scanLocationIds.isEmpty()) {
+                for (Entry<String, Boolean> scanId : scanLocationIds.entrySet()) {
+                    if (!scanId.getValue()) {
+                        // This scan location has not yet been mapped to the project/version
+                        listener.getLogger().println(
+                                "[DEBUG] Mapping the scan location with id: '" + scanId.getKey() + "', to the Version with Id: '" + versionId + "'.");
 
-                    resource.getRequest().setCookies(getCookies());
-                    resource.setMethod(Method.POST);
+                        resource.getRequest().setCookies(getCookies());
+                        resource.setMethod(Method.POST);
 
-                    JSONObject obj = new JSONObject();
+                        JSONObject obj = new JSONObject();
 
-                    JSONObject ownerEntity = new JSONObject();
-                    ownerEntity.put("entityId", versionId);
-                    // this is the version location
-                    ownerEntity.put("entityType", "RL");
+                        JSONObject ownerEntity = new JSONObject();
+                        ownerEntity.put("entityId", versionId);
+                        // this is the version location
+                        ownerEntity.put("entityType", "RL");
 
-                    JSONObject assetEntity = new JSONObject();
-                    assetEntity.put("entityId", scanId.getKey());
-                    // this is the code location
-                    assetEntity.put("entityType", "CL");
+                        JSONObject assetEntity = new JSONObject();
+                        assetEntity.put("entityId", scanId.getKey());
+                        // this is the code location
+                        assetEntity.put("entityType", "CL");
 
-                    obj.put("ownerEntityKey", ownerEntity);
-                    obj.put("assetEntityKey", assetEntity);
+                        obj.put("ownerEntityKey", ownerEntity);
+                        obj.put("assetEntityKey", assetEntity);
 
-                    StringRepresentation stringRep = new StringRepresentation(obj.toString());
-                    stringRep.setMediaType(MediaType.APPLICATION_JSON);
-                    resource.post(stringRep);
-                    int responseCode = resource.getResponse().getStatus().getCode();
+                        StringRepresentation stringRep = new StringRepresentation(obj.toString());
+                        stringRep.setMediaType(MediaType.APPLICATION_JSON);
+                        resource.post(stringRep);
+                        int responseCode = resource.getResponse().getStatus().getCode();
 
-                    // HashMap<String, Object> responseMap = new HashMap<String, Object>();
-                    if (responseCode == 201) {
-                        // Successful mapping
-                        listener.getLogger()
-                                .println(
-                                        "[DEBUG] Successfully mapped the scan with id: '" + scanId.getKey() + "', to the Version with Id: '" + versionId + "'.");
+                        // HashMap<String, Object> responseMap = new HashMap<String, Object>();
+                        if (responseCode == 201) {
+                            // Successful mapping
+                            listener.getLogger()
+                                    .println(
+                                            "[DEBUG] Successfully mapped the scan with id: '" + scanId.getKey() + "', to the Version with Id: '" + versionId
+                                                    + "'.");
+                        } else {
+                            throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode), resource);
+                        }
                     } else {
-                        throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+                        listener.getLogger().println(
+                                "[DEBUG] The scan location with id: '" + scanId.getKey() + "', is already mapped to the Version with Id: '" + versionId + "'.");
                     }
-                } else {
-                    listener.getLogger().println(
-                            "[DEBUG] The scan location with id: '" + scanId.getKey() + "', is already mapped to the Version with Id: '" + versionId + "'.");
                 }
             }
+            else {
+                listener.getLogger().println("[DEBUG] Could not find any scan Id's to map to the Version.");
+            }
+        } catch (ResourceException e) {
+            throw new BDRestException("Problem connecting to the Hub server provided.", e, resource);
         }
-        else {
-            listener.getLogger().println("[DEBUG] Could not find any scan Id's to map to the Version.");
-        }
-        // return responseMap;
 
     }
 
@@ -432,34 +446,37 @@ public class JenkinsHubIntRestService {
 
     public LinkedHashMap<String, Object> getVersionMatchesForProjectId(String projectId) throws IOException, BDRestException {
 
-        String url = getBaseUrl() + "/api/v1/projects/" + projectId + "/releases?limit=30";
+        String url = getBaseUrl() + "/api/v1/projects/" + projectId + "/releases";
         ClientResource resource = createClientResource(url);
-
-        resource.getRequest().setCookies(getCookies());
-        resource.setMethod(Method.GET);
-        resource.get();
-        int responseCode = resource.getResponse().getStatus().getCode();
-
         LinkedHashMap<String, Object> responseMap = null;
-        if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+        try {
+            resource.getRequest().setCookies(getCookies());
+            resource.setMethod(Method.GET);
+            resource.get();
+            int responseCode = resource.getResponse().getStatus().getCode();
 
-            Response resp = resource.getResponse();
-            Reader reader = resp.getEntity().getReader();
-            BufferedReader bufReader = new BufferedReader(reader);
-            StringBuilder sb = new StringBuilder();
-            String line = bufReader.readLine();
-            while (line != null) {
-                sb.append(line + "\n");
-                line = bufReader.readLine();
+            if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+
+                Response resp = resource.getResponse();
+                Reader reader = resp.getEntity().getReader();
+                BufferedReader bufReader = new BufferedReader(reader);
+                StringBuilder sb = new StringBuilder();
+                String line = bufReader.readLine();
+                while (line != null) {
+                    sb.append(line + "\n");
+                    line = bufReader.readLine();
+                }
+                bufReader.close();
+                byte[] mapData = sb.toString().getBytes();
+
+                // Create HashMap from the Rest response
+                ObjectMapper responseMapper = new ObjectMapper();
+                responseMap = responseMapper.readValue(mapData, LinkedHashMap.class);
+            } else {
+                throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode), resource);
             }
-            bufReader.close();
-            byte[] mapData = sb.toString().getBytes();
-
-            // Create HashMap from the Rest response
-            ObjectMapper responseMapper = new ObjectMapper();
-            responseMap = responseMapper.readValue(mapData, LinkedHashMap.class);
-        } else {
-            throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+        } catch (ResourceException e) {
+            throw new BDRestException("Problem connecting to the Hub server provided.", e, resource);
         }
         return responseMap;
     }
@@ -479,7 +496,7 @@ public class JenkinsHubIntRestService {
         return versionId;
     }
 
-    public HashMap<String, Object> createHubProject(String projectName) throws IOException, BDRestException {
+    public String createHubProject(String projectName) throws IOException, BDRestException {
 
         String url = getBaseUrl() + "/api/v1/projects";
         ClientResource resource = createClientResource(url);
@@ -514,22 +531,26 @@ public class JenkinsHubIntRestService {
                 // Create HashMap from the Rest response
                 ObjectMapper responseMapper = new ObjectMapper();
                 responseMap = responseMapper.readValue(mapData, HashMap.class);
+                if (!responseMap.containsKey("id")) {
+                    // The Hub Api has changed and we received a JSON response that we did not expect
+                    throw new BDRestException(Messages.HubBuildScan_getIncorrectMappingOfServerResponse(), resource);
+                } else {
+                    return (String) responseMap.get("id");
+                }
             } else {
-                throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
+                throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode), resource);
             }
         } catch (ResourceException e) {
-            org.restlet.Response r = resource.getResponse();
-            System.out.println(e.getStatus().toString());
-            System.out.println(r.getEntityAsText());
+            throw new BDRestException("Problem connecting to the Hub server provided.", e, resource);
         }
 
-        return responseMap;
     }
 
-    public int createHubVersion(String projectVersion, String projectId) throws IOException, BDRestException {
+    public String createHubVersion(String projectVersion, String projectId) throws IOException, BDRestException {
         String url = getBaseUrl() + "/api/v1/releases";
         ClientResource resource = createClientResource(url);
         int responseCode;
+        HashMap<String, Object> responseMap = null;
         try {
             JSONObject obj = new JSONObject();
             obj.put("projectId", projectId);
@@ -544,13 +565,37 @@ public class JenkinsHubIntRestService {
 
             resource.post(stringRep);
             responseCode = resource.getResponse().getStatus().getCode();
+
+            if (responseCode == 201) {
+
+                Response resp = resource.getResponse();
+                Reader reader = resp.getEntity().getReader();
+                BufferedReader bufReader = new BufferedReader(reader);
+                StringBuilder sb = new StringBuilder();
+                String line = bufReader.readLine();
+                while (line != null) {
+                    sb.append(line + "\n");
+                    line = bufReader.readLine();
+                }
+                bufReader.close();
+                byte[] mapData = sb.toString().getBytes();
+
+                // Create HashMap from the Rest response
+                ObjectMapper responseMapper = new ObjectMapper();
+                responseMap = responseMapper.readValue(mapData, HashMap.class);
+                if (!responseMap.containsKey("id")) {
+                    // The Hub Api has changed and we received a JSON response that we did not expect
+                    throw new BDRestException(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
+                } else {
+                    return (String) responseMap.get("id");
+                }
+            } else {
+                throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode), resource);
+            }
+
         } catch (ResourceException e) {
-            org.restlet.Response r = resource.getResponse();
-            System.out.println(e.getStatus().toString());
-            System.out.println(r.getEntityAsText());
-            responseCode = resource.getResponse().getStatus().getCode();
+            throw new BDRestException("Problem connecting to the Hub server provided.", e, resource);
         }
-        return responseCode;
     }
 
 }

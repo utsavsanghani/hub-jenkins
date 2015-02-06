@@ -1,5 +1,7 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import hudson.FilePath;
@@ -15,6 +17,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -31,6 +35,7 @@ import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
+import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
 import com.google.common.base.Charsets;
@@ -425,5 +430,31 @@ public class PostBuildHubScanUnitTest {
         scans[0] = oneScan;
 
         mockpbScan.validateConfiguration(iScanInstallations, scans);
+    }
+
+    @Test
+    public void testHandleVariableReplacementVariableUndefined() throws Exception {
+        exception.expect(BDJenkinsHubPluginException.class);
+        exception
+                .expectMessage("Variable was not properly replaced. Value : ${JOB_NAME}, Result : ${JOB_NAME}. Make sure the variable has been properly defined.");
+
+        PostBuildHubScan postScan = new PostBuildHubScan(null, null, null, null, null);
+        Map<String, String> emptyVariables = new HashMap<String, String>();
+        postScan.handleVariableReplacement(emptyVariables, "${JOB_NAME}");
+    }
+
+    @Test
+    public void testHandleVariableReplacementVariable() throws Exception {
+        PostBuildHubScan postScan = new PostBuildHubScan(null, null, null, null, null);
+        Map<String, String> emptyVariables = new HashMap<String, String>();
+        emptyVariables.put("JOB_NAME", "Test Job");
+        assertEquals("Test Job", postScan.handleVariableReplacement(emptyVariables, "${JOB_NAME}"));
+    }
+
+    @Test
+    public void testHandleVariableReplacementVariableNull() throws Exception {
+        PostBuildHubScan postScan = new PostBuildHubScan(null, null, null, null, null);
+        Map<String, String> emptyVariables = new HashMap<String, String>();
+        assertNull(postScan.handleVariableReplacement(null, null));
     }
 }
