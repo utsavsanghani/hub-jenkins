@@ -271,34 +271,38 @@ public class IntegrationTest {
         scans[0] = oneScan;
         scans[1] = twoScan;
         scans[2] = threeScan;
+        String projectName = "Jenkins Hub Integration Variable Project Name";
+        try {
+            PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
+            scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-        scanDesc.setHubServerInfo(serverInfo);
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", "${JOB_NAME}", PROJECT_RELEASE_EXISTING, "4096");
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", "${JOB_NAME}", PROJECT_RELEASE_EXISTING, "4096");
+            FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, projectName);
+            project.setCustomWorkspace(testWorkspace);
 
-        FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Jenkins Hub Integration Variable Project Name");
-        project.setCustomWorkspace(testWorkspace);
+            project.getPublishersList().add(pbScan);
 
-        project.getPublishersList().add(pbScan);
-
-        FreeStyleBuild build = project.scheduleBuild2(0).get();
-        String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-        System.out.println(buildOutput);
-        List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id:"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] These scan Id's were found for the scan targets."));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Mapping the scan location with id:"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan with id:"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+            FreeStyleBuild build = project.scheduleBuild2(0).get();
+            String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+            System.out.println(buildOutput);
+            List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id:"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+        } finally {
+            restHelper.deleteHubProject(restHelper.getProjectId(projectName));
+        }
     }
 
     @Test
