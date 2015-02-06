@@ -254,6 +254,22 @@ public class Messages {
     }
 
     /**
+     * The Version was created!
+     * 
+     */
+    public static String HubBuildScan_getVersionCreated() {
+        return holder.format("HubBuildScan_getVersionCreated");
+    }
+
+    /**
+     * The Version was created!
+     * 
+     */
+    public static Localizable _HubBuildScan_getVersionCreated() {
+        return new Localizable(holder, "HubBuildScan_getVersionCreated");
+    }
+
+    /**
      * Could not connect to the Hub server with the Given Url and credentials. Error Code:  {0}
      * 
      */
@@ -379,6 +395,22 @@ public class Messages {
      */
     public static Localizable _HubBuildScan_getProjectExistsWithDuplicateMatches_0_(Object arg1) {
         return new Localizable(holder, "HubBuildScan_getProjectExistsWithDuplicateMatches_0_", arg1);
+    }
+
+    /**
+     * The Project was created!
+     * 
+     */
+    public static String HubBuildScan_getProjectCreated() {
+        return holder.format("HubBuildScan_getProjectCreated");
+    }
+
+    /**
+     * The Project was created!
+     * 
+     */
+    public static Localizable _HubBuildScan_getProjectCreated() {
+        return new Localizable(holder, "HubBuildScan_getProjectCreated");
     }
 
     /**

@@ -331,34 +331,16 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 service.setBaseUrl(getHubServerUrl());
                 service.setCookies(credentialUserName, credentialPassword);
 
-                ArrayList<LinkedHashMap<String, Object>> responseList = service.getProjectMatches(hubProjectName);
-                if (!responseList.isEmpty()) {
-                    StringBuilder projectMatches = new StringBuilder();
-                    ArrayList<String> projIds = new ArrayList<String>();
-                    for (LinkedHashMap<String, Object> map : responseList) {
-                        if (map.get("value").equals(hubProjectName)) {
-                            projIds.add((String) map.get("uuid"));
-                            // setProjectId((String) map.get("uuid"));
-                            // return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getServerUrl()));
-                        } else {
-                            // name does not match
-                            if (projectMatches.length() > 0) {
-                                projectMatches.append(", " + (String) map.get("value"));
-                            } else {
-                                projectMatches.append((String) map.get("value"));
-                            }
-                        }
-                    }
-                    if (projIds.size() > 1) {
-                        return FormValidation.warning(Messages.HubBuildScan_getProjectExistsWithDuplicateMatches_0_(getHubServerUrl()));
-                    } else if (projIds.size() == 1) {
-                        return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getHubServerUrl()));
-                    } else {
-                        return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(getHubServerUrl(), projectMatches.toString()));
-                    }
+                String projectId = service.getProjectId(hubProjectName);
+
+                if (projectId != null) {
+                    return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getHubServerUrl()));
                 } else {
                     return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getHubServerUrl()));
                 }
+            } catch (BDRestException e) {
+                e.printStackTrace();
+                return FormValidation.error(e.getMessage());
             } catch (Exception e) {
                 String message;
                 if (e.getCause() != null && e.getCause().getCause() != null) {
@@ -413,6 +395,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 if (hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
+                }
+                if (hubProjectName.matches("(\\$\\{.*\\}){1,}")) {
+                    return FormValidation
+                            .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
                 }
 
                 String credentialUserName = null;
@@ -588,30 +574,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             if (StringUtils.isEmpty(hubProjectVersion)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
             }
-            if (hubProjectName.matches("(\\$\\{.*\\}){1,}") || hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
+            if (hubProjectName.matches("(\\$\\{.*\\}){1,}")) {
                 return FormValidation
-                        .warning(Messages.HubBuildScan_getProjectNameOrVersionContainsVariable());
-            }
-            // Check if the Project with the given name exists or not before creating it
-            FormValidation projectNameCheck = doCheckHubProjectName(hubProjectName);
-            String projectNonExistentMessage = Messages.HubBuildScan_getProjectNonExistingWithMatches_0_(null, null);
-            projectNonExistentMessage = projectNonExistentMessage.substring(0, 47);
-            boolean projectExists = false;
-            if (FormValidation.Kind.OK.equals(projectNameCheck.kind)
-                    || (FormValidation.Kind.WARNING.equals(projectNameCheck.kind))) {
-                // Project exists for given name
-                projectExists = true;
-                // Check if the Version for the given Project exists or not before creating it
-                FormValidation projectVersionCheck = doCheckHubProjectVersion(hubProjectVersion, hubProjectName);
-                String versionNonExistentMessage = Messages.HubBuildScan_getVersionNonExistingIn_0_(null, null);
-                versionNonExistentMessage = versionNonExistentMessage.substring(0, 52);
-                if (FormValidation.Kind.OK.equals(projectVersionCheck.kind)) {
-                    return FormValidation.warning(Messages.HubBuildScan_getProjectAndVersionExist());
-                } else if (!FormValidation.Kind.ERROR.equals(projectVersionCheck.kind) && !projectVersionCheck.getMessage().contains(versionNonExistentMessage)) {
-                    return FormValidation.error(projectVersionCheck.getMessage());
-                }
-            } else if (!FormValidation.Kind.ERROR.equals(projectNameCheck.kind) && !projectNameCheck.getMessage().contains(projectNonExistentMessage)) {
-                return FormValidation.error(projectNameCheck.getMessage());
+                        .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
             }
 
             String credentialUserName = null;
@@ -629,20 +594,52 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             service.setBaseUrl(getHubServerUrl());
             service.setCookies(credentialUserName, credentialPassword);
 
+            boolean projectExists = false;
+            boolean projectCreated = false;
+
             String projectId = null;
-            if (!projectExists) {
+            try {
+                projectId = service.getProjectId(hubProjectName);
+                if (projectId != null) {
+                    projectExists = true;
+                }
+            } catch (BDRestException e) {
+                // Either doesnt exist or cant connect to the server.
+                // Assume it doesnt exist for now
+            }
+
+            if (projectId == null) {
                 try {
                     projectId = service.createHubProject(hubProjectName);
+                    if (projectId != null) {
+                        projectCreated = true;
+                    }
                 } catch (BDRestException e) {
                     return FormValidation.error(e.getMessage());
                 }
             }
-            if (projectId == null) {
-                projectId = service.getProjectId(hubProjectName);
+
+            if (hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
+                if (projectCreated) {
+                    return FormValidation
+                            .warning(Messages._HubBuildScan_getProjectCreated() + " :: " + Messages.HubBuildScan_getProjectVersionContainsVariable());
+                } else {
+                    return FormValidation
+                            .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
+                }
             }
             String versionId = null;
             try {
-                versionId = service.createHubVersion(hubProjectVersion, projectId);
+                LinkedHashMap<String, Object> versionMatchesResponse = service.getVersionMatchesForProjectId(projectId);
+                versionId = service.getVersionIdFromMatches(versionMatchesResponse, hubProjectVersion);
+                if (projectExists && versionId != null) {
+                    return FormValidation
+                            .warning(Messages.HubBuildScan_getProjectAndVersionExist());
+                }
+
+                if (versionId == null) {
+                    versionId = service.createHubVersion(hubProjectVersion, projectId);
+                }
             } catch (BDRestException e) {
                 if (e.getResource().getResponse().getStatus().getCode() == 412) {
                     return FormValidation.error(Messages.HubBuildScan_getProjectVersionCreationProblem());

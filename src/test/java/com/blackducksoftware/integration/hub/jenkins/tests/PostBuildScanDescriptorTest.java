@@ -253,21 +253,34 @@ public class PostBuildScanDescriptorTest {
     @Test
     public void testCreateProjectVariables() throws Exception {
         PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
+                testProperties.getProperty("TEST_USERNAME"),
+                testProperties.getProperty("TEST_PASSWORD"));
+        UserFacingAction store = new UserFacingAction();
+        try {
+            store.getStore().addCredentials(Domain.global(), credential);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        HubServerInfo hubServerInfo = new HubServerInfo();
+        hubServerInfo.setCredentialsId(credential.getId());
+        hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+        descriptor.setHubServerInfo(hubServerInfo);
 
         FormValidation form = descriptor.doCreateHubProject("${JOB_NAME}", PROJECT_RELEASE_EXISTING);
 
         Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
-        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNameOrVersionContainsVariable());
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNameContainsVariable());
 
         FormValidation form2 = descriptor.doCreateHubProject(PROJECT_NAME_EXISTING, "${BUILD_NUMBER}");
 
         Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
-        Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectNameOrVersionContainsVariable());
+        Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectCreated() + " :: " + Messages.HubBuildScan_getProjectVersionContainsVariable());
 
         FormValidation form3 = descriptor.doCreateHubProject("${JOB_NAME}", "${BUILD_NUMBER}");
 
         Assert.assertEquals(FormValidation.Kind.WARNING, form3.kind);
-        Assert.assertEquals(form3.getMessage(), Messages.HubBuildScan_getProjectNameOrVersionContainsVariable());
+        Assert.assertEquals(form3.getMessage(), Messages.HubBuildScan_getProjectNameContainsVariable());
 
     }
 
@@ -304,7 +317,7 @@ public class PostBuildScanDescriptorTest {
 
         FormValidation form = descriptor.doCheckHubProjectName(PROJECT_NAME_NOT_EXISTING);
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNonExistingIn_0_(testProperties.getProperty("TEST_HUB_SERVER_URL")));
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_());
     }
 
     @Test
