@@ -621,6 +621,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
             if (hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
                 if (projectCreated) {
+
                     return FormValidation
                             .warning(Messages._HubBuildScan_getProjectCreated() + " :: " + Messages.HubBuildScan_getProjectVersionContainsVariable());
                 } else {
@@ -651,6 +652,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
             }
             if (!StringUtils.isEmpty(versionId)) {
+                // StaplerRequest request = Stapler.getCurrentRequest();
+                // StaplerResponse response = Stapler.getCurrentResponse();
+                // Stapler.getCurrent().invoke(request, response, this, "/checkHubProjectName");
+                // Stapler.getCurrent().invoke(request, response, this, "/checkHubProjectVersion");
                 return FormValidation.ok(Messages.HubBuildScan_getProjectAndVersionCreated());
             } else {
                 return FormValidation.error(Messages.HubBuildScan_getProjectVersionCreationProblem());
