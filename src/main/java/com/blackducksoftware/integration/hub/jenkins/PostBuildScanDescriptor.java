@@ -300,7 +300,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName) throws IOException, ServletException {
+    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName,
+            @QueryParameter("hubProjectVersion") final String hubProjectVersion) throws IOException, ServletException {
+        // Query for the project version so hopefully the check methods run for boths fields
+        // when the User changes the Name of the project
         if (hubProjectName.length() > 0) {
             ClassLoader originalClassLoader = Thread.currentThread()
                     .getContextClassLoader();
@@ -566,6 +569,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 .getContextClassLoader();
         boolean changed = false;
         try {
+
             save();
 
             if (StringUtils.isEmpty(hubProjectName)) {
@@ -621,7 +625,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
             if (hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
                 if (projectCreated) {
-
                     return FormValidation
                             .warning(Messages._HubBuildScan_getProjectCreated() + " :: " + Messages.HubBuildScan_getProjectVersionContainsVariable());
                 } else {
@@ -652,10 +655,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
             }
             if (!StringUtils.isEmpty(versionId)) {
-                // StaplerRequest request = Stapler.getCurrentRequest();
-                // StaplerResponse response = Stapler.getCurrentResponse();
-                // Stapler.getCurrent().invoke(request, response, this, "/checkHubProjectName");
-                // Stapler.getCurrent().invoke(request, response, this, "/checkHubProjectVersion");
                 return FormValidation.ok(Messages.HubBuildScan_getProjectAndVersionCreated());
             } else {
                 return FormValidation.error(Messages.HubBuildScan_getProjectVersionCreationProblem());

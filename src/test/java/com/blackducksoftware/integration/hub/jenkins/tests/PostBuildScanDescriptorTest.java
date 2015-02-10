@@ -176,7 +176,7 @@ public class PostBuildScanDescriptorTest {
             // wait 1.5 seconds before checking for the project and release
             Thread.sleep(3000);
             // Need to wait a second before checking if the project exists or it will not be recognized
-            FormValidation form2 = descriptor.doCheckHubProjectName(PROJECT_NAME_EXISTING);
+            FormValidation form2 = descriptor.doCheckHubProjectName(PROJECT_NAME_EXISTING, null);
             Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
             Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectExistsIn_0_(testProperties.getProperty("TEST_HUB_SERVER_URL")));
 
@@ -293,7 +293,7 @@ public class PostBuildScanDescriptorTest {
         hubServerInfo.setServerUrl("FAKE SERVER");
         descriptor.setHubServerInfo(hubServerInfo);
 
-        FormValidation form = descriptor.doCheckHubProjectName("${JOB_NAME}");
+        FormValidation form = descriptor.doCheckHubProjectName("${JOB_NAME}", null);
         Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNameContainsVariable());
     }
@@ -315,7 +315,7 @@ public class PostBuildScanDescriptorTest {
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         descriptor.setHubServerInfo(hubServerInfo);
 
-        FormValidation form = descriptor.doCheckHubProjectName(PROJECT_NAME_NOT_EXISTING);
+        FormValidation form = descriptor.doCheckHubProjectName(PROJECT_NAME_NOT_EXISTING, null);
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_());
     }
