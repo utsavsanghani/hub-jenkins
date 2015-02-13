@@ -194,9 +194,13 @@ public class PostBuildHubScan extends Recorder {
                 if (validateConfiguration(iScanTools, getScans())) {
                     // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any
                     // file even outside of the Jenkins directories
-
-                    File workspace = new File(build.getWorkspace().getRemote());
-
+                    File workspace = null;
+                    if (build.getWorkspace() == null) {
+                        // might be using custom workspace
+                        workspace = new File(build.getProject().getCustomWorkspace());
+                    } else {
+                        workspace = new File(build.getWorkspace().getRemote());
+                    }
                     String workingDirectory = "";
                     try {
                         workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(workspace));
@@ -207,7 +211,7 @@ public class PostBuildHubScan extends Recorder {
                     listener.getLogger().println("Node workspace " + workingDirectory);
                     setWorkingDirectory(workingDirectory);
                     setJava(build, listener);
-                    FilePath iScanExec = getScanCLI(iScanTools, listener, build);
+                    EnvVars variables = build.getEnvironment(listener);
                     List<String> scanTargets = new ArrayList<String>();
                     for (ScanJobs scanJob : getScans()) {
                         if (StringUtils.isEmpty(scanJob.getScanTarget())) {
@@ -215,7 +219,8 @@ public class PostBuildHubScan extends Recorder {
                         } else {
                             // trim the target so there are no false whitespaces at the beginning or end of the target
                             // path
-                            String target = scanJob.getScanTarget().trim();
+                            String target = handleVariableReplacement(variables, scanJob.getScanTarget().trim());
+
                             // make sure the target doesn't already begin with a slash or end in a slash
                             // removes the slash if the target begins or ends with one
                             if (target.startsWith("/") || target.startsWith("\\")) {
@@ -234,14 +239,14 @@ public class PostBuildHubScan extends Recorder {
                     String projectVersion = null;
 
                     if (!StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectVersion())) {
-                        EnvVars variables = build.getEnvironment(listener);
-
                         projectName = handleVariableReplacement(variables, getHubProjectName());
                         projectVersion = handleVariableReplacement(variables, getHubProjectVersion());
 
                     }
 
                     printConfiguration(build, listener, projectName, projectVersion, scanTargets);
+
+                    FilePath iScanExec = getScanCLI(iScanTools, listener, build);
 
                     runScan(build, launcher, listener, iScanExec, scanTargets);
 

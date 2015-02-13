@@ -84,7 +84,7 @@ public class IntegrationTest {
         basePath = IntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf(File.separator + "target"));
         basePath = basePath + File.separator + "test-workspace";
-        iScanInstallPath = basePath + File.separator + "scan.cli-1.18.0-SNAPSHOT";
+        iScanInstallPath = basePath + File.separator + "scan.cli-2.0.0-SNAPSHOT";
         testWorkspace = basePath + File.separator + "workspace";
 
         testProperties = new Properties();
@@ -696,9 +696,8 @@ public class IntegrationTest {
 
         Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
         // TODO replace with new BlackDuck Scan error message
-        Assert.assertTrue(listContainsSubString(buildOutputList, "ERROR:"));
         Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "with status FAILURE"));
+        Assert.assertTrue(listContainsSubString(buildOutputList, "with status NO_PERMISSION"));
         Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
     }
 
@@ -741,9 +740,8 @@ public class IntegrationTest {
 
         Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
         // TODO replace with new BlackDuck Scan error message
-        Assert.assertTrue(listContainsSubString(buildOutputList, "ERROR:"));
         Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "with status FAILURE"));
+        Assert.assertTrue(listContainsSubString(buildOutputList, "with status NO_PERMISSION"));
         Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
     }
 
