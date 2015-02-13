@@ -246,9 +246,9 @@ public class PostBuildHubScan extends Recorder {
 
                     printConfiguration(build, listener, projectName, projectVersion, scanTargets);
 
-                    FilePath iScanExec = getScanCLI(iScanTools, listener, build);
+                    FilePath scanExec = getScanCLI(iScanTools, listener, build);
 
-                    runScan(build, launcher, listener, iScanExec, scanTargets);
+                    runScan(build, launcher, listener, scanExec, scanTargets);
 
                     // Only map the scans to a Project Version if the Project name and Project Version have been
                     // configured
@@ -464,7 +464,7 @@ public class PostBuildHubScan extends Recorder {
      *            Launcher
      * @param listener
      *            BuildListener
-     * @param iScanExec
+     * @param scanExec
      *            FilePath
      * @param scanTargets
      *            List<String>
@@ -473,7 +473,7 @@ public class PostBuildHubScan extends Recorder {
      * @throws HubConfigurationException
      * @throws InterruptedException
      */
-    private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath iScanExec, List<String> scanTargets)
+    private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath scanExec, List<String> scanTargets)
             throws IOException,
             HubConfigurationException, InterruptedException {
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
@@ -508,7 +508,7 @@ public class PostBuildHubScan extends Recorder {
         } else {
             cmd.add("-Xmx" + DEFAULT_MEMORY + "m");
         }
-        cmd.add(iScanExec.getRemote());
+        cmd.add(scanExec.getRemote());
         cmd.add("--scheme");
         cmd.add(url.getProtocol());
         cmd.add("--host");
@@ -533,6 +533,7 @@ public class PostBuildHubScan extends Recorder {
                 getJava().getHome());
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ProcStarter ps = launcher.launch();
+        long scanTime = System.nanoTime();
         if (ps != null) {
             ps.envs(build.getEnvironment(listener));
             ps.cmds(cmd);
@@ -554,14 +555,6 @@ public class PostBuildHubScan extends Recorder {
                         File scanTargetFile = new File(target);
                         String fileName = scanTargetFile.getName();
 
-                        FilePath libFolder = iScanExec.getParent();
-                        List<FilePath> files = libFolder.list();
-                        FilePath logFolder = null;
-                        for (FilePath file : files) {
-                            if (file.getName().contains("log")) {
-                                logFolder = file;
-                            }
-                        }
                         String localHostName = "";
                         try {
                             localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
@@ -570,7 +563,7 @@ public class PostBuildHubScan extends Recorder {
                             e.printStackTrace(listener.getLogger());
                         }
 
-                        File latestLogFile = getLogFileForScan(localHostName, fileName, logFolder);
+                        File latestLogFile = getLogFileForScan(localHostName, fileName, scanExec, scanTime);
                         if (latestLogFile != null) {
                             listener.getLogger().println(
                                     "For scan target : '" + target + "', you can view the BlackDuck Scan CLI logs at : '" + latestLogFile.getCanonicalPath()
@@ -601,9 +594,19 @@ public class PostBuildHubScan extends Recorder {
         }
     }
 
-    private File getLogFileForScan(String localHostName, String fileName, FilePath logFolder) throws IOException, InterruptedException {
+    private File getLogFileForScan(String localHostName, String fileName, FilePath scanExec, long scanTime) throws IOException, InterruptedException {
         File latestLogFile = null;
         DateTime latestLogTime = null;
+
+        FilePath libFolder = scanExec.getParent();
+        List<FilePath> files = libFolder.list();
+        FilePath logFolder = null;
+        for (FilePath file : files) {
+            if (file.getName().contains("log")) {
+                logFolder = file;
+            }
+        }
+
         List<FilePath> logFiles = logFolder.list();
         for (FilePath log : logFiles) {
             if (log.getName().contains(fileName)) {
@@ -611,8 +614,8 @@ public class PostBuildHubScan extends Recorder {
                 if (logName.contains(localHostName)) {
                     // remove the host name
                     logName = logName.replace(localHostName + "-", "");
-                    int end = logName.length() - 31;
-                    if (logName.substring(0, end).equals(fileName)) {
+
+                    if (logName.startsWith(fileName)) {
                         // remove the filename
                         logName = logName.replace(fileName + "-", "");
 
@@ -620,7 +623,9 @@ public class PostBuildHubScan extends Recorder {
                         if (latestLogFile == null) {
                             String time = logName;
                             // remove the -0400.log from the log file name
-                            time = time.substring(0, time.length() - 9);
+                            time = time.substring(0, 20); // the length of the time format
+
+                            // TODO compare against the scan time, closet time should be the correct log
 
                             DateTimeFormatter dateStringFormat = new
                                     DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
@@ -629,7 +634,7 @@ public class PostBuildHubScan extends Recorder {
                             latestLogFile = new File(log.getRemote());
                         } else {
                             String time = logName;
-                            time = time.substring(0, time.length() - 9);
+                            time = time.substring(0, 20); // the length of the time format
 
                             DateTimeFormatter dateStringFormat = new
                                     DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
