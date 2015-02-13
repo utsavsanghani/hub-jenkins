@@ -458,51 +458,55 @@ public class IntegrationTest {
 
     @Test
     public void completeRunthroughAndScanWithMappingToNonExistentProject() throws IOException, InterruptedException, ExecutionException, BDRestException {
-        Jenkins jenkins = j.jenkins;
+        try {
+            Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+            ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
 
-        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-        iScanDesc.setInstallations(iScanInstall);
+            IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
+            iScanDesc.setInstallations(iScanInstall);
 
-        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
-        UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
-                testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
-        store.addCredentials(Domain.global(), credential);
+            CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+            UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
+                    testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+            store.addCredentials(Domain.global(), credential);
 
-        HubServerInfo serverInfo = new HubServerInfo();
-        serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        serverInfo.setCredentialsId(credential.getId());
+            HubServerInfo serverInfo = new HubServerInfo();
+            serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+            serverInfo.setCredentialsId(credential.getId());
 
-        ScanJobs oneScan = new ScanJobs("");
-        ScanJobs[] scans = new ScanJobs[1];
-        scans[0] = oneScan;
+            ScanJobs oneScan = new ScanJobs("");
+            ScanJobs[] scans = new ScanJobs[1];
+            scans[0] = oneScan;
 
-        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-        scanDesc.setHubServerInfo(serverInfo);
+            PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
+            scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING, "4096");
-        pbScan.setTEST(true);
-        FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
-        project.setCustomWorkspace(testWorkspace);
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING, "4096");
+            pbScan.setTEST(true);
+            FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+            project.setCustomWorkspace(testWorkspace);
 
-        project.getPublishersList().add(pbScan);
+            project.getPublishersList().add(pbScan);
 
-        FreeStyleBuild build = project.scheduleBuild2(0).get();
-        String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-        System.out.println(buildOutput);
-        List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Scan target exists at :"));
-        URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
-        Assert.assertTrue(buildOutputList
-                .contains("ERROR: The specified Project could not be found. "));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Build step 'Black Duck Hub Integration' changed build result to UNSTABLE"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Finished: UNSTABLE"));
-
+            FreeStyleBuild build = project.scheduleBuild2(0).get();
+            String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+            System.out.println(buildOutput);
+            List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Scan target exists at :"));
+            URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id: '"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished: SUCCESS"));
+        } finally {
+            restHelper.deleteHubProject(restHelper.getProjectId(PROJECT_NAME_NOT_EXISTING));
+        }
     }
 
     @Test
@@ -554,11 +558,10 @@ public class IntegrationTest {
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutputList
-                    .contains(
-                    "ERROR: The specified Version could not be found in the Project."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Build step 'Black Duck Hub Integration' changed build result to UNSTABLE"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished: UNSTABLE"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id: '"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished: SUCCESS"));
         } finally {
             restHelper.deleteHubProject(projectId);
         }
