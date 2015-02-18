@@ -199,6 +199,64 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     /**
+     * Fills the drop down list of possible Version phases
+     *
+     * @return
+     */
+    public ListBoxModel doFillHubVersionPhaseItems() {
+        ClassLoader originalClassLoader = Thread.currentThread()
+                .getContextClassLoader();
+        boolean changed = false;
+        ListBoxModel items = new ListBoxModel();
+        try {
+            // FIXME should get this list from the Hub server, ticket HUB-1610
+            items.add("PLANNING", "PLANNING");
+            items.add("DEVELOPMENT", "DEVELOPMENT");
+            items.add("RELEASED", "RELEASED");
+            items.add("DEPRECATED", "DEPRECATED");
+            items.add("ARCHIVED", "ARCHIVED");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println(e.getMessage());
+        } finally {
+            if (changed) {
+                Thread.currentThread().setContextClassLoader(
+                        originalClassLoader);
+            }
+        }
+        return items;
+    }
+
+    /**
+     * Fills the drop down list of possible Version distribution types
+     *
+     * @return
+     */
+    public ListBoxModel doFillHubVersionDistItems() {
+        ClassLoader originalClassLoader = Thread.currentThread()
+                .getContextClassLoader();
+        boolean changed = false;
+        ListBoxModel items = new ListBoxModel();
+        try {
+            // FIXME should get this list from the Hub server, ticket HUB-1610
+            items.add("EXTERNAL", "EXTERNAL");
+            items.add("SAAS", "SAAS");
+            items.add("INTERNAL", "INTERNAL");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println(e.getMessage());
+        } finally {
+            if (changed) {
+                Thread.currentThread().setContextClassLoader(
+                        originalClassLoader);
+            }
+        }
+        return items;
+    }
+
+    /**
      * Performs on-the-fly validation of the form field 'serverUrl'.
      *
      * @param value
@@ -241,52 +299,45 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName) throws IOException,
             ServletException {
         AutoCompletionCandidates potentialMatches = new AutoCompletionCandidates();
-        UsernamePasswordCredentialsImpl credential = null;
         if (!StringUtils.isEmpty(getHubServerUrl()) || !StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
-            credential = hubServerInfo.getCredential();
-            if (credential != null) {
-                ClassLoader originalClassLoader = Thread.currentThread()
-                        .getContextClassLoader();
-                boolean changed = false;
-                try {
-                    String credentialUserName = null;
-                    String credentialPassword = null;
-                    credentialUserName = credential.getUsername();
-                    credentialPassword = credential.getPassword().getPlainText();
+            ClassLoader originalClassLoader = Thread.currentThread()
+                    .getContextClassLoader();
+            boolean changed = false;
+            try {
 
-                    JenkinsHubIntRestService service = new JenkinsHubIntRestService();
-                    setupService(service);
-                    service.setBaseUrl(getHubServerUrl());
-                    service.setCookies(credentialUserName, credentialPassword);
-                    ArrayList<LinkedHashMap<String, Object>> responseList = service.getProjectMatches(hubProjectName);
+                JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+                setupService(service);
+                service.setBaseUrl(getHubServerUrl());
+                service.setCookies(getHubServerInfo().getUsername(), getHubServerInfo().getPassword());
+                ArrayList<LinkedHashMap<String, Object>> responseList = service.getProjectMatches(hubProjectName);
 
-                    if (!responseList.isEmpty()) {
-                        ArrayList<String> projectNames = new ArrayList<String>();
-                        for (LinkedHashMap<String, Object> map : responseList) {
-                            if (map.get("value").equals(hubProjectName)) {
-                                if (!projectNames.contains(map.get("value"))) {
-                                    projectNames.add((String) map.get("value"));
-                                }
-                            } else {
-                                // name does not match
+                if (!responseList.isEmpty()) {
+                    ArrayList<String> projectNames = new ArrayList<String>();
+                    for (LinkedHashMap<String, Object> map : responseList) {
+                        if (map.get("value").equals(hubProjectName)) {
+                            if (!projectNames.contains(map.get("value"))) {
                                 projectNames.add((String) map.get("value"));
                             }
-                        }
-                        if (!projectNames.isEmpty()) {
-                            for (String projectName : projectNames) {
-                                potentialMatches.add(projectName);
-                            }
+                        } else {
+                            // name does not match
+                            projectNames.add((String) map.get("value"));
                         }
                     }
-                } catch (Exception e) {
-                    // do nothing for exception
-                } finally {
-                    if (changed) {
-                        Thread.currentThread().setContextClassLoader(
-                                originalClassLoader);
+                    if (!projectNames.isEmpty()) {
+                        for (String projectName : projectNames) {
+                            potentialMatches.add(projectName);
+                        }
                     }
                 }
+            } catch (Exception e) {
+                // do nothing for exception
+            } finally {
+                if (changed) {
+                    Thread.currentThread().setContextClassLoader(
+                            originalClassLoader);
+                }
             }
+
         }
         return potentialMatches;
     }
@@ -564,7 +615,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @throws ServletException
      */
     public FormValidation doCreateHubProject(@QueryParameter("hubProjectName") final String hubProjectName,
-            @QueryParameter("hubProjectVersion") final String hubProjectVersion) {
+            @QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("hubVersionPhase") final String hubVersionPhase,
+            @QueryParameter("hubVersionDist") final String hubVersionDist) {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -635,14 +687,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             String versionId = null;
             try {
                 LinkedHashMap<String, Object> versionMatchesResponse = service.getVersionMatchesForProjectId(projectId);
-                versionId = service.getVersionIdFromMatches(versionMatchesResponse, hubProjectVersion);
+                versionId = service.getVersionIdFromMatches(versionMatchesResponse, hubProjectVersion, hubVersionPhase, hubVersionDist);
                 if (projectExists && versionId != null) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectAndVersionExist());
                 }
 
                 if (versionId == null) {
-                    versionId = service.createHubVersion(hubProjectVersion, projectId);
+                    versionId = service.createHubVersion(hubProjectVersion, projectId, hubVersionPhase, hubVersionDist);
                 }
             } catch (BDRestException e) {
                 if (e.getResource().getResponse().getStatus().getCode() == 412) {

@@ -481,7 +481,8 @@ public class JenkinsHubIntRestService {
         return responseMap;
     }
 
-    public String getVersionIdFromMatches(LinkedHashMap<String, Object> responseMap, String releaseVersion) throws IOException, BDRestException {
+    public String getVersionIdFromMatches(LinkedHashMap<String, Object> responseMap, String releaseVersion, String versionPhase, String versionDist)
+            throws IOException, BDRestException {
         String versionId = null;
 
         if (responseMap.containsKey("items")) {
@@ -489,7 +490,14 @@ public class JenkinsHubIntRestService {
             for (LinkedHashMap<String, Object> release : versionList) {
                 if (((String) release.get("version")).equals(releaseVersion)) {
                     versionId = (String) release.get("id");
-
+                    if (!((String) release.get("phase")).equals(versionPhase) && listener != null) {
+                        listener.getLogger().println("WARNING: The selected Phase does not match the Phase of this Version.");
+                        listener.getLogger().println("WARNING: If you wish to update the Phase please do so in the Hub.");
+                    }
+                    if (!((String) release.get("distribution")).equals(versionDist) && listener != null) {
+                        listener.getLogger().println("WARNING: The selected Distribution does not match the Distribution of this Version.");
+                        listener.getLogger().println("WARNING: If you wish to update the Distribution please do so in the Hub.");
+                    }
                 }
             }
         }
@@ -546,7 +554,7 @@ public class JenkinsHubIntRestService {
 
     }
 
-    public String createHubVersion(String projectVersion, String projectId) throws IOException, BDRestException {
+    public String createHubVersion(String projectVersion, String projectId, String phase, String dist) throws IOException, BDRestException {
         String url = getBaseUrl() + "/api/v1/releases";
         ClientResource resource = createClientResource(url);
         int responseCode;
@@ -555,8 +563,8 @@ public class JenkinsHubIntRestService {
             JSONObject obj = new JSONObject();
             obj.put("projectId", projectId);
             obj.put("version", projectVersion);
-            obj.put("phase", "DEVELOPMENT");
-            obj.put("distribution", "EXTERNAL");
+            obj.put("phase", phase);
+            obj.put("distribution", dist);
 
             resource.getRequest().setCookies(getCookies());
             resource.setMethod(Method.POST);

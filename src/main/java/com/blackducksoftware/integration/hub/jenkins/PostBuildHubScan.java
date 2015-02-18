@@ -31,6 +31,7 @@ import jenkins.model.Jenkins;
 
 import org.codehaus.plexus.util.StringUtils;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeComparator;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -49,6 +50,10 @@ public class PostBuildHubScan extends Recorder {
     private final String scanName;
 
     private final String hubProjectName;
+
+    private final String hubVersionPhase;
+
+    private final String hubVersionDist;
 
     private String hubProjectVersion;
 
@@ -69,11 +74,14 @@ public class PostBuildHubScan extends Recorder {
     private boolean test = false;
 
     @DataBoundConstructor
-    public PostBuildHubScan(ScanJobs[] scans, String scanName, String hubProjectName, String hubProjectVersion, String scanMemory) {
+    public PostBuildHubScan(ScanJobs[] scans, String scanName, String hubProjectName, String hubProjectVersion, String hubVersionPhase, String hubVersionDist,
+            String scanMemory) {
         this.scans = scans;
         this.scanName = scanName;
         this.hubProjectName = hubProjectName;
         this.hubProjectVersion = hubProjectVersion;
+        this.hubVersionPhase = hubVersionPhase;
+        this.hubVersionDist = hubVersionDist;
         Integer memory = 0;
         try {
             memory = Integer.valueOf(scanMemory);
@@ -126,6 +134,14 @@ public class PostBuildHubScan extends Recorder {
 
     public String getHubProjectName() {
         return hubProjectName;
+    }
+
+    public String getHubVersionPhase() {
+        return hubVersionPhase;
+    }
+
+    public String getHubVersionDist() {
+        return hubVersionDist;
     }
 
     public ScanJobs[] getScans() {
@@ -311,9 +327,9 @@ public class PostBuildHubScan extends Recorder {
             projectId = service.getProjectId(projectName);
 
             LinkedHashMap<String, Object> versionMatchesResponse = service.getVersionMatchesForProjectId(projectId);
-            versionId = service.getVersionIdFromMatches(versionMatchesResponse, projectVersion);
+            versionId = service.getVersionIdFromMatches(versionMatchesResponse, projectVersion, getHubVersionPhase(), getHubVersionDist());
             if (versionId == null) {
-                versionId = service.createHubVersion(projectVersion, projectId);
+                versionId = service.createHubVersion(projectVersion, projectId, getHubVersionPhase(), getHubVersionDist());
                 listener.getLogger().println("[DEBUG] Version created!");
             }
         } catch (BDRestException e) {
@@ -328,9 +344,9 @@ public class PostBuildHubScan extends Recorder {
                         // We check if the version exists first even though we just created the project
                         // The user might have specified the default version, in which case it already exists
                         LinkedHashMap<String, Object> versionMatchesResponse = service.getVersionMatchesForProjectId(projectId);
-                        versionId = service.getVersionIdFromMatches(versionMatchesResponse, projectVersion);
+                        versionId = service.getVersionIdFromMatches(versionMatchesResponse, projectVersion, getHubVersionPhase(), getHubVersionDist());
                         if (versionId == null) {
-                            versionId = service.createHubVersion(projectVersion, projectId);
+                            versionId = service.createHubVersion(projectVersion, projectId, getHubVersionPhase(), getHubVersionDist());
                             listener.getLogger().println("[DEBUG] Version created!");
                         }
 
@@ -533,7 +549,7 @@ public class PostBuildHubScan extends Recorder {
                 getJava().getHome());
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ProcStarter ps = launcher.launch();
-        long scanTime = System.nanoTime();
+        DateTime scanTime = new DateTime();
         if (ps != null) {
             ps.envs(build.getEnvironment(listener));
             ps.cmds(cmd);
@@ -594,9 +610,9 @@ public class PostBuildHubScan extends Recorder {
         }
     }
 
-    private File getLogFileForScan(String localHostName, String fileName, FilePath scanExec, long scanTime) throws IOException, InterruptedException {
-        File latestLogFile = null;
-        DateTime latestLogTime = null;
+    private File getLogFileForScan(String localHostName, String fileName, FilePath scanExec, DateTime scanTime) throws IOException, InterruptedException {
+        File closestLogFile = null;
+        int smallestDifference = 0;
 
         FilePath libFolder = scanExec.getParent();
         List<FilePath> files = libFolder.list();
@@ -620,18 +636,19 @@ public class PostBuildHubScan extends Recorder {
                         logName = logName.replace(fileName + "-", "");
 
                         // log file name contains the scan target, and the host name. Get the latest one.
-                        if (latestLogFile == null) {
+                        if (closestLogFile == null) {
                             String time = logName;
                             // remove the -0400.log from the log file name
                             time = time.substring(0, 20); // the length of the time format
 
-                            // TODO compare against the scan time, closet time should be the correct log
-
                             DateTimeFormatter dateStringFormat = new
                                     DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-                            DateTime dateTime = dateStringFormat.parseDateTime(time);
-                            latestLogTime = dateTime;
-                            latestLogFile = new File(log.getRemote());
+                            DateTime logTime = dateStringFormat.parseDateTime(time);
+
+                            int difference = Math.abs(DateTimeComparator.getInstance().compare(scanTime, logTime));
+
+                            smallestDifference = difference;
+                            closestLogFile = new File(log.getRemote());
                         } else {
                             String time = logName;
                             time = time.substring(0, 20); // the length of the time format
@@ -640,16 +657,18 @@ public class PostBuildHubScan extends Recorder {
                                     DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
                             DateTime logTime = dateStringFormat.parseDateTime(time);
 
-                            if (logTime.isAfter(latestLogTime)) {
-                                latestLogTime = logTime;
-                                latestLogFile = new File(log.getRemote());
+                            int difference = Math.abs(DateTimeComparator.getInstance().compare(scanTime, logTime));
+
+                            if (difference < smallestDifference) {
+                                smallestDifference = difference;
+                                closestLogFile = new File(log.getRemote());
                             }
                         }
                     }
                 }
             }
         }
-        return latestLogFile;
+        return closestLogFile;
     }
 
     public JDK getJava() {

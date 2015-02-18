@@ -70,14 +70,21 @@ public class HubServerInfo implements Serializable {
 
     public String getUsername() {
         UsernamePasswordCredentialsImpl creds = getCredential();
-
-        return creds.getUsername();
+        if (creds == null) {
+            return null;
+        } else {
+            return creds.getUsername();
+        }
     }
 
     public String getPassword() {
         UsernamePasswordCredentialsImpl creds = getCredential();
+        if (creds == null) {
+            return null;
+        } else {
+            return creds.getPassword().getPlainText();
+        }
 
-        return creds.getPassword().getPlainText();
     }
 
     protected UsernamePasswordCredentialsImpl getCredential() {
