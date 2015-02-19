@@ -491,12 +491,14 @@ public class JenkinsHubIntRestService {
                 if (((String) release.get("version")).equals(releaseVersion)) {
                     versionId = (String) release.get("id");
                     if (!((String) release.get("phase")).equals(versionPhase) && listener != null) {
-                        listener.getLogger().println("WARNING: The selected Phase does not match the Phase of this Version.");
-                        listener.getLogger().println("WARNING: If you wish to update the Phase please do so in the Hub.");
+                        listener.getLogger()
+                                .println(
+                                        "WARNING: The selected Phase does not match the Phase of this Version. If you wish to update the Phase please do so in the Hub.");
                     }
                     if (!((String) release.get("distribution")).equals(versionDist) && listener != null) {
-                        listener.getLogger().println("WARNING: The selected Distribution does not match the Distribution of this Version.");
-                        listener.getLogger().println("WARNING: If you wish to update the Distribution please do so in the Hub.");
+                        listener.getLogger()
+                                .println(
+                                        "WARNING: The selected Distribution does not match the Distribution of this Version. If you wish to update the Distribution please do so in the Hub.");
                     }
                 }
             }
