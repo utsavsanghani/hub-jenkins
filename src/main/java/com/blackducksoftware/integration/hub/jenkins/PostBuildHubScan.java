@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -551,6 +552,17 @@ public class PostBuildHubScan extends Recorder {
         ProcStarter ps = launcher.launch();
         DateTime scanTime = new DateTime();
         if (ps != null) {
+            // ////////////////////// Code to mask the password in the logs
+            int indexOfPassword = cmd.indexOf("--password");
+            boolean[] masks = new boolean[cmd.size()];
+            Arrays.fill(masks, false);
+
+            // The Users password should appear after --password
+            masks[indexOfPassword + 1] = true;
+
+            ps.masks(masks);
+            // ///////////////////////
+
             ps.envs(build.getEnvironment(listener));
             ps.cmds(cmd);
             ps.stdout(byteStream);
@@ -693,12 +705,14 @@ public class PostBuildHubScan extends Recorder {
             listener.getLogger().println("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
             // Empty node name indicates master
             javaHomeTemp = build.getProject().getJDK();
-            listener.getLogger().println("JDK home : " + javaHomeTemp.getHome());
         } else {
             listener.getLogger().println("Getting Jdk on node  : " + build.getBuiltOn().getNodeName());
             javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), listener);
+        }
+        if (javaHomeTemp != null && javaHomeTemp.getHome() != null) {
             listener.getLogger().println("JDK home : " + javaHomeTemp.getHome());
         }
+
         if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
             listener.getLogger().println("Could not find the specified Java installation, checking the JAVA_HOME variable.");
             if (envVars.get("JAVA_HOME") == null || envVars.get("JAVA_HOME") == "") {
