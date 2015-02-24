@@ -158,6 +158,12 @@ public class PostBuildHubScan extends Recorder {
     }
 
     private void setWorkingDirectory(String workingDirectory) {
+        if (!workingDirectory.startsWith("\\") && !workingDirectory.startsWith("/")) {
+            workingDirectory = "/" + workingDirectory;
+            // Need to do this because of the windows issue, IJH-64
+        }
+        workingDirectory = workingDirectory.replace("\\", "/"); // IJH-64
+
         this.workingDirectory = workingDirectory;
     }
 
@@ -238,17 +244,20 @@ public class PostBuildHubScan extends Recorder {
                             // path
                             String target = handleVariableReplacement(variables, scanJob.getScanTarget().trim());
 
-                            // make sure the target doesn't already begin with a slash or end in a slash
+                            // make sure the target provided doesn't already begin with a slash or end in a slash
                             // removes the slash if the target begins or ends with one
                             if (target.startsWith("/") || target.startsWith("\\")) {
                                 target = getWorkingDirectory() + target;
                             } else {
-                                target = getWorkingDirectory() + "/" + target;
+                                target = getWorkingDirectory() + File.separator + target;
 
                             }
                             if (target.endsWith("/") || target.endsWith("\\")) {
                                 target = target.substring(0, target.length() - 1);
                             }
+
+                            target = target.replace("\\", "/"); // IJH-64
+
                             scanTargets.add(target);
                         }
                     }
@@ -350,7 +359,6 @@ public class PostBuildHubScan extends Recorder {
                             versionId = service.createHubVersion(projectVersion, projectId, getHubVersionPhase(), getHubVersionDist());
                             listener.getLogger().println("[DEBUG] Version created!");
                         }
-
                     } catch (BDRestException e1) {
                         if (e1.getResource() != null) {
                             listener.getLogger().println("[ERROR] Status : " + e1.getResource().getStatus().getCode());
@@ -594,7 +602,7 @@ public class PostBuildHubScan extends Recorder {
                         File latestLogFile = getLogFileForScan(localHostName, fileName, scanExec, scanTime);
                         if (latestLogFile != null) {
                             listener.getLogger().println(
-                                    "For scan target : '" + target + "', you can view the BlackDuck Scan CLI logs at : '" + latestLogFile.getCanonicalPath()
+                                    "For scan target : '" + target + "', you can view the BlackDuck Scan CLI logs at : '" + latestLogFile.getAbsolutePath()
                                             + "'");
                             listener.getLogger().println();
                         } else {
@@ -836,17 +844,19 @@ public class PostBuildHubScan extends Recorder {
             InterruptedException {
         for (String currTarget : scanTargets) {
             File locationFile = new File(currTarget);
-            FilePath target = null;
+            String targetPath = "";
             if (channel != null) {
-                target = new FilePath(channel, currTarget);
+                targetPath = channel.call(new GetCanonicalPath(locationFile));
             } else {
-                target = new FilePath(locationFile);
+                targetPath = locationFile.getCanonicalPath();
             }
-            if (target.length() <= getWorkingDirectory().length()
-                    && !getWorkingDirectory().equals(target.getRemote()) && !target.getRemote().contains(getWorkingDirectory())) {
+
+            if (targetPath.length() <= getWorkingDirectory().length()
+                    && !getWorkingDirectory().equals(targetPath) && !targetPath.contains(getWorkingDirectory())) {
                 throw new HubConfigurationException("Can not scan targets outside of the workspace.");
             }
 
+            FilePath target = new FilePath(channel, targetPath);
             if (!target.exists()) {
                 throw new IOException("Scan target could not be found : " + target.getRemote());
             } else {
@@ -856,5 +866,4 @@ public class PostBuildHubScan extends Recorder {
         }
         return true;
     }
-
 }

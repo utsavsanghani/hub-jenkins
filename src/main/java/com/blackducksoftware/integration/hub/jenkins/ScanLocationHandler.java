@@ -5,6 +5,7 @@ import hudson.model.Result;
 import hudson.model.AbstractBuild;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.MalformedURLException;
@@ -123,8 +124,15 @@ public class ScanLocationHandler {
                     for (LinkedHashMap<String, Object> scanMatch : scanMatchesList) {
                         path = (String) scanMatch.get("path");
 
-                        listener.getLogger().println("[DEBUG] Comparing target : '" + targetPath + "' with path : '" + path + "'.");
+                        // Remove trailing slash from both strings
+                        if (path.endsWith(File.separator)) {
+                            path = path.substring(0, path.length() - 1);
+                        }
+                        if (targetPath.endsWith(File.separator)) {
+                            targetPath = targetPath.substring(0, targetPath.length() - 1);
+                        }
 
+                        listener.getLogger().println("[DEBUG] Comparing target : '" + targetPath + "' with path : '" + path + "'.");
                         // trim the path, this way there should be no whitespaces to intefere with the comparison
                         if (targetPath.equals(path.trim())) {
                             listener.getLogger().println("[DEBUG] MATCHED!");
@@ -136,6 +144,15 @@ public class ScanLocationHandler {
                 } else if (scanMatchesList.size() == 1) {
                     LinkedHashMap<String, Object> scanMatch = scanMatchesList.get(0);
                     path = (String) scanMatch.get("path");
+
+                    // Remove trailing slash from both strings
+                    if (path.endsWith(File.separator)) {
+                        path = path.substring(0, path.length() - 1);
+                    }
+                    if (targetPath.endsWith(File.separator)) {
+                        targetPath = targetPath.substring(0, targetPath.length() - 1);
+                    }
+
                     listener.getLogger().println("[DEBUG] Comparing target : '" + targetPath + "' with path : '" + path + "'.");
                     // trim the path, this way there should be no whitespaces to intefere with the comparison
                     if (targetPath.equals(path.trim())) {
