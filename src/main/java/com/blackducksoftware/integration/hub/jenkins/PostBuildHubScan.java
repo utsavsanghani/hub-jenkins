@@ -602,7 +602,7 @@ public class PostBuildHubScan extends Recorder {
                         File latestLogFile = getLogFileForScan(localHostName, fileName, scanExec, scanTime);
                         if (latestLogFile != null) {
                             listener.getLogger().println(
-                                    "For scan target : '" + target + "', you can view the BlackDuck Scan CLI logs at : '" + latestLogFile.getAbsolutePath()
+                                    "For scan target : '" + target + "', you can view the BlackDuck Scan CLI logs at : '" + latestLogFile.getCanonicalPath()
                                             + "'");
                             listener.getLogger().println();
                         } else {
