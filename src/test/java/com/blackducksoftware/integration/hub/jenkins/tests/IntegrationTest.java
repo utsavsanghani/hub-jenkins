@@ -48,7 +48,9 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
 public class IntegrationTest {
 
-    private static final String PASSWORD_WRONG = "Assert.failurePassword";
+    private static final String DEFAULT_ISCAN = "default";
+
+	private static final String PASSWORD_WRONG = "Assert.failurePassword";
 
     private static final String USERNAME_NON_EXISTING = "Assert.failureUser";
 
@@ -130,7 +132,7 @@ public class IntegrationTest {
     public void completeRunthroughAndScan() throws IOException, InterruptedException, ExecutionException {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
 
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
@@ -151,7 +153,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
 
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
@@ -182,7 +184,7 @@ public class IntegrationTest {
     public void completeRunthroughAndScanWithMapping() throws IOException, InterruptedException, ExecutionException, BDRestException {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
 
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
@@ -217,7 +219,7 @@ public class IntegrationTest {
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, null, null, "4096");
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, null, null, "4096");
 
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -250,7 +252,7 @@ public class IntegrationTest {
     public void completeRunthroughAndScanWithMappingVariableProjectName() throws IOException, InterruptedException, ExecutionException, BDRestException {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
 
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
@@ -276,7 +278,7 @@ public class IntegrationTest {
             PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
             scanDesc.setHubServerInfo(serverInfo);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", "${JOB_NAME}", PROJECT_RELEASE_EXISTING, "DEVELOPMENT", "EXTERNAL", "4096");
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, "${JOB_NAME}", PROJECT_RELEASE_EXISTING, "DEVELOPMENT", "EXTERNAL", "4096");
 
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, projectName);
             project.setCustomWorkspace(testWorkspace);
@@ -309,7 +311,7 @@ public class IntegrationTest {
     public void completeRunthroughAndScanWithMappingThroughProxy() throws IOException, InterruptedException, ExecutionException, BDRestException {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
 
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
@@ -344,7 +346,7 @@ public class IntegrationTest {
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, null, null, "4096");
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, null, null, "4096");
             pbScan.setTEST(true);
             jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST"),
                     Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT")));
@@ -383,7 +385,7 @@ public class IntegrationTest {
     public void completeRunthroughAndScanWithMappingWithProxyIgnored() throws IOException, InterruptedException, ExecutionException, BDRestException {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
 
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
@@ -418,7 +420,7 @@ public class IntegrationTest {
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, null, null, "4096");
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, null, null, "4096");
             pbScan.setTEST(true);
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
             jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST"),
@@ -461,7 +463,7 @@ public class IntegrationTest {
         try {
             Jenkins jenkins = j.jenkins;
 
-            ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+            ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
 
             IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
             iScanDesc.setInstallations(iScanInstall);
@@ -482,7 +484,7 @@ public class IntegrationTest {
             PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
             scanDesc.setHubServerInfo(serverInfo);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING, "DEVELOPMENT",
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING, "DEVELOPMENT",
                     "EXTERNAL", "4096");
             pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
@@ -514,7 +516,7 @@ public class IntegrationTest {
     public void completeRunthroughAndScanWithMappingToNonExistentVersion() throws IOException, InterruptedException, ExecutionException, BDRestException {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
 
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
@@ -541,7 +543,7 @@ public class IntegrationTest {
             // Give server time to recognize the Project
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_NOT_EXISTING, "DEVELOPMENT", "EXTERNAL",
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_EXISTING, PROJECT_RELEASE_NOT_EXISTING, "DEVELOPMENT", "EXTERNAL",
                     "4096");
             pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
@@ -573,7 +575,7 @@ public class IntegrationTest {
     public void completeRunthroughAndScanWithMappingScansAlreadyMapped() throws IOException, InterruptedException, ExecutionException, BDRestException {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
 
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
@@ -608,7 +610,7 @@ public class IntegrationTest {
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, "DEVELOPMENT", "EXTERNAL",
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, "DEVELOPMENT", "EXTERNAL",
                     "4096");
             pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
@@ -667,7 +669,7 @@ public class IntegrationTest {
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
 
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
@@ -688,7 +690,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
 
         project.getPublishersList().add(pbScan);
 
@@ -711,7 +713,7 @@ public class IntegrationTest {
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
 
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
@@ -732,7 +734,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
 
         project.getPublishersList().add(pbScan);
 
@@ -752,9 +754,12 @@ public class IntegrationTest {
     public void setJDKUserSelectedNonExistent() throws IOException, InterruptedException, ExecutionException {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
+        System.err.println("iScanInstall: "+iScanInstall +"(\""+iScanInstallPath+"\")");
 
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
+        System.err.println("iScanDescriptor: "+iScanDesc);
+
         iScanDesc.setInstallations(iScanInstall);
 
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
@@ -773,7 +778,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
         pbScan.setTEST(true);
 
         JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");
@@ -809,7 +814,7 @@ public class IntegrationTest {
 
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
+        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
 
         IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
@@ -830,7 +835,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, "default", null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
         pbScan.setTEST(true);
 
         JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");
