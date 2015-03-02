@@ -2,14 +2,14 @@
 
 ##############################################################################
 ##
-##  scan.cli start up script for UN*X
+##  scan.cli.wrapper start up script for UN*X
 ##
 ##############################################################################
 
 # Add default JVM options here. You can also use JAVA_OPTS and SCAN_CLI_OPTS to pass JVM options to this script.
 DEFAULT_JVM_OPTS='"-Xms256m" "-Xmx4096m"'
 
-APP_NAME="scan.cli"
+APP_NAME="scan.cli.wrapper"
 APP_BASE_NAME=`basename "$0"`
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
@@ -67,6 +67,7 @@ cd "$SAVED" >&-
 
 CLASSPATH=$APP_HOME/lib/scan.cli-2.0.0-SNAPSHOT-standalone.jar
 
+SCAN_CLI_OPTS="-Done-jar.silent=true -Done-jar.jar.path=$APP_HOME/lib/cache/scan.cli.impl-standalone.jar $SCAN_CLI_OPTS"
 # Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
@@ -161,4 +162,4 @@ function splitJvmOpts() {
 eval splitJvmOpts $DEFAULT_JVM_OPTS $JAVA_OPTS $SCAN_CLI_OPTS
 
 
-exec "$JAVACMD" "${JVM_OPTS[@]}" -Done-jar.silent=true -jar "$CLASSPATH"  "$@"
+exec "$JAVACMD" "${JVM_OPTS[@]}" -jar "$CLASSPATH"  "$@"
