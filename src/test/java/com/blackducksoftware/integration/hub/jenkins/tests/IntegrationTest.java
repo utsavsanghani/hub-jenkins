@@ -233,9 +233,7 @@ public class IntegrationTest {
             Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
             Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
-            // FIXME in most of theses tests we need to fix this
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
@@ -294,8 +292,7 @@ public class IntegrationTest {
             Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
             Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
@@ -366,8 +363,7 @@ public class IntegrationTest {
             Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
             Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
@@ -443,8 +439,7 @@ public class IntegrationTest {
             Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
             Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Ignoring proxy for the Host: '" + url.getHost() + "'"));
@@ -506,8 +501,7 @@ public class IntegrationTest {
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id: '"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan"));
@@ -567,8 +561,7 @@ public class IntegrationTest {
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id: '"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan"));
@@ -634,8 +627,7 @@ public class IntegrationTest {
             Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
             Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
@@ -655,8 +647,7 @@ public class IntegrationTest {
             Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
             Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(listContainsSubString(buildOutputList, "', you can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
             Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
