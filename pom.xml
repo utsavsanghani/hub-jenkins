@@ -13,7 +13,7 @@
 	<groupId>com.blackducksoftware.integration</groupId>
 	<artifactId>hub-jenkins</artifactId>
 	<!-- !!! Also update the url below on release !!! -->
-	<version>1.3.0</version>
+	<version>1.3.1-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 	<name>Black Duck Hub Plug-In for Jenkins</name>
 	<description>Runs iScan in Jenkins build</description>
