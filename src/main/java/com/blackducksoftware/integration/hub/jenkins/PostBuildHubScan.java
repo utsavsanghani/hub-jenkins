@@ -553,6 +553,14 @@ public class PostBuildHubScan extends Recorder {
         if (url.getPort() != -1) {
             cmd.add("--port");
             cmd.add(Integer.toString(url.getPort()));
+        } else {
+            if (url.getDefaultPort() != -1) {
+                cmd.add("--port");
+                cmd.add(Integer.toString(url.getDefaultPort()));
+            } else {
+                listener.getLogger().println("[WARN] : Could not find a port to use for the Server.");
+            }
+
         }
 
         if (isTEST()) {
