@@ -188,7 +188,7 @@ public class JenkinsHubIntRestService {
 
     public ArrayList<LinkedHashMap<String, Object>> getProjectMatches(String hubProjectName) throws IOException, BDRestException {
 
-        String url = getBaseUrl() + "/api/v1/autocomplete/PROJECT?text=" + hubProjectName + "&limit=30";
+        String url = getBaseUrl() + "/api/v1/autocomplete/PROJECT?text=" + hubProjectName + "&limit=30&ownership=0";
         ClientResource resource = createClientResource(url);
         try {
             resource.getRequest().setCookies(getCookies());
