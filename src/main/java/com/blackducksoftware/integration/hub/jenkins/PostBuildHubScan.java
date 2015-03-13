@@ -564,7 +564,8 @@ public class PostBuildHubScan extends Recorder {
         }
         File logDirectory = null;
         if (true) {
-            // Need to only add this option if version 2.0.1 or later
+            // Need to only add this option if version 2.0.1 or later,
+            // this is the pro-active approach to the log problem
             logDirectory = new File(getWorkingDirectory() + File.separator + "HubScanLogs" + File.separator + build.getNumber());
             // This log directory should never exist as a new one is created for each Build
             logDirectory.mkdirs();
@@ -596,6 +597,19 @@ public class PostBuildHubScan extends Recorder {
             ps.join();
 
             ByteArrayOutputStream byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
+
+            if (byteStreamOutput.toString().contains("Unrecognized option: --logDir")) {
+                // retry without the log option
+                // The reactive approach to the log problem
+                cmd.remove("--logDir");
+                cmd.remove(logDirectory.getCanonicalPath());
+                byteStream = new ByteArrayOutputStream();
+                ps.envs(build.getEnvironment(listener));
+                ps.cmds(cmd);
+                ps.stdout(byteStream);
+                ps.join();
+            }
+            byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
             // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will handle
             // closing it.
             String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
