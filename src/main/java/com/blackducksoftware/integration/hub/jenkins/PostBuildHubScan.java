@@ -31,10 +31,6 @@ import java.util.Map.Entry;
 import jenkins.model.Jenkins;
 
 import org.codehaus.plexus.util.StringUtils;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeComparator;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormatterBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
@@ -514,8 +510,6 @@ public class PostBuildHubScan extends Recorder {
         cmd.add(javaPath);
         cmd.add("-Done-jar.silent=true");
         cmd.add("-Done-jar.jar.path=" + scanExec.getParent().getRemote() + File.separator + "cache" + File.separator + "scan.cli.impl-standalone.jar");
-        cmd.add("-jar");
-
         // TODO add proxy configuration for the CLI as soon as the CLI has proxy support
         // Jenkins jenkins = Jenkins.getInstance();
         // if (jenkins != null) {
@@ -540,6 +534,7 @@ public class PostBuildHubScan extends Recorder {
         } else {
             cmd.add("-Xmx" + DEFAULT_MEMORY + "m");
         }
+        cmd.add("-jar");
         cmd.add(scanExec.getRemote());
         cmd.add("--scheme");
         cmd.add(url.getProtocol());
@@ -564,7 +559,17 @@ public class PostBuildHubScan extends Recorder {
         }
 
         if (isTEST()) {
+            // The new dry run option
             cmd.add("--selfTest");
+        }
+        File logDirectory = null;
+        if (true) {
+            // Need to only add this option if version 2.0.1 or later
+            logDirectory = new File(getWorkingDirectory() + File.separator + "HubScanLogs" + File.separator + build.getNumber());
+            // This log directory should never exist as a new one is created for each Build
+            logDirectory.mkdirs();
+            cmd.add("--logDir");
+            cmd.add(logDirectory.getCanonicalPath());
         }
         for (String target : scanTargets) {
             cmd.add(target);
@@ -573,7 +578,6 @@ public class PostBuildHubScan extends Recorder {
                 getJava().getHome());
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ProcStarter ps = launcher.launch();
-        DateTime scanTime = new DateTime();
         if (ps != null) {
             // ////////////////////// Code to mask the password in the logs
             int indexOfPassword = cmd.indexOf("--password");
@@ -614,17 +618,12 @@ public class PostBuildHubScan extends Recorder {
                             e.printStackTrace(listener.getLogger());
                         }
 
-                        File latestLogFile = getLogFileForScan(localHostName, fileName, scanExec, scanTime);
-                        if (latestLogFile != null) {
-                            listener.getLogger().println(
-                                    "For scan target : '" + target + "', you can view the BlackDuck Scan CLI logs at : '" + latestLogFile.getCanonicalPath()
-                                            + "'");
-                            listener.getLogger().println();
-                        } else {
-                            listener.getLogger().println(
-                                    "For scan target : '" + target + "', could not find the log file!");
-                        }
-
+                    }
+                    if (logDirectory != null) {
+                        listener.getLogger().println(
+                                "You can view the BlackDuck Scan CLI logs at : '" + logDirectory.getCanonicalPath()
+                                        + "'");
+                        listener.getLogger().println();
                     }
                 } catch (Exception e) {
                     e.printStackTrace(listener.getLogger());
@@ -645,67 +644,68 @@ public class PostBuildHubScan extends Recorder {
         }
     }
 
-    private File getLogFileForScan(String localHostName, String fileName, FilePath scanExec, DateTime scanTime) throws IOException, InterruptedException {
-        File closestLogFile = null;
-        int smallestDifference = 0;
-
-        FilePath libFolder = scanExec.getParent();
-        List<FilePath> files = libFolder.list();
-        FilePath logFolder = null;
-        for (FilePath file : files) {
-            if (file.getName().contains("log")) {
-                logFolder = file;
-            }
-        }
-        if (logFolder != null) {
-            List<FilePath> logFiles = logFolder.list();
-            for (FilePath log : logFiles) {
-                if (log.getName().contains(fileName)) {
-                    String logName = log.getName();
-                    if (logName.contains(localHostName)) {
-                        // remove the host name
-                        logName = logName.replace(localHostName + "-", "");
-
-                        if (logName.startsWith(fileName)) {
-                            // remove the filename
-                            logName = logName.replace(fileName + "-", "");
-
-                            // log file name contains the scan target, and the host name. Get the latest one.
-                            if (closestLogFile == null) {
-                                String time = logName;
-                                // remove the -0400.log from the log file name
-                                time = time.substring(0, 20); // the length of the time format
-
-                                DateTimeFormatter dateStringFormat = new
-                                        DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-                                DateTime logTime = dateStringFormat.parseDateTime(time);
-
-                                int difference = Math.abs(DateTimeComparator.getInstance().compare(scanTime, logTime));
-
-                                smallestDifference = difference;
-                                closestLogFile = new File(log.getRemote());
-                            } else {
-                                String time = logName;
-                                time = time.substring(0, 20); // the length of the time format
-
-                                DateTimeFormatter dateStringFormat = new
-                                        DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-                                DateTime logTime = dateStringFormat.parseDateTime(time);
-
-                                int difference = Math.abs(DateTimeComparator.getInstance().compare(scanTime, logTime));
-
-                                if (difference < smallestDifference) {
-                                    smallestDifference = difference;
-                                    closestLogFile = new File(log.getRemote());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return closestLogFile;
-    }
+    // private File getLogFileForScan(String localHostName, String fileName, FilePath scanExec, DateTime scanTime)
+    // throws IOException, InterruptedException {
+    // File closestLogFile = null;
+    // int smallestDifference = 0;
+    //
+    // FilePath libFolder = scanExec.getParent();
+    // List<FilePath> files = libFolder.list();
+    // FilePath logFolder = null;
+    // for (FilePath file : files) {
+    // if (file.getName().contains("log")) {
+    // logFolder = file;
+    // }
+    // }
+    // if (logFolder != null) {
+    // List<FilePath> logFiles = logFolder.list();
+    // for (FilePath log : logFiles) {
+    // if (log.getName().contains(fileName)) {
+    // String logName = log.getName();
+    // if (logName.contains(localHostName)) {
+    // // remove the host name
+    // logName = logName.replace(localHostName + "-", "");
+    //
+    // if (logName.startsWith(fileName)) {
+    // // remove the filename
+    // logName = logName.replace(fileName + "-", "");
+    //
+    // // log file name contains the scan target, and the host name. Get the latest one.
+    // if (closestLogFile == null) {
+    // String time = logName;
+    // // remove the -0400.log from the log file name
+    // time = time.substring(0, 20); // the length of the time format
+    //
+    // DateTimeFormatter dateStringFormat = new
+    // DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+    // DateTime logTime = dateStringFormat.parseDateTime(time);
+    //
+    // int difference = Math.abs(DateTimeComparator.getInstance().compare(scanTime, logTime));
+    //
+    // smallestDifference = difference;
+    // closestLogFile = new File(log.getRemote());
+    // } else {
+    // String time = logName;
+    // time = time.substring(0, 20); // the length of the time format
+    //
+    // DateTimeFormatter dateStringFormat = new
+    // DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
+    // DateTime logTime = dateStringFormat.parseDateTime(time);
+    //
+    // int difference = Math.abs(DateTimeComparator.getInstance().compare(scanTime, logTime));
+    //
+    // if (difference < smallestDifference) {
+    // smallestDifference = difference;
+    // closestLogFile = new File(log.getRemote());
+    // }
+    // }
+    // }
+    // }
+    // }
+    // }
+    // }
+    // return closestLogFile;
+    // }
 
     public JDK getJava() {
         return java;
