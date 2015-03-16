@@ -563,6 +563,7 @@ public class PostBuildHubScan extends Recorder {
             cmd.add("--selfTest");
         }
         File logDirectory = null;
+        Boolean oldCLi = false;
         // need to get the Hub version from the new service endpoint so we can add the log option,
         // if it is 2.0.1 or later
         // TODO change the condition statement once we know the Hub version and run the code if the CLI is compatible
@@ -606,6 +607,7 @@ public class PostBuildHubScan extends Recorder {
                 // The reactive approach to the log problem
                 cmd.remove("--logDir");
                 cmd.remove(logDirectory.getCanonicalPath());
+                oldCLi = true;
                 byteStream = new ByteArrayOutputStream();
                 ps.envs(build.getEnvironment(listener));
                 ps.cmds(cmd);
@@ -636,7 +638,7 @@ public class PostBuildHubScan extends Recorder {
                         }
 
                     }
-                    if (logDirectory != null) {
+                    if (logDirectory != null && oldCLi) {
                         listener.getLogger().println(
                                 "You can view the BlackDuck Scan CLI logs at : '" + logDirectory.getCanonicalPath()
                                         + "'");
