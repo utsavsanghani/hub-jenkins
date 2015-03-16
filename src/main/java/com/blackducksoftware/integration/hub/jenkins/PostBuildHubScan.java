@@ -563,12 +563,15 @@ public class PostBuildHubScan extends Recorder {
             cmd.add("--selfTest");
         }
         File logDirectory = null;
+        // need to get the Hub version from the new service endpoint so we can add the log option,
+        // if it is 2.0.1 or later
+        // TODO change the condition statement once we know the Hub version and run the code if the CLI is compatible
         if (true) {
-            // Need to only add this option if version 2.0.1 or later,
-            // this is the pro-active approach to the log problem
             logDirectory = new File(getWorkingDirectory() + File.separator + "HubScanLogs" + File.separator + build.getNumber());
             // This log directory should never exist as a new one is created for each Build
             logDirectory.mkdirs();
+            // Need to only add this option if version 2.0.1 or later,
+            // this is the pro-active approach to the log problem
             cmd.add("--logDir");
             cmd.add(logDirectory.getCanonicalPath());
         }
