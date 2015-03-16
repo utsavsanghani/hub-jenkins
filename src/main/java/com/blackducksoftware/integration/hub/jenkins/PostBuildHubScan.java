@@ -638,7 +638,7 @@ public class PostBuildHubScan extends Recorder {
                         }
 
                     }
-                    if (logDirectory != null && oldCLi) {
+                    if (logDirectory != null && !oldCLi) {
                         listener.getLogger().println(
                                 "You can view the BlackDuck Scan CLI logs at : '" + logDirectory.getCanonicalPath()
                                         + "'");
