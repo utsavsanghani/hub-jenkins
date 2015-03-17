@@ -32,6 +32,7 @@ import jenkins.model.Jenkins;
 
 import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.restlet.data.Status;
 
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
@@ -493,10 +494,10 @@ public class PostBuildHubScan extends Recorder {
      * @throws IOException
      * @throws HubConfigurationException
      * @throws InterruptedException
+     * @throws BDRestException
      */
     private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath scanExec, List<String> scanTargets)
-            throws IOException,
-            HubConfigurationException, InterruptedException {
+            throws IOException, HubConfigurationException, InterruptedException, BDRestException {
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
         URL url = new URL(getDescriptor().getHubServerUrl());
         PostBuildScanDescriptor desc = getDescriptor();
@@ -564,17 +565,24 @@ public class PostBuildHubScan extends Recorder {
         }
         File logDirectory = null;
         Boolean oldCLi = false;
-        // need to get the Hub version from the new service endpoint so we can add the log option,
-        // if it is 2.0.1 or later
-        // TODO change the condition statement once we know the Hub version and run the code if the CLI is compatible
-        if (true) {
-            logDirectory = new File(getWorkingDirectory() + File.separator + "HubScanLogs" + File.separator + build.getNumber());
-            // This log directory should never exist as a new one is created for each Build
-            logDirectory.mkdirs();
-            // Need to only add this option if version 2.0.1 or later,
-            // this is the pro-active approach to the log problem
-            cmd.add("--logDir");
-            cmd.add(logDirectory.getCanonicalPath());
+        JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
+        try {
+            String hubVersion = service.getHubVersion();
+            if (!hubVersion.equals("2.0.0")) {
+                logDirectory = new File(getWorkingDirectory() + File.separator + "HubScanLogs" + File.separator + build.getNumber());
+                // This log directory should never exist as a new one is created for each Build
+                logDirectory.mkdirs();
+                // Need to only add this option if version 2.0.1 or later,
+                // this is the pro-active approach to the log problem
+                cmd.add("--logDir");
+                cmd.add(logDirectory.getCanonicalPath());
+            }
+        } catch (BDRestException e) {
+            if (e.getResourceException().getStatus().equals(Status.CLIENT_ERROR_NOT_FOUND)) {
+                // The Hub server is version 2.0.0 and the version endpoint does not exist
+            } else {
+                listener.error(e.getResourceException().getMessage());
+            }
         }
         for (String target : scanTargets) {
             cmd.add(target);
@@ -624,107 +632,17 @@ public class PostBuildHubScan extends Recorder {
             } else if (outputString.contains("ERROR")) {
                 setResult(Result.UNSTABLE);
             } else {
-                try {
-                    for (String target : scanTargets) {
-                        File scanTargetFile = new File(target);
-                        String fileName = scanTargetFile.getName();
-
-                        String localHostName = "";
-                        try {
-                            localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
-                        } catch (IOException e) {
-                            listener.error("Problem getting the Local Host name : " + e.getMessage());
-                            e.printStackTrace(listener.getLogger());
-                        }
-
-                    }
-                    if (logDirectory != null && !oldCLi) {
-                        listener.getLogger().println(
-                                "You can view the BlackDuck Scan CLI logs at : '" + logDirectory.getCanonicalPath()
-                                        + "'");
-                        listener.getLogger().println();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace(listener.getLogger());
-                    String message;
-                    if (e.getCause() != null && e.getCause().getCause() != null) {
-                        message = e.getCause().getCause().toString();
-                    } else if (e.getCause() != null) {
-                        message = e.getCause().toString();
-                    } else {
-                        message = e.toString();
-                    }
-                    listener.error(message);
-                    setResult(Result.UNSTABLE);
+                if (logDirectory != null && !oldCLi) {
+                    listener.getLogger().println(
+                            "You can view the BlackDuck Scan CLI logs at : '" + logDirectory.getCanonicalPath()
+                                    + "'");
+                    listener.getLogger().println();
                 }
             }
         } else {
             listener.getLogger().println("[ERROR] : Could not find a ProcStarter to run the process!");
         }
     }
-
-    // private File getLogFileForScan(String localHostName, String fileName, FilePath scanExec, DateTime scanTime)
-    // throws IOException, InterruptedException {
-    // File closestLogFile = null;
-    // int smallestDifference = 0;
-    //
-    // FilePath libFolder = scanExec.getParent();
-    // List<FilePath> files = libFolder.list();
-    // FilePath logFolder = null;
-    // for (FilePath file : files) {
-    // if (file.getName().contains("log")) {
-    // logFolder = file;
-    // }
-    // }
-    // if (logFolder != null) {
-    // List<FilePath> logFiles = logFolder.list();
-    // for (FilePath log : logFiles) {
-    // if (log.getName().contains(fileName)) {
-    // String logName = log.getName();
-    // if (logName.contains(localHostName)) {
-    // // remove the host name
-    // logName = logName.replace(localHostName + "-", "");
-    //
-    // if (logName.startsWith(fileName)) {
-    // // remove the filename
-    // logName = logName.replace(fileName + "-", "");
-    //
-    // // log file name contains the scan target, and the host name. Get the latest one.
-    // if (closestLogFile == null) {
-    // String time = logName;
-    // // remove the -0400.log from the log file name
-    // time = time.substring(0, 20); // the length of the time format
-    //
-    // DateTimeFormatter dateStringFormat = new
-    // DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-    // DateTime logTime = dateStringFormat.parseDateTime(time);
-    //
-    // int difference = Math.abs(DateTimeComparator.getInstance().compare(scanTime, logTime));
-    //
-    // smallestDifference = difference;
-    // closestLogFile = new File(log.getRemote());
-    // } else {
-    // String time = logName;
-    // time = time.substring(0, 20); // the length of the time format
-    //
-    // DateTimeFormatter dateStringFormat = new
-    // DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HHmmss.SSS").toFormatter();
-    // DateTime logTime = dateStringFormat.parseDateTime(time);
-    //
-    // int difference = Math.abs(DateTimeComparator.getInstance().compare(scanTime, logTime));
-    //
-    // if (difference < smallestDifference) {
-    // smallestDifference = difference;
-    // closestLogFile = new File(log.getRemote());
-    // }
-    // }
-    // }
-    // }
-    // }
-    // }
-    // }
-    // return closestLogFile;
-    // }
 
     public JDK getJava() {
         return java;
