@@ -717,10 +717,7 @@ public class IntegrationTest {
         List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
 
         Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-        // TODO replace with new BlackDuck Scan error message
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "with status NO_PERMISSION"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+        Assert.assertTrue(listContainsSubString(buildOutputList, "Unauthorized (401) - Unauthorized"));
     }
 
     @Test
@@ -761,10 +758,7 @@ public class IntegrationTest {
         List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
 
         Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-        // TODO replace with new BlackDuck Scan error message
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "with status NO_PERMISSION"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+        Assert.assertTrue(listContainsSubString(buildOutputList, "Unauthorized (401) - Unauthorized"));
     }
 
     @Test

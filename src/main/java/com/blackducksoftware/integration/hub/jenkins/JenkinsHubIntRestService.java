@@ -608,4 +608,47 @@ public class JenkinsHubIntRestService {
         }
     }
 
+    public String getHubVersion() throws IOException, BDRestException {
+
+        String url = getBaseUrl() + "/api/v1/current-version";
+        ClientResource resource = createClientResource(url);
+        try {
+            resource.getRequest().setCookies(getCookies());
+            resource.setMethod(Method.GET);
+            resource.get();
+            int responseCode = resource.getResponse().getStatus().getCode();
+
+            if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+                Response resp = resource.getResponse();
+                return resp.getEntityAsText();
+            } else {
+                throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(getBaseUrl()), resource);
+            }
+        } catch (ResourceException e) {
+            throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(getBaseUrl()), e, resource);
+        }
+    }
+
+    public Integer compareWithHubVersion(String version) throws IOException, BDRestException {
+
+        String url = getBaseUrl() + "/api/v1/current-version-comparison?version=" + version;
+        ClientResource resource = createClientResource(url);
+        try {
+            resource.getRequest().setCookies(getCookies());
+            resource.setMethod(Method.GET);
+            resource.get();
+            int responseCode = resource.getResponse().getStatus().getCode();
+
+            if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+                Response resp = resource.getResponse();
+                JSONObject obj = JSONObject.fromObject(resp.getEntityAsText());
+                return new Integer(obj.getInt("numericResult"));
+            } else {
+                throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(getBaseUrl()), resource);
+            }
+        } catch (ResourceException e) {
+            throw new BDRestException(Messages.HubBuildScan_getErrorConnectingTo_0_(getBaseUrl()), e, resource);
+        }
+    }
+
 }
