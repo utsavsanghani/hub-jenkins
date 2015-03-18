@@ -13,7 +13,7 @@
 	<groupId>com.blackducksoftware.integration</groupId>
 	<artifactId>hub-jenkins</artifactId>
 	<!-- !!! Also update the url below on release !!! -->
-	<version>1.3.1</version>
+	<version>1.3.X-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 	<name>Black Duck Hub Plug-In for Jenkins</name>
 	<description>Runs iScan in Jenkins build</description>
@@ -178,15 +178,16 @@
 			<version>2.4.1</version>
 		</dependency>
 		<dependency>
+			<!-- Don't upgrade to 2.3.X - requires JDK 7 -->
 			<groupId>org.restlet.jse</groupId>
 			<artifactId>org.restlet</artifactId>
-			<version>2.2-RC4</version>
+			<version>2.2.3</version>
 		</dependency>
 		<!-- This dependency allows for proxy configuration per Client Resource -->
 		<dependency>
 			<groupId>org.restlet.jse</groupId>
 			<artifactId>org.restlet.ext.httpclient</artifactId>
-			<version>2.2.1</version>
+			<version>2.2.3</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -230,7 +231,7 @@
 		<dependency>
 			<groupId>org.kohsuke.stapler</groupId>
 			<artifactId>json-lib</artifactId>
-			<version>2.1-rev6</version>
+			<version>2.1-rev7</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
@@ -249,9 +250,9 @@
 						</goals>
 						<configuration>
 							<sources>
-								<!-- Add so Eclipse m2e can pick those up - 
-								     if you see a error in eclipse about this click and select discover 
-								       to install the m2e mapping for this maven plugin -->
+								<!-- Add so Eclipse m2e can pick those up - if you see a error in 
+									eclipse about this click and select discover to install the m2e mapping for 
+									this maven plugin -->
 								<source>${project.build.directory}/generated-sources/localizer/</source>
 								<source>${project.build.directory}/generated-sources/annotations/</source>
 							</sources>
@@ -310,12 +311,11 @@
 					<configuration>
 						<classpathContainers>
 							<classpathContainer>
-								org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/Java
-								SE 6
+								org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7
 							</classpathContainer>
 						</classpathContainers>
-						<source>1.6</source>
-						<target>1.6</target>
+						<source>1.7</source>
+						<target>1.7</target>
 					</configuration>
 				</plugin>
 			</plugins>
