@@ -1,0 +1,22 @@
+buildscript{
+	repositories{
+		maven{url 'http://artifactory.blackducksoftware.com/artifactory/blackduck-staging-repos'}
+		maven{url 'http://artifactory.blackducksoftware.com/artifactory/blackduck-builder-repos'}
+	}
+	dependencies{
+		classpath 'com.blackducksoftware.gradle.plugins:gradle-plugins:1.39'
+	}
+}
+
+File pomFile = new File('pom.xml')
+def pom = new XmlSlurper().parse(pomFile)
+
+description = pom.'name'.text()
+version = pom.version.text()
+group = pom.groupId.text()
+
+apply plugin: 'release'
+
+task wrapper(type: Wrapper){
+	gradleVersion = '2.3'
+}
