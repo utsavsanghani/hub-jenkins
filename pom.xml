@@ -16,7 +16,7 @@
 	<version>1.3.X-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 	<name>Black Duck Hub Plug-In for Jenkins</name>
-	<description>Runs iScan in Jenkins build</description>
+	<description>Runs the Black Duck Hub scan in Jenkins build</description>
 	<inceptionYear>2014</inceptionYear>
 
 	<url>https://customerhubblackducksoftware.force.com/apex/The_Exchange?sfdc.tabName=01r60000000QMbg</url>
