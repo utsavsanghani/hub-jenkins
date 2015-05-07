@@ -31,6 +31,8 @@ public class CallableHubScan implements Callable<Result, BDJenkinsHubPluginExcep
 
     private FilePath scanExec;
 
+    private FilePath oneJarPath;
+
     private List<String> scanTargets;
 
     private JDK java;
@@ -49,6 +51,14 @@ public class CallableHubScan implements Callable<Result, BDJenkinsHubPluginExcep
         this.build = build;
         this.launcher = launcher;
         this.listener = listener;
+    }
+
+    public FilePath getOneJarPath() {
+        return oneJarPath;
+    }
+
+    public void setOneJarPath(FilePath oneJarPath) {
+        this.oneJarPath = oneJarPath;
     }
 
     public String getHubVersion() {
@@ -129,7 +139,7 @@ public class CallableHubScan implements Callable<Result, BDJenkinsHubPluginExcep
             }
             cmd.add(javaPath);
             cmd.add("-Done-jar.silent=true");
-            cmd.add("-Done-jar.jar.path=" + scanExec.getParent().getRemote() + File.separator + "cache" + File.separator + "scan.cli.impl-standalone.jar");
+            cmd.add("-Done-jar.jar.path=" + getOneJarPath().getRemote());
             // TODO add proxy configuration for the CLI as soon as the CLI has proxy support
             // Jenkins jenkins = Jenkins.getInstance();
             // if (jenkins != null) {

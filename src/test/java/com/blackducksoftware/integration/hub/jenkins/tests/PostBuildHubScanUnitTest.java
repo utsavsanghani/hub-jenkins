@@ -42,11 +42,11 @@ import com.google.common.base.Charsets;
 
 public class PostBuildHubScanUnitTest {
 
-    private static final String TEST_CLI_PATH = "/lib/scan.cli-2.0.0-SNAPSHOT-standalone.jar";
+    private static final String TEST_CLI_PATH = "/lib/scan.cli-2.1.2-standalone.jar";
 
     private static String VALID_CREDENTIAL = "Valid Credential Id";
 
-    private static String VALID_SERVERURL = "http://donald:8080";
+    private static String VALID_SERVERURL = "http://integration-hub";
 
     private static String basePath;
 
@@ -70,7 +70,7 @@ public class PostBuildHubScanUnitTest {
         basePath = IntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf("/target"));
         basePath = basePath + "/test-workspace";
-        iScanInstallPath = basePath + "/scan.cli-2.0.0-SNAPSHOT";
+        iScanInstallPath = basePath + "/scan.cli-2.1.2";
         byteOutput = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(byteOutput);
         listener = new StreamBuildListener(ps, Charsets.UTF_8);

@@ -65,7 +65,7 @@ cd "`dirname \"$PRG\"`/.." >&-
 APP_HOME="`pwd -P`"
 cd "$SAVED" >&-
 
-CLASSPATH=$APP_HOME/lib/scan.cli-2.0.0-SNAPSHOT-standalone.jar
+CLASSPATH=$APP_HOME/lib/scan.cli-2.1.2-standalone.jar
 
 SCAN_CLI_OPTS="-Done-jar.silent=true -Done-jar.jar.path=$APP_HOME/lib/cache/scan.cli.impl-standalone.jar $SCAN_CLI_OPTS"
 # Determine the Java command to use to start the JVM.

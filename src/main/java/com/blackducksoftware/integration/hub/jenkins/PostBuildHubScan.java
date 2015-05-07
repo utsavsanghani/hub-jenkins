@@ -507,12 +507,16 @@ public class PostBuildHubScan extends Recorder {
                 listener.error(e.getResourceException().getMessage());
             }
         }
+        FilePath oneJarPath = null;
+
+        oneJarPath = new FilePath(scanExec.getParent(), "cache" + File.separator + "scan.cli.impl-standalone.jar");
 
         CallableHubScan scan = new CallableHubScan(build, launcher, listener);
         scan.setHubServerInfo(getDescriptor().getHubServerInfo());
         scan.setHubVersion(hubVersion);
         scan.setJava(getJava());
         scan.setScanExec(scanExec);
+        scan.setOneJarPath(oneJarPath);
         scan.setScanMemory(scanMemory);
         scan.setScanTargets(scanTargets);
         scan.setWorkingDirectory(new File(workingDirectory));
