@@ -155,13 +155,14 @@
 	<distributionManagement>
 		<repository>
 			<id>bds-artifactory</id>
-			<url>http://artifactory.blackducksoftware.com:8081/artifactory/integration</url>
+			<url>http://artifactory.blackducksoftware.com:8081/artifactory/bds-jenkins-plugins</url>
 		</repository>
 		<snapshotRepository>
 			<id>artifactory.blackducksoftware.com</id>
-			<url>http://artifactory.blackducksoftware.com:8081/artifactory/integration-snapshot</url>
+			<url>http://artifactory.blackducksoftware.com:8081/artifactory/bds-jenkins-plugins-snapshot</url>
 		</snapshotRepository>
 	</distributionManagement>
+	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
