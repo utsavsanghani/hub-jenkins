@@ -3,7 +3,6 @@ package com.blackducksoftware.integration.hub.jenkins;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.Launcher.ProcStarter;
 import hudson.Util;
 import hudson.ProxyConfiguration;
 import hudson.model.BuildListener;
@@ -16,13 +15,10 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Recorder;
 import hudson.tools.ToolDescriptor;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -284,7 +280,7 @@ public class PostBuildHubScan extends Recorder {
                     }
                 }
             } catch (BDJenkinsHubPluginException e) {
-                listener.error(e.getMessage());
+                listener.error(e.getMessage(), e);
                 e.printStackTrace(listener.getLogger());
                 setResult(Result.UNSTABLE);
             } catch (Exception e) {
@@ -495,88 +491,15 @@ public class PostBuildHubScan extends Recorder {
      * @throws HubConfigurationException
      * @throws InterruptedException
      * @throws BDRestException
+     * @throws BDJenkinsHubPluginException
      */
     private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath scanExec, List<String> scanTargets)
-            throws IOException, HubConfigurationException, InterruptedException, BDRestException {
+            throws IOException, HubConfigurationException, InterruptedException, BDRestException, BDJenkinsHubPluginException {
         validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
-        URL url = new URL(getDescriptor().getHubServerUrl());
-        PostBuildScanDescriptor desc = getDescriptor();
-        List<String> cmd = new ArrayList<String>();
-        String javaPath = getJava().getHome();
-        if (javaPath.endsWith(File.separator)) {
-            javaPath = javaPath + "bin" + File.separator + "java";
-        } else {
-            javaPath = javaPath + File.separator + "bin" + File.separator + "java";
-        }
-        cmd.add(javaPath);
-        cmd.add("-Done-jar.silent=true");
-        cmd.add("-Done-jar.jar.path=" + scanExec.getParent().getRemote() + File.separator + "cache" + File.separator + "scan.cli.impl-standalone.jar");
-        // TODO add proxy configuration for the CLI as soon as the CLI has proxy support
-        // Jenkins jenkins = Jenkins.getInstance();
-        // if (jenkins != null) {
-        // ProxyConfiguration proxy = jenkins.proxy;
-        // if (proxy != null && proxy.getNoProxyHostPatterns() != null) {
-        // if (!JenkinsHubIntRestService.getMatchingNoProxyHostPatterns(url.getHost(), proxy.getNoProxyHostPatterns()))
-        // {
-        // if (!StringUtils.isEmpty(proxy.name) && proxy.port != 0) {
-        // // System.setProperty("http.proxyHost", proxy.name);
-        // // System.setProperty("http.proxyPort", Integer.toString(proxy.port));
-        // // cmd.add("-Dhttp.useProxy=true");
-        // cmd.add("-Dblackduck.hub.proxy.host=" + proxy.name);
-        // cmd.add("-Dblackduck.hub.proxy.port=" + proxy.port);
-        // System.setProperty("blackduck.hub.proxy.host", proxy.name);
-        // System.setProperty("blackduck.hub.proxy.port", Integer.toString(proxy.port));
-        // }
-        // }
-        // }
-        // }
-        if (scanMemory != 256) {
-            cmd.add("-Xmx" + scanMemory + "m");
-        } else {
-            cmd.add("-Xmx" + DEFAULT_MEMORY + "m");
-        }
-        cmd.add("-jar");
-        cmd.add(scanExec.getRemote());
-        cmd.add("--scheme");
-        cmd.add(url.getProtocol());
-        cmd.add("--host");
-        cmd.add(url.getHost());
-        listener.getLogger().println("[DEBUG] : Using this Hub Url : '" + url.getHost() + "'");
-        cmd.add("--username");
-        cmd.add(getDescriptor().getHubServerInfo().getUsername());
-        cmd.add("--password");
-        cmd.add(getDescriptor().getHubServerInfo().getPassword());
-        if (url.getPort() != -1) {
-            cmd.add("--port");
-            cmd.add(Integer.toString(url.getPort()));
-        } else {
-            if (url.getDefaultPort() != -1) {
-                cmd.add("--port");
-                cmd.add(Integer.toString(url.getDefaultPort()));
-            } else {
-                listener.getLogger().println("[WARN] : Could not find a port to use for the Server.");
-            }
-
-        }
-
-        if (isTEST()) {
-            // The new dry run option
-            cmd.add("--selfTest");
-        }
-        File logDirectory = null;
-        Boolean oldCLi = false;
+        String hubVersion = null;
         JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
         try {
-            String hubVersion = service.getHubVersion();
-            if (!hubVersion.equals("2.0.0")) {
-                logDirectory = new File(getWorkingDirectory() + File.separator + "HubScanLogs" + File.separator + build.getNumber());
-                // This log directory should never exist as a new one is created for each Build
-                logDirectory.mkdirs();
-                // Need to only add this option if version 2.0.1 or later,
-                // this is the pro-active approach to the log problem
-                cmd.add("--logDir");
-                cmd.add(logDirectory.getCanonicalPath());
-            }
+            hubVersion = service.getHubVersion();
         } catch (BDRestException e) {
             if (e.getResourceException().getStatus().equals(Status.CLIENT_ERROR_NOT_FOUND)) {
                 // The Hub server is version 2.0.0 and the version endpoint does not exist
@@ -584,64 +507,21 @@ public class PostBuildHubScan extends Recorder {
                 listener.error(e.getResourceException().getMessage());
             }
         }
-        for (String target : scanTargets) {
-            cmd.add(target);
-        }
-        listener.getLogger().println("[DEBUG] : Using this java installation : " + getJava().getName() + " : " +
-                getJava().getHome());
-        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        ProcStarter ps = launcher.launch();
-        if (ps != null) {
-            // ////////////////////// Code to mask the password in the logs
-            int indexOfPassword = cmd.indexOf("--password");
-            boolean[] masks = new boolean[cmd.size()];
-            Arrays.fill(masks, false);
 
-            // The Users password should appear after --password
-            masks[indexOfPassword + 1] = true;
+        CallableHubScan scan = new CallableHubScan(build, launcher, listener);
+        scan.setHubServerInfo(getDescriptor().getHubServerInfo());
+        scan.setHubVersion(hubVersion);
+        scan.setJava(getJava());
+        scan.setScanExec(scanExec);
+        scan.setScanMemory(scanMemory);
+        scan.setScanTargets(scanTargets);
+        scan.setWorkingDirectory(new File(workingDirectory));
 
-            ps.masks(masks);
-            // ///////////////////////
+        scan.setIsTest(isTEST());
 
-            ps.envs(build.getEnvironment(listener));
-            ps.cmds(cmd);
-            ps.stdout(byteStream);
-            ps.join();
+        Result result = build.getBuiltOn().getChannel().call(scan);
 
-            ByteArrayOutputStream byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
-
-            if (byteStreamOutput.toString().contains("Unrecognized option: --logDir")) {
-                // retry without the log option
-                // The reactive approach to the log problem
-                cmd.remove("--logDir");
-                cmd.remove(logDirectory.getCanonicalPath());
-                oldCLi = true;
-                byteStream = new ByteArrayOutputStream();
-                ps.envs(build.getEnvironment(listener));
-                ps.cmds(cmd);
-                ps.stdout(byteStream);
-                ps.join();
-            }
-            byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
-            // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will handle
-            // closing it.
-            String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
-            listener.getLogger().println(outputString);
-            if (!outputString.contains("Finished in") || !outputString.contains("with status SUCCESS")) {
-                setResult(Result.UNSTABLE);
-            } else if (outputString.contains("ERROR")) {
-                setResult(Result.UNSTABLE);
-            } else {
-                if (logDirectory != null && !oldCLi) {
-                    listener.getLogger().println(
-                            "You can view the BlackDuck Scan CLI logs at : '" + logDirectory.getCanonicalPath()
-                                    + "'");
-                    listener.getLogger().println();
-                }
-            }
-        } else {
-            listener.getLogger().println("[ERROR] : Could not find a ProcStarter to run the process!");
-        }
+        setResult(result);
     }
 
     public JDK getJava() {
