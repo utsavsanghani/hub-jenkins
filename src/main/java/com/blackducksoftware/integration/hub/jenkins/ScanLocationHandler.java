@@ -42,14 +42,14 @@ public class ScanLocationHandler {
      * @throws InterruptedException
      * @throws BDRestException
      */
-    public void getScanLocationIdWithRetry(AbstractBuild build, ClientResource resource, String targetPath, String versionId,
+    public void getScanLocationIdWithRetry(AbstractBuild build, ClientResource resource, String remoteTargetPath, String versionId,
             Map<String, Boolean> scanLocationIds)
             throws UnknownHostException, MalformedURLException, InterruptedException, BDRestException {
 
         if (resource == null) {
             throw new IllegalArgumentException("Need to provide a ClientResource in order to get the ScanLocation");
         }
-        if (StringUtils.isEmpty(targetPath)) {
+        if (StringUtils.isEmpty(remoteTargetPath)) {
             throw new IllegalArgumentException("Need to provide the targetPath of the ScanLocation.");
         }
         if (StringUtils.isEmpty(versionId)) {
@@ -65,8 +65,8 @@ public class ScanLocationHandler {
 
             i++;
 
-            listener.getLogger().println("Attempt # " + i + " to get the Scan Location for : '" + targetPath + "'.");
-            matchFound = scanLocationRetrieval(resource, targetPath, versionId, scanLocationIds);
+            listener.getLogger().println("Attempt # " + i + " to get the Scan Location for : '" + remoteTargetPath + "'.");
+            matchFound = scanLocationRetrieval(resource, remoteTargetPath, versionId, scanLocationIds);
             if (matchFound) {
                 break;
             }
@@ -88,7 +88,7 @@ public class ScanLocationHandler {
 
     }
 
-    private boolean scanLocationRetrieval(ClientResource resource, String targetPath, String versionId, Map<String, Boolean> scanLocationIds) {
+    private boolean scanLocationRetrieval(ClientResource resource, String remoteTargetPath, String versionId, Map<String, Boolean> scanLocationIds) {
         boolean matchFound = false;
         resource.get();
 
@@ -118,26 +118,25 @@ public class ScanLocationHandler {
             if (responseMap.containsKey("items") && ((ArrayList<LinkedHashMap<String, Object>>) responseMap.get("items")).size() > 0) {
                 ArrayList<LinkedHashMap<String, Object>> scanMatchesList = (ArrayList<LinkedHashMap<String, Object>>) responseMap.get("items");
                 // More than one match found
-                String scanId = null;
                 String path = null;
                 if (scanMatchesList.size() > 1) {
                     for (LinkedHashMap<String, Object> scanMatch : scanMatchesList) {
-                        path = (String) scanMatch.get("path");
+
+                        path = ((String) scanMatch.get("path")).trim();
 
                         // Remove trailing slash from both strings
                         if (path.endsWith(File.separator)) {
                             path = path.substring(0, path.length() - 1);
                         }
-                        if (targetPath.endsWith(File.separator)) {
-                            targetPath = targetPath.substring(0, targetPath.length() - 1);
+                        if (remoteTargetPath.endsWith(File.separator)) {
+                            remoteTargetPath = remoteTargetPath.substring(0, remoteTargetPath.length() - 1);
                         }
 
-                        listener.getLogger().println("[DEBUG] Comparing target : '" + targetPath + "' with path : '" + path + "'.");
-                        // trim the path, this way there should be no whitespaces to intefere with the comparison
-                        if (targetPath.equals(path.trim())) {
+                        listener.getLogger().println("[DEBUG] Comparing target : '" + remoteTargetPath + "' with path : '" + path + "'.");
+                        if (remoteTargetPath.equals(path)) {
                             listener.getLogger().println("[DEBUG] MATCHED!");
                             matchFound = true;
-                            handleScanLocationMatch(scanLocationIds, scanMatch, targetPath, versionId);
+                            handleScanLocationMatch(scanLocationIds, scanMatch, remoteTargetPath, versionId);
                             break;
                         }
                     }
@@ -149,17 +148,16 @@ public class ScanLocationHandler {
                     if (path.endsWith(File.separator)) {
                         path = path.substring(0, path.length() - 1);
                     }
-                    if (targetPath.endsWith(File.separator)) {
-                        targetPath = targetPath.substring(0, targetPath.length() - 1);
+                    if (remoteTargetPath.endsWith(File.separator)) {
+                        remoteTargetPath = remoteTargetPath.substring(0, remoteTargetPath.length() - 1);
                     }
 
-                    listener.getLogger().println("[DEBUG] Comparing target : '" + targetPath + "' with path : '" + path + "'.");
+                    listener.getLogger().println("[DEBUG] Comparing target : '" + remoteTargetPath + "' with path : '" + path + "'.");
                     // trim the path, this way there should be no whitespaces to intefere with the comparison
-                    if (targetPath.equals(path.trim())) {
+                    if (remoteTargetPath.equals(path.trim())) {
                         listener.getLogger().println("[DEBUG] MATCHED!");
                         matchFound = true;
-                        handleScanLocationMatch(scanLocationIds, scanMatch, targetPath, versionId);
-
+                        handleScanLocationMatch(scanLocationIds, scanMatch, remoteTargetPath, versionId);
                     }
                 }
                 // if (scanId != null) {
@@ -175,7 +173,7 @@ public class ScanLocationHandler {
                 // }
             } else {
                 listener.getLogger().println(
-                        "[ERROR] No Scan Location Id could be found for the scan target : '" + targetPath + "'.");
+                        "[ERROR] No Scan Location Id could be found for the scan target : '" + remoteTargetPath + "'.");
             }
         } catch (IOException e) {
             e.printStackTrace(listener.getLogger());

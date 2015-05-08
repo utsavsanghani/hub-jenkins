@@ -57,7 +57,7 @@ public class PostBuildHubScan extends Recorder {
 
     private Integer scanMemory;
 
-    private String workingDirectory;
+    private FilePath workingDirectory;
 
     private JDK java;
 
@@ -146,18 +146,12 @@ public class PostBuildHubScan extends Recorder {
         return scanName;
     }
 
-    public String getWorkingDirectory() {
+    public FilePath getWorkingDirectory() {
         return workingDirectory;
     }
 
-    private void setWorkingDirectory(String workingDirectory) {
-        if (!workingDirectory.startsWith("\\") && !workingDirectory.startsWith("/")) {
-            workingDirectory = "/" + workingDirectory;
-            // Need to do this because of the windows issue, IJH-64
-        }
-        workingDirectory = workingDirectory.replace("\\", "/"); // IJH-64
-
-        this.workingDirectory = workingDirectory;
+    private void setWorkingDirectory(VirtualChannel channel, String workingDirectory) {
+        this.workingDirectory = new FilePath(channel, workingDirectory);
     }
 
     // http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
@@ -225,33 +219,35 @@ public class PostBuildHubScan extends Recorder {
                         e.printStackTrace(listener.getLogger());
                     }
                     listener.getLogger().println("Node workspace " + workingDirectory);
-                    setWorkingDirectory(workingDirectory);
+                    VirtualChannel remotingChannel = build.getBuiltOn().getChannel();
+                    setWorkingDirectory(remotingChannel, workingDirectory);
                     setJava(build, listener);
                     EnvVars variables = build.getEnvironment(listener);
-                    List<String> scanTargets = new ArrayList<String>();
+                    List<FilePath> scanTargets = new ArrayList<FilePath>();
                     for (ScanJobs scanJob : getScans()) {
                         if (StringUtils.isEmpty(scanJob.getScanTarget())) {
+
                             scanTargets.add(getWorkingDirectory());
                         } else {
                             // trim the target so there are no false whitespaces at the beginning or end of the target
                             // path
                             String target = handleVariableReplacement(variables, scanJob.getScanTarget().trim());
-
                             // make sure the target provided doesn't already begin with a slash or end in a slash
                             // removes the slash if the target begins or ends with one
                             if (target.startsWith("/") || target.startsWith("\\")) {
-                                target = getWorkingDirectory() + target;
+                                target = getWorkingDirectory().getRemote() + target;
                             } else {
-                                target = getWorkingDirectory() + File.separator + target;
+                                target = getWorkingDirectory().getRemote() + File.separator + target;
 
                             }
-                            if (target.endsWith("/") || target.endsWith("\\")) {
-                                target = target.substring(0, target.length() - 1);
+                            File targetFile = new File(target);
+                            try {
+                                target = build.getBuiltOn().getChannel().call(new GetCanonicalPath(targetFile));
+                            } catch (IOException e) {
+                                listener.error("Problem getting the real path of the target : " + target + " on this node. Error : " + e.getMessage());
+                                e.printStackTrace(listener.getLogger());
                             }
-
-                            target = target.replace("\\", "/"); // IJH-64
-
-                            scanTargets.add(target);
+                            scanTargets.add(new FilePath(getWorkingDirectory(), target));
                         }
                     }
                     String projectName = null;
@@ -262,12 +258,11 @@ public class PostBuildHubScan extends Recorder {
                         projectVersion = handleVariableReplacement(variables, getHubProjectVersion());
 
                     }
-
-                    printConfiguration(build, listener, projectName, projectVersion, scanTargets);
+                    String separator = build.getBuiltOn().getChannel().call(new GetFileSeparator());
+                    printConfiguration(build, listener, projectName, projectVersion, scanTargets, separator);
 
                     FilePath scanExec = getScanCLI(iScanTools, listener, build);
-
-                    runScan(build, launcher, listener, scanExec, scanTargets);
+                    runScan(build, launcher, listener, scanExec, scanTargets, separator);
 
                     // Only map the scans to a Project Version if the Project name and Project Version have been
                     // configured
@@ -314,7 +309,7 @@ public class PostBuildHubScan extends Recorder {
         return true;
     }
 
-    private void doScanMapping(AbstractBuild build, BuildListener listener, String projectName, String projectVersion, List<String> scanTargets)
+    private void doScanMapping(AbstractBuild build, BuildListener listener, String projectName, String projectVersion, List<FilePath> scanTargets)
             throws IOException, BDRestException,
             BDJenkinsHubPluginException,
             InterruptedException {
@@ -323,6 +318,8 @@ public class PostBuildHubScan extends Recorder {
         // /////////////////////////////////////////// Handling the Project name and Version
         String projectId = null;
         String versionId = null;
+        listener.getLogger().println("Phase: " + getHubVersionPhase());
+        listener.getLogger().println("Distribution: " + getHubVersionDist());
 
         // This behavior has been updated to match the Protex Jenkins Plugin version 1.x
         // This checks for the Project and Version and if they dont exist then it creates them
@@ -349,6 +346,8 @@ public class PostBuildHubScan extends Recorder {
                         LinkedHashMap<String, Object> versionMatchesResponse = service.getVersionMatchesForProjectId(projectId);
                         versionId = service.getVersionIdFromMatches(versionMatchesResponse, projectVersion, getHubVersionPhase(), getHubVersionDist());
                         if (versionId == null) {
+                            listener.getLogger().println("Phase : " + getHubVersionPhase());
+                            listener.getLogger().println("Distribution : " + getHubVersionDist());
                             versionId = service.createHubVersion(projectVersion, projectId, getHubVersionPhase(), getHubVersionDist());
                             listener.getLogger().println("[DEBUG] Version created!");
                         }
@@ -364,7 +363,7 @@ public class PostBuildHubScan extends Recorder {
                         listener.getLogger().println("[ERROR] Status : " + e.getResource().getStatus().getCode());
                         listener.getLogger().println("[ERROR] Response : " + e.getResource().getResponse().getEntityAsText());
                     }
-                    throw new BDJenkinsHubPluginException("Problem getting the Project Id. ", e);
+                    throw new BDJenkinsHubPluginException("Problem getting the Project/Version. ", e);
                 }
             }
         }
@@ -444,7 +443,8 @@ public class PostBuildHubScan extends Recorder {
         }
     }
 
-    public void printConfiguration(AbstractBuild build, BuildListener listener, String projectName, String projectVersion, List<String> scanTargets)
+    public void printConfiguration(AbstractBuild build, BuildListener listener, String projectName, String projectVersion, List<FilePath> scanTargets,
+            String separator)
             throws IOException,
             InterruptedException {
         listener.getLogger().println(
@@ -465,9 +465,9 @@ public class PostBuildHubScan extends Recorder {
 
         listener.getLogger().println(
                 "-> Scanning the following targets  : ");
-        for (String target : scanTargets) {
+        for (FilePath target : scanTargets) {
             listener.getLogger().println(
-                    "-> " + target);
+                    "-> " + target.getRemote());
         }
     }
 
@@ -493,9 +493,9 @@ public class PostBuildHubScan extends Recorder {
      * @throws BDRestException
      * @throws BDJenkinsHubPluginException
      */
-    private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath scanExec, List<String> scanTargets)
+    private void runScan(AbstractBuild build, Launcher launcher, BuildListener listener, FilePath scanExec, List<FilePath> scanTargets, String separator)
             throws IOException, HubConfigurationException, InterruptedException, BDRestException, BDJenkinsHubPluginException {
-        validateScanTargets(listener, build.getBuiltOn().getChannel(), scanTargets);
+        validateScanTargets(listener, scanTargets);
         String hubVersion = null;
         JenkinsHubIntRestService service = setJenkinsHubIntRestService(listener);
         try {
@@ -511,7 +511,7 @@ public class PostBuildHubScan extends Recorder {
 
         oneJarPath = new FilePath(scanExec.getParent(), "cache" + File.separator + "scan.cli.impl-standalone.jar");
 
-        CallableHubScan scan = new CallableHubScan(build, launcher, listener);
+        ScanExecutor scan = new ScanExecutor(build, launcher, listener);
         scan.setHubServerInfo(getDescriptor().getHubServerInfo());
         scan.setHubVersion(hubVersion);
         scan.setJava(getJava());
@@ -519,11 +519,11 @@ public class PostBuildHubScan extends Recorder {
         scan.setOneJarPath(oneJarPath);
         scan.setScanMemory(scanMemory);
         scan.setScanTargets(scanTargets);
-        scan.setWorkingDirectory(new File(workingDirectory));
-
+        scan.setWorkingDirectory(workingDirectory);
+        scan.setSeparator(separator);
         scan.setIsTest(isTEST());
 
-        Result result = build.getBuiltOn().getChannel().call(scan);
+        Result result = scan.executeScan();
 
         setResult(result);
     }
@@ -594,38 +594,38 @@ public class PostBuildHubScan extends Recorder {
      */
     public FilePath getScanCLI(ScanInstallation[] scanTools, BuildListener listener, AbstractBuild build) throws IScanToolMissingException, IOException,
             InterruptedException, HubConfigurationException {
-        FilePath iScanExec = null;
-        for (ScanInstallation iScan : scanTools) {
+        FilePath scanExecutable = null;
+        for (ScanInstallation scanInstallation : scanTools) {
             Node node = build.getBuiltOn();
             if (StringUtils.isEmpty(node.getNodeName())) {
                 // Empty node name indicates master
                 listener.getLogger().println("[DEBUG] : Running on : master");
             } else {
                 listener.getLogger().println("[DEBUG] : Running on : " + node.getNodeName());
-                iScan = iScan.forNode(node, listener); // Need to get the Slave iScan
+                scanInstallation = scanInstallation.forNode(node, listener); // Need to get the Slave iScan
             }
-            if (iScan.getName().equals(getScanName())) {
-                if (iScan.getExists(node.getChannel(), listener)) {
-                    iScanExec = iScan.getCLI(node.getChannel());
-                    if (iScanExec == null) {
+            if (scanInstallation.getName().equals(getScanName())) {
+                if (scanInstallation.getExists(node.getChannel(), listener)) {
+                    scanExecutable = scanInstallation.getCLI(node.getChannel());
+                    if (scanExecutable == null) {
                         // Should not get here unless there are no iScan Installations defined
                         // But we check this just in case
                         throw new HubConfigurationException("You need to select which BlackDuck Scan installation to use.");
                     }
                     listener.getLogger().println(
-                            "[DEBUG] : Using this BlackDuck Scan CLI at : " + iScanExec.getRemote());
+                            "[DEBUG] : Using this BlackDuck Scan CLI at : " + scanExecutable.getRemote());
                 } else {
-                    listener.getLogger().println("[ERROR] : Could not find the CLI file in : " + iScan.getHome());
-                    throw new IScanToolMissingException("Could not find the CLI file to execute at : '" + iScan.getHome() + "'");
+                    listener.getLogger().println("[ERROR] : Could not find the CLI file in : " + scanInstallation.getHome());
+                    throw new IScanToolMissingException("Could not find the CLI file to execute at : '" + scanInstallation.getHome() + "'");
                 }
             }
         }
-        if (iScanExec == null) {
+        if (scanExecutable == null) {
             // Should not get here unless there are no iScan Installations defined
             // But we check this just in case
             throw new HubConfigurationException("You need to select which BlackDuck Scan installation to use.");
         }
-        return iScanExec;
+        return scanExecutable;
     }
 
     /**
@@ -677,30 +677,27 @@ public class PostBuildHubScan extends Recorder {
      * @throws HubConfigurationException
      * @throws InterruptedException
      */
-    public boolean validateScanTargets(BuildListener listener, VirtualChannel channel, List<String> scanTargets) throws IOException, HubConfigurationException,
+    public boolean validateScanTargets(BuildListener listener, List<FilePath> scanTargets) throws IOException,
+            HubConfigurationException,
             InterruptedException {
-        for (String currTarget : scanTargets) {
-            File locationFile = new File(currTarget);
-            String targetPath = "";
-            if (channel != null) {
-                targetPath = channel.call(new GetCanonicalPath(locationFile));
-            } else {
-                targetPath = locationFile.getCanonicalPath();
-            }
+        for (FilePath currTarget : scanTargets) {
 
-            if (targetPath.length() <= getWorkingDirectory().length()
-                    && !getWorkingDirectory().equals(targetPath) && !targetPath.contains(getWorkingDirectory())) {
+            String workingDir = getWorkingDirectory().getRemote();
+            String currTargetPath = currTarget.getRemote();
+
+            if (currTargetPath.length() <= workingDir.length()
+                    && !workingDir.equals(currTargetPath) && !currTargetPath.contains(workingDir)) {
                 throw new HubConfigurationException("Can not scan targets outside of the workspace.");
             }
 
-            FilePath target = new FilePath(channel, targetPath);
-            if (!target.exists()) {
-                throw new IOException("Scan target could not be found : " + target.getRemote());
+            if (!currTarget.exists()) {
+                throw new IOException("Scan target could not be found : " + currTargetPath);
             } else {
                 listener.getLogger().println(
-                        "[DEBUG] : Scan target exists at : " + target.getRemote());
+                        "[DEBUG] : Scan target exists at : " + currTargetPath);
             }
         }
         return true;
     }
+
 }

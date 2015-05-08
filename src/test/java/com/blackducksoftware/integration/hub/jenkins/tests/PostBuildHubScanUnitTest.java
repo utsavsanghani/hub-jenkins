@@ -31,10 +31,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
+import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
@@ -90,9 +90,10 @@ public class PostBuildHubScanUnitTest {
         File createdFile = folder.newFile("myfilefile.txt");
         PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class, Mockito.CALLS_REAL_METHODS);
         File workspace = new File(createdFolder.getCanonicalPath() + "/..");
-        when(mockpbScan.getWorkingDirectory()).thenReturn(workspace.getCanonicalPath());
-        String[] scanTargets = { createdFolder.getCanonicalPath(), createdFile.getCanonicalPath() };
-        Assert.assertTrue(mockpbScan.validateScanTargets(listener, null, Arrays.asList(scanTargets)));
+        VirtualChannel nullChannel = null;
+        when(mockpbScan.getWorkingDirectory()).thenReturn(new FilePath(nullChannel, workspace.getCanonicalPath()));
+        FilePath[] scanTargets = { new FilePath(nullChannel, createdFolder.getCanonicalPath()), new FilePath(nullChannel, createdFile.getCanonicalPath()) };
+        Assert.assertTrue(mockpbScan.validateScanTargets(listener, Arrays.asList(scanTargets)));
         String output = byteOutput.toString("UTF-8");
         Assert.assertTrue(output.contains("[DEBUG] : Scan target exists at : "));
     }
@@ -102,9 +103,10 @@ public class PostBuildHubScanUnitTest {
         exception.expect(IOException.class);
         exception.expectMessage("Scan target could not be found :");
         PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class, Mockito.CALLS_REAL_METHODS);
-        when(mockpbScan.getWorkingDirectory()).thenReturn("/");
-        String[] scanTargets = { "/ASSERT/NOT/EXISTING", "/RE-ASSERT/Not/EXISTING" };
-        mockpbScan.validateScanTargets(listener, null, Arrays.asList(scanTargets));
+        VirtualChannel nullChannel = null;
+        when(mockpbScan.getWorkingDirectory()).thenReturn(new FilePath(nullChannel, "/"));
+        FilePath[] scanTargets = { new FilePath(nullChannel, "/ASSERT/NOT/EXISTING"), new FilePath(nullChannel, "/RE-ASSERT/Not/EXISTING") };
+        mockpbScan.validateScanTargets(listener, Arrays.asList(scanTargets));
     }
 
     @Test
@@ -115,9 +117,10 @@ public class PostBuildHubScanUnitTest {
         File testWorkspace = folder.newFolder("workspace");
         File createdFile = folder.newFile("myfilefile.txt");
         PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class, Mockito.CALLS_REAL_METHODS);
-        when(mockpbScan.getWorkingDirectory()).thenReturn(testWorkspace.getCanonicalPath());
-        String[] scanTargets = { createdFolder.getCanonicalPath(), createdFile.getCanonicalPath() };
-        mockpbScan.validateScanTargets(listener, null, Arrays.asList(scanTargets));
+        VirtualChannel nullChannel = null;
+        when(mockpbScan.getWorkingDirectory()).thenReturn(new FilePath(nullChannel, testWorkspace.getCanonicalPath()));
+        FilePath[] scanTargets = { new FilePath(nullChannel, createdFolder.getCanonicalPath()), new FilePath(nullChannel, createdFile.getCanonicalPath()) };
+        mockpbScan.validateScanTargets(listener, Arrays.asList(scanTargets));
     }
 
     // getIScanScript

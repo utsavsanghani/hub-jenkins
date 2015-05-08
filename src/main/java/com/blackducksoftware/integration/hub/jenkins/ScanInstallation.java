@@ -25,11 +25,11 @@ import org.kohsuke.stapler.StaplerRequest;
 public class ScanInstallation extends ToolInstallation implements NodeSpecific<ScanInstallation>, EnvironmentSpecific<ScanInstallation> {
 
     /**
-	 * 
+	 *
 	 */
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@DataBoundConstructor
+    @DataBoundConstructor
     public ScanInstallation(String name, String home, List<? extends ToolProperty<?>> properties) {
         super(name, home, properties);
     }
@@ -51,10 +51,10 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
 
     /**
      * Checks if the executable exists
-     * 
+     *
      * @param channel
      *            VirtualChannel to find the executable on master or slave
-     * 
+     *
      * @return true if executable is found, false otherwise
      * @throws IOException
      * @throws InterruptedException
@@ -71,6 +71,7 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
                 for (FilePath iScanDirectory : files) {
                     if ("lib".equalsIgnoreCase(iScanDirectory.getName())) {
                         libFolder = iScanDirectory;
+                        break;
                     }
                 }
                 if (libFolder == null) {
@@ -86,6 +87,7 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
                         listener.getLogger().println("[DEBUG] BlackDuck Scan lib file: " + file.getRemote());
                         if (file.getName().contains("scan.cli")) {
                             iScanScript = file;
+                            break;
                         }
                     }
                 }
@@ -100,10 +102,10 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
 
     /**
      * Returns the executable file of the installation
-     * 
+     *
      * @param channel
      *            VirtualChannel to find the executable on master or slave
-     * 
+     *
      * @return FilePath
      * @throws IOException
      * @throws InterruptedException

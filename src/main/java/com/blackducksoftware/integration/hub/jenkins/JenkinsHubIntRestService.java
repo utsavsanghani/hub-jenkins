@@ -1,5 +1,6 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
+import hudson.FilePath;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 
@@ -187,7 +188,7 @@ public class JenkinsHubIntRestService {
     }
 
     public ArrayList<LinkedHashMap<String, Object>> getProjectMatches(String hubProjectName) throws IOException, BDRestException {
-
+        // hubProjectName = URLEncoder.encode(hubProjectName, "UTF-8");
         String url = getBaseUrl() + "/api/v1/autocomplete/PROJECT?text=" + hubProjectName + "&limit=30&ownership=0";
         ClientResource resource = createClientResource(url);
         try {
@@ -259,7 +260,7 @@ public class JenkinsHubIntRestService {
     }
 
     public String getProjectId(String hubProjectName) throws IOException, BDRestException {
-
+        // hubProjectName = URLEncoder.encode(hubProjectName, "UTF-8");
         String url = getBaseUrl() + "/api/v1/projects?name=" + hubProjectName;
         ClientResource resource = createClientResource(url);
         try {
@@ -318,7 +319,7 @@ public class JenkinsHubIntRestService {
      * @throws InterruptedException
      * @throws BDRestException
      */
-    public Map<String, Boolean> getScanLocationIds(AbstractBuild build, BuildListener listener, List<String> scanTargets, String versionId)
+    public Map<String, Boolean> getScanLocationIds(AbstractBuild build, BuildListener listener, List<FilePath> scanTargets, String versionId)
             throws UnknownHostException,
             MalformedURLException, InterruptedException, BDRestException {
         HashMap<String, Boolean> scanLocationIds = new HashMap<String, Boolean>();
@@ -326,7 +327,7 @@ public class JenkinsHubIntRestService {
         String url = null;
         String localHostName = "";
         try {
-            for (String targetPath : scanTargets) {
+            for (FilePath targetPath : scanTargets) {
                 try {
                     localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
                 } catch (IOException e) {
@@ -336,9 +337,19 @@ public class JenkinsHubIntRestService {
                 if (localHostName == null || localHostName.length() == 0) {
                     return null;
                 }
-                url = baseUrl + "/api/v1/scanlocations?host=" + localHostName + "&path=" + targetPath;
+                String remoteTargetPath = targetPath.getRemote();
+                // Scan paths in the Hub only use '/' not '\'
+                if (remoteTargetPath.contains("\\")) {
+                    remoteTargetPath = remoteTargetPath.replace("\\", "/");
+                }
+                // and it always starts with a '/'
+                if (!remoteTargetPath.startsWith("/")) {
+                    remoteTargetPath = "/" + remoteTargetPath;
+                }
+
+                url = baseUrl + "/api/v1/scanlocations?host=" + localHostName + "&path=" + remoteTargetPath;
                 listener.getLogger().println(
-                        "[DEBUG] Checking for the scan location with Host name: '" + localHostName + "' and Path: '" + targetPath + "'");
+                        "[DEBUG] Checking for the scan location with Host name: '" + localHostName + "' and Path: '" + remoteTargetPath + "'");
 
                 resource = createClientResource(url);
 
@@ -347,7 +358,7 @@ public class JenkinsHubIntRestService {
 
                 ScanLocationHandler handler = new ScanLocationHandler(listener);
 
-                handler.getScanLocationIdWithRetry(build, resource, targetPath, versionId, scanLocationIds);
+                handler.getScanLocationIdWithRetry(build, resource, remoteTargetPath, versionId, scanLocationIds);
 
             }
         } catch (ResourceException e) {
@@ -507,7 +518,7 @@ public class JenkinsHubIntRestService {
     }
 
     public String createHubProject(String projectName) throws IOException, BDRestException {
-
+        // projectName = URLEncoder.encode(projectName, "UTF-8");
         String url = getBaseUrl() + "/api/v1/projects";
         ClientResource resource = createClientResource(url);
         HashMap<String, Object> responseMap = null;
@@ -557,6 +568,7 @@ public class JenkinsHubIntRestService {
     }
 
     public String createHubVersion(String projectVersion, String projectId, String phase, String dist) throws IOException, BDRestException {
+        // projectVersion = URLEncoder.encode(projectVersion, "UTF-8");
         String url = getBaseUrl() + "/api/v1/releases";
         ClientResource resource = createClientResource(url);
         int responseCode;
