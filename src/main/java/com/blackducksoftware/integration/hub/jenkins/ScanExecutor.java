@@ -211,7 +211,7 @@ public class ScanExecutor {
                 cmd.add("--logDir");
 
                 // cmd.add(URLEncoder.encode(logDirectory.getRemote(), "UTF-8"));
-                cmd.add(logDirectory.getRemote().replace(" ", "%20"));
+                cmd.add(logDirectory.getRemote().replace(" ", "\\ "));
             }
 
             for (FilePath target : scanTargets) {
