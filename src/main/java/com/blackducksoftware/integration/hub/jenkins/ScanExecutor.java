@@ -12,7 +12,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -211,7 +210,8 @@ public class ScanExecutor {
                 // this is the pro-active approach to the log problem
                 cmd.add("--logDir");
 
-                cmd.add(URLEncoder.encode(logDirectory.getRemote(), "UTF-8"));
+                // cmd.add(URLEncoder.encode(logDirectory.getRemote(), "UTF-8"));
+                cmd.add(logDirectory.getRemote().replace(" ", "%20"));
             }
 
             for (FilePath target : scanTargets) {

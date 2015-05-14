@@ -5,7 +5,6 @@ import hudson.model.Result;
 import hudson.model.AbstractBuild;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.MalformedURLException;
@@ -125,10 +124,10 @@ public class ScanLocationHandler {
                         path = ((String) scanMatch.get("path")).trim();
 
                         // Remove trailing slash from both strings
-                        if (path.endsWith(File.separator)) {
+                        if (path.endsWith("/")) {
                             path = path.substring(0, path.length() - 1);
                         }
-                        if (remoteTargetPath.endsWith(File.separator)) {
+                        if (remoteTargetPath.endsWith("/")) {
                             remoteTargetPath = remoteTargetPath.substring(0, remoteTargetPath.length() - 1);
                         }
 
@@ -145,10 +144,10 @@ public class ScanLocationHandler {
                     path = (String) scanMatch.get("path");
 
                     // Remove trailing slash from both strings
-                    if (path.endsWith(File.separator)) {
+                    if (path.endsWith("/")) {
                         path = path.substring(0, path.length() - 1);
                     }
-                    if (remoteTargetPath.endsWith(File.separator)) {
+                    if (remoteTargetPath.endsWith("/")) {
                         remoteTargetPath = remoteTargetPath.substring(0, remoteTargetPath.length() - 1);
                     }
 

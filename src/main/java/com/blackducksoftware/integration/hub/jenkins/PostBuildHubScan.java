@@ -223,6 +223,7 @@ public class PostBuildHubScan extends Recorder {
                     setWorkingDirectory(remotingChannel, workingDirectory);
                     setJava(build, listener);
                     EnvVars variables = build.getEnvironment(listener);
+                    String separator = build.getBuiltOn().getChannel().call(new GetFileSeparator());
                     List<FilePath> scanTargets = new ArrayList<FilePath>();
                     for (ScanJobs scanJob : getScans()) {
                         if (StringUtils.isEmpty(scanJob.getScanTarget())) {
@@ -237,7 +238,7 @@ public class PostBuildHubScan extends Recorder {
                             if (target.startsWith("/") || target.startsWith("\\")) {
                                 target = getWorkingDirectory().getRemote() + target;
                             } else {
-                                target = getWorkingDirectory().getRemote() + File.separator + target;
+                                target = getWorkingDirectory().getRemote() + separator + target;
 
                             }
                             File targetFile = new File(target);
@@ -258,7 +259,6 @@ public class PostBuildHubScan extends Recorder {
                         projectVersion = handleVariableReplacement(variables, getHubProjectVersion());
 
                     }
-                    String separator = build.getBuiltOn().getChannel().call(new GetFileSeparator());
                     printConfiguration(build, listener, projectName, projectVersion, scanTargets, separator);
 
                     FilePath scanExec = getScanCLI(iScanTools, listener, build);
@@ -509,7 +509,7 @@ public class PostBuildHubScan extends Recorder {
         }
         FilePath oneJarPath = null;
 
-        oneJarPath = new FilePath(scanExec.getParent(), "cache" + File.separator + "scan.cli.impl-standalone.jar");
+        oneJarPath = new FilePath(scanExec.getParent(), "cache" + separator + "scan.cli.impl-standalone.jar");
 
         ScanExecutor scan = new ScanExecutor(build, launcher, listener);
         scan.setHubServerInfo(getDescriptor().getHubServerInfo());
