@@ -9,6 +9,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.JDK;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -208,10 +209,15 @@ public class ScanExecutor {
                 logDirectory.mkdirs();
                 // Need to only add this option if version 2.0.1 or later,
                 // this is the pro-active approach to the log problem
-                cmd.add("--logDir");
+                try {
+                    cmd.add("--logDir");
 
-                // cmd.add(URLEncoder.encode(logDirectory.getRemote(), "UTF-8"));
-                cmd.add(logDirectory.getRemote().replace(" ", "\\ "));
+                    // cmd.add(URLEncoder.encode(logDirectory.getRemote(), "UTF-8"));
+                    String testFile = new File(logDirectory.getRemote()).toURI().toURL().toExternalForm();
+                    cmd.add(testFile);
+                } catch (Throwable e) {
+                    listener.getLogger().println("CANN NOT GET THE CORRECT LOG PATH");
+                }
             }
 
             for (FilePath target : scanTargets) {
