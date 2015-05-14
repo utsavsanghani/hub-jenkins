@@ -57,11 +57,11 @@ public class PostBuildHubScan extends Recorder {
 
     private Integer scanMemory;
 
-    private FilePath workingDirectory;
+    private transient FilePath workingDirectory;
 
-    private JDK java;
+    private transient JDK java;
 
-    private Result result;
+    private transient Result result;
 
     // private JenkinsHubIntRestService service = null;
 
