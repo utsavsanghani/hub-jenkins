@@ -19,7 +19,7 @@
 	<description>Runs the Black Duck Hub scan in Jenkins build</description>
 	<inceptionYear>2014</inceptionYear>
 
-	<url>https://customerhubblackducksoftware.force.com/apex/The_Exchange?sfdc.tabName=01r60000000QMbg</url>
+	<url>https://confluence.blackducksoftware.com/display/JUS/Black+Duck+Hub+Jenkins+Plug-in</url>
 	<scm>
 		<url>http://stash.blackducksoftware.com/scm/int-hub/int-hub-jenkins.git</url>
 	</scm>
