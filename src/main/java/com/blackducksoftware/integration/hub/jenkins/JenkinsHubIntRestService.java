@@ -34,6 +34,7 @@ import org.restlet.resource.ClientResource;
 import org.restlet.resource.ResourceException;
 import org.restlet.util.Series;
 
+import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -318,10 +319,11 @@ public class JenkinsHubIntRestService {
      * @throws MalformedURLException
      * @throws InterruptedException
      * @throws BDRestException
+     * @throws BDJenkinsHubPluginException
      */
     public Map<String, Boolean> getScanLocationIds(AbstractBuild build, BuildListener listener, List<FilePath> scanTargets, String versionId)
             throws UnknownHostException,
-            MalformedURLException, InterruptedException, BDRestException {
+            MalformedURLException, InterruptedException, BDRestException, BDJenkinsHubPluginException {
         HashMap<String, Boolean> scanLocationIds = new HashMap<String, Boolean>();
         ClientResource resource = null;
         String url = null;

@@ -42,10 +42,11 @@ public class ScanLocationHandler {
      * @throws MalformedURLException
      * @throws InterruptedException
      * @throws BDRestException
+     * @throws BDJenkinsHubPluginException
      */
     public void getScanLocationIdWithRetry(AbstractBuild build, ClientResource resource, String remoteTargetPath, String versionId,
             Map<String, Boolean> scanLocationIds)
-            throws UnknownHostException, MalformedURLException, InterruptedException, BDRestException {
+            throws UnknownHostException, MalformedURLException, InterruptedException, BDRestException, BDJenkinsHubPluginException {
 
         if (resource == null) {
             throw new IllegalArgumentException("Need to provide a ClientResource in order to get the ScanLocation");
@@ -90,7 +91,8 @@ public class ScanLocationHandler {
 
     }
 
-    private boolean scanLocationRetrieval(ClientResource resource, String remoteTargetPath, String versionId, Map<String, Boolean> scanLocationIds) {
+    private boolean scanLocationRetrieval(ClientResource resource, String remoteTargetPath, String versionId, Map<String, Boolean> scanLocationIds)
+            throws BDJenkinsHubPluginException {
         boolean matchFound = false;
         resource.get();
 
@@ -180,8 +182,6 @@ public class ScanLocationHandler {
         } catch (IOException e) {
             e.printStackTrace(listener.getLogger());
         } catch (BDRestException e) {
-            e.printStackTrace(listener.getLogger());
-        } catch (BDJenkinsHubPluginException e) {
             e.printStackTrace(listener.getLogger());
         }
 
