@@ -13,12 +13,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.codehaus.plexus.util.StringUtils;
 import org.restlet.Response;
 import org.restlet.resource.ClientResource;
 
+import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -179,34 +181,54 @@ public class ScanLocationHandler {
             e.printStackTrace(listener.getLogger());
         } catch (BDRestException e) {
             e.printStackTrace(listener.getLogger());
+        } catch (BDJenkinsHubPluginException e) {
+            e.printStackTrace(listener.getLogger());
         }
 
         return matchFound;
     }
 
-    private void handleScanLocationMatch(Map<String, Boolean> scanLocationIds, LinkedHashMap<String, Object> scanMatch, String targetPath, String versionId) {
+    private void handleScanLocationMatch(Map<String, Boolean> scanLocationIds, LinkedHashMap<String, Object> scanMatch, String targetPath, String versionId)
+            throws BDJenkinsHubPluginException {
         ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) scanMatch
                 .get("assetReferenceList");
         if (!assetReferences.isEmpty()) {
             for (LinkedHashMap<String, Object> assetReference : assetReferences) {
                 LinkedHashMap<String, Object> ownerEntity = (LinkedHashMap<String, Object>) assetReference.get("ownerEntityKey");
-                String ownerId = (String) ownerEntity.get("entityId");
-                if (ownerId.equals(versionId)) {
-                    String scanId = (String) scanMatch.get("id");
-                    scanLocationIds.put(scanId, true);
-                    listener.getLogger().println(
-                            "[DEBUG] The scan target : '"
-                                    + targetPath
-                                    + "' has Scan Location Id: '"
-                                    + scanId
-                                    + "'. This is already mapped to the Version with Id: '"
-                                    + versionId + "'.");
-                    listener.getLogger().println();
+                if (ownerEntity == null || !ownerEntity.containsKey("entityId")) {
+                    if (ownerEntity != null) {
+                        listener.getLogger().println("[ERROR] Owner entity does not have 'entityId' key");
+                        Set<String> keys = ownerEntity.keySet();
+                        listener.getLogger().println("[DEBUG] Owner entity has these keys : ");
+                        for (String key : keys) {
+                            listener.getLogger().println("[DEBUG] key = " + key);
+                        }
+                        throw new BDJenkinsHubPluginException("The scan has an owner but the owner does not have an 'entityId'");
+                    } else {
+                        String scanId = (String) scanMatch.get("id");
+                        listener.getLogger().println(
+                                "[DEBUG] The scan target : '" + targetPath + "' has Scan Location Id: '" + scanId + "'.");
+                        scanLocationIds.put(scanId, false);
+                    }
                 } else {
-                    String scanId = (String) scanMatch.get("id");
-                    listener.getLogger().println(
-                            "[DEBUG] The scan target : '" + targetPath + "' has Scan Location Id: '" + scanId + "'.");
-                    scanLocationIds.put(scanId, false);
+                    String ownerId = (String) ownerEntity.get("entityId");
+                    if (ownerId.equals(versionId)) {
+                        String scanId = (String) scanMatch.get("id");
+                        scanLocationIds.put(scanId, true);
+                        listener.getLogger().println(
+                                "[DEBUG] The scan target : '"
+                                        + targetPath
+                                        + "' has Scan Location Id: '"
+                                        + scanId
+                                        + "'. This is already mapped to the Version with Id: '"
+                                        + versionId + "'.");
+                        listener.getLogger().println();
+                    } else {
+                        String scanId = (String) scanMatch.get("id");
+                        listener.getLogger().println(
+                                "[DEBUG] The scan target : '" + targetPath + "' has Scan Location Id: '" + scanId + "'.");
+                        scanLocationIds.put(scanId, false);
+                    }
                 }
             }
 
