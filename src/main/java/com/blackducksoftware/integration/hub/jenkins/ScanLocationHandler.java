@@ -195,21 +195,14 @@ public class ScanLocationHandler {
         if (!assetReferences.isEmpty()) {
             for (LinkedHashMap<String, Object> assetReference : assetReferences) {
                 LinkedHashMap<String, Object> ownerEntity = (LinkedHashMap<String, Object>) assetReference.get("ownerEntityKey");
-                if (ownerEntity == null || !ownerEntity.containsKey("entityId")) {
-                    if (ownerEntity != null) {
-                        listener.getLogger().println("[ERROR] Owner entity does not have 'entityId' key");
-                        Set<String> keys = ownerEntity.keySet();
-                        listener.getLogger().println("[DEBUG] Owner entity has these keys : ");
-                        for (String key : keys) {
-                            listener.getLogger().println("[DEBUG] key = " + key);
-                        }
-                        throw new BDJenkinsHubPluginException("The scan has an owner but the owner does not have an 'entityId'");
-                    } else {
-                        String scanId = (String) scanMatch.get("id");
-                        listener.getLogger().println(
-                                "[DEBUG] The scan target : '" + targetPath + "' has Scan Location Id: '" + scanId + "'.");
-                        scanLocationIds.put(scanId, false);
+                if (!ownerEntity.containsKey("entityId")) {
+                    listener.getLogger().println("[ERROR] Owner entity does not have 'entityId' key");
+                    Set<String> keys = ownerEntity.keySet();
+                    listener.getLogger().println("[DEBUG] Owner entity has these keys : ");
+                    for (String key : keys) {
+                        listener.getLogger().println("[DEBUG] key = " + key);
                     }
+                    throw new BDJenkinsHubPluginException("The scan has an owner but the owner does not have an 'entityId'");
                 } else {
                     String ownerId = (String) ownerEntity.get("entityId");
                     if (ownerId.equals(versionId)) {
