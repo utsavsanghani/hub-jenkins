@@ -589,7 +589,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 message = e.toString();
             }
             if (message.toLowerCase().contains("service unavailable")) {
-                message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getHubServerUrl());
+                message = Messages.HubBuildScan_getCanNotReachThisServer_0_(serverUrl);
             } else if (message.toLowerCase().contains("precondition failed")) {
                 message = message + ", Check your configuration.";
             }

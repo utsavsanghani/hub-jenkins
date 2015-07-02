@@ -65,6 +65,7 @@ public class ScanLocationHandler {
             i++;
 
             listener.getLogger().println("Attempt # " + i + " to get the Scan Location for : '" + remoteTargetPath + "'.");
+
             matchFound = scanLocationRetrieval(resource, remoteTargetPath, versionId, scanLocationIds);
             if (matchFound) {
                 break;
