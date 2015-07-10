@@ -154,8 +154,9 @@ public class JenkinsHubIntRestService {
      *
      * @return int Status code
      * @throws MalformedURLException
+     * @throws BDJenkinsHubPluginException
      */
-    public int setCookies(String credentialUserName, String credentialPassword) throws MalformedURLException {
+    public int setCookies(String credentialUserName, String credentialPassword) throws MalformedURLException, BDJenkinsHubPluginException {
         String url = getBaseUrl() + "/j_spring_security_check?j_username=" + credentialUserName + "&j_password=" + credentialPassword;
         ClientResource resource = createClientResource(url);
         resource.setMethod(Method.POST);
@@ -164,6 +165,10 @@ public class JenkinsHubIntRestService {
         resource.post(rep);
         if (cookies == null) {
             Series<CookieSetting> cookieSettings = resource.getResponse().getCookieSettings();
+            if (cookieSettings == null || cookieSettings.size() == 0) {
+                throw new BDJenkinsHubPluginException("Could not establish connection to '" + getBaseUrl() + "' . Failed to retrieve cookies");
+            }
+
             Series<Cookie> requestCookies = resource.getRequest().getCookies();
             for (CookieSetting ck : cookieSettings) {
                 Cookie cookie = new Cookie();

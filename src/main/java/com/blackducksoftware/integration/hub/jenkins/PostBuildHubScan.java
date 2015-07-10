@@ -396,7 +396,7 @@ public class PostBuildHubScan extends Recorder {
 
     }
 
-    public JenkinsHubIntRestService setJenkinsHubIntRestService(BuildListener listener) throws MalformedURLException {
+    public JenkinsHubIntRestService setJenkinsHubIntRestService(BuildListener listener) throws MalformedURLException, BDJenkinsHubPluginException {
         JenkinsHubIntRestService service = new JenkinsHubIntRestService();
         service.setListener(listener);
         Jenkins jenkins = Jenkins.getInstance();

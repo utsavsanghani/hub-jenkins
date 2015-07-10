@@ -11,6 +11,7 @@ import hudson.security.ACL;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
+import hudson.util.FormValidation.Kind;
 import hudson.util.ListBoxModel;
 
 import java.io.IOException;
@@ -35,6 +36,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -287,7 +289,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             URLConnection connection = url.openConnection();
             connection.getContent();
         } catch (IOException ioe) {
-            return FormValidation.warning(Messages
+            return FormValidation.error(Messages
                     .HubBuildScan_getCanNotReachThisServer_0_(serverUrl));
         } catch (RuntimeException e) {
             return FormValidation.error(Messages
@@ -543,6 +545,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             if (StringUtils.isEmpty(hubCredentialsId)) {
                 return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
             }
+            FormValidation urlCheck = doCheckServerUrl(serverUrl);
+            if (urlCheck.kind != Kind.OK) {
+                return urlCheck;
+            }
 
             String credentialUserName = null;
             String credentialPassword = null;
@@ -580,8 +586,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
             }
         } catch (Exception e) {
-            String message;
-            if (e.getCause() != null && e.getCause().getCause() != null) {
+            String message = null;
+            if (e instanceof BDJenkinsHubPluginException) {
+                message = e.getMessage();
+            } else if (e.getCause() != null && e.getCause().getCause() != null) {
                 message = e.getCause().getCause().toString();
             } else if (e.getCause() != null) {
                 message = e.getCause().toString();
