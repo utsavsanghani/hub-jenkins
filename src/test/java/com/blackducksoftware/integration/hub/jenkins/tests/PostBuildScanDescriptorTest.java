@@ -102,7 +102,7 @@ public class PostBuildScanDescriptorTest {
         }
         FormValidation form = descriptor.doTestConnection("http://ASSERTNONEXISTENTURL", credential.getId());
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertTrue(form.getMessage().contains("UnknownHostException"));
+        Assert.assertTrue(form.getMessage(), form.getMessage().equals(Messages.HubBuildScan_getCanNotReachThisServer_0_("http://ASSERTNONEXISTENTURL")));
 
     }
 
