@@ -190,8 +190,19 @@ public class ScanLocationHandler {
 
     private void handleScanLocationMatch(Map<String, Boolean> scanLocationIds, LinkedHashMap<String, Object> scanMatch, String targetPath, String versionId)
             throws BDJenkinsHubPluginException {
-        ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) scanMatch
-                .get("assetReferenceList");
+        if (!scanMatch.containsKey("assetReferenceList")) {
+            listener.getLogger().println("[ERROR] The matched scan does not have 'assetReferenceList' key");
+            Set<String> keys = scanMatch.keySet();
+            listener.getLogger().println("[DEBUG] The matched scan does have these keys : ");
+            for (String key : keys) {
+                listener.getLogger().println("[DEBUG] key = " + key);
+            }
+            throw new BDJenkinsHubPluginException("The matched scan does not have the 'assetReferenceList' key");
+        }
+
+        Object assetRefObject = scanMatch.get("assetReferenceList");
+        ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) assetRefObject;
+
         if (!assetReferences.isEmpty()) {
             for (LinkedHashMap<String, Object> assetReference : assetReferences) {
                 LinkedHashMap<String, Object> ownerEntity = (LinkedHashMap<String, Object>) assetReference.get("ownerEntityKey");
