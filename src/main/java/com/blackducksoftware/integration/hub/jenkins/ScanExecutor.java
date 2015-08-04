@@ -177,7 +177,7 @@ public class ScanExecutor {
             cmd.add(url.getProtocol());
             cmd.add("--host");
             cmd.add(url.getHost());
-            listener.getLogger().println("[DEBUG] : Using this Hub Url : '" + url.getHost() + "'");
+            listener.getLogger().println("[DEBUG] : Using this Hub hostname : '" + url.getHost() + "'");
             cmd.add("--username");
             cmd.add(getHubServerInfo().getUsername());
             cmd.add("--password");

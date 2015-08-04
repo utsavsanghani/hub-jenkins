@@ -34,11 +34,11 @@ import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -173,7 +173,7 @@ public class IntegrationTest {
         Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Using this BlackDuck Scan CLI at : "));
         Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Scan target exists at :"));
         URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Using this Hub Url : '" + url.getHost()));
+        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Using this Hub hostname : '" + url.getHost()));
         Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Using this java installation : "));
         Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
         Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
