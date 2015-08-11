@@ -276,6 +276,7 @@
 				<version>1.106</version>
 				<configuration>
 					<pluginFirstClassLoader>false</pluginFirstClassLoader>
+					<hpiName>${project.artifactId}-${project.version}</hpiName>
 				</configuration>
 				<dependencies>
 					<dependency> <!-- overwrite the xalan version for the plugin, otherwise SdkFaults result 
