@@ -194,6 +194,7 @@ public class ScanLocationHandler {
             Object assetRefObject = scanMatch.get("assetReferenceList");
             ArrayList<LinkedHashMap<String, Object>> assetReferences = (ArrayList<LinkedHashMap<String, Object>>) assetRefObject;
             if (!assetReferences.isEmpty()) {
+                boolean scanAlreadyMatched = false;
                 for (LinkedHashMap<String, Object> assetReference : assetReferences) {
                     LinkedHashMap<String, Object> ownerEntity = (LinkedHashMap<String, Object>) assetReference.get("ownerEntityKey");
                     if (!ownerEntity.containsKey("entityId")) {
@@ -207,25 +208,30 @@ public class ScanLocationHandler {
                     } else {
                         String ownerId = (String) ownerEntity.get("entityId");
                         if (ownerId.equals(versionId)) {
-                            String scanId = (String) scanMatch.get("id");
-                            scanLocationIds.put(scanId, true);
-                            listener.getLogger().println(
-                                    "[DEBUG] The scan target : '"
-                                            + targetPath
-                                            + "' has Scan Location Id: '"
-                                            + scanId
-                                            + "'. This is already mapped to the Version with Id: '"
-                                            + versionId + "'.");
-                            listener.getLogger().println();
-                            return;
-                        } else {
-                            String scanId = (String) scanMatch.get("id");
-                            listener.getLogger().println(
-                                    "[DEBUG] The scan target : '" + targetPath + "' has Scan Location Id: '" + scanId + "'.");
-                            scanLocationIds.put(scanId, false);
-                            return;
+                            scanAlreadyMatched = true;
+                            break;
                         }
                     }
+                }
+
+                if (scanAlreadyMatched) {
+                    String scanId = (String) scanMatch.get("id");
+                    scanLocationIds.put(scanId, true);
+                    listener.getLogger().println(
+                            "[DEBUG] The scan target : '"
+                                    + targetPath
+                                    + "' has Scan Location Id: '"
+                                    + scanId
+                                    + "'. This is already mapped to the Version with Id: '"
+                                    + versionId + "'.");
+                    listener.getLogger().println();
+                    return;
+                } else {
+                    String scanId = (String) scanMatch.get("id");
+                    listener.getLogger().println(
+                            "[DEBUG] The scan target : '" + targetPath + "' has Scan Location Id: '" + scanId + "'.");
+                    scanLocationIds.put(scanId, false);
+                    return;
                 }
 
             }
