@@ -17,7 +17,10 @@ import hudson.tools.ToolDescriptor;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -254,7 +257,7 @@ public class PostBuildHubScan extends Recorder {
                     String projectName = null;
                     String projectVersion = null;
 
-                    if (!StringUtils.isEmpty(getHubProjectName()) && !StringUtils.isEmpty(getHubProjectVersion())) {
+                    if (StringUtils.isNotBlank(getHubProjectName()) && StringUtils.isNotBlank(getHubProjectVersion())) {
                         projectName = handleVariableReplacement(variables, getHubProjectName());
                         projectVersion = handleVariableReplacement(variables, getHubProjectVersion());
 
@@ -266,7 +269,7 @@ public class PostBuildHubScan extends Recorder {
 
                     // Only map the scans to a Project Version if the Project name and Project Version have been
                     // configured
-                    if (getResult().equals(Result.SUCCESS) && !StringUtils.isEmpty(projectName) && !StringUtils.isEmpty(projectVersion)) {
+                    if (getResult().equals(Result.SUCCESS) && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
                         // Wait 5 seconds for the scans to be recognized in the Hub server
                         listener.getLogger().println("Waiting a few seconds for the scans to be recognized by the Hub server.");
                         Thread.sleep(5000);
@@ -401,14 +404,29 @@ public class PostBuildHubScan extends Recorder {
         service.setListener(listener);
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
-            ProxyConfiguration proxy = jenkins.proxy;
-            if (proxy != null) {
-                service.setNoProxyHosts(proxy.getNoProxyHostPatterns());
-                service.setProxyHost(proxy.name);
-                service.setProxyPort(proxy.port);
-                if (!StringUtils.isEmpty(proxy.name) && proxy.port != 0) {
-                    if (listener != null) {
-                        listener.getLogger().println("[DEBUG] Using proxy: '" + proxy.name + "' at Port: '" + proxy.port + "'");
+            ProxyConfiguration proxyConfig = jenkins.proxy;
+            if (proxyConfig != null) {
+
+                URL serverUrl = new URL(getDescriptor().getHubServerInfo().getServerUrl());
+
+                Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name, proxyConfig.port,
+                        proxyConfig.noProxyHost);
+
+                if (proxy.address() != null) {
+                    InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
+                    if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
+                        if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
+                            service.setProxyHost(proxyAddress.getHostName());
+                            service.setProxyPort(proxyAddress.getPort());
+                            service.setProxyUsername(jenkins.proxy.getUserName());
+                            service.setProxyPassword(jenkins.proxy.getPassword());
+                        } else {
+                            service.setProxyHost(proxyAddress.getHostName());
+                            service.setProxyPort(proxyAddress.getPort());
+                        }
+                        if (listener != null) {
+                            listener.getLogger().println("[DEBUG] Using proxy: '" + proxyAddress.getHostName() + "' at Port: '" + proxyAddress.getPort() + "'");
+                        }
                     }
                 }
             }

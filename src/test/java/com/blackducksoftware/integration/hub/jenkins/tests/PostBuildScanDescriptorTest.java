@@ -128,7 +128,7 @@ public class PostBuildScanDescriptorTest {
         }
         FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId());
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertTrue(form.getMessage().contains("Unauthorized (401) - Unauthorized"));
+        Assert.assertTrue(form.getMessage(), form.getMessage().contains("Unauthorized (401) - Unauthorized"));
 
     }
 
@@ -146,7 +146,7 @@ public class PostBuildScanDescriptorTest {
         }
         FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId());
         Assert.assertEquals(FormValidation.Kind.OK, form.kind);
-        Assert.assertTrue(form.getMessage().contains("Credentials valid for: " + testProperties.getProperty("TEST_HUB_SERVER_URL")));
+        Assert.assertTrue(form.getMessage(), form.getMessage().contains("Credentials valid for: " + testProperties.getProperty("TEST_HUB_SERVER_URL")));
 
     }
 

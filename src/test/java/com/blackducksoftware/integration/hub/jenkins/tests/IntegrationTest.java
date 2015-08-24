@@ -15,9 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
@@ -163,21 +161,21 @@ public class IntegrationTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
-        List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Running on : master"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] BlackDuck Scan directory:"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] directories in the BlackDuck Scan directory"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] BlackDuck Scan lib directory:"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] BlackDuck Scan lib file:"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Using this BlackDuck Scan CLI at : "));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Scan target exists at :"));
+
+        Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Running on : master"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] BlackDuck Scan lib directory:"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
+        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Scan target exists at :"));
         URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Using this Hub hostname : '" + url.getHost()));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Using this java installation : "));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Using this Hub hostname : '" + url.getHost()));
+        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Using this java installation : "));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
     }
 
     @Test
@@ -229,22 +227,22 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
+
+            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             // FIXME uncomment when the CLI is fixed
             // Assert.assertTrue(listContainsSubString(buildOutputList,
             // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Mapping the scan location with id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan with id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
         }
@@ -290,22 +288,22 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
+
+            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             // FIXME uncomment when the CLI is fixed
             // Assert.assertTrue(listContainsSubString(buildOutputList,
             // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Mapping the scan location with id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan with id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(restHelper.getProjectId(projectName));
         }
@@ -363,24 +361,24 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
+
+            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             // FIXME uncomment when the CLI is fixed
             // Assert.assertTrue(listContainsSubString(buildOutputList,
             // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Mapping the scan location with id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan with id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
         } finally {
             restHelper.deleteHubProject(projectId);
@@ -429,6 +427,7 @@ public class IntegrationTest {
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, null, null, "4096");
             pbScan.setTEST(true);
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+
             jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST"),
                     Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT")), null, null, url.getHost());
 
@@ -440,26 +439,24 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
 
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             // FIXME uncomment when the CLI is fixed
             // Assert.assertTrue(listContainsSubString(buildOutputList,
             // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
+            Assert.assertTrue(buildOutput, !buildOutput.contains("[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Ignoring proxy for the Host: '" + url.getHost() + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Mapping the scan location with id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan with id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
         } finally {
             restHelper.deleteHubProject(projectId);
@@ -503,20 +500,22 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Scan target exists at :"));
-            URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
+
+            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Scan target exists at :"));
+
+            // URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             // FIXME uncomment when the CLI is fixed
             // Assert.assertTrue(listContainsSubString(buildOutputList,
             // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id: '"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished: SUCCESS"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id: '"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
         } finally {
             restHelper.deleteHubProject(restHelper.getProjectId(PROJECT_NAME_NOT_EXISTING));
         }
@@ -565,20 +564,22 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] : Scan target exists at :"));
-            URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
+
+            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Scan target exists at :"));
+
+            // URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             // FIXME uncomment when the CLI is fixed
             // Assert.assertTrue(listContainsSubString(buildOutputList,
             // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id: '"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished: SUCCESS"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id: '"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
         } finally {
             restHelper.deleteHubProject(projectId);
         }
@@ -635,45 +636,44 @@ public class IntegrationTest {
             FreeStyleBuild build = project.scheduleBuild2(0).get();
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
+
+            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             // FIXME uncomment when the CLI is fixed
             // Assert.assertTrue(listContainsSubString(buildOutputList,
             // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Mapping the scan location with id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Successfully mapped the scan with id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
             // Second run, scans should already be mapped
             build = project.scheduleBuild2(0).get();
             buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
-            buildOutputList = Arrays.asList(buildOutput.split("\n"));
 
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished in"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "with status SUCCESS"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             // FIXME uncomment when the CLI is fixed
             // Assert.assertTrue(listContainsSubString(buildOutputList,
             // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] The scan target :"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "' has Scan Location Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Version Id:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(listContainsSubString(buildOutputList, "Finished running Black Duck Scans."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
         }
@@ -714,10 +714,9 @@ public class IntegrationTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
-        List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
 
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Unauthorized (401) - Unauthorized"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Unauthorized (401) - Unauthorized"));
     }
 
     @Test
@@ -755,10 +754,9 @@ public class IntegrationTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
-        List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
 
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Starting BlackDuck Scans..."));
-        Assert.assertTrue(listContainsSubString(buildOutputList, "Unauthorized (401) - Unauthorized"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Unauthorized (401) - Unauthorized"));
     }
 
     @Test
@@ -812,7 +810,7 @@ public class IntegrationTest {
 
         System.out.println(buildOutput);
         // FIXME Need to check the Jdk exists before using it
-        // List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
+        //
         // Assert.assertTrue(buildOutputList.get(3).contains("Could not find the specified Java installation, checking the JAVA_HOME variable."));
         // Assert.assertTrue(buildOutputList
         // .get(4)
@@ -867,7 +865,7 @@ public class IntegrationTest {
 
         System.out.println(buildOutput);
         // FIXME Need to check the Jdk exists before using it
-        // List<String> buildOutputList = Arrays.asList(buildOutput.split("\n"));
+        //
         // Assert.assertTrue(buildOutputList
         // .get(3)
         // .contains(
@@ -878,14 +876,4 @@ public class IntegrationTest {
         // "Could not find the specified Java installation at:"));
     }
 
-    private boolean listContainsSubString(List<String> list, String subString) {
-        for (String listString : list) {
-            if (listString != null && !listString.isEmpty()) {
-                if (listString.contains(subString)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 }

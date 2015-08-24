@@ -16,7 +16,9 @@ import hudson.util.ListBoxModel;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -109,14 +111,30 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return "<unnamed>";
     }
 
-    public void setupService(JenkinsHubIntRestService service) {
+    public void setupService(JenkinsHubIntRestService service) throws MalformedURLException {
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
-            ProxyConfiguration proxy = jenkins.proxy;
-            if (proxy != null) {
-                service.setNoProxyHosts(proxy.getNoProxyHostPatterns());
-                service.setProxyHost(proxy.name);
-                service.setProxyPort(proxy.port);
+            ProxyConfiguration proxyConfig = jenkins.proxy;
+            if (proxyConfig != null) {
+                URL serverUrl = new URL(getHubServerInfo().getServerUrl());
+
+                Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name, proxyConfig.port,
+                        proxyConfig.noProxyHost);
+
+                if (proxy.address() != null) {
+                    InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
+                    if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
+                        if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
+                            service.setProxyHost(proxyAddress.getHostName());
+                            service.setProxyPort(proxyAddress.getPort());
+                            service.setProxyUsername(jenkins.proxy.getUserName());
+                            service.setProxyPassword(jenkins.proxy.getPassword());
+                        } else {
+                            service.setProxyHost(proxyAddress.getHostName());
+                            service.setProxyPort(proxyAddress.getPort());
+                        }
+                    }
+                }
             }
         }
     }
@@ -301,7 +319,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName) throws IOException,
             ServletException {
         AutoCompletionCandidates potentialMatches = new AutoCompletionCandidates();
-        if (!StringUtils.isEmpty(getHubServerUrl()) || !StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
+        if (StringUtils.isNotBlank(getHubServerUrl()) || StringUtils.isNotBlank(getHubServerInfo().getCredentialsId())) {
             ClassLoader originalClassLoader = Thread.currentThread()
                     .getContextClassLoader();
             boolean changed = false;
@@ -714,7 +732,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
                 }
             }
-            if (!StringUtils.isEmpty(versionId)) {
+            if (StringUtils.isNotBlank(versionId)) {
                 return FormValidation.ok(Messages.HubBuildScan_getProjectAndVersionCreated());
             } else {
                 return FormValidation.error(Messages.HubBuildScan_getProjectVersionCreationProblem());

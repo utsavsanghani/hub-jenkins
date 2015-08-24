@@ -8,7 +8,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,8 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import net.sf.json.JSONObject;
 
@@ -47,11 +44,29 @@ public class JenkinsHubIntRestService {
 
     private int proxyPort;
 
-    private List<Pattern> noProxyHosts;
+    private String proxyUsername;
+
+    private String proxyPassword;
 
     private BuildListener listener;
 
     protected JenkinsHubIntRestService() {
+    }
+
+    public String getProxyUsername() {
+        return proxyUsername;
+    }
+
+    public void setProxyUsername(String proxyUsername) {
+        this.proxyUsername = proxyUsername;
+    }
+
+    public String getProxyPassword() {
+        return proxyPassword;
+    }
+
+    public void setProxyPassword(String proxyPassword) {
+        this.proxyPassword = proxyPassword;
     }
 
     public void setListener(BuildListener listener) {
@@ -64,14 +79,6 @@ public class JenkinsHubIntRestService {
 
     public void setBaseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
-    }
-
-    public void setNoProxyHosts(List<Pattern> noProxyHosts) {
-        this.noProxyHosts = noProxyHosts;
-    }
-
-    public List<Pattern> getNoProxyHosts() {
-        return noProxyHosts;
     }
 
     public void setProxyPort(int proxyPort) {
@@ -92,54 +99,19 @@ public class JenkinsHubIntRestService {
 
     private ClientResource createClientResource(String url) throws MalformedURLException {
         ClientResource resource = new ClientResource(new Context(), url);
-        if (noProxyHosts != null) {
-            if (!getMatchingNoProxyHostPatterns(url, noProxyHosts)) {
-                if (!StringUtils.isEmpty(proxyHost) && proxyPort != 0) {
-                    resource.getContext().getParameters().add("proxyHost", proxyHost);
-                    resource.getContext().getParameters().add("proxyPort", Integer.toString(proxyPort));
-                }
-            } else {
-                if (listener != null) {
-                    URL currUrl = new URL(url);
-                    listener.getLogger().println(
-                            "[DEBUG] Ignoring proxy for the Host: '" + currUrl.getHost() + "'");
-                }
+
+        if (StringUtils.isNotBlank(getProxyHost()) && getProxyPort() != 0) {
+            resource.getContext().getParameters().add("proxyHost", getProxyHost());
+            resource.getContext().getParameters().add("proxyPort", Integer.toString(getProxyPort()));
+
+            if (StringUtils.isNotBlank(getProxyUsername()) && StringUtils.isNotBlank(getProxyPassword())) {
+                // set proxy credentials
+
             }
+
         }
+
         return resource;
-    }
-
-    /**
-     * Checks the list of user defined host names that should be connected to directly and not go through the proxy. If
-     * the hostToMatch matches any of these hose names then this method returns true.
-     *
-     * @param hostToMatch
-     *            String the hostName to check if it is in the list of hosts that should not go through the proxy.
-     *
-     * @return boolean
-     */
-    protected static boolean getMatchingNoProxyHostPatterns(String hostToMatch, List<Pattern> noProxyHosts) {
-        if (noProxyHosts.isEmpty()) {
-            // User did not specify any hosts to ignore the proxy
-            return false;
-        }
-        StringBuilder pattern = new StringBuilder();
-        for (Pattern p : noProxyHosts) {
-            if (pattern.length() > 0) {
-                pattern.append('|');
-            }
-            pattern.append('(');
-            pattern.append(p.pattern());
-            pattern.append(')');
-        }
-        Pattern noProxyHostPattern = Pattern.compile(pattern.toString());
-        Matcher m = noProxyHostPattern.matcher(hostToMatch);
-        boolean match = false;
-        while (m.find()) {
-            match = true;
-        }
-        return match;
-
     }
 
     /**

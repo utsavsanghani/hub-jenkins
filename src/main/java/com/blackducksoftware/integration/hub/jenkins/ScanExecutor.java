@@ -154,7 +154,7 @@ public class ScanExecutor {
             // if (!JenkinsHubIntRestService.getMatchingNoProxyHostPatterns(url.getHost(),
             // proxy.getNoProxyHostPatterns()))
             // {
-            // if (!StringUtils.isEmpty(proxy.name) && proxy.port != 0) {
+            // if (StringUtils.isNotBlank(proxy.name) && proxy.port != 0) {
             // // System.setProperty("http.proxyHost", proxy.name);
             // // System.setProperty("http.proxyPort", Integer.toString(proxy.port));
             // // cmd.add("-Dhttp.useProxy=true");
