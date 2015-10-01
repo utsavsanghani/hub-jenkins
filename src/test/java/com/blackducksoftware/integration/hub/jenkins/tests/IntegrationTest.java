@@ -13,9 +13,8 @@ import hudson.tools.ToolDescriptor;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
@@ -31,13 +30,16 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
-import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
+import com.blackducksoftware.integration.hub.response.DistributionEnum;
+import com.blackducksoftware.integration.hub.response.PhaseEnum;
+import com.blackducksoftware.integration.hub.response.ProjectItem;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
@@ -52,11 +54,7 @@ public class IntegrationTest {
 
     private static final String USERNAME_NON_EXISTING = "Assert.failureUser";
 
-    private static final String PROJECT_NAME_EXISTING = "Jenkins Hub Integration Test Project";
-
     private static final String PROJECT_NAME_NOT_EXISTING = "Assert Project Does Not Exist";
-
-    private static final String PROJECT_RELEASE_EXISTING = "First Release";
 
     private static final String PROJECT_RELEASE_NOT_EXISTING = "Assert Release Does Not Exist";
 
@@ -99,14 +97,13 @@ public class IntegrationTest {
         System.out.println(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         System.out.println(testProperties.getProperty("TEST_USERNAME"));
         System.out.println(testProperties.getProperty("TEST_PASSWORD"));
-        restHelper = new JenkinsHubIntTestHelper();
-        restHelper.setBaseUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+        restHelper = new JenkinsHubIntTestHelper(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         restHelper.setCookies(testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
         projectCleanup();
     }
 
     @AfterClass
-    public static void tearDown() throws BDRestException, IOException {
+    public static void tearDown() throws BDRestException, IOException, URISyntaxException {
         projectCleanup();
     }
 
@@ -115,14 +112,16 @@ public class IntegrationTest {
      *
      * @throws BDRestException
      * @throws IOException
+     * @throws URISyntaxException
      */
-    public static void projectCleanup() throws BDRestException, IOException {
-        ArrayList<LinkedHashMap<String, Object>> responseList = restHelper.getProjectMatches(PROJECT_NAME_EXISTING);
-        ArrayList<String> ids = restHelper.getProjectIdsFromProjectMatches(responseList, PROJECT_NAME_EXISTING);
-        if (ids.size() > 0) {
-            for (String id : ids) {
-                restHelper.deleteHubProject(id);
+    public static void projectCleanup() throws BDRestException, IOException, URISyntaxException {
+        try {
+            ProjectItem project = restHelper.getProjectByName(testProperties.getProperty("TEST_PROJECT"));
+            if (project != null && project.getId() != null) {
+                restHelper.deleteHubProject(project.getId());
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -163,23 +162,23 @@ public class IntegrationTest {
         System.out.println(buildOutput);
 
         Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Running on : master"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] BlackDuck Scan directory:"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] directories in the BlackDuck Scan directory"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] BlackDuck Scan lib directory:"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] BlackDuck Scan lib file:"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
-        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Scan target exists at :"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Running on : master"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan directory:"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("directories in the BlackDuck Scan directory"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib directory:"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib file:"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Using this BlackDuck Scan CLI at : "));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
         URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Using this Hub hostname : '" + url.getHost()));
-        Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Using this java installation : "));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Using this Hub hostname : '" + url.getHost()));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Using this java installation : "));
         Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
         Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
         Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
     }
 
     @Test
-    public void completeRunthroughAndScanWithMapping() throws IOException, InterruptedException, ExecutionException, BDRestException {
+    public void completeRunthroughAndScanWithMapping() throws Exception {
         Jenkins jenkins = j.jenkins;
 
         ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
@@ -208,16 +207,19 @@ public class IntegrationTest {
         scanDesc.setHubServerInfo(serverInfo);
         String projectId = null;
         try {
-            projectId = restHelper.createHubProject(PROJECT_NAME_EXISTING);
+            projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
             Assert.assertNotNull(projectId);
             // Give server time to recognize the Project
             Thread.sleep(2000);
-            String versionId = restHelper.createHubVersion(PROJECT_RELEASE_EXISTING, projectId, "DEVELOPMENT", "EXTERNAL");
+            String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId, PhaseEnum.DEVELOPMENT.name(),
+                    DistributionEnum.EXTERNAL.name());
             assertNotNull(versionId);
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, null, null, "4096");
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
+                    testProperties.getProperty("TEST_VERSION"), null,
+                    null, "4096");
 
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -231,17 +233,16 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            // FIXME uncomment when the CLI is fixed
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains(
+                    "You can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Mapping the scan location with id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
@@ -249,7 +250,7 @@ public class IntegrationTest {
     }
 
     @Test
-    public void completeRunthroughAndScanWithMappingVariableProjectName() throws IOException, InterruptedException, ExecutionException, BDRestException {
+    public void completeRunthroughAndScanWithMappingVariableProjectName() throws Exception {
         Jenkins jenkins = j.jenkins;
 
         ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
@@ -278,7 +279,9 @@ public class IntegrationTest {
             PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
             scanDesc.setHubServerInfo(serverInfo);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, "${JOB_NAME}", PROJECT_RELEASE_EXISTING, "DEVELOPMENT", "EXTERNAL", "4096");
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, "${JOB_NAME}", testProperties.getProperty("TEST_VERSION"),
+                    PhaseEnum.DEVELOPMENT.name(),
+                    DistributionEnum.EXTERNAL.name(), "4096");
 
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, projectName);
             project.setCustomWorkspace(testWorkspace);
@@ -292,25 +295,24 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            // FIXME uncomment when the CLI is fixed
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains(
+                    "You can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Mapping the scan location with id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
-            restHelper.deleteHubProject(restHelper.getProjectId(projectName));
+            restHelper.deleteHubProject(restHelper.getProjectByName(projectName).getId());
         }
     }
 
     @Test
-    public void completeRunthroughAndScanWithMappingThroughProxy() throws IOException, InterruptedException, ExecutionException, BDRestException {
+    public void completeRunthroughAndScanWithMappingThroughProxy() throws Exception {
         Jenkins jenkins = j.jenkins;
 
         ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
@@ -339,19 +341,22 @@ public class IntegrationTest {
         scanDesc.setHubServerInfo(serverInfo);
         String projectId = null;
         try {
-            projectId = restHelper.createHubProject(PROJECT_NAME_EXISTING);
+            projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
             Assert.assertNotNull(projectId);
             // Give server time to recognize the Project
             Thread.sleep(2000);
-            String versionId = restHelper.createHubVersion(PROJECT_RELEASE_EXISTING, projectId, "DEVELOPMENT", "EXTERNAL");
+            String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId, PhaseEnum.DEVELOPMENT.name(),
+                    DistributionEnum.EXTERNAL.name());
             assertNotNull(versionId);
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, null, null, "4096");
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
+                    testProperties.getProperty("TEST_VERSION"), null,
+                    null, "4096");
             pbScan.setTEST(true);
-            jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST"),
-                    Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT")));
+            jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
+                    Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH")));
 
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -363,21 +368,23 @@ public class IntegrationTest {
             System.out.println(buildOutput);
 
             Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyHost="));
+            Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPort="));
+
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            // FIXME uncomment when the CLI is fixed
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
-                    + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains(
+                    "You can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH") + "' at Port: '"
+                    + testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH") + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Mapping the scan location with id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
         } finally {
@@ -385,8 +392,184 @@ public class IntegrationTest {
         }
     }
 
+    // @Test
+    // public void completeRunthroughAndScanWithMappingThroughBASICProxy() throws Exception {
+    // Jenkins jenkins = j.jenkins;
+    //
+    // ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
+    //
+    // IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
+    // iScanDesc.setInstallations(iScanInstall);
+    //
+    // CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+    // UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null,
+    // null,
+    // testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+    // store.addCredentials(Domain.global(), credential);
+    //
+    // HubServerInfo serverInfo = new HubServerInfo();
+    // serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+    // serverInfo.setCredentialsId(credential.getId());
+    //
+    // ScanJobs oneScan = new ScanJobs("");
+    // ScanJobs twoScan = new ScanJobs("ch-simple-web/simple-webapp/target");
+    // ScanJobs threeScan = new ScanJobs("ch-simple-web/simple-webapp/target/simple-webapp.war");
+    // ScanJobs[] scans = new ScanJobs[3];
+    // scans[0] = oneScan;
+    // scans[1] = twoScan;
+    // scans[2] = threeScan;
+    //
+    // PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
+    // scanDesc.setHubServerInfo(serverInfo);
+    // String projectId = null;
+    // try {
+    // projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
+    // Assert.assertNotNull(projectId);
+    // // Give server time to recognize the Project
+    // Thread.sleep(2000);
+    // String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId,
+    // PhaseEnum.DEVELOPMENT.name(),
+    // DistributionEnum.EXTERNAL.name());
+    // assertNotNull(versionId);
+    // // Give server time to recognize the Version
+    // Thread.sleep(2000);
+    //
+    // PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
+    // testProperties.getProperty("TEST_VERSION"), null,
+    // null, "4096");
+    // pbScan.setTEST(true);
+    // jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_BASIC"),
+    // Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_BASIC")),
+    // testProperties.getProperty("TEST_PROXY_USER_BASIC"),
+    // testProperties.getProperty("TEST_PROXY_PASSWORD_BASIC"));
+    //
+    // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+    // project.setCustomWorkspace(testWorkspace);
+    //
+    // project.getPublishersList().add(pbScan);
+    //
+    // FreeStyleBuild build = project.scheduleBuild2(0).get();
+    // String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+    // System.out.println(buildOutput);
+    //
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyHost="));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPort="));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyUser="));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPassword="));
+    //
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains(
+    // "You can view the BlackDuck Scan CLI logs at :"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Using proxy: '" +
+    // testProperties.getProperty("TEST_PROXY_HOST_BASIC") + "' at Port: '"
+    // + testProperties.getProperty("TEST_PROXY_PORT_BASIC") + "'"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+    //
+    // } finally {
+    // restHelper.deleteHubProject(projectId);
+    // }
+    // }
+    //
+    // @Test
+    // public void completeRunthroughAndScanWithMappingThroughDIGESTProxy() throws Exception {
+    // Jenkins jenkins = j.jenkins;
+    //
+    // ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
+    //
+    // IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
+    // iScanDesc.setInstallations(iScanInstall);
+    //
+    // CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+    // UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null,
+    // null,
+    // testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+    // store.addCredentials(Domain.global(), credential);
+    //
+    // HubServerInfo serverInfo = new HubServerInfo();
+    // serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+    // serverInfo.setCredentialsId(credential.getId());
+    //
+    // ScanJobs oneScan = new ScanJobs("");
+    // ScanJobs twoScan = new ScanJobs("ch-simple-web/simple-webapp/target");
+    // ScanJobs threeScan = new ScanJobs("ch-simple-web/simple-webapp/target/simple-webapp.war");
+    // ScanJobs[] scans = new ScanJobs[3];
+    // scans[0] = oneScan;
+    // scans[1] = twoScan;
+    // scans[2] = threeScan;
+    //
+    // PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
+    // scanDesc.setHubServerInfo(serverInfo);
+    // String projectId = null;
+    // try {
+    // projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
+    // Assert.assertNotNull(projectId);
+    // // Give server time to recognize the Project
+    // Thread.sleep(2000);
+    // String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId,
+    // PhaseEnum.DEVELOPMENT.name(),
+    // DistributionEnum.EXTERNAL.name());
+    // assertNotNull(versionId);
+    // // Give server time to recognize the Version
+    // Thread.sleep(2000);
+    //
+    // PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
+    // testProperties.getProperty("TEST_VERSION"), null,
+    // null, "4096");
+    // pbScan.setTEST(true);
+    // jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_DIGEST"),
+    // Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_DIGEST")),
+    // testProperties.getProperty("TEST_PROXY_USER_DIGEST"),
+    // testProperties.getProperty("TEST_PROXY_PASSWORD_DIGEST"));
+    //
+    // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+    // project.setCustomWorkspace(testWorkspace);
+    //
+    // project.getPublishersList().add(pbScan);
+    //
+    // FreeStyleBuild build = project.scheduleBuild2(0).get();
+    // String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+    // System.out.println(buildOutput);
+    //
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyHost="));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPort="));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyUser="));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPassword="));
+    //
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains(
+    // "You can view the BlackDuck Scan CLI logs at :"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Using proxy: '" +
+    // testProperties.getProperty("TEST_PROXY_HOST_DIGEST") + "' at Port: '"
+    // + testProperties.getProperty("TEST_PROXY_PORT_DIGEST") + "'"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+    // Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+    //
+    // } finally {
+    // restHelper.deleteHubProject(projectId);
+    // }
+    // }
+
     @Test
-    public void completeRunthroughAndScanWithMappingWithProxyIgnored() throws IOException, InterruptedException, ExecutionException, BDRestException {
+    public void completeRunthroughAndScanWithMappingWithProxyIgnored() throws Exception {
         Jenkins jenkins = j.jenkins;
 
         ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
@@ -415,21 +598,24 @@ public class IntegrationTest {
         scanDesc.setHubServerInfo(serverInfo);
         String projectId = null;
         try {
-            projectId = restHelper.createHubProject(PROJECT_NAME_EXISTING);
+            projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
             Assert.assertNotNull(projectId);
             // Give server time to recognize the Project
             Thread.sleep(2000);
-            String versionId = restHelper.createHubVersion(PROJECT_RELEASE_EXISTING, projectId, "DEVELOPMENT", "EXTERNAL");
+            String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId, PhaseEnum.DEVELOPMENT.name(),
+                    DistributionEnum.EXTERNAL.name());
             assertNotNull(versionId);
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, null, null, "4096");
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
+                    testProperties.getProperty("TEST_VERSION"), null,
+                    null, "4096");
             pbScan.setTEST(true);
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
 
-            jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST"),
-                    Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT")), null, null, url.getHost());
+            jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
+                    Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH")), null, null, url.getHost());
 
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -443,19 +629,18 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            // FIXME uncomment when the CLI is fixed
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, !buildOutput.contains("[DEBUG] Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
+            Assert.assertTrue(buildOutput, buildOutput.contains(
+                    "You can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(buildOutput, !buildOutput.contains("Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Mapping the scan location with id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
         } finally {
@@ -464,7 +649,7 @@ public class IntegrationTest {
     }
 
     @Test
-    public void completeRunthroughAndScanWithMappingToNonExistentProject() throws IOException, InterruptedException, ExecutionException, BDRestException {
+    public void completeRunthroughAndScanWithMappingToNonExistentProject() throws Exception {
         try {
             Jenkins jenkins = j.jenkins;
 
@@ -489,8 +674,9 @@ public class IntegrationTest {
             PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
             scanDesc.setHubServerInfo(serverInfo);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING, "DEVELOPMENT",
-                    "EXTERNAL", "4096");
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING,
+                    PhaseEnum.DEVELOPMENT.name(),
+                    DistributionEnum.EXTERNAL.name(), "4096");
             pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -502,27 +688,26 @@ public class IntegrationTest {
             System.out.println(buildOutput);
 
             Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Scan target exists at :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
 
             // URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
 
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            // FIXME uncomment when the CLI is fixed
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id: '"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan"));
+            Assert.assertTrue(buildOutput, buildOutput.contains(
+                    "You can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
         } finally {
-            restHelper.deleteHubProject(restHelper.getProjectId(PROJECT_NAME_NOT_EXISTING));
+            restHelper.deleteHubProject(restHelper.getProjectByName(PROJECT_NAME_NOT_EXISTING).getId());
         }
     }
 
     @Test
-    public void completeRunthroughAndScanWithMappingToNonExistentVersion() throws IOException, InterruptedException, ExecutionException, BDRestException {
+    public void completeRunthroughAndScanWithMappingToNonExistentVersion() throws Exception {
         Jenkins jenkins = j.jenkins;
 
         ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
@@ -547,13 +732,14 @@ public class IntegrationTest {
         scanDesc.setHubServerInfo(serverInfo);
         String projectId = null;
         try {
-            projectId = restHelper.createHubProject(PROJECT_NAME_EXISTING);
+            projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
             Assert.assertNotNull(projectId);
             // Give server time to recognize the Project
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_EXISTING, PROJECT_RELEASE_NOT_EXISTING, "DEVELOPMENT",
-                    "EXTERNAL",
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"), PROJECT_RELEASE_NOT_EXISTING,
+                    PhaseEnum.DEVELOPMENT.name(),
+                    DistributionEnum.EXTERNAL.name(),
                     "4096");
             pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
@@ -566,18 +752,17 @@ public class IntegrationTest {
             System.out.println(buildOutput);
 
             Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] : Scan target exists at :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
 
             // URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
 
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            // FIXME uncomment when the CLI is fixed
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id: '"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan"));
+            Assert.assertTrue(buildOutput, buildOutput.contains(
+                    "You can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
         } finally {
@@ -586,7 +771,7 @@ public class IntegrationTest {
     }
 
     @Test
-    public void completeRunthroughAndScanWithMappingScansAlreadyMapped() throws IOException, InterruptedException, ExecutionException, BDRestException {
+    public void completeRunthroughAndScanWithMappingScansAlreadyMapped() throws Exception {
         Jenkins jenkins = j.jenkins;
 
         ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
@@ -615,16 +800,19 @@ public class IntegrationTest {
         scanDesc.setHubServerInfo(serverInfo);
         String projectId = null;
         try {
-            projectId = restHelper.createHubProject(PROJECT_NAME_EXISTING);
+            projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
             Assert.assertNotNull(projectId);
             // Give server time to recognize the Project
             Thread.sleep(2000);
-            String versionId = restHelper.createHubVersion(PROJECT_RELEASE_EXISTING, projectId, "DEVELOPMENT", "EXTERNAL");
+            String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId, PhaseEnum.DEVELOPMENT.name(),
+                    DistributionEnum.EXTERNAL.name());
             assertNotNull(versionId);
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_EXISTING, PROJECT_RELEASE_EXISTING, "DEVELOPMENT", "EXTERNAL",
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
+                    testProperties.getProperty("TEST_VERSION"),
+                    PhaseEnum.DEVELOPMENT.name(), DistributionEnum.EXTERNAL.name(),
                     "4096");
             pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
@@ -640,17 +828,16 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            // FIXME uncomment when the CLI is fixed
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains(
+                    "You can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Mapping the scan location with id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Successfully mapped the scan with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
             // Second run, scans should already be mapped
@@ -661,18 +848,17 @@ public class IntegrationTest {
             Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
             Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            // FIXME uncomment when the CLI is fixed
-            // Assert.assertTrue(listContainsSubString(buildOutputList,
-            // "', you can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] The scan target :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains(
+                    "You can view the BlackDuck Scan CLI logs at :"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("[DEBUG] These scan Id's were found for the scan targets."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
@@ -716,7 +902,7 @@ public class IntegrationTest {
         System.out.println(buildOutput);
 
         Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-        Assert.assertTrue(buildOutput, buildOutput.contains("Unauthorized (401) - Unauthorized"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Unauthorized (401)"));
     }
 
     @Test
@@ -756,7 +942,7 @@ public class IntegrationTest {
         System.out.println(buildOutput);
 
         Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-        Assert.assertTrue(buildOutput, buildOutput.contains("Unauthorized (401) - Unauthorized"));
+        Assert.assertTrue(buildOutput, buildOutput.contains("Unauthorized (401)"));
     }
 
     @Test

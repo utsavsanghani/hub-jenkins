@@ -22,10 +22,7 @@ import java.net.Proxy;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -37,9 +34,15 @@ import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
-import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
+import com.blackducksoftware.integration.hub.response.AutoCompleteItem;
+import com.blackducksoftware.integration.hub.response.DistributionEnum;
+import com.blackducksoftware.integration.hub.response.PhaseEnum;
+import com.blackducksoftware.integration.hub.response.ProjectItem;
+import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -111,7 +114,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return "<unnamed>";
     }
 
-    public void setupService(JenkinsHubIntRestService service) throws MalformedURLException {
+    public void setupService(HubIntRestService service) throws MalformedURLException {
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
             ProxyConfiguration proxyConfig = jenkins.proxy;
@@ -125,13 +128,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
                     if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
                         if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
-                            service.setProxyHost(proxyAddress.getHostName());
-                            service.setProxyPort(proxyAddress.getPort());
-                            service.setProxyUsername(jenkins.proxy.getUserName());
-                            service.setProxyPassword(jenkins.proxy.getPassword());
+                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, jenkins.proxy.getUserName(),
+                                    jenkins.proxy.getPassword());
                         } else {
-                            service.setProxyHost(proxyAddress.getHostName());
-                            service.setProxyPort(proxyAddress.getPort());
+                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, null, null);
                         }
                     }
                 }
@@ -230,11 +230,16 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         ListBoxModel items = new ListBoxModel();
         try {
             // FIXME should get this list from the Hub server, ticket HUB-1610
-            items.add("PLANNING", "PLANNING");
-            items.add("DEVELOPMENT", "DEVELOPMENT");
-            items.add("RELEASED", "RELEASED");
-            items.add("DEPRECATED", "DEPRECATED");
-            items.add("ARCHIVED", "ARCHIVED");
+            for (PhaseEnum phase : PhaseEnum.values()) {
+                if (phase != PhaseEnum.UNKNOWNPHASE) {
+                    items.add(phase.name(), phase.name());
+                }
+            }
+            // items.add("PLANNING", "PLANNING");
+            // items.add("DEVELOPMENT", "DEVELOPMENT");
+            // items.add("RELEASED", "RELEASED");
+            // items.add("DEPRECATED", "DEPRECATED");
+            // items.add("ARCHIVED", "ARCHIVED");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -260,9 +265,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         ListBoxModel items = new ListBoxModel();
         try {
             // FIXME should get this list from the Hub server, ticket HUB-1610
-            items.add("EXTERNAL", "EXTERNAL");
-            items.add("SAAS", "SAAS");
-            items.add("INTERNAL", "INTERNAL");
+            for (DistributionEnum distribution : DistributionEnum.values()) {
+                if (distribution != DistributionEnum.UNKNOWNDISTRIBUTION) {
+                    items.add(distribution.name(), distribution.name());
+                }
+            }
+            // items.add("EXTERNAL", "EXTERNAL");
+            // items.add("SAAS", "SAAS");
+            // items.add("INTERNAL", "INTERNAL");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -325,32 +335,18 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             boolean changed = false;
             try {
 
-                JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+                HubIntRestService service = new HubIntRestService(getHubServerUrl());
                 setupService(service);
-                service.setBaseUrl(getHubServerUrl());
                 service.setCookies(getHubServerInfo().getUsername(), getHubServerInfo().getPassword());
-                ArrayList<LinkedHashMap<String, Object>> responseList = service.getProjectMatches(hubProjectName);
+                List<AutoCompleteItem> suggestions = service.getProjectMatches(hubProjectName);
 
-                if (!responseList.isEmpty()) {
-                    ArrayList<String> projectNames = new ArrayList<String>();
-                    for (LinkedHashMap<String, Object> map : responseList) {
-                        if (map.get("value").equals(hubProjectName)) {
-                            if (!projectNames.contains(map.get("value"))) {
-                                projectNames.add((String) map.get("value"));
-                            }
-                        } else {
-                            // name does not match
-                            projectNames.add((String) map.get("value"));
-                        }
-                    }
-                    if (!projectNames.isEmpty()) {
-                        for (String projectName : projectNames) {
-                            potentialMatches.add(projectName);
-                        }
+                if (!suggestions.isEmpty()) {
+                    for (AutoCompleteItem projectSuggestion : suggestions) {
+                        potentialMatches.add(projectSuggestion.getValue());
                     }
                 }
             } catch (Exception e) {
-                // do nothing for exception
+                // do nothing for exception, there is nowhere in the UI to display this error
             } finally {
                 if (changed) {
                     Thread.currentThread().setContextClassLoader(
@@ -400,14 +396,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
-                JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+                HubIntRestService service = new HubIntRestService(getHubServerUrl());
                 setupService(service);
-                service.setBaseUrl(getHubServerUrl());
                 service.setCookies(credentialUserName, credentialPassword);
 
-                String projectId = service.getProjectId(hubProjectName);
+                ProjectItem project = service.getProjectByName(hubProjectName);
 
-                if (projectId != null) {
+                if (project != null && StringUtils.isNotBlank(project.getId())) {
                     return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getHubServerUrl()));
                 } else {
                     return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getHubServerUrl()));
@@ -484,37 +479,31 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
-                JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+                HubIntRestService service = new HubIntRestService(getHubServerUrl());
                 setupService(service);
-                service.setBaseUrl(getHubServerUrl());
                 service.setCookies(credentialUserName, credentialPassword);
-                String idToUse = null;
+                ProjectItem project = null;
                 try {
-                    idToUse = service.getProjectId(hubProjectName);
+                    project = service.getProjectByName(hubProjectName);
                 } catch (BDRestException e) {
                     return FormValidation.error(e.getMessage());
                 }
+                List<ReleaseItem> releases = service.getVersionsForProject(project.getId());
 
-                HashMap<String, Object> responseMap = service.getVersionMatchesForProjectId(idToUse);
                 StringBuilder projectVersions = new StringBuilder();
-                if (responseMap.containsKey("items")) {
-                    ArrayList<LinkedHashMap> versionList = (ArrayList<LinkedHashMap>) responseMap.get("items");
-                    for (LinkedHashMap release : versionList) {
-                        if (((String) release.get("version")).equals(hubProjectVersion)) {
-                            return FormValidation.ok(Messages.HubBuildScan_getVersionExistsIn_0_(idToUse));
+                for (ReleaseItem release : releases) {
+                    if (release.getVersion().equals(hubProjectVersion)) {
+                        return FormValidation.ok(Messages.HubBuildScan_getVersionExistsIn_0_(project.getName()));
+                    } else {
+                        if (projectVersions.length() > 0) {
+                            projectVersions.append(", " + release.getVersion());
                         } else {
-                            if (projectVersions.length() > 0) {
-                                projectVersions.append(", " + ((String) release.get("version")));
-                            } else {
-                                projectVersions.append((String) release.get("version"));
-                            }
+                            projectVersions.append(release.getVersion());
                         }
                     }
-                } else {
-                    // The Hub Api has changed and we received a JSON response that we did not expect
-                    return FormValidation.error(Messages.HubBuildScan_getIncorrectMappingOfServerResponse());
                 }
-                return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(idToUse, projectVersions.toString()));
+
+                return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(project.getName(), projectVersions.toString()));
             } catch (Exception e) {
                 String message;
                 if (e.getCause() != null && e.getCause().getCause() != null) {
@@ -588,10 +577,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+            HubIntRestService service = new HubIntRestService(serverUrl);
 
             setupService(service);
-            service.setBaseUrl(serverUrl);
 
             int responseCode = service.setCookies(credentialUserName, credentialPassword);
 
@@ -671,26 +659,27 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            JenkinsHubIntRestService service = new JenkinsHubIntRestService();
+            HubIntRestService service = new HubIntRestService(getHubServerUrl());
             setupService(service);
-            service.setBaseUrl(getHubServerUrl());
             service.setCookies(credentialUserName, credentialPassword);
 
             boolean projectExists = false;
             boolean projectCreated = false;
 
-            String projectId = null;
+            ProjectItem project = null;
             try {
-                projectId = service.getProjectId(hubProjectName);
-                if (projectId != null) {
+                project = service.getProjectByName(hubProjectName);
+                if (project != null && project.getId() != null && project.getName() != null) {
                     projectExists = true;
                 }
+
             } catch (BDRestException e) {
                 // Either doesnt exist or cant connect to the server.
                 // Assume it doesnt exist for now
             }
 
-            if (projectId == null) {
+            String projectId = null;
+            if (!projectExists) {
                 try {
                     projectId = service.createHubProject(hubProjectName);
                     if (projectId != null) {
@@ -699,6 +688,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 } catch (BDRestException e) {
                     return FormValidation.error(e.getMessage());
                 }
+            } else {
+                projectId = project.getId();
             }
 
             if (hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
@@ -712,8 +703,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             }
             String versionId = null;
             try {
-                LinkedHashMap<String, Object> versionMatchesResponse = service.getVersionMatchesForProjectId(projectId);
-                versionId = service.getVersionIdFromMatches(versionMatchesResponse, hubProjectVersion, hubVersionPhase, hubVersionDist);
+                List<ReleaseItem> releases = service.getVersionsForProject(projectId);
+                for (ReleaseItem release : releases) {
+                    if (release.getVersion().equals(hubProjectVersion)) {
+                        versionId = release.getId();
+                    }
+
+                }
                 if (projectExists && versionId != null) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectAndVersionExist());

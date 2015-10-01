@@ -16,7 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +38,7 @@ import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
+import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 import com.google.common.base.Charsets;
 
 public class PostBuildHubScanUnitTest {
@@ -52,10 +53,6 @@ public class PostBuildHubScanUnitTest {
 
     private static String iScanInstallPath;
 
-    private static StreamBuildListener listener;
-
-    private static ByteArrayOutputStream byteOutput;
-
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
@@ -65,12 +62,17 @@ public class PostBuildHubScanUnitTest {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
+    private static StreamBuildListener listener;
+
+    private static ByteArrayOutputStream byteOutput;
+
     @BeforeClass
     public static void init() {
         basePath = IntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf("/target"));
         basePath = basePath + "/test-workspace";
         iScanInstallPath = basePath + "/scan.cli-2.1.2";
+
         byteOutput = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(byteOutput);
         listener = new StreamBuildListener(ps, Charsets.UTF_8);
@@ -85,32 +87,40 @@ public class PostBuildHubScanUnitTest {
 
     // validateScanTargets
     @Test
-    public void testValidateScanTargetsTwoExistingInWorkspace() throws IOException, HubConfigurationException, InterruptedException {
+    public void testValidateScanTargetsTwoExistingInWorkspace() throws Exception {
         File createdFolder = folder.newFolder("newfolder");
         File createdFile = folder.newFile("myfilefile.txt");
         PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class, Mockito.CALLS_REAL_METHODS);
         File workspace = new File(createdFolder.getCanonicalPath() + "/..");
         VirtualChannel nullChannel = null;
         when(mockpbScan.getWorkingDirectory()).thenReturn(new FilePath(nullChannel, workspace.getCanonicalPath()));
-        FilePath[] scanTargets = { new FilePath(nullChannel, createdFolder.getCanonicalPath()), new FilePath(nullChannel, createdFile.getCanonicalPath()) };
-        Assert.assertTrue(mockpbScan.validateScanTargets(listener, Arrays.asList(scanTargets)));
-        String output = byteOutput.toString("UTF-8");
-        Assert.assertTrue(output.contains("[DEBUG] : Scan target exists at : "));
+        ArrayList<String> scanTargets = new ArrayList<String>();
+        scanTargets.add(createdFolder.getCanonicalPath());
+        scanTargets.add(createdFile.getCanonicalPath());
+
+        TestLogger logger = new TestLogger();
+        Assert.assertTrue(mockpbScan.validateScanTargets(logger, scanTargets, nullChannel));
+        String output = logger.getOutputString();
+        Assert.assertTrue(output, output.contains("Scan target exists at : "));
     }
 
     @Test
-    public void testValidateScanTargetsTwoNotExisting() throws IOException, HubConfigurationException, InterruptedException {
+    public void testValidateScanTargetsTwoNotExisting() throws Exception {
         exception.expect(IOException.class);
         exception.expectMessage("Scan target could not be found :");
         PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class, Mockito.CALLS_REAL_METHODS);
         VirtualChannel nullChannel = null;
         when(mockpbScan.getWorkingDirectory()).thenReturn(new FilePath(nullChannel, "/"));
-        FilePath[] scanTargets = { new FilePath(nullChannel, "/ASSERT/NOT/EXISTING"), new FilePath(nullChannel, "/RE-ASSERT/Not/EXISTING") };
-        mockpbScan.validateScanTargets(listener, Arrays.asList(scanTargets));
+
+        ArrayList<String> scanTargets = new ArrayList<String>();
+        scanTargets.add("/ASSERT/NOT/EXISTING");
+        scanTargets.add("/RE-ASSERT/Not/EXISTING");
+
+        mockpbScan.validateScanTargets(new TestLogger(), scanTargets, nullChannel);
     }
 
     @Test
-    public void testValidateScanTargetsExistingOutsideWorkspace() throws IOException, HubConfigurationException, InterruptedException {
+    public void testValidateScanTargetsExistingOutsideWorkspace() throws Exception {
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("Can not scan targets outside of the workspace.");
         File createdFolder = folder.newFolder("newfolder");
@@ -119,8 +129,13 @@ public class PostBuildHubScanUnitTest {
         PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class, Mockito.CALLS_REAL_METHODS);
         VirtualChannel nullChannel = null;
         when(mockpbScan.getWorkingDirectory()).thenReturn(new FilePath(nullChannel, testWorkspace.getCanonicalPath()));
-        FilePath[] scanTargets = { new FilePath(nullChannel, createdFolder.getCanonicalPath()), new FilePath(nullChannel, createdFile.getCanonicalPath()) };
-        mockpbScan.validateScanTargets(listener, Arrays.asList(scanTargets));
+
+        ArrayList<String> scanTargets = new ArrayList<String>();
+        scanTargets.add(createdFolder.getCanonicalPath());
+        scanTargets.add(createdFile.getCanonicalPath());
+
+        TestLogger logger = new TestLogger();
+        mockpbScan.validateScanTargets(logger, scanTargets, nullChannel);
     }
 
     // getIScanScript
@@ -143,12 +158,13 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, null, null, "4096");
 
-        FilePath script = pbScan.getScanCLI(iScanInstallations, listener, mockBuild);
+        TestLogger logger = new TestLogger();
+        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, mockBuild, listener);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
-        String output = byteOutput.toString("UTF-8");
-        Assert.assertTrue(output.contains("[DEBUG] : Running on : master"));
-        Assert.assertTrue(output.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
+        String output = logger.getOutputString();
+        Assert.assertTrue(output, output.contains("Running on : master"));
+        Assert.assertTrue(output, output.contains("Using this BlackDuck Scan CLI at : "));
     }
 
     @Test
@@ -169,7 +185,7 @@ public class PostBuildHubScanUnitTest {
         when(mockIScanInstall.getHome()).thenReturn(iScanInstallPath);
         when(mockIScanInstall.forNode(Mockito.any(Node.class), Mockito.any(BuildListener.class))).thenReturn(mockIScanInstall);
         when(mockIScanInstall.getCLI(Mockito.any(VirtualChannel.class))).thenCallRealMethod();
-        when(mockIScanInstall.getExists(Mockito.any(VirtualChannel.class), Mockito.any(BuildListener.class))).thenCallRealMethod();
+        when(mockIScanInstall.getExists(Mockito.any(VirtualChannel.class), Mockito.any(IntLogger.class))).thenCallRealMethod();
         ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = mockIScanInstall;
 
@@ -177,12 +193,13 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, null, null, "4096");
 
-        FilePath script = pbScan.getScanCLI(iScanInstallations, listener, mockBuild);
+        TestLogger logger = new TestLogger();
+        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, mockBuild, listener);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
-        String output = byteOutput.toString("UTF-8");
-        Assert.assertTrue(output.contains("[DEBUG] : Running on : testSlave"));
-        Assert.assertTrue(output.contains("[DEBUG] : Using this BlackDuck Scan CLI at : "));
+        String output = logger.getOutputString();
+        Assert.assertTrue(output, output.contains("Running on : testSlave"));
+        Assert.assertTrue(output, output.contains("Using this BlackDuck Scan CLI at : "));
     }
 
     @Test
@@ -197,7 +214,8 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, null, null, "4096");
 
-        FilePath script = pbScan.getScanCLI(iScanInstallations, listener, null);
+        TestLogger logger = new TestLogger();
+        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, null, listener);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
     }
@@ -222,7 +240,9 @@ public class PostBuildHubScanUnitTest {
         iScanInstallations[0] = iScanInstall;
 
         PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, null, null, "4096");
-        pbScan.getScanCLI(iScanInstallations, listener, mockBuild);
+
+        TestLogger logger = new TestLogger();
+        pbScan.getScanCLI(iScanInstallations, logger, mockBuild, listener);
     }
 
     // validateConfiguration

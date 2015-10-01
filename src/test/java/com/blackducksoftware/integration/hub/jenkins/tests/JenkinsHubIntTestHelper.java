@@ -6,14 +6,14 @@ import org.restlet.data.Method;
 import org.restlet.resource.ClientResource;
 import org.restlet.util.Series;
 
-import com.blackducksoftware.integration.hub.jenkins.JenkinsHubIntRestService;
+import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
-import com.blackducksoftware.integration.hub.jenkins.exceptions.BDRestException;
 
-public class JenkinsHubIntTestHelper extends JenkinsHubIntRestService {
+public class JenkinsHubIntTestHelper extends HubIntRestService {
 
-    protected JenkinsHubIntTestHelper() {
-
+    protected JenkinsHubIntTestHelper(String baseUrl) {
+        super(baseUrl);
     }
 
     /**

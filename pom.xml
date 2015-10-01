@@ -161,7 +161,7 @@
 			<url>http://artifactory.blackducksoftware.com:8081/artifactory/bds-jenkins-plugins-snapshot</url>
 		</snapshotRepository>
 	</distributionManagement>
-	
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -178,17 +178,9 @@
 			<version>2.4.1</version>
 		</dependency>
 		<dependency>
-			<!-- Don't upgrade to 2.3.X - requires JDK 7 -->
-			<groupId>org.restlet.jse</groupId>
-			<artifactId>org.restlet</artifactId>
-			<version>2.2.3</version>
-		</dependency>
-		<!-- This dependency allows for proxy configuration per Client Resource -->
-		<dependency>
-			<groupId>org.restlet.jse</groupId>
-			<artifactId>org.restlet.ext.httpclient</artifactId>
-			<version>2.2.3</version>
-			<scope>runtime</scope>
+			<groupId>com.blackducksoftware.integration</groupId>
+			<artifactId>int-hub-ci</artifactId>
+			<version>1.1.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>

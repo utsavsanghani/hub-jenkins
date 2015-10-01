@@ -3,7 +3,6 @@ package com.blackducksoftware.integration.hub.jenkins;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.model.BuildListener;
 import hudson.model.EnvironmentSpecific;
 import hudson.model.TaskListener;
 import hudson.model.Descriptor;
@@ -21,6 +20,8 @@ import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+
+import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 
 public class ScanInstallation extends ToolInstallation implements NodeSpecific<ScanInstallation>, EnvironmentSpecific<ScanInstallation> {
 
@@ -59,13 +60,13 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
      * @throws IOException
      * @throws InterruptedException
      */
-    public boolean getExists(VirtualChannel channel, BuildListener listener) throws IOException, InterruptedException {
+    public boolean getExists(VirtualChannel channel, IntLogger logger) throws IOException, InterruptedException {
         FilePath homeFilePath = new FilePath(channel, getHome());
         // find the lib folder in the iScan directory
-        listener.getLogger().println("[DEBUG] BlackDuck Scan directory: " + homeFilePath.getRemote());
+        logger.debug("BlackDuck Scan directory: " + homeFilePath.getRemote());
         List<FilePath> files = homeFilePath.listDirectories();
         if (files != null) {
-            listener.getLogger().println("[DEBUG] directories in the BlackDuck Scan directory: " + files.size());
+            logger.debug("directories in the BlackDuck Scan directory: " + files.size());
             if (!files.isEmpty()) {
                 FilePath libFolder = null;
                 for (FilePath iScanDirectory : files) {
@@ -77,14 +78,14 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
                 if (libFolder == null) {
                     return false;
                 }
-                listener.getLogger().println("[DEBUG] BlackDuck Scan lib directory: " + libFolder.getRemote());
+                logger.debug("BlackDuck Scan lib directory: " + libFolder.getRemote());
                 FilePath[] cliFiles = libFolder.list("scan.cli*.jar");
                 FilePath iScanScript = null;
                 if (cliFiles == null) {
                     return false;
                 } else {
                     for (FilePath file : cliFiles) {
-                        listener.getLogger().println("[DEBUG] BlackDuck Scan lib file: " + file.getRemote());
+                        logger.debug("BlackDuck Scan lib file: " + file.getRemote());
                         if (file.getName().contains("scan.cli")) {
                             iScanScript = file;
                             break;
