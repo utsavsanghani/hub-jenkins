@@ -540,7 +540,8 @@ public class PostBuildHubScan extends Recorder {
         try {
             // The logDir option wasnt added until Hub version 2.0.1
             logOptionComparison = service.compareWithHubVersion("2.0.1");
-            mappingComparison = service.compareWithHubVersion("2.1.0");
+
+            mappingComparison = service.compareWithHubVersion("2.2.0");
         } catch (BDRestException e) {
             if (e.getResourceException().getStatus().equals(Status.CLIENT_ERROR_NOT_FOUND)) {
                 // The Hub server is version 2.0.0 and the version endpoint does not exist
@@ -573,8 +574,10 @@ public class PostBuildHubScan extends Recorder {
         if (mappingComparison != null && mappingComparison.getNumericResult() <= 0 &&
                 StringUtils.isNotBlank(projectName)
                 && StringUtils.isNotBlank(versionName)) {
-            // The project and release options werent added until Hub version 2.1.0
-            // So if the result is that 2.1.0 is less than or equal to the actual version, we know that it supports
+            // FIXME Which version was this fixed in?
+
+            // The project and release options werent working until Hub version 2.2.?
+            // So if the result is that 2.2.0 is less than or equal to the actual version, we know that it supports
             // these options
             scan.setCliSupportsMapping(true);
             scan.setProject(projectName);
