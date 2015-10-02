@@ -79,7 +79,7 @@ public class PostBuildHubScan extends Recorder {
 
     private transient boolean test = false;
 
-    private transient boolean verbose = false;
+    private transient boolean verbose = true;
 
     @DataBoundConstructor
     public PostBuildHubScan(ScanJobs[] scans, String scanName, String hubProjectName, String hubProjectVersion, String hubVersionPhase, String hubVersionDist,
