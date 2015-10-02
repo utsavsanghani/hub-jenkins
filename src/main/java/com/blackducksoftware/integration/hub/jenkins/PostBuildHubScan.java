@@ -77,9 +77,9 @@ public class PostBuildHubScan extends Recorder {
 
     // private HubIntRestService service = null;
 
-    private transient boolean test = false;
+    private boolean test = false;
 
-    private transient boolean verbose = true;
+    private Boolean verbose;
 
     @DataBoundConstructor
     public PostBuildHubScan(ScanJobs[] scans, String scanName, String hubProjectName, String hubProjectVersion, String hubVersionPhase, String hubVersionDist,
@@ -103,6 +103,7 @@ public class PostBuildHubScan extends Recorder {
         } else {
             this.scanMemory = memory;
         }
+
     }
 
     public boolean isTEST() {
@@ -120,6 +121,9 @@ public class PostBuildHubScan extends Recorder {
     }
 
     public boolean isVerbose() {
+        if (verbose == null) {
+            verbose = true;
+        }
         return verbose;
     }
 
