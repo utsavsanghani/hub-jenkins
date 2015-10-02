@@ -77,7 +77,9 @@ public class PostBuildHubScan extends Recorder {
 
     // private HubIntRestService service = null;
 
-    private boolean test = false;
+    private transient boolean test = false;
+
+    private transient boolean verbose = false;
 
     @DataBoundConstructor
     public PostBuildHubScan(ScanJobs[] scans, String scanName, String hubProjectName, String hubProjectVersion, String hubVersionPhase, String hubVersionDist,
@@ -110,6 +112,15 @@ public class PostBuildHubScan extends Recorder {
     // Set to true run the integration test without running the Hub scan.
     public void setTEST(boolean test) {
         this.test = test;
+    }
+
+    // Set to true run the integration test without running the Hub scan.
+    public void setverbose(boolean verbose) {
+        this.verbose = verbose;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
     }
 
     public Result getResult() {
@@ -570,7 +581,7 @@ public class PostBuildHubScan extends Recorder {
         scan.setScanMemory(scanMemory);
         scan.setWorkingDirectory(getWorkingDirectory().getRemote());
         scan.setTestScan(isTEST());
-
+        scan.setVerboseRun(isVerbose());
         if (mappingComparison != null && mappingComparison.getNumericResult() <= 0 &&
                 StringUtils.isNotBlank(projectName)
                 && StringUtils.isNotBlank(versionName)) {

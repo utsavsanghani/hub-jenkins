@@ -151,7 +151,7 @@ public class IntegrationTest {
         scanDesc.setHubServerInfo(serverInfo);
 
         PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
-
+        pbScan.setverbose(false);
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
 
@@ -220,7 +220,7 @@ public class IntegrationTest {
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
                     null, "4096");
-
+            pbScan.setverbose(false);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
 
@@ -282,7 +282,7 @@ public class IntegrationTest {
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, "${JOB_NAME}", testProperties.getProperty("TEST_VERSION"),
                     PhaseEnum.DEVELOPMENT.name(),
                     DistributionEnum.EXTERNAL.name(), "4096");
-
+            pbScan.setverbose(false);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, projectName);
             project.setCustomWorkspace(testWorkspace);
 
@@ -354,6 +354,7 @@ public class IntegrationTest {
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
                     null, "4096");
+            pbScan.setverbose(false);
             pbScan.setTEST(true);
             jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
                     Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH")));
@@ -525,6 +526,7 @@ public class IntegrationTest {
     // PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
     // testProperties.getProperty("TEST_VERSION"), null,
     // null, "4096");
+    // pbScan.setverbose(false);
     // pbScan.setTEST(true);
     // jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_DIGEST"),
     // Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_DIGEST")),
@@ -611,6 +613,7 @@ public class IntegrationTest {
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
                     null, "4096");
+            pbScan.setverbose(false);
             pbScan.setTEST(true);
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
 
@@ -677,6 +680,7 @@ public class IntegrationTest {
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING,
                     PhaseEnum.DEVELOPMENT.name(),
                     DistributionEnum.EXTERNAL.name(), "4096");
+            pbScan.setverbose(false);
             pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -741,6 +745,7 @@ public class IntegrationTest {
                     PhaseEnum.DEVELOPMENT.name(),
                     DistributionEnum.EXTERNAL.name(),
                     "4096");
+            pbScan.setverbose(false);
             pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -814,6 +819,7 @@ public class IntegrationTest {
                     testProperties.getProperty("TEST_VERSION"),
                     PhaseEnum.DEVELOPMENT.name(), DistributionEnum.EXTERNAL.name(),
                     "4096");
+            pbScan.setverbose(false);
             pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -894,7 +900,7 @@ public class IntegrationTest {
         scanDesc.setHubServerInfo(serverInfo);
 
         PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
-
+        pbScan.setverbose(false);
         project.getPublishersList().add(pbScan);
 
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -934,7 +940,7 @@ public class IntegrationTest {
         scanDesc.setHubServerInfo(serverInfo);
 
         PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
-
+        pbScan.setverbose(false);
         project.getPublishersList().add(pbScan);
 
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -974,6 +980,7 @@ public class IntegrationTest {
         scanDesc.setHubServerInfo(serverInfo);
 
         PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
+        pbScan.setverbose(false);
         pbScan.setTEST(true);
 
         JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");
@@ -1031,6 +1038,7 @@ public class IntegrationTest {
         scanDesc.setHubServerInfo(serverInfo);
 
         PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
+        pbScan.setverbose(false);
         pbScan.setTEST(true);
 
         JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");
