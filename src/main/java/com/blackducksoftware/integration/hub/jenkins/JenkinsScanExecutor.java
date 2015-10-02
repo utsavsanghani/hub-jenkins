@@ -1,12 +1,12 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Arrays;
@@ -35,7 +35,73 @@ public class JenkinsScanExecutor extends ScanExecutor {
     }
 
     @Override
-    protected Result executeScan(List<String> cmd, File logDirectory) throws HubIntegrationException, InterruptedException {
+    protected boolean isConfiguredCorrectly(String scanExec, String oneJarPath, String javaExec) {
+        if (getLogger() == null) {
+            System.out.println("Could not find a logger");
+            return false;
+        }
+        try {
+
+            if (scanExec == null) {
+                getLogger().error("Please provide the Hub scan CLI.");
+                return false;
+            }
+            else {
+                FilePath scanExecRemote = new FilePath(build.getBuiltOn().getChannel(), scanExec);
+                if (!scanExecRemote.exists()) {
+                    getLogger().error("The Hub scan CLI provided does not exist.");
+                    return false;
+                }
+            }
+
+            if (oneJarPath == null) {
+                getLogger().error("Please provide the path for the CLI cache.");
+                return false;
+            }
+
+            if (javaExec == null) {
+                getLogger().error("Please provide the java home directory.");
+                return false;
+            }
+            else {
+                FilePath javaExecRemote = new FilePath(build.getBuiltOn().getChannel(), javaExec);
+                if (!javaExecRemote.exists()) {
+                    getLogger().error("The Java home provided does not exist.");
+                    return false;
+                }
+            }
+
+            if (getScanMemory() <= 0) {
+                getLogger().error("No memory set for the HUB CLI. Will use the default memory, " + DEFAULT_MEMORY);
+                setScanMemory(DEFAULT_MEMORY);
+            }
+        } catch (IOException e) {
+            getLogger().error(e.toString(), e);
+            return false;
+        } catch (InterruptedException e) {
+            getLogger().error(e.toString(), e);
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    protected String getLogDirectoryPath() throws IOException {
+        FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), getWorkingDirectory());
+        logDirectory = new FilePath(logDirectory, "HubScanLogs");
+        logDirectory = new FilePath(logDirectory, String.valueOf(getBuildNumber()));
+        // This log directory should never exist as a new one is created for each Build
+        try {
+            logDirectory.mkdirs();
+        } catch (InterruptedException e) {
+            getLogger().error("Could not create the log directory : " + e.getMessage(), e);
+        }
+
+        return logDirectory.getRemote();
+    }
+
+    @Override
+    protected Result executeScan(List<String> cmd, String logDirectoryPath) throws HubIntegrationException, InterruptedException {
         try {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             ProcStarter ps = launcher.launch();
@@ -75,16 +141,21 @@ public class JenkinsScanExecutor extends ScanExecutor {
                 // closing it.
                 String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
                 getLogger().info(outputString);
-                if (logDirectory != null && logDirectory.exists() && doesHubSupportLogOption()) {
-                    getLogger().info(
-                            "You can view the BlackDuck Scan CLI logs at : '" + logDirectory.getCanonicalPath()
-                                    + "'");
-                    getLogger().info("");
+
+                if (logDirectoryPath != null) {
+                    FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), logDirectoryPath);
+                    if (logDirectory.exists() && doesHubSupportLogOption()) {
+
+                        getLogger().info(
+                                "You can view the BlackDuck Scan CLI logs at : '" + logDirectory.getRemote()
+                                        + "'");
+                        getLogger().info("");
+                    }
                 }
 
-                if (!outputString.contains("Finished in") || !outputString.contains("with status SUCCESS")) {
-                    return Result.FAILURE;
-                } else if (outputString.contains("ERROR")) {
+                if (outputString.contains("Finished in") && outputString.contains("with status SUCCESS")) {
+                    return Result.SUCCESS;
+                } else {
                     return Result.FAILURE;
                 }
 

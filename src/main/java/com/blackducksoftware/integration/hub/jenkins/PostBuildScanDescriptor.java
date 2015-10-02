@@ -149,7 +149,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         try {
             Integer.valueOf(scanMemory);
         } catch (NumberFormatException e) {
-            return FormValidation.error(Messages
+            return FormValidation.error(e, Messages
                     .HubBuildScan_getInvalidMemoryString());
         }
 
@@ -306,21 +306,21 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             try {
                 url.toURI();
             } catch (URISyntaxException e) {
-                return FormValidation.error(Messages
+                return FormValidation.error(e, Messages
                         .HubBuildScan_getNotAValidUrl());
             }
         } catch (MalformedURLException e) {
-            return FormValidation.error(Messages
+            return FormValidation.error(e, Messages
                     .HubBuildScan_getNotAValidUrl());
         }
         try {
             URLConnection connection = url.openConnection();
             connection.getContent();
         } catch (IOException ioe) {
-            return FormValidation.error(Messages
+            return FormValidation.error(ioe, Messages
                     .HubBuildScan_getCanNotReachThisServer_0_(serverUrl));
         } catch (RuntimeException e) {
-            return FormValidation.error(Messages
+            return FormValidation.error(e, Messages
                     .HubBuildScan_getNotAValidUrl());
         }
         return FormValidation.ok();
@@ -409,7 +409,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
             } catch (BDRestException e) {
                 e.printStackTrace();
-                return FormValidation.error(e.getMessage());
+                return FormValidation.error(e, e.getMessage());
             } catch (Exception e) {
                 String message;
                 if (e.getCause() != null && e.getCause().getCause() != null) {
@@ -424,7 +424,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 } else if (message.toLowerCase().contains("precondition failed")) {
                     message = message + ", Check your configuration.";
                 }
-                return FormValidation.error(message);
+                return FormValidation.error(e, message);
             } finally {
                 if (changed) {
                     Thread.currentThread().setContextClassLoader(
@@ -486,7 +486,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 try {
                     project = service.getProjectByName(hubProjectName);
                 } catch (BDRestException e) {
-                    return FormValidation.error(e.getMessage());
+                    return FormValidation.error(e, e.getMessage());
                 }
                 List<ReleaseItem> releases = service.getVersionsForProject(project.getId());
 
@@ -518,7 +518,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 } else if (message.toLowerCase().contains("precondition failed")) {
                     message = message + ", Check your configuration.";
                 }
-                return FormValidation.error(message);
+                return FormValidation.error(e, message);
             } finally {
                 if (changed) {
                     Thread.currentThread().setContextClassLoader(
@@ -607,7 +607,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             } else if (message.toLowerCase().contains("precondition failed")) {
                 message = message + ", Check your configuration.";
             }
-            return FormValidation.error(message);
+            return FormValidation.error(e, message);
         } finally {
             if (changed) {
                 Thread.currentThread().setContextClassLoader(
@@ -720,12 +720,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
             } catch (BDRestException e) {
                 if (e.getResource().getResponse().getStatus().getCode() == 412) {
-                    return FormValidation.error(Messages.HubBuildScan_getProjectVersionCreationProblem());
+                    return FormValidation.error(e, Messages.HubBuildScan_getProjectVersionCreationProblem());
                 } else if (e.getResource().getResponse().getStatus().getCode() == 401) {
                     // If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
-                    return FormValidation.error(Messages.HubBuildScan_getCredentialsInValidFor_0_(getHubServerUrl()));
+                    return FormValidation.error(e, Messages.HubBuildScan_getCredentialsInValidFor_0_(getHubServerUrl()));
                 } else {
-                    return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
+                    return FormValidation.error(e, Messages.HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
                 }
             }
             if (StringUtils.isNotBlank(versionId)) {
@@ -748,7 +748,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             } else if (message.toLowerCase().contains("precondition failed")) {
                 message = message + ", Check your configuration.";
             }
-            return FormValidation.error(message);
+            return FormValidation.error(e, message);
         } finally {
             if (changed) {
                 Thread.currentThread().setContextClassLoader(

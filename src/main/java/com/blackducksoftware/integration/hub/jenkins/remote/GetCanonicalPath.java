@@ -1,4 +1,4 @@
-package com.blackducksoftware.integration.hub.jenkins;
+package com.blackducksoftware.integration.hub.jenkins.remote;
 
 import hudson.remoting.Callable;
 
@@ -10,10 +10,11 @@ public class GetCanonicalPath implements Callable<String, IOException> {
 
     private final File file;
 
-    protected GetCanonicalPath(File file) {
+    public GetCanonicalPath(File file) {
         this.file = file;
     }
 
+    @Override
     public String call() throws IOException {
         return file.getCanonicalPath();
     }

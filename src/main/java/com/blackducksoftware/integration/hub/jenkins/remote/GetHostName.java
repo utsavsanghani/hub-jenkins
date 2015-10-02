@@ -1,4 +1,4 @@
-package com.blackducksoftware.integration.hub.jenkins;
+package com.blackducksoftware.integration.hub.jenkins.remote;
 
 import hudson.remoting.Callable;
 
