@@ -89,7 +89,7 @@ public class PostBuildScanDescriptorTest {
         }
         FormValidation form = descriptor.doTestConnection("http://ASSERTNONEXISTENTURL", credential.getId());
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertTrue(form.getMessage(), form.getMessage().equals(Messages.HubBuildScan_getCanNotReachThisServer_0_("http://ASSERTNONEXISTENTURL")));
+        Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getCanNotReachThisServer_0_("http://ASSERTNONEXISTENTURL")));
 
     }
 
@@ -308,7 +308,7 @@ public class PostBuildScanDescriptorTest {
 
         FormValidation form = descriptor.doCheckHubProjectName(PROJECT_NAME_NOT_EXISTING, null);
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_());
+        Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_()));
     }
 
     @Test
@@ -379,7 +379,7 @@ public class PostBuildScanDescriptorTest {
 
         FormValidation form = descriptor.doCheckHubProjectVersion(testProperties.getProperty("TEST_VERSION"), testProperties.getProperty("TEST_PROJECT"));
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertEquals(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_(), form.getMessage());
+        Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_()));
     }
 
     @Test
@@ -388,7 +388,7 @@ public class PostBuildScanDescriptorTest {
 
         FormValidation form = descriptor.doCheckScanMemory("This is not an Integer");
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getInvalidMemoryString());
+        Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getInvalidMemoryString()));
     }
 
     @Test
