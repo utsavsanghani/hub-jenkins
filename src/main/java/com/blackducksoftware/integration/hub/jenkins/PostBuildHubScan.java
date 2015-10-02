@@ -281,22 +281,22 @@ public class PostBuildHubScan extends Recorder {
                     HubIntRestService service = setHubIntRestService(logger);
                     String projectId = null;
                     String versionId = null;
+                    if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
+                        projectId = ensureProjectExists(service, logger, projectName);
 
-                    projectId = ensureProjectExists(service, logger, projectName);
+                        versionId = ensureVersionExists(service, logger, projectVersion, projectId);
 
-                    versionId = ensureVersionExists(service, logger, projectVersion, projectId);
+                        if (StringUtils.isEmpty(projectId)) {
+                            throw new BDJenkinsHubPluginException("The specified Project could not be found.");
+                        }
 
-                    if (StringUtils.isEmpty(projectId)) {
-                        throw new BDJenkinsHubPluginException("The specified Project could not be found.");
+                        logger.debug("Project Id: '" + projectId + "'");
+
+                        if (StringUtils.isEmpty(versionId)) {
+                            throw new BDJenkinsHubPluginException("The specified Version could not be found in the Project.");
+                        }
+                        logger.debug("Version Id: '" + versionId + "'");
                     }
-
-                    logger.debug("Project Id: '" + projectId + "'");
-
-                    if (StringUtils.isEmpty(versionId)) {
-                        throw new BDJenkinsHubPluginException("The specified Version could not be found in the Project.");
-                    }
-                    logger.debug("Version Id: '" + versionId + "'");
-
                     Boolean mappingDone = runScan(service, build, launcher, listener, logger, scanExec, scanTargets, projectName, projectVersion);
 
                     // Only map the scans to a Project Version if the Project name and Project Version have been
