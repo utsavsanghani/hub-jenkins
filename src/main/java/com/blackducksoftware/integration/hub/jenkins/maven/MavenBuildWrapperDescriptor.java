@@ -1,11 +1,14 @@
 package com.blackducksoftware.integration.hub.jenkins.maven;
 
+import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.AbstractProject;
 import jenkins.model.Jenkins;
 
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapperDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.Messages;
 
+@Extension(optional = true)
 public class MavenBuildWrapperDescriptor extends BDBuildWrapperDescriptor {
 
     /**
@@ -36,12 +39,12 @@ public class MavenBuildWrapperDescriptor extends BDBuildWrapperDescriptor {
      */
     @Override
     public String getDisplayName() {
-        return ""; // Messages.HubMavenWrapper_getDisplayName();
+        return Messages.HubMavenWrapper_getDisplayName();
     }
 
     /*
      * (non-JSDoc)
-     * 
+     *
      * @see java.lang.Object#toString()
      */
     @Override

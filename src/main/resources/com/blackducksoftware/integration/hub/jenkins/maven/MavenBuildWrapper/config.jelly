@@ -29,7 +29,7 @@
 		}
 	</script>
 		
-<f:section title="${%SectionTitle}">
+<f:section >
 		<f:block>
 			<table style="width:100%" id="ccBlackDuckTable">
 				<f:entry title="${%MavenScopesField}" field="userScopesToInclude">
@@ -39,7 +39,7 @@
             	<f:entry field="sameAsPostBuildScan">
                		<!-- define checkbox first, label after for label to the right of the checkbox layout -->
                		<f:checkbox default="false" checked="${it.sameAsPostBuildScan}"/>
-               		<label>${%AutoCreateComponentField}</label>
+               		<label>${%SameAsPostBuildScanTitle}</label>
             	</f:entry>
 				
 				<f:entry field="hubProjectName" title="${%ProjectNameTitle}">

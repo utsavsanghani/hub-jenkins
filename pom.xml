@@ -6,7 +6,7 @@
 		<groupId>org.jenkins-ci.plugins</groupId>
 		<artifactId>plugin</artifactId>
 		<!-- which version of Jenkins is this plugin built against? -->
-		<version>1.466</version>
+		<version>1.580.3</version>
 		<relativePath></relativePath>
 	</parent>
 
@@ -168,6 +168,12 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-jdk14</artifactId>
+			<version>1.7.5</version>
+		</dependency>
+		
+		<dependency>
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 			<version>2.3</version>
@@ -197,6 +203,14 @@
 		<dependency>
 			<groupId>org.jenkins-ci.main</groupId>
 			<artifactId>maven-plugin</artifactId>
+			<version>[2.5,)</version>
+			<optional>true</optional>
+			<exclusions>
+					<exclusion>
+						<groupId>org.jenkins-ci</groupId>
+						<artifactId>SECURITY-144-compat</artifactId>
+					</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.mortbay.jetty</groupId>
@@ -309,6 +323,35 @@
 						</classpathContainers>
 						<source>1.7</source>
 						<target>1.7</target>
+					</configuration>
+				</plugin>
+				<plugin>
+					<!--This plugin's configuration is used to store Eclipse m2e settings 
+						only. It has no influence on the Maven build itself. -->
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.jacoco</groupId>
+										<artifactId>jacoco-maven-plugin</artifactId>
+										<versionRange>[0.5,)
+										</versionRange>
+										<goals>
+											<goal>prepare-agent</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<!-- m2e doesn't know what to do with jacoco, let's ignore it or 
+											annoying error markers appear see http://wiki.eclipse.org/M2E_plugin_execution_not_covered -->
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
 					</configuration>
 				</plugin>
 			</plugins>
