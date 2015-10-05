@@ -1,8 +1,6 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
 import hudson.Extension;
-import hudson.Plugin;
-import hudson.PluginWrapper;
 import hudson.ProxyConfiguration;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.AbstractProject;
@@ -101,9 +99,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     public String getPluginVersion() {
-        Plugin p = Jenkins.getInstance().getPlugin("hub-jenkins");
-        PluginWrapper pw = p.getWrapper();
-        return pw.getVersion();
+        return PluginHelper.getPluginVersion();
     }
 
     public String getDefaultProjectName() {

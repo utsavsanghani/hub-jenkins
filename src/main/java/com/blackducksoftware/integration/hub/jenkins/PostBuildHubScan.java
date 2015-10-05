@@ -86,8 +86,16 @@ public class PostBuildHubScan extends Recorder {
             String scanMemory) {
         this.scans = scans;
         this.scanName = scanName;
-        this.hubProjectName = hubProjectName;
-        this.hubProjectVersion = hubProjectVersion;
+        if (StringUtils.isNotBlank(hubProjectName)) {
+            this.hubProjectName = hubProjectName.trim();
+        } else {
+            this.hubProjectName = null;
+        }
+        if (StringUtils.isNotBlank(hubProjectVersion)) {
+            this.hubProjectVersion = hubProjectVersion.trim();
+        } else {
+            this.hubProjectVersion = null;
+        }
         this.hubVersionPhase = hubVersionPhase;
         this.hubVersionDist = hubVersionDist;
         Integer memory = 0;
@@ -247,7 +255,7 @@ public class PostBuildHubScan extends Recorder {
                     logger.info("Node workspace " + workingDirectory);
                     VirtualChannel remotingChannel = build.getBuiltOn().getChannel();
                     setWorkingDirectory(remotingChannel, workingDirectory);
-                    setJava(logger, build, listener);
+                    setJava(logger, build);
                     EnvVars variables = build.getEnvironment(listener);
                     List<String> scanTargets = new ArrayList<String>();
                     for (ScanJobs scanJob : getScans()) {
@@ -280,9 +288,9 @@ public class PostBuildHubScan extends Recorder {
                     }
                     printConfiguration(build, logger, projectName, projectVersion, scanTargets);
 
-                    FilePath scanExec = getScanCLI(iScanTools, logger, build, listener);
+                    FilePath scanExec = getScanCLI(iScanTools, logger, build);
 
-                    HubIntRestService service = setHubIntRestService(logger);
+                    HubIntRestService service = getRestService(logger);
                     String projectId = null;
                     String versionId = null;
                     if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
@@ -301,7 +309,7 @@ public class PostBuildHubScan extends Recorder {
                         }
                         logger.debug("Version Id: '" + versionId + "'");
                     }
-                    Boolean mappingDone = runScan(service, build, launcher, listener, logger, scanExec, scanTargets, projectName, projectVersion);
+                    Boolean mappingDone = runScan(service, build, launcher, logger, scanExec, scanTargets, projectName, projectVersion);
 
                     // Only map the scans to a Project Version if the Project name and Project Version have been
                     // configured
@@ -427,7 +435,7 @@ public class PostBuildHubScan extends Recorder {
 
     }
 
-    public HubIntRestService setHubIntRestService(IntLogger logger) throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException,
+    public HubIntRestService getRestService(IntLogger logger) throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException,
             MalformedURLException {
         HubIntRestService service = new HubIntRestService(getDescriptor().getHubServerInfo().getServerUrl());
         service.setLogger(logger);
@@ -543,7 +551,7 @@ public class PostBuildHubScan extends Recorder {
      * @throws URISyntaxException
      * @throws HubIntegrationException
      */
-    private Boolean runScan(HubIntRestService service, AbstractBuild build, Launcher launcher, BuildListener listener, IntLogger logger, FilePath scanExec,
+    private Boolean runScan(HubIntRestService service, AbstractBuild build, Launcher launcher, HubJenkinsLogger logger, FilePath scanExec,
             List<String> scanTargets,
             String projectName, String versionName)
             throws IOException, HubConfigurationException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException
@@ -571,7 +579,7 @@ public class PostBuildHubScan extends Recorder {
         oneJarPath = new FilePath(oneJarPath, "scan.cli.impl-standalone.jar");
 
         JenkinsScanExecutor scan = new JenkinsScanExecutor(getDescriptor().getHubServerInfo().getServerUrl(), getDescriptor().getHubServerInfo().getUsername(),
-                getDescriptor().getHubServerInfo().getPassword(), scanTargets, build.getNumber(), build, launcher, listener);
+                getDescriptor().getHubServerInfo().getPassword(), scanTargets, build.getNumber(), build, launcher, logger.getJenkinsListener());
         scan.setLogger(logger);
         addProxySettingsToScanner(logger, scan);
 
@@ -679,9 +687,9 @@ public class PostBuildHubScan extends Recorder {
      * @throws InterruptedException
      * @throws HubConfigurationException
      */
-    private void setJava(IntLogger logger, AbstractBuild build, BuildListener listener) throws IOException, InterruptedException,
+    private void setJava(HubJenkinsLogger logger, AbstractBuild build) throws IOException, InterruptedException,
             HubConfigurationException {
-        EnvVars envVars = build.getEnvironment(listener);
+        EnvVars envVars = build.getEnvironment(logger.getJenkinsListener());
         JDK javaHomeTemp = null;
         if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
             logger.info("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
@@ -689,7 +697,7 @@ public class PostBuildHubScan extends Recorder {
             javaHomeTemp = build.getProject().getJDK();
         } else {
             logger.info("Getting Jdk on node  : " + build.getBuiltOn().getNodeName());
-            javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), listener);
+            javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), logger.getJenkinsListener());
         }
         if (javaHomeTemp != null && javaHomeTemp.getHome() != null) {
             logger.info("JDK home : " + javaHomeTemp.getHome());
@@ -729,7 +737,7 @@ public class PostBuildHubScan extends Recorder {
      * @throws InterruptedException
      * @throws HubConfigurationException
      */
-    public FilePath getScanCLI(ScanInstallation[] scanTools, IntLogger logger, AbstractBuild build, BuildListener listener)
+    public FilePath getScanCLI(ScanInstallation[] scanTools, HubJenkinsLogger logger, AbstractBuild build)
             throws IScanToolMissingException, IOException,
             InterruptedException, HubConfigurationException {
         FilePath scanExecutable = null;
@@ -740,7 +748,8 @@ public class PostBuildHubScan extends Recorder {
                 logger.debug("Running on : master");
             } else {
                 logger.debug("Running on : " + node.getNodeName());
-                scanInstallation = scanInstallation.forNode(node, listener); // Need to get the Slave iScan
+                scanInstallation = scanInstallation.forNode(node, logger.getJenkinsListener()); // Need to get the Slave
+                                                                                                // iScan
             }
             if (scanInstallation.getName().equals(getScanName())) {
                 if (scanInstallation.getExists(node.getChannel(), logger)) {

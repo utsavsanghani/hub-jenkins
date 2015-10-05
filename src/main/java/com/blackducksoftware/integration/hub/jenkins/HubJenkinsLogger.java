@@ -19,6 +19,10 @@ public class HubJenkinsLogger implements IntLogger, Serializable {
         this.jenkinsLogger = jenkinsLogger;
     }
 
+    public BuildListener getJenkinsListener() {
+        return jenkinsLogger;
+    }
+
     @Override
     public void setLogLevel(LogLevel level) {
         this.level = level;
