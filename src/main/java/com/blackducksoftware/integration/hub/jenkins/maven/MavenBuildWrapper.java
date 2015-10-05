@@ -234,7 +234,7 @@ public class MavenBuildWrapper extends BDBuildWrapper {
                             log4jJar = mavenConfig.jarFile(Logger.class);
                             gsonJar = mavenConfig.jarFile(Gson.class);
                         } else {
-                            buildLogger.error("[ERROR] workspace: null");
+                            buildLogger.error("workspace: null");
                             build.setResult(Result.UNSTABLE);
                         }
                     } else {
