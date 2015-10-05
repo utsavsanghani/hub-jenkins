@@ -135,11 +135,33 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
                 ByteArrayOutputStream byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
 
-                byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
                 // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will
                 // handle
                 // closing it.
                 String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
+
+                if (outputString.contains("Illegal character in path")
+                        && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
+                    // This version of the CLI can not handle spaces in the log directory
+                    // Not sure which version of the CLI this issue was fixed
+
+                    int indexOfLogOption = cmd.indexOf("--logDir") + 1;
+
+                    String logPath = cmd.get(indexOfLogOption);
+                    logPath = logPath.replace(" ", "%20");
+                    cmd.remove(indexOfLogOption);
+                    cmd.add(indexOfLogOption, logPath);
+
+                    byteStream = new ByteArrayOutputStream();
+
+                    ps.cmds(cmd);
+                    ps.stdout(byteStream);
+                    ps.join();
+
+                    byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
+                    outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
+                }
+
                 getLogger().info(outputString);
 
                 if (logDirectoryPath != null) {
