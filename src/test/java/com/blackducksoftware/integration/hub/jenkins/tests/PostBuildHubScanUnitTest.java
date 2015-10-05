@@ -31,10 +31,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
@@ -98,7 +98,7 @@ public class PostBuildHubScanUnitTest {
         scanTargets.add(createdFolder.getCanonicalPath());
         scanTargets.add(createdFile.getCanonicalPath());
 
-        TestLogger logger = new TestLogger();
+        TestLogger logger = new TestLogger(listener);
         Assert.assertTrue(mockpbScan.validateScanTargets(logger, scanTargets, nullChannel));
         String output = logger.getOutputString();
         Assert.assertTrue(output, output.contains("Scan target exists at : "));
@@ -116,7 +116,7 @@ public class PostBuildHubScanUnitTest {
         scanTargets.add("/ASSERT/NOT/EXISTING");
         scanTargets.add("/RE-ASSERT/Not/EXISTING");
 
-        mockpbScan.validateScanTargets(new TestLogger(), scanTargets, nullChannel);
+        mockpbScan.validateScanTargets(new TestLogger(listener), scanTargets, nullChannel);
     }
 
     @Test
@@ -134,7 +134,7 @@ public class PostBuildHubScanUnitTest {
         scanTargets.add(createdFolder.getCanonicalPath());
         scanTargets.add(createdFile.getCanonicalPath());
 
-        TestLogger logger = new TestLogger();
+        TestLogger logger = new TestLogger(listener);
         mockpbScan.validateScanTargets(logger, scanTargets, nullChannel);
     }
 
@@ -158,8 +158,8 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, null, null, "4096");
 
-        TestLogger logger = new TestLogger();
-        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, mockBuild, listener);
+        TestLogger logger = new TestLogger(listener);
+        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, mockBuild);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
         String output = logger.getOutputString();
@@ -193,8 +193,8 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, null, null, "4096");
 
-        TestLogger logger = new TestLogger();
-        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, mockBuild, listener);
+        TestLogger logger = new TestLogger(listener);
+        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, mockBuild);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
         String output = logger.getOutputString();
@@ -214,8 +214,8 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, null, null, "4096");
 
-        TestLogger logger = new TestLogger();
-        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, null, listener);
+        TestLogger logger = new TestLogger(listener);
+        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, null);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
     }
@@ -241,8 +241,8 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, null, null, "4096");
 
-        TestLogger logger = new TestLogger();
-        pbScan.getScanCLI(iScanInstallations, logger, mockBuild, listener);
+        TestLogger logger = new TestLogger(listener);
+        pbScan.getScanCLI(iScanInstallations, logger, mockBuild);
     }
 
     // validateConfiguration

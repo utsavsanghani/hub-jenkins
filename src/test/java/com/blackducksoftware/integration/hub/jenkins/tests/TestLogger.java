@@ -1,13 +1,19 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
+import hudson.model.BuildListener;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 
-import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
+import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
 
-public class TestLogger implements IntLogger {
+public class TestLogger extends HubJenkinsLogger {
+
+    public TestLogger(BuildListener jenkinsLogger) {
+        super(jenkinsLogger);
+    }
 
     private ArrayList<String> outputList = new ArrayList<String>();
 
