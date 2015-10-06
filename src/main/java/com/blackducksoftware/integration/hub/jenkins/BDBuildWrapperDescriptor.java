@@ -175,6 +175,9 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                     .getContextClassLoader();
             boolean changed = false;
             try {
+                if (hubWrapperProjectName.matches("(.*$.*){1,}")) {
+                    return potentialMatches;
+                }
 
                 HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo()
                         .getPassword());
@@ -224,7 +227,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 if (StringUtils.isBlank(getHubServerInfo().getCredentialsId())) {
                     return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
                 }
-                if (hubWrapperProjectName.matches("(\\$\\{.*\\}){1,}")) {
+                if (hubWrapperProjectName.matches("(.*$.*){1,}")) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
                 }
@@ -303,11 +306,11 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 if (StringUtils.isBlank(hubWrapperProjectName)) {
                     return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
                 }
-                if (hubWrapperProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
+                if (hubWrapperProjectVersion.matches("(.*$.*){1,}")) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
                 }
-                if (hubWrapperProjectName.matches("(\\$\\{.*\\}){1,}")) {
+                if (hubWrapperProjectName.matches("(.*$.*){1,}")) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
                 }
@@ -399,7 +402,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
             if (StringUtils.isBlank(hubWrapperProjectVersion)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
             }
-            if (hubWrapperProjectName.matches("(\\$\\{.*\\}){1,}")) {
+            if (hubWrapperProjectName.matches("(.*$.*){1,}")) {
                 return FormValidation
                         .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
             }
@@ -445,7 +448,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 projectId = project.getId();
             }
 
-            if (hubWrapperProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
+            if (hubWrapperProjectVersion.matches("(.*$.*){1,}")) {
                 if (projectCreated) {
                     return FormValidation
                             .warning(Messages._HubBuildScan_getProjectCreated() + " :: " + Messages.HubBuildScan_getProjectVersionContainsVariable());

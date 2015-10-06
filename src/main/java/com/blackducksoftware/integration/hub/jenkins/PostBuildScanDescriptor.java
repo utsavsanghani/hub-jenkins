@@ -341,6 +341,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     .getContextClassLoader();
             boolean changed = false;
             try {
+                if (hubProjectName.matches("(.*$.*){1,}")) {
+                    return potentialMatches;
+                }
 
                 HubIntRestService service = getRestService(getHubServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword());
 
@@ -388,7 +391,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 if (StringUtils.isBlank(getHubServerInfo().getCredentialsId())) {
                     return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
                 }
-                if (hubProjectName.matches("(\\$\\{.*\\}){1,}")) {
+                if (hubProjectName.matches("(.*$.*){1,}")) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
                 }
@@ -466,11 +469,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 if (StringUtils.isBlank(hubProjectName)) {
                     return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
                 }
-                if (hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
+                if (hubProjectVersion.matches("(.*$.*){1,}")) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
                 }
-                if (hubProjectName.matches("(\\$\\{.*\\}){1,}")) {
+                if (hubProjectName.matches("(.*$.*){1,}")) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
                 }
@@ -647,7 +650,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             if (StringUtils.isBlank(hubProjectVersion)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
             }
-            if (hubProjectName.matches("(\\$\\{.*\\}){1,}")) {
+            if (hubProjectName.matches("(.*$.*){1,}")) {
                 return FormValidation
                         .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
             }
@@ -693,7 +696,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 projectId = project.getId();
             }
 
-            if (hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
+            if (hubProjectVersion.matches("(.*$.*){1,}")) {
                 if (projectCreated) {
                     return FormValidation
                             .warning(Messages._HubBuildScan_getProjectCreated() + " :: " + Messages.HubBuildScan_getProjectVersionContainsVariable());

@@ -55,6 +55,8 @@ public class PostBuildHubScan extends Recorder {
 
     private final String scanName;
 
+    protected final boolean sameAsBuildWrapper;
+
     private final String hubProjectName;
 
     private final String hubVersionPhase;
@@ -82,10 +84,12 @@ public class PostBuildHubScan extends Recorder {
     private Boolean verbose;
 
     @DataBoundConstructor
-    public PostBuildHubScan(ScanJobs[] scans, String scanName, String hubProjectName, String hubProjectVersion, String hubVersionPhase, String hubVersionDist,
+    public PostBuildHubScan(ScanJobs[] scans, String scanName, boolean sameAsBuildWrapper, String hubProjectName, String hubProjectVersion,
+            String hubVersionPhase, String hubVersionDist,
             String scanMemory) {
         this.scans = scans;
         this.scanName = scanName;
+        this.sameAsBuildWrapper = sameAsBuildWrapper;
         if (StringUtils.isNotBlank(hubProjectName)) {
             this.hubProjectName = hubProjectName.trim();
         } else {
@@ -159,6 +163,10 @@ public class PostBuildHubScan extends Recorder {
             hubProjectVersion = hubProjectRelease;
         }
         return hubProjectVersion;
+    }
+
+    public boolean getSameAsBuildWrapper() {
+        return sameAsBuildWrapper;
     }
 
     public String getHubProjectName() {

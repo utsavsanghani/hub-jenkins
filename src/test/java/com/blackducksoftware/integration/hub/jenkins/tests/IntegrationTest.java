@@ -32,11 +32,11 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.response.DistributionEnum;
 import com.blackducksoftware.integration.hub.response.PhaseEnum;
 import com.blackducksoftware.integration.hub.response.ProjectItem;
@@ -150,7 +150,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, null, null, null, null, "4096");
         pbScan.setverbose(false);
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
@@ -217,7 +217,7 @@ public class IntegrationTest {
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
                     null, "4096");
             pbScan.setverbose(false);
@@ -279,7 +279,7 @@ public class IntegrationTest {
             PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
             scanDesc.setHubServerInfo(serverInfo);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, "${JOB_NAME}", testProperties.getProperty("TEST_VERSION"),
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, "${JOB_NAME}", testProperties.getProperty("TEST_VERSION"),
                     PhaseEnum.DEVELOPMENT.name(),
                     DistributionEnum.EXTERNAL.name(), "4096");
             pbScan.setverbose(false);
@@ -351,7 +351,7 @@ public class IntegrationTest {
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
                     null, "4096");
             pbScan.setverbose(false);
@@ -610,7 +610,7 @@ public class IntegrationTest {
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
                     null, "4096");
             pbScan.setverbose(false);
@@ -677,7 +677,7 @@ public class IntegrationTest {
             PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
             scanDesc.setHubServerInfo(serverInfo);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING,
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING,
                     PhaseEnum.DEVELOPMENT.name(),
                     DistributionEnum.EXTERNAL.name(), "4096");
             pbScan.setverbose(false);
@@ -741,7 +741,8 @@ public class IntegrationTest {
             // Give server time to recognize the Project
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"), PROJECT_RELEASE_NOT_EXISTING,
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, testProperties.getProperty("TEST_PROJECT"),
+                    PROJECT_RELEASE_NOT_EXISTING,
                     PhaseEnum.DEVELOPMENT.name(),
                     DistributionEnum.EXTERNAL.name(),
                     "4096");
@@ -815,7 +816,7 @@ public class IntegrationTest {
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"),
                     PhaseEnum.DEVELOPMENT.name(), DistributionEnum.EXTERNAL.name(),
                     "4096");
@@ -899,7 +900,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, null, null, null, null, "4096");
         pbScan.setverbose(false);
         project.getPublishersList().add(pbScan);
 
@@ -939,7 +940,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, null, null, null, null, "4096");
         pbScan.setverbose(false);
         project.getPublishersList().add(pbScan);
 
@@ -979,7 +980,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, null, null, null, null, "4096");
         pbScan.setverbose(false);
         pbScan.setTEST(true);
 
@@ -1037,7 +1038,7 @@ public class IntegrationTest {
         PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
         scanDesc.setHubServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, null, null, null, null, "4096");
         pbScan.setverbose(false);
         pbScan.setTEST(true);
 

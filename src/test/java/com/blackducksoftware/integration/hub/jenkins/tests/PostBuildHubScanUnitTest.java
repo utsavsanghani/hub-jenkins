@@ -156,7 +156,7 @@ public class PostBuildHubScanUnitTest {
         ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", false, null, null, null, null, "4096");
 
         TestLogger logger = new TestLogger(listener);
         FilePath script = pbScan.getScanCLI(iScanInstallations, logger, mockBuild);
@@ -191,7 +191,7 @@ public class PostBuildHubScanUnitTest {
 
         // iScan.forNode(build.getBuiltOn(), listener);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", false, null, null, null, null, "4096");
 
         TestLogger logger = new TestLogger(listener);
         FilePath script = pbScan.getScanCLI(iScanInstallations, logger, mockBuild);
@@ -212,7 +212,7 @@ public class PostBuildHubScanUnitTest {
 
         ScanInstallation[] iScanInstallations = new ScanInstallation[0];
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", false, null, null, null, null, "4096");
 
         TestLogger logger = new TestLogger(listener);
         FilePath script = pbScan.getScanCLI(iScanInstallations, logger, null);
@@ -239,7 +239,7 @@ public class PostBuildHubScanUnitTest {
         ScanInstallation[] iScanInstallations = new ScanInstallation[1];
         iScanInstallations[0] = iScanInstall;
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", false, null, null, null, null, "4096");
 
         TestLogger logger = new TestLogger(listener);
         pbScan.getScanCLI(iScanInstallations, logger, mockBuild);
@@ -461,14 +461,14 @@ public class PostBuildHubScanUnitTest {
         exception
                 .expectMessage("Variable was not properly replaced. Value : ${JOB_NAME}, Result : ${JOB_NAME}. Make sure the variable has been properly defined.");
 
-        PostBuildHubScan postScan = new PostBuildHubScan(null, null, null, null, null, null, null);
+        PostBuildHubScan postScan = new PostBuildHubScan(null, null, false, null, null, null, null, null);
         Map<String, String> emptyVariables = new HashMap<String, String>();
         postScan.handleVariableReplacement(emptyVariables, "${JOB_NAME}");
     }
 
     @Test
     public void testHandleVariableReplacementVariable() throws Exception {
-        PostBuildHubScan postScan = new PostBuildHubScan(null, null, null, null, null, null, null);
+        PostBuildHubScan postScan = new PostBuildHubScan(null, null, false, null, null, null, null, null);
         Map<String, String> emptyVariables = new HashMap<String, String>();
         emptyVariables.put("JOB_NAME", "Test Job");
         assertEquals("Test Job", postScan.handleVariableReplacement(emptyVariables, "${JOB_NAME}"));
@@ -476,7 +476,7 @@ public class PostBuildHubScanUnitTest {
 
     @Test
     public void testHandleVariableReplacementVariableNull() throws Exception {
-        PostBuildHubScan postScan = new PostBuildHubScan(null, null, null, null, null, null, null);
+        PostBuildHubScan postScan = new PostBuildHubScan(null, null, false, null, null, null, null, null);
         Map<String, String> emptyVariables = new HashMap<String, String>();
         assertNull(postScan.handleVariableReplacement(null, null));
     }

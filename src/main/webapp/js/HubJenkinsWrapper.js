@@ -34,6 +34,14 @@
 		}
 		
 		function enableSameAsPostBuildScan(onload){
+			var sameAsBuildWrapper = document.getElementsByName('_.sameAsBuildWrapper')[0];
+			if(sameAsBuildWrapper && sameAsBuildWrapper.checked){
+				var sameAsPostBuildScanMessageArea = document.getElementById('sameAsPostBuildScanMessageArea');
+				sameAsPostBuildScanMessageArea.className = 'error';
+				var newSpan = document.createElement('span');
+				newSpan.innerHTML = "The Post-build Action Hub Integration is configured to use this configuration!";
+				sameAsPostBuildScanMessageArea.appendChild(newSpan);
+			} else{
 			var hubProjectName = document.getElementsByName('_.hubProjectName')[0];
 			var hubProjectVersion = document.getElementsByName('_.hubProjectVersion')[0];
 			var hubVersionPhase = document.getElementsByName('_.hubVersionPhase')[0];
@@ -68,6 +76,7 @@
 				newSpan.innerHTML = "The Post-build Action 'Black Duck Hub Integration' is not configured for this Job!";
 				sameAsPostBuildScanMessageArea.appendChild(newSpan);
 			}
+			}
 		}
 		
 		
@@ -92,10 +101,10 @@
 		
 		
 		
-		var oldOnLoad = window.onload;
+		var hubWrapperOldOnLoad = window.onload;
 		
 		window.onload = function(){
-			oldOnLoad();
+			hubWrapperOldOnLoad();
 			
 			var sameAsPostBuildScan = document.getElementsByName('_.sameAsPostBuildScan')[0];
 			useSameAsPostBuildScan(sameAsPostBuildScan, true);
