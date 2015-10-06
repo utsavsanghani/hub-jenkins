@@ -16,16 +16,16 @@
         	});
     	}
 
-		function customOnClick(method, withVars, button){
+		function customCreateProject(method, withVars, button){
 	
 			validateButton('${descriptor.descriptorFullUrl}/'+method, withVars , button);	
 
-			var hubProjName = document.getElementsByName('_.hubProjectName')[0];
-			var hubProjVersion = document.getElementsByName('_.hubProjectVersion')[0];
+			var hubProjectName = document.getElementsByName('_.hubProjectName')[0];
+			var hubProjectVersion = document.getElementsByName('_.hubProjectVersion')[0];
 	
 			// wait 900 ms before running the checks
 			// otherwise it happens too quick and shows that the project doesnt exist yet
-			setTimeout(function(){checker(hubProjName);checker(hubProjVersion);}, 900);
+			setTimeout(function(){checker(hubProjectName);checker(hubProjectVersion);}, 900);
 		}
 	</script>
 		
@@ -48,7 +48,7 @@
 
 <f:entry>
     <div style="float:right">
-      <input name="hubCreateButton" type="button" value="${%CreateProject}" class="yui-button validate-button" onclick="customOnClick('createHubProject', 'hubProjectName,hubProjectVersion,hubVersionPhase,hubVersionDist', this);" />
+      <input name="hubCreateButton" type="button" value="${%CreateProject}" class="yui-button validate-button" onclick="customCreateProject('createHubProject', 'hubProjectName,hubProjectVersion,hubVersionPhase,hubVersionDist', this);" />
     </div>
     <div style="display:none;">
       <img src="${imagesURL}/spinner.gif" /> ${%CreateProjectProgress}

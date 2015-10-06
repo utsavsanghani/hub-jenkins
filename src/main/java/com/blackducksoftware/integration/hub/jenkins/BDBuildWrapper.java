@@ -58,16 +58,16 @@ public abstract class BDBuildWrapper extends BuildWrapper {
 
     protected final boolean sameAsPostBuildScan;
 
-    private final String hubProjectName;
+    private final String hubWrapperProjectName;
 
-    private final String hubVersionPhase;
+    private final String hubWrapperVersionPhase;
 
-    private final String hubVersionDist;
+    private final String hubWrapperVersionDist;
 
-    private final String hubProjectVersion;
+    private final String hubWrapperProjectVersion;
 
-    public BDBuildWrapper(String userScopesToInclude, boolean sameAsPostBuildScan, String hubProjectName, String hubVersionPhase,
-            String hubVersionDist, String hubProjectVersion) {
+    public BDBuildWrapper(String userScopesToInclude, boolean sameAsPostBuildScan, String hubWrapperProjectName, String hubWrapperVersionPhase,
+            String hubWrapperVersionDist, String hubWrapperProjectVersion) {
         if (StringUtils.isNotBlank(userScopesToInclude)) {
             this.userScopesToInclude = userScopesToInclude.trim();
         } else {
@@ -76,19 +76,19 @@ public abstract class BDBuildWrapper extends BuildWrapper {
 
         this.sameAsPostBuildScan = sameAsPostBuildScan;
 
-        if (StringUtils.isNotBlank(hubProjectName)) {
-            this.hubProjectName = hubProjectName.trim();
+        if (StringUtils.isNotBlank(hubWrapperProjectName)) {
+            this.hubWrapperProjectName = hubWrapperProjectName.trim();
         } else {
-            this.hubProjectName = null;
+            this.hubWrapperProjectName = null;
         }
 
-        this.hubVersionPhase = hubVersionPhase;
-        this.hubVersionDist = hubVersionDist;
+        this.hubWrapperVersionPhase = hubWrapperVersionPhase;
+        this.hubWrapperVersionDist = hubWrapperVersionDist;
 
-        if (StringUtils.isNotBlank(hubProjectVersion)) {
-            this.hubProjectVersion = hubProjectVersion.trim();
+        if (StringUtils.isNotBlank(hubWrapperProjectVersion)) {
+            this.hubWrapperProjectVersion = hubWrapperProjectVersion.trim();
         } else {
-            this.hubProjectVersion = null;
+            this.hubWrapperProjectVersion = null;
         }
     }
 
@@ -96,20 +96,20 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         return sameAsPostBuildScan;
     }
 
-    public String getHubProjectName() {
-        return hubProjectName;
+    public String getHubWrapperProjectName() {
+        return hubWrapperProjectName;
     }
 
-    public String getHubVersionPhase() {
-        return hubVersionPhase;
+    public String getHubWrapperVersionPhase() {
+        return hubWrapperVersionPhase;
     }
 
-    public String getHubVersionDist() {
-        return hubVersionDist;
+    public String getHubWrapperVersionDist() {
+        return hubWrapperVersionDist;
     }
 
-    public String getHubProjectVersion() {
-        return hubProjectVersion;
+    public String getHubWrapperProjectVersion() {
+        return hubWrapperProjectVersion;
     }
 
     public String getUserScopesToInclude() {
@@ -295,16 +295,16 @@ public abstract class BDBuildWrapper extends BuildWrapper {
             for (ReleaseItem release : projectVersions) {
                 if (projectVersion.equals(release.getVersion())) {
                     versionId = release.getId();
-                    if (!release.getPhase().equals(getHubVersionPhase())) {
+                    if (!release.getPhase().equals(getHubWrapperVersionPhase())) {
                         logger.warn("The selected Phase does not match the Phase of this Version. If you wish to update the Phase please do so in the Hub UI.");
                     }
-                    if (!release.getDistribution().equals(getHubVersionDist())) {
+                    if (!release.getDistribution().equals(getHubWrapperVersionDist())) {
                         logger.warn("The selected Distribution does not match the Distribution of this Version. If you wish to update the Distribution please do so in the Hub UI.");
                     }
                 }
             }
             if (versionId == null) {
-                versionId = service.createHubVersion(projectVersion, projectId, getHubVersionPhase(), getHubVersionDist());
+                versionId = service.createHubVersion(projectVersion, projectId, getHubWrapperVersionPhase(), getHubWrapperVersionDist());
                 logger.debug("Version created!");
             }
         } catch (BDRestException e) {
@@ -353,10 +353,10 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         boolean isPluginConfigured = serverInfo != null
                 && serverInfo.isPluginConfigured();
         boolean isPluginEnabled = StringUtils
-                .isNotBlank(getHubProjectName()) &&
-                StringUtils.isNotBlank(getHubVersionPhase()) &&
-                StringUtils.isNotBlank(getHubVersionDist()) &&
-                StringUtils.isNotBlank(getHubProjectVersion()) &&
+                .isNotBlank(getHubWrapperProjectName()) &&
+                StringUtils.isNotBlank(getHubWrapperVersionPhase()) &&
+                StringUtils.isNotBlank(getHubWrapperVersionDist()) &&
+                StringUtils.isNotBlank(getHubWrapperProjectVersion()) &&
                 StringUtils.isNotBlank(getUserScopesToInclude());
 
         boolean scopesProvided = true;
@@ -401,7 +401,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
                 logger.error("No Hub password configured!");
             }
         }
-        if (StringUtils.isBlank(getHubProjectName())) {
+        if (StringUtils.isBlank(getHubWrapperProjectName())) {
             isPluginConfigured = false;
             logger.error("No Hub project name configured!");
         }
@@ -413,7 +413,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         // isPluginConfigured = false;
         // logger.error("");
         // }
-        if (StringUtils.isBlank(getHubProjectVersion())) {
+        if (StringUtils.isBlank(getHubWrapperProjectVersion())) {
             isPluginConfigured = false;
             logger.error("No Hub project version configured!");
         }

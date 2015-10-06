@@ -1,6 +1,8 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
 import hudson.ProxyConfiguration;
+import hudson.model.AutoCompletionCandidates;
+import hudson.model.Describable;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.BuildWrapperDescriptor;
@@ -21,6 +23,7 @@ import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 
 import org.apache.commons.lang3.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
@@ -30,6 +33,7 @@ import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.maven.MavenBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.maven.Scope;
+import com.blackducksoftware.integration.hub.response.AutoCompleteItem;
 import com.blackducksoftware.integration.hub.response.DistributionEnum;
 import com.blackducksoftware.integration.hub.response.PhaseEnum;
 import com.blackducksoftware.integration.hub.response.ProjectItem;
@@ -78,7 +82,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
      *
      * @return
      */
-    public ListBoxModel doFillHubVersionPhaseItems() {
+    public ListBoxModel doFillHubWrapperVersionPhaseItems() {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -107,7 +111,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
      *
      * @return
      */
-    public ListBoxModel doFillHubVersionDistItems() {
+    public ListBoxModel doFillHubWrapperVersionDistItems() {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -163,20 +167,53 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
         return service;
     }
 
+    public AutoCompletionCandidates doAutoCompleteHubWrapperProjectName(@QueryParameter("value") final String hubWrapperProjectName) throws IOException,
+            ServletException {
+        AutoCompletionCandidates potentialMatches = new AutoCompletionCandidates();
+        if (StringUtils.isNotBlank(getHubServerInfo().getServerUrl()) || StringUtils.isNotBlank(getHubServerInfo().getCredentialsId())) {
+            ClassLoader originalClassLoader = Thread.currentThread()
+                    .getContextClassLoader();
+            boolean changed = false;
+            try {
+
+                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo()
+                        .getPassword());
+
+                List<AutoCompleteItem> suggestions = service.getProjectMatches(hubWrapperProjectName);
+
+                if (!suggestions.isEmpty()) {
+                    for (AutoCompleteItem projectSuggestion : suggestions) {
+                        potentialMatches.add(projectSuggestion.getValue());
+                    }
+                }
+            } catch (Exception e) {
+                // do nothing for exception, there is nowhere in the UI to display this error
+            } finally {
+                if (changed) {
+                    Thread.currentThread().setContextClassLoader(
+                            originalClassLoader);
+                }
+            }
+
+        }
+        return potentialMatches;
+    }
+
     /**
-     * Performs on-the-fly validation of the form field 'hubProjectName'. Checks to see if there is already a project in
+     * Performs on-the-fly validation of the form field 'hubWrapperProjectName'. Checks to see if there is already a
+     * project in
      * the Hub with this name.
      *
-     * @param hubProjectName
+     * @param hubWrapperProjectName
      *            This parameter receives the value that the user has typed.
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName,
-            @QueryParameter("hubProjectVersion") final String hubProjectVersion) throws IOException, ServletException {
+    public FormValidation doCheckHubWrapperProjectName(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
+            @QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion) throws IOException, ServletException {
         // Query for the project version so hopefully the check methods run for boths fields
         // when the User changes the Name of the project
-        if (hubProjectName.length() > 0) {
+        if (hubWrapperProjectName.length() > 0) {
             ClassLoader originalClassLoader = Thread.currentThread()
                     .getContextClassLoader();
             boolean changed = false;
@@ -187,7 +224,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 if (StringUtils.isBlank(getHubServerInfo().getCredentialsId())) {
                     return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
                 }
-                if (hubProjectName.matches("(\\$\\{.*\\}){1,}")) {
+                if (hubWrapperProjectName.matches("(\\$\\{.*\\}){1,}")) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
                 }
@@ -204,7 +241,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 
                 HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword);
 
-                ProjectItem project = service.getProjectByName(hubProjectName);
+                ProjectItem project = service.getProjectByName(hubWrapperProjectName);
 
                 if (project != null && StringUtils.isNotBlank(project.getId())) {
                     return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getHubServerInfo().getServerUrl()));
@@ -240,17 +277,18 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
     }
 
     /**
-     * Performs on-the-fly validation of the form field 'hubProjectVersion'. Checks to see if there is already a project
+     * Performs on-the-fly validation of the form field 'hubWrapperProjectVersion'. Checks to see if there is already a
+     * project
      * in the Hub with this name.
      *
-     * @param hubProjectVersion
+     * @param hubWrapperProjectVersion
      *            This parameter receives the value that the user has typed for the Version.
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion,
-            @QueryParameter("hubProjectName") final String hubProjectName) throws IOException, ServletException {
-        if (hubProjectVersion.length() > 0) {
+    public FormValidation doCheckHubWrapperProjectVersion(@QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion,
+            @QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName) throws IOException, ServletException {
+        if (hubWrapperProjectVersion.length() > 0) {
 
             ClassLoader originalClassLoader = Thread.currentThread()
                     .getContextClassLoader();
@@ -262,14 +300,14 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 if (StringUtils.isBlank(getHubServerInfo().getCredentialsId())) {
                     return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
                 }
-                if (StringUtils.isBlank(hubProjectName)) {
+                if (StringUtils.isBlank(hubWrapperProjectName)) {
                     return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
                 }
-                if (hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
+                if (hubWrapperProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
                 }
-                if (hubProjectName.matches("(\\$\\{.*\\}){1,}")) {
+                if (hubWrapperProjectName.matches("(\\$\\{.*\\}){1,}")) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
                 }
@@ -288,7 +326,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 
                 ProjectItem project = null;
                 try {
-                    project = service.getProjectByName(hubProjectName);
+                    project = service.getProjectByName(hubWrapperProjectName);
                 } catch (BDRestException e) {
                     return FormValidation.error(e, e.getMessage());
                 }
@@ -296,7 +334,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 
                 StringBuilder projectVersions = new StringBuilder();
                 for (ReleaseItem release : releases) {
-                    if (release.getVersion().equals(hubProjectVersion)) {
+                    if (release.getVersion().equals(hubWrapperProjectVersion)) {
                         return FormValidation.ok(Messages.HubBuildScan_getVersionExistsIn_0_(project.getName()));
                     } else {
                         if (projectVersions.length() > 0) {
@@ -344,9 +382,10 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
      * @return FormValidation
      * @throws ServletException
      */
-    public FormValidation doCreateHubProject(@QueryParameter("hubProjectName") final String hubProjectName,
-            @QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("hubVersionPhase") final String hubVersionPhase,
-            @QueryParameter("hubVersionDist") final String hubVersionDist) {
+    public FormValidation doCreateHubWrapperProject(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
+            @QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion,
+            @QueryParameter("hubWrapperVersionPhase") final String hubWrapperVersionPhase,
+            @QueryParameter("hubWrapperVersionDist") final String hubWrapperVersionDist) {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -354,13 +393,13 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 
             save();
 
-            if (StringUtils.isBlank(hubProjectName)) {
+            if (StringUtils.isBlank(hubWrapperProjectName)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
             }
-            if (StringUtils.isBlank(hubProjectVersion)) {
+            if (StringUtils.isBlank(hubWrapperProjectVersion)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
             }
-            if (hubProjectName.matches("(\\$\\{.*\\}){1,}")) {
+            if (hubWrapperProjectName.matches("(\\$\\{.*\\}){1,}")) {
                 return FormValidation
                         .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
             }
@@ -382,7 +421,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 
             ProjectItem project = null;
             try {
-                project = service.getProjectByName(hubProjectName);
+                project = service.getProjectByName(hubWrapperProjectName);
                 if (project != null && project.getId() != null && project.getName() != null) {
                     projectExists = true;
                 }
@@ -395,7 +434,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
             String projectId = null;
             if (!projectExists) {
                 try {
-                    projectId = service.createHubProject(hubProjectName);
+                    projectId = service.createHubProject(hubWrapperProjectName);
                     if (projectId != null) {
                         projectCreated = true;
                     }
@@ -406,7 +445,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 projectId = project.getId();
             }
 
-            if (hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
+            if (hubWrapperProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
                 if (projectCreated) {
                     return FormValidation
                             .warning(Messages._HubBuildScan_getProjectCreated() + " :: " + Messages.HubBuildScan_getProjectVersionContainsVariable());
@@ -415,17 +454,17 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                             .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
                 }
             }
-            if (StringUtils.isBlank(hubVersionPhase)) {
+            if (StringUtils.isBlank(hubWrapperVersionPhase)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideVersionPhase());
             }
-            if (StringUtils.isBlank(hubVersionDist)) {
+            if (StringUtils.isBlank(hubWrapperVersionDist)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideVersionDist());
             }
             String versionId = null;
             try {
                 List<ReleaseItem> releases = service.getVersionsForProject(projectId);
                 for (ReleaseItem release : releases) {
-                    if (release.getVersion().equals(hubProjectVersion)) {
+                    if (release.getVersion().equals(hubWrapperProjectVersion)) {
                         versionId = release.getId();
                     }
 
@@ -436,7 +475,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 }
 
                 if (versionId == null) {
-                    versionId = service.createHubVersion(hubProjectVersion, projectId, hubVersionPhase, hubVersionDist);
+                    versionId = service.createHubVersion(hubWrapperProjectVersion, projectId, hubWrapperVersionPhase, hubWrapperVersionDist);
                 }
             } catch (BDRestException e) {
                 if (e.getResource().getResponse().getStatus().getCode() == 412) {
@@ -506,6 +545,19 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
         // .CodeCenterBuildWrapper_getPleaseIncludeAConfiguration());
         // }
         // }
+        return FormValidation.ok();
+    }
+
+    public FormValidation doCheckSameAsPostBuildScan(@QueryParameter("sameAsPostBuildScan") final Boolean sameAsPostBuildScan,
+            @AncestorInPath AbstractProject project) throws IOException, ServletException {
+
+        if (sameAsPostBuildScan) {
+            Describable hubScan = project.getPublishersList().get(PostBuildHubScan.class);
+            if (hubScan == null) {
+                return FormValidation.error(Messages.HubWrapper_getCLIScanNotConfigured());
+            }
+        }
+
         return FormValidation.ok();
     }
 

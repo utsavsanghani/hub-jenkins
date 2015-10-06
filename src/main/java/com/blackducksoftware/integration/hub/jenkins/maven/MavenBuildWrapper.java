@@ -66,10 +66,10 @@ public class MavenBuildWrapper extends BDBuildWrapper {
     /**
      *  This is the Maven Build Wrapper of our Plugin. Can't change otherwise we break our backwards compatability
      */
-    public MavenBuildWrapper(String userScopesToInclude, boolean useSameConfigAsPostBuildScan, String hubProjectName, String hubVersionPhase,
-            String hubVersionDist, String hubProjectVersion) {
-        super(userScopesToInclude, useSameConfigAsPostBuildScan, hubProjectName,
-                hubVersionPhase, hubVersionDist, hubProjectVersion);
+    public MavenBuildWrapper(String userScopesToInclude, boolean sameAsPostBuildScan, String hubWrapperProjectName, String hubWrapperVersionPhase,
+            String hubWrapperVersionDist, String hubWrapperProjectVersion) {
+        super(userScopesToInclude, sameAsPostBuildScan, hubWrapperProjectName,
+                hubWrapperVersionPhase, hubWrapperVersionDist, hubWrapperProjectVersion);
     }
 
     // Overridden for better type safety.
