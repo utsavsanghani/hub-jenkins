@@ -37,7 +37,7 @@ import com.blackducksoftware.integration.hub.exception.BDCIScopeException;
 import com.blackducksoftware.integration.hub.exception.BDMavenRetrieverException;
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapper;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
-import com.blackducksoftware.integration.hub.jenkins.remote.GetSeparator;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetPathSeparator;
 import com.blackducksoftware.integration.hub.maven.BdMavenConfigurator;
 import com.blackducksoftware.integration.hub.maven.Scope;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
@@ -132,7 +132,7 @@ public class MavenBuildWrapper extends BDBuildWrapper {
             }
         }
 
-        if (isPluginEnabled() && validateConfiguration(buildLogger)) {
+        if (validateConfiguration(buildLogger)) {
             buildLogger.info("Build Recorder enabled");
             buildLogger.info("Hub Jenkins Plugin version : " + getDescriptor().getPluginVersion());
 
@@ -268,46 +268,46 @@ public class MavenBuildWrapper extends BDBuildWrapper {
                     FilePath remoteRootPath = new FilePath(buildOn.getRootPath(), "cache" + File.separator + "hub-jenkins");
                     removeSnapshots(remoteRootPath);
 
-                    String separator = null;
+                    String pathSeparator = null;
                     try {
                         VirtualChannel channel = buildOn.getChannel();
                         if (channel == null) {
                             buildLogger.error("Channel build on: null");
                         } else {
-                            separator = channel.call(new GetSeparator());
+                            pathSeparator = channel.call(new GetPathSeparator());
                         }
                     } catch (IOException e) {
                         buildLogger.error(e.toString(), e);
                     } catch (InterruptedException e) {
                         buildLogger.error(e.toString(), e);
                     }
-                    if (StringUtils.isEmpty(separator)) {
-                        separator = File.pathSeparator;
+                    if (StringUtils.isEmpty(pathSeparator)) {
+                        pathSeparator = File.pathSeparator;
                     }
-                    mavenClasspathAction.setSeparator(separator);
+                    mavenClasspathAction.setSeparator(pathSeparator);
 
                     if (dependencyRecorderJar != null) {
                         appendClasspath(build, remoteRootPath, mavenExtClasspath,
-                                dependencyRecorderJar.getAbsolutePath(), buildLogger, separator);
+                                dependencyRecorderJar.getAbsolutePath(), buildLogger, pathSeparator);
                         if (buildInfo != null) {
                             appendClasspath(build, remoteRootPath, mavenExtClasspath,
-                                    buildInfo.getAbsolutePath(), buildLogger, separator);
+                                    buildInfo.getAbsolutePath(), buildLogger, pathSeparator);
                         }
                         if (gsonJar != null) {
                             appendClasspath(build, remoteRootPath, mavenExtClasspath,
-                                    gsonJar.getAbsolutePath(), buildLogger, separator);
+                                    gsonJar.getAbsolutePath(), buildLogger, pathSeparator);
                         }
                         if (slf4jJar != null) {
                             appendClasspath(build, remoteRootPath, mavenExtClasspath,
-                                    slf4jJar.getAbsolutePath(), buildLogger, separator);
+                                    slf4jJar.getAbsolutePath(), buildLogger, pathSeparator);
                         }
                         if (slf4jJdkBindingJar != null) {
                             appendClasspath(build, remoteRootPath, mavenExtClasspath,
-                                    slf4jJdkBindingJar.getAbsolutePath(), buildLogger, separator);
+                                    slf4jJdkBindingJar.getAbsolutePath(), buildLogger, pathSeparator);
                         }
                         if (log4jJar != null) {
                             appendClasspath(build, remoteRootPath, mavenExtClasspath,
-                                    log4jJar.getAbsolutePath(), buildLogger, separator);
+                                    log4jJar.getAbsolutePath(), buildLogger, pathSeparator);
                         }
                         mavenClasspathAction.setMavenClasspathExtension(mavenExtClasspath.toString());
                         buildLogger.debug("Hub Build Wrapper 'maven.ext.class.path' = "
@@ -380,7 +380,7 @@ public class MavenBuildWrapper extends BDBuildWrapper {
     }
 
     private void appendClasspath(AbstractBuild<?, ?> build, FilePath remoteRoot, StringBuilder classpath,
-            String location, IntLogger buildLogger, String separator) {
+            String location, IntLogger buildLogger, String pathSeparator) {
         if (!StringUtils.isEmpty(location)) {
             File locationFile = new File(location);
             FilePath remoteFile = new FilePath(remoteRoot,
@@ -408,7 +408,7 @@ public class MavenBuildWrapper extends BDBuildWrapper {
             }
 
             if (classpath.length() > 0) {
-                classpath.append(separator);
+                classpath.append(pathSeparator);
             }
 
             if (remoteFile.isRemote()) {

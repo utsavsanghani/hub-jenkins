@@ -34,6 +34,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
+import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.response.AutoCompleteItem;
@@ -110,14 +111,18 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return "<unnamed>";
     }
 
-    public void setupService(HubIntRestService service) throws MalformedURLException {
+    public HubIntRestService getRestService(String serverUrl, String username, String password) throws BDJenkinsHubPluginException,
+            HubIntegrationException, URISyntaxException,
+            MalformedURLException {
+        HubIntRestService service = new HubIntRestService(serverUrl);
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
             ProxyConfiguration proxyConfig = jenkins.proxy;
             if (proxyConfig != null) {
-                URL serverUrl = new URL(getHubServerInfo().getServerUrl());
 
-                Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name, proxyConfig.port,
+                URL actualUrl = new URL(serverUrl);
+
+                Proxy proxy = ProxyConfiguration.createProxy(actualUrl.getHost(), proxyConfig.name, proxyConfig.port,
                         proxyConfig.noProxyHost);
 
                 if (proxy.address() != null) {
@@ -133,6 +138,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
             }
         }
+        if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
+            service.setCookies(username,
+                    password);
+        }
+
+        return service;
     }
 
     public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") String scanMemory)
@@ -331,9 +342,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             boolean changed = false;
             try {
 
-                HubIntRestService service = new HubIntRestService(getHubServerUrl());
-                setupService(service);
-                service.setCookies(getHubServerInfo().getUsername(), getHubServerInfo().getPassword());
+                HubIntRestService service = getRestService(getHubServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword());
+
                 List<AutoCompleteItem> suggestions = service.getProjectMatches(hubProjectName);
 
                 if (!suggestions.isEmpty()) {
@@ -372,10 +382,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     .getContextClassLoader();
             boolean changed = false;
             try {
-                if (StringUtils.isEmpty(getHubServerUrl())) {
+                if (StringUtils.isBlank(getHubServerUrl())) {
                     return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
                 }
-                if (StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
+                if (StringUtils.isBlank(getHubServerInfo().getCredentialsId())) {
                     return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
                 }
                 if (hubProjectName.matches("(\\$\\{.*\\}){1,}")) {
@@ -392,9 +402,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
-                HubIntRestService service = new HubIntRestService(getHubServerUrl());
-                setupService(service);
-                service.setCookies(credentialUserName, credentialPassword);
+
+                HubIntRestService service = getRestService(getHubServerUrl(), credentialUserName, credentialPassword);
 
                 ProjectItem project = service.getProjectByName(hubProjectName);
 
@@ -448,13 +457,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     .getContextClassLoader();
             boolean changed = false;
             try {
-                if (StringUtils.isEmpty(getHubServerUrl())) {
+                if (StringUtils.isBlank(getHubServerUrl())) {
                     return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
                 }
-                if (StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
+                if (StringUtils.isBlank(getHubServerInfo().getCredentialsId())) {
                     return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
                 }
-                if (StringUtils.isEmpty(hubProjectName)) {
+                if (StringUtils.isBlank(hubProjectName)) {
                     return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
                 }
                 if (hubProjectVersion.matches("(\\$\\{.*\\}){1,}")) {
@@ -475,9 +484,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
-                HubIntRestService service = new HubIntRestService(getHubServerUrl());
-                setupService(service);
-                service.setCookies(credentialUserName, credentialPassword);
+
+                HubIntRestService service = getRestService(getHubServerUrl(), credentialUserName, credentialPassword);
+
                 ProjectItem project = null;
                 try {
                     project = service.getProjectByName(hubProjectName);
@@ -542,10 +551,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 .getContextClassLoader();
         boolean changed = false;
         try {
-            if (StringUtils.isEmpty(serverUrl)) {
+            if (StringUtils.isBlank(serverUrl)) {
                 return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
             }
-            if (StringUtils.isEmpty(hubCredentialsId)) {
+            if (StringUtils.isBlank(hubCredentialsId)) {
                 return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
             }
             FormValidation urlCheck = doCheckServerUrl(serverUrl);
@@ -573,9 +582,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            HubIntRestService service = new HubIntRestService(serverUrl);
-
-            setupService(service);
+            HubIntRestService service = getRestService(getHubServerUrl(), null, null);
 
             int responseCode = service.setCookies(credentialUserName, credentialPassword);
 
@@ -614,7 +621,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     /**
-     * Validates that the URL, Username, and Password are correct for connecting to the Hub Server.
+     * Creates the Hub project AND/OR version
      *
      *
      * @param serverUrl
@@ -634,10 +641,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
             save();
 
-            if (StringUtils.isEmpty(hubProjectName)) {
+            if (StringUtils.isBlank(hubProjectName)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
             }
-            if (StringUtils.isEmpty(hubProjectVersion)) {
+            if (StringUtils.isBlank(hubProjectVersion)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
             }
             if (hubProjectName.matches("(\\$\\{.*\\}){1,}")) {
@@ -655,9 +662,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            HubIntRestService service = new HubIntRestService(getHubServerUrl());
-            setupService(service);
-            service.setCookies(credentialUserName, credentialPassword);
+            HubIntRestService service = getRestService(getHubServerUrl(), credentialUserName, credentialPassword);
 
             boolean projectExists = false;
             boolean projectCreated = false;
@@ -696,6 +701,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
                 }
+            }
+            if (StringUtils.isBlank(hubVersionPhase)) {
+                return FormValidation.error(Messages.HubBuildScan_getProvideVersionPhase());
+            }
+            if (StringUtils.isBlank(hubVersionDist)) {
+                return FormValidation.error(Messages.HubBuildScan_getProvideVersionDist());
             }
             String versionId = null;
             try {

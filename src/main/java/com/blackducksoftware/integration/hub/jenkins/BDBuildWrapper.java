@@ -146,7 +146,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
             if (build == null) {
                 buildLogger.error("Build: null. The Hub build wrapper will not run.");
             } else if (BuildHelper.isOngoing(build) || BuildHelper.isSuccess(build)) {
-                if (isPluginEnabled() && validateConfiguration(buildLogger)) {
+                if (validateConfiguration(buildLogger)) {
                     // // ** read build-info.json file
                     // BuildInfo buildInfo = readBuildInfo(buildInfoFile, build.getId(), buildLogger);
                     // CodeCenterCIFacade facade = getFacade(descriptor, buildLogger);
@@ -368,9 +368,66 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         return isPluginConfigured && isPluginEnabled && scopesProvided;
     }
 
+    /**
+     * Determine if plugin is configured correctly
+     *
+     * @return true if Code Center server info is complete and if
+     *         CodeCenterApplication Name and CodeCenterApplicationVersion are
+     *         not empty
+     */
     public Boolean validateConfiguration(IntLogger logger) {
+        // Checks to make sure the user provided an application name and version
+        // also checks to make sure a server url, username, and password were
+        // provided
+        BDBuildWrapperDescriptor descriptor = getDescriptor();
+        HubServerInfo serverInfo = descriptor.getHubServerInfo();
 
-        return false;
+        boolean isPluginConfigured = true;
+
+        if (StringUtils.isBlank(serverInfo.getServerUrl())) {
+            isPluginConfigured = false;
+            logger.error("The Hub server URL is not configured!");
+        }
+        if (StringUtils.isBlank(serverInfo.getCredentialsId())) {
+            isPluginConfigured = false;
+            logger.error("No Hub credentials configured!");
+        } else {
+            if (StringUtils.isBlank(serverInfo.getUsername())) {
+                isPluginConfigured = false;
+                logger.error("No Hub username configured!");
+            }
+            if (StringUtils.isBlank(serverInfo.getPassword())) {
+                isPluginConfigured = false;
+                logger.error("No Hub password configured!");
+            }
+        }
+        if (StringUtils.isBlank(getHubProjectName())) {
+            isPluginConfigured = false;
+            logger.error("No Hub project name configured!");
+        }
+        // if (StringUtils.isBlank(getHubVersionPhase())) {
+        // isPluginConfigured = false;
+        // logger.error("");
+        // }
+        // if (StringUtils.isBlank(getHubVersionDist())) {
+        // isPluginConfigured = false;
+        // logger.error("");
+        // }
+        if (StringUtils.isBlank(getHubProjectVersion())) {
+            isPluginConfigured = false;
+            logger.error("No Hub project version configured!");
+        }
+        if (StringUtils.isBlank(getUserScopesToInclude())) {
+            isPluginConfigured = false;
+            logger.error("No Maven scopes configured!");
+        } else {
+            List<String> scopes = getScopesAsList(logger);
+            if (scopes == null || scopes.isEmpty()) {
+                isPluginConfigured = false;
+            }
+        }
+
+        return isPluginConfigured;
     }
 
     protected void checkScopesValid(List<String> errorMessage, List<String> scopes) {
