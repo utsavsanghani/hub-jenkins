@@ -79,8 +79,6 @@ function enableSameAsPostBuildScan(onload) {
 		disableWrapperFields();
 		
 	} else {
-		addOnBlurToScanFields();
-		
 		var hubProjectName = getFieldByNameWrapper('_.hubProjectName');
 		var hubProjectVersion = getFieldByNameWrapper('_.hubProjectVersion');
 		var hubVersionPhase = getFieldByNameWrapper('_.hubVersionPhase');
@@ -94,6 +92,8 @@ function enableSameAsPostBuildScan(onload) {
 		// Only run this if the scan has been configured
 		if ((hubProjectName) && (hubProjectVersion) && (hubVersionPhase)
 				&& (hubVersionDist)) {
+			addOnBlurToScanFields();
+				
 			//We disable the wrapper fields since we want to use the scan fields
 			disableWrapperFields();
 

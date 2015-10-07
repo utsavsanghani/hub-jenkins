@@ -26,18 +26,30 @@ function customCreateProject(method, withVars, button) {
 		scanChecker(hubProjectVersion);
 	}, 1000);
 
-	var sameAsPostBuildScan = getFieldByNameScan('_.sameAsPostBuildScan');
-	if (sameAsPostBuildScan && sameAsPostBuildScan.checked) {
-		// We found the Build wrapper checkbox and it is checked to use the same configuration as the Cli scan
-		// So we run the check on the wrapper fields as well
-		
-		var hubWrapperProjectName = getFieldByNameScan('_.hubWrapperProjectName');
-		var hubWrapperProjectVersion = getFieldByNameScan('_.hubWrapperProjectVersion');
-		
-		setTimeout(function() {
-			wrapperChecker(hubWrapperProjectName);
-			wrapperChecker(hubWrapperProjectVersion);
-		}, 1000);
+	if(checkWrapperIsEnabled()){
+		var sameAsPostBuildScan = getFieldByNameScan('_.sameAsPostBuildScan');
+		if (sameAsPostBuildScan && sameAsPostBuildScan.checked) {
+			// We found the Build wrapper checkbox and it is checked to use the same configuration as the Cli scan
+			// So we run the check on the wrapper fields as well
+			
+			var hubWrapperProjectName = getFieldByNameScan('_.hubWrapperProjectName');
+			var hubWrapperProjectVersion = getFieldByNameScan('_.hubWrapperProjectVersion');
+			
+			setTimeout(function() {
+				wrapperChecker(hubWrapperProjectName);
+				wrapperChecker(hubWrapperProjectVersion);
+			}, 1000);
+		}
+	}
+}
+
+function checkWrapperIsEnabled(){
+	//add gradle when we have the gradle wrapper
+	var mavenWrapperCheckBox = getFieldByNameScan('com-blackducksoftware-integration-hub-jenkins-maven-MavenBuildWrapper');
+	if (mavenWrapperCheckBox && mavenWrapperCheckBox.checked) {
+		return true;
+	} else{
+		return false;
 	}
 }
 
@@ -50,14 +62,16 @@ function useSameAsBuildWrapper(checkbox, onload) {
 	
 	// When the window loads this will already run so we dont need to trigger it again
 	if(!onload){
-		var sameAsPostBuildScan = getFieldByNameWrapper('_.sameAsPostBuildScan');
-		if (sameAsPostBuildScan){
-			if (sameAsPostBuildScan.checked) {
-				// We found the Build wrapper checkbox and it is checked to use the same configuration as the Cli scan
-				// So we trigger its enable method as well
-				enableSameAsPostBuildScan(false);
-			} else{
-				disableSameAsPostBuildScan(false);
+		if(checkWrapperIsEnabled()){
+			var sameAsPostBuildScan = getFieldByNameWrapper('_.sameAsPostBuildScan');
+			if (sameAsPostBuildScan){
+				if (sameAsPostBuildScan.checked) {
+					// We found the Build wrapper checkbox and it is checked to use the same configuration as the Cli scan
+					// So we trigger its enable method as well
+					enableSameAsPostBuildScan(false);
+				} else{
+					disableSameAsPostBuildScan(false);
+				}
 			}
 		}
 	}
@@ -65,7 +79,7 @@ function useSameAsBuildWrapper(checkbox, onload) {
 
 function enableSameAsBuildWrapper(onload) {
 	var sameAsPostBuildScan = getFieldByNameScan('_.sameAsPostBuildScan');
-	if (sameAsPostBuildScan && sameAsPostBuildScan.checked) {
+	if (checkWrapperIsEnabled() && sameAsPostBuildScan && sameAsPostBuildScan.checked) {
 		// The Build wrapper and the Cli are both checked to use the other configuration
 		// This is obviously an issue so we log an error to the screen
 		
@@ -76,8 +90,7 @@ function enableSameAsBuildWrapper(onload) {
 		sameAsBuildWrapperMessageArea.appendChild(newScanSpan);
 		disableScanFields();
 	} else {
-		addOnBlurToWrapperFields();
-
+		
 		var hubWrapperProjectName = getFieldByNameScan('_.hubWrapperProjectName');
 		var hubWrapperProjectVersion = getFieldByNameScan('_.hubWrapperProjectVersion');
 		var hubWrapperVersionPhase = getFieldByNameScan('_.hubWrapperVersionPhase');
@@ -88,9 +101,11 @@ function enableSameAsBuildWrapper(onload) {
 		var hubVersionPhase = getFieldByNameScan('_.hubVersionPhase');
 		var hubVersionDist = getFieldByNameScan('_.hubVersionDist');
 
-		// Only run this if the wrapper has been configured
-		if ((hubWrapperProjectName) && (hubWrapperProjectVersion)
-				&& (hubWrapperVersionPhase) && (hubWrapperVersionDist)) {
+		// Only run this if a wrapper has been configured
+		if (checkWrapperIsEnabled()) {
+			
+			addOnBlurToWrapperFields();
+			
 			//We disable the scan fields since we want to use the wrapper fields
 			disableScanFields();
 
