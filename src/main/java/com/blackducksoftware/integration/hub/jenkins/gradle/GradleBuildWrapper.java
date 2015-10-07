@@ -28,6 +28,7 @@ import com.blackducksoftware.integration.hub.BuilderType;
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapper;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetSeparator;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 
 /**
@@ -106,7 +107,7 @@ public class GradleBuildWrapper extends BDBuildWrapper {
             if (builders == null || builders.isEmpty()) {
                 // User didn't configure the job with a Builder
                 buildLogger.error("No Builder found for this job.");
-                buildLogger.error("Will not run the Code Center plugin.");
+                buildLogger.error("Will not run the Hub Gradle Build wrapper.");
                 build.setResult(Result.UNSTABLE);
                 return new Environment() {
                 }; // Continue with the rest of the Build
@@ -120,7 +121,7 @@ public class GradleBuildWrapper extends BDBuildWrapper {
             if (gradleBuilder == null) {
                 // User didn't configure the job with a Gradle Builder
                 buildLogger.error("This Wrapper should only be run with a Gradle Builder");
-                buildLogger.error("Will not run the Code Center plugin.");
+                buildLogger.error("Will not run the Hub Gradle Build wrapper.");
                 build.setResult(Result.UNSTABLE);
                 return new Environment() {
                 }; // Continue with the rest of the Build
@@ -217,6 +218,23 @@ public class GradleBuildWrapper extends BDBuildWrapper {
                                 rootBuildScriptDir = handleVariableReplacement(variables, rootBuildScriptDir);
                             }
 
+                            String fileSeparator = null;
+                            try {
+                                VirtualChannel channel = build.getBuiltOn().getChannel();
+                                if (channel == null) {
+                                    buildLogger.error("Channel build on: null");
+                                } else {
+                                    fileSeparator = channel.call(new GetSeparator());
+                                }
+                            } catch (IOException e) {
+                                buildLogger.error(e.toString(), e);
+                            } catch (InterruptedException e) {
+                                buildLogger.error(e.toString(), e);
+                            }
+                            if (StringUtils.isEmpty(fileSeparator)) {
+                                fileSeparator = File.separator;
+                            }
+
                             FilePath workspace = build.getWorkspace();
                             if (workspace == null) {
                                 buildLogger.error("Workspace: null");
@@ -224,10 +242,10 @@ public class GradleBuildWrapper extends BDBuildWrapper {
                                 return true;
                             } else {
                                 if (!StringUtils.startsWithIgnoreCase(rootBuildScriptDir, workspace.getRemote())) {
-                                    if (workspace.getRemote().endsWith(File.separator)) {
+                                    if (workspace.getRemote().endsWith(fileSeparator)) {
                                         rootBuildScriptDir = workspace + rootBuildScriptDir;
                                     } else {
-                                        rootBuildScriptDir = workspace + File.separator + rootBuildScriptDir;
+                                        rootBuildScriptDir = workspace + fileSeparator + rootBuildScriptDir;
                                     }
                                 }
 
@@ -240,8 +258,10 @@ public class GradleBuildWrapper extends BDBuildWrapper {
                                     if (channel == null) {
                                         buildLogger.error("Channel build on: null");
                                     } else {
-                                        buildInfoFile = new FilePath(channel, rootBuildScriptDir + File.separator + "build"
-                                                + File.separator + "BlackDuck" + File.separator + BuildInfo.OUTPUT_FILE_NAME);
+                                        buildInfoFile = new FilePath(channel, rootBuildScriptDir);
+                                        buildInfoFile = new FilePath(buildInfoFile, "build");
+                                        buildInfoFile = new FilePath(buildInfoFile, "BlackDuck");
+                                        buildInfoFile = new FilePath(buildInfoFile, BuildInfo.OUTPUT_FILE_NAME);
                                     }
                                 }
                                 if (buildInfoFile != null) {

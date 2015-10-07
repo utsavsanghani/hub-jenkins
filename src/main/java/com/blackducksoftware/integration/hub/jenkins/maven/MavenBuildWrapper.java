@@ -111,7 +111,7 @@ public class MavenBuildWrapper extends BDBuildWrapper {
             if (builders == null || builders.isEmpty()) {
                 // User didn't configure the job with a Builder
                 buildLogger.error("No Builder found for this job.");
-                buildLogger.error("Will not run the Hub Build wrapper.");
+                buildLogger.error("Will not run the Hub Maven Build wrapper.");
                 build.setResult(Result.UNSTABLE);
                 return new Environment() {
                 }; // Continue with the rest of the Build
@@ -125,7 +125,7 @@ public class MavenBuildWrapper extends BDBuildWrapper {
             if (mavenBuilder == null) {
                 // User didn't configure the job with a Maven Builder
                 buildLogger.error("This Wrapper should only be run with a Maven Builder");
-                buildLogger.error("Will not run the Hub Build wrapper.");
+                buildLogger.error("Will not run the Hub Maven Build wrapper.");
                 build.setResult(Result.UNSTABLE);
                 return new Environment() {
                 }; // Continue with the rest of the Build
