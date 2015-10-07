@@ -18,13 +18,27 @@ function customWrapperCreateProject(method, withVars, button) {
 	var hubWrapperProjectName = getFieldByNameWrapper('_.hubWrapperProjectName');
 	var hubWrapperProjectVersion = getFieldByNameWrapper('_.hubWrapperProjectVersion');
 
-	// wait 900 ms before running the checks
+	// wait 1000 ms before running the checks
 	// otherwise it happens too quick and shows that the project doesnt
 	// exist yet
 	setTimeout(function() {
 		wrapperChecker(hubWrapperProjectName);
 		wrapperChecker(hubWrapperProjectVersion);
-	}, 900);
+	}, 1000);
+	
+	var sameAsBuildWrapper = getFieldByNameWrapper('_.sameAsBuildWrapper');
+	if (sameAsBuildWrapper && sameAsBuildWrapper.checked) {
+		// We found the Cli scan checkbox and it is checked to use the same configuration as the Build wrapper
+		// So we run the check on the cli fields as well
+		
+		var hubProjectName = getFieldByNameWrapper('_.hubProjectName');
+		var hubProjectVersion = getFieldByNameWrapper('_.hubProjectVersion');
+		
+		setTimeout(function() {
+			wrapperChecker(hubProjectName);
+			wrapperChecker(hubProjectVersion);
+		}, 1000);
+	}
 
 }
 
@@ -34,10 +48,14 @@ function useSameAsPostBuildScan(checkbox, onload) {
 	} else {
 		disableSameAsPostBuildScan(onload);
 	}
-	if(!onload){	
+
+	// When the window loads this will already run so we dont need to trigger it again
+	if(!onload){
 		var sameAsBuildWrapper = getFieldByNameScan('_.sameAsBuildWrapper');
 		if (sameAsBuildWrapper){
 			if(sameAsBuildWrapper.checked) {
+				// We found the Cli scan checkbox and it is checked to use the same configuration as the Build wrapper
+				// So we trigger its enable method as well
 				enableSameAsBuildWrapper(false);
 			} else{
 				disableSameAsBuildWrapper(false);
@@ -47,17 +65,22 @@ function useSameAsPostBuildScan(checkbox, onload) {
 }
 
 function enableSameAsPostBuildScan(onload) {
-	addOnBlurToScanFields();
 
 	var sameAsBuildWrapper = getFieldByNameWrapper('_.sameAsBuildWrapper');
 	if (sameAsBuildWrapper && sameAsBuildWrapper.checked) {
+		// The Build wrapper and the Cli are both checked to use the other configuration
+		// This is obviously an issue so we log an error to the screen
+		
 		var sameAsPostBuildScanMessageArea = document.getElementById('sameAsPostBuildScanMessageArea');
 		sameAsPostBuildScanMessageArea.className = 'error';
 		var newWrapperSpan = document.createElement('span');
 		newWrapperSpan.innerHTML = "The Post-build Action Hub Integration is configured to use this configuration!";
 		sameAsPostBuildScanMessageArea.appendChild(newWrapperSpan);
-
+		disableWrapperFields();
+		
 	} else {
+		addOnBlurToScanFields();
+		
 		var hubProjectName = getFieldByNameWrapper('_.hubProjectName');
 		var hubProjectVersion = getFieldByNameWrapper('_.hubProjectVersion');
 		var hubVersionPhase = getFieldByNameWrapper('_.hubVersionPhase');
@@ -68,8 +91,10 @@ function enableSameAsPostBuildScan(onload) {
 		var hubWrapperVersionPhase = getFieldByNameWrapper('_.hubWrapperVersionPhase');
 		var hubWrapperVersionDist = getFieldByNameWrapper('_.hubWrapperVersionDist');
 
+		// Only run this if the scan has been configured
 		if ((hubProjectName) && (hubProjectVersion) && (hubVersionPhase)
 				&& (hubVersionDist)) {
+			//We disable the wrapper fields since we want to use the scan fields
 			disableWrapperFields();
 
 			hubWrapperProjectName.value = hubProjectName.value;
@@ -83,9 +108,12 @@ function enableSameAsPostBuildScan(onload) {
 				setTimeout(function() {
 					wrapperChecker(hubWrapperProjectName);
 					wrapperChecker(hubWrapperProjectVersion);
-				}, 100);
+				}, 1000);
 			}
 		} else {
+			//The scan is not configured so we cant use the same configuration as it
+			// so we log the error for the user
+			
 			var sameAsPostBuildScanMessageArea = document
 					.getElementById('sameAsPostBuildScanMessageArea');
 			sameAsPostBuildScanMessageArea.className = 'error';
@@ -97,8 +125,11 @@ function enableSameAsPostBuildScan(onload) {
 }
 
 function disableSameAsPostBuildScan(onload) {
+	//We enable the wrapper fields since we no longer want to use the scan fields
 	enableWrapperFields();
 
+	
+	// We remove the appropriate error messages from the UI
 	var sameAsPostBuildScanMessageArea = document.getElementById('sameAsPostBuildScanMessageArea');
 	sameAsPostBuildScanMessageArea.className = '';
 	while (sameAsPostBuildScanMessageArea.firstChild) {
@@ -124,10 +155,17 @@ function enableWrapperFields() {
 	var hubWrapperVersionPhase = getFieldByNameWrapper('_.hubWrapperVersionPhase');
 	var hubWrapperVersionDist = getFieldByNameWrapper('_.hubWrapperVersionDist');
 
+	// Make sure the fields are no longer read only or disabled
 	hubWrapperProjectName.readOnly = false;
 	hubWrapperProjectVersion.readOnly = false;
 	hubWrapperVersionPhase.disabled = false;
 	hubWrapperVersionDist.disabled = false;
+	
+	//Remove the readonly css class we added to the fields
+	hubWrapperProjectName.className = hubWrapperProjectName.className.replace(/ bdReadOnly/g,"");
+	hubWrapperProjectVersion.className = hubWrapperProjectVersion.className.replace(/ bdReadOnly/g,"");
+	hubWrapperVersionPhase.className = hubWrapperVersionPhase.className.replace(/ bdReadOnly/g,"");
+	hubWrapperVersionDist.className = hubWrapperVersionDist.className.replace(/ bdReadOnly/g,"");
 
 }
 
@@ -137,10 +175,17 @@ function disableWrapperFields() {
 	var hubWrapperVersionPhase = getFieldByNameWrapper('_.hubWrapperVersionPhase');
 	var hubWrapperVersionDist = getFieldByNameWrapper('_.hubWrapperVersionDist');
 
+	// Make sure the fields are read only or disabled
 	hubWrapperProjectName.readOnly = true;
 	hubWrapperProjectVersion.readOnly = true;
 	hubWrapperVersionPhase.disabled = true;
 	hubWrapperVersionDist.disabled = true;
+	
+	//Add the readonly css class to the fields	
+	hubWrapperProjectName.className = hubWrapperProjectName.className + ' bdReadOnly';
+	hubWrapperProjectVersion.className = hubWrapperProjectVersion.className + ' bdReadOnly';
+	hubWrapperVersionPhase.className = hubWrapperVersionPhase.className + ' bdReadOnly';
+	hubWrapperVersionDist.className = hubWrapperVersionDist.className + ' bdReadOnly';
 }
 
 
@@ -155,8 +200,8 @@ window.onload = function() {
 };
 
 function addOnBlurToScanFields() {
-	wrapperOnBlur('_.hubWrapperProjectName', '_.hubProjectName');
-	wrapperOnBlur('_.hubWrapperProjectVersion', '_.hubProjectVersion');
+	projectWrapperOnBlur('_.hubWrapperProjectName','_.hubWrapperProjectVersion', '_.hubProjectName');
+	projectWrapperOnBlur('_.hubWrapperProjectVersion','_.hubWrapperProjectName', '_.hubProjectVersion');
 	wrapperOnBlur('_.hubWrapperVersionPhase', '_.hubVersionPhase');
 	wrapperOnBlur('_.hubWrapperVersionDist', '_.hubVersionDist');
 
@@ -166,6 +211,9 @@ function wrapperOnBlur(wrapperFieldName, scanFieldName) {
 	var scanField = getFieldByNameWrapper(scanFieldName);
 	if(scanField){
 		scanField.onblur = function() {
+			// When the scan field is changed and then loses focus, this method will run 
+			// This will trigger the specified wrapper field to update 
+			// ONLY IF the wrapper is set to use the same config as the scan
 			
 			var sameAsPostBuildScan = getFieldByNameWrapper('_.sameAsPostBuildScan');
 			if (sameAsPostBuildScan && sameAsPostBuildScan.checked) {
@@ -173,7 +221,32 @@ function wrapperOnBlur(wrapperFieldName, scanFieldName) {
 				wrapperField.value = scanField.value
 				setTimeout(function() {
 					wrapperChecker(wrapperField);
-				}, 100);
+				}, 900);
+			}
+		};
+	}
+}
+
+function projectWrapperOnBlur(wrapperFirstFieldName, wrapperSecondFieldName, scanFieldName) {
+	//This is a separate method for when the project name or version is updated to trigger
+	// the validation of both of the appropriate fields
+	
+	var scanField = getFieldByNameWrapper(scanFieldName);
+	if(scanField){
+		scanField.onblur = function() {
+			// When the scan field is changed and then loses focus, this method will run 
+			// This will trigger the specified wrapper field to update 
+			// ONLY IF the wrapper is set to use the same config as the scan
+			
+			var sameAsPostBuildScan = getFieldByNameWrapper('_.sameAsPostBuildScan');
+			if (sameAsPostBuildScan && sameAsPostBuildScan.checked) {
+				var wrapperFirstField = getFieldByNameWrapper(wrapperFirstFieldName);
+				var wrapperSecondField = getFieldByNameWrapper(wrapperSecondFieldName);
+				wrapperFirstField.value = scanField.value
+				setTimeout(function() {
+					wrapperChecker(wrapperFirstField);
+					wrapperChecker(wrapperSecondField);
+				}, 900);
 			}
 		};
 	}

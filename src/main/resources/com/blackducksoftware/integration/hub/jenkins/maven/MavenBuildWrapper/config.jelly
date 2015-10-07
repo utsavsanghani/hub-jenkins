@@ -5,6 +5,7 @@
 	<st:once>
 		<script type="text/javascript"
 			src="${rootURL}/plugin/hub-jenkins/js/HubJenkinsWrapper.js" />
+		<link href="${rootURL}/plugin/hub-jenkins/css/BdHubCustom.css"  rel="stylesheet" type="text/css"  />
 	</st:once>
 	
 		
