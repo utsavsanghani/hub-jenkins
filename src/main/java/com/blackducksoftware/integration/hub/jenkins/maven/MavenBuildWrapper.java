@@ -265,7 +265,8 @@ public class MavenBuildWrapper extends BDBuildWrapper {
                 if (buildOn == null) {
                     buildLogger.error("Node build on: null");
                 } else {
-                    FilePath remoteRootPath = new FilePath(buildOn.getRootPath(), "cache" + File.separator + "hub-jenkins");
+                    FilePath remoteRootPath = new FilePath(buildOn.getRootPath(), "cache");
+                    remoteRootPath = new FilePath(remoteRootPath, "hub-jenkins");
                     removeSnapshots(remoteRootPath);
 
                     String pathSeparator = null;
