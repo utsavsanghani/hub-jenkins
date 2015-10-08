@@ -228,7 +228,7 @@ public class PostBuildHubScan extends Recorder {
         HubJenkinsLogger logger = new HubJenkinsLogger(listener);
         logger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
         setResult(build.getResult());
-        if (result.equals(Result.SUCCESS)) {
+        if (BuildHelper.isSuccess(build)) {
             try {
                 logger.info("Starting BlackDuck Scans...");
 

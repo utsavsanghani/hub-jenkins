@@ -1,8 +1,13 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import hudson.maven.MavenModuleSet;
 import hudson.model.AutoCompletionCandidates;
+import hudson.model.FreeStyleProject;
+import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
@@ -12,14 +17,18 @@ import java.util.Properties;
 
 import junit.framework.Assert;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.WithoutJenkins;
 
+import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
+import com.blackducksoftware.integration.hub.jenkins.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.response.DistributionEnum;
 import com.blackducksoftware.integration.hub.response.PhaseEnum;
@@ -29,7 +38,8 @@ import com.cloudbees.plugins.credentials.SystemCredentialsProvider.UserFacingAct
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
-public class PostBuildScanDescriptorTest {
+public class BDBuildWrapperDescriptorTest {
+
     private static final String PASSWORD_WRONG = "Assert.failurePassword";
 
     private static final String USERNAME_NON_EXISTING = "Assert.failureUser";
@@ -41,8 +51,6 @@ public class PostBuildScanDescriptorTest {
     private static Properties testProperties;
 
     private static JenkinsHubIntTestHelper restHelper;
-
-    private static PostBuildScanDescriptor descriptor;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -79,6 +87,12 @@ public class PostBuildScanDescriptorTest {
         }
     }
 
+    public void addHubServerInfo(HubServerInfo hubServerInfo) {
+        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        descriptor.setHubServerInfo(hubServerInfo);
+        j.getInstance().getDescriptorList(Publisher.class).add(descriptor);
+    }
+
     public UsernamePasswordCredentialsImpl addCredentialToGlobalStore(String username, String password) {
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 username, password);
@@ -92,62 +106,18 @@ public class PostBuildScanDescriptorTest {
     }
 
     @Test
-    public void testConnectionNonExistentUrl() {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
-        UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
-                testProperties.getProperty("TEST_USERNAME"),
-                testProperties.getProperty("TEST_PASSWORD"));
-        FormValidation form = descriptor.doTestConnection("http://ASSERTNONEXISTENTURL", credential.getId());
-        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getCanNotReachThisServer_0_("http://ASSERTNONEXISTENTURL")));
-
-    }
-
-    @Test
-    public void testConnectionNonExistentUser() {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
-        FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), "NONEXITENTCREDENTIAL");
-        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertTrue(form.getMessage().contains("User needs to specify which credentials to use."));
-
-    }
-
-    @Test
-    public void testConnectionUnAuthorized() {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
-        UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(USERNAME_NON_EXISTING,
-                PASSWORD_WRONG);
-        FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId());
-        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertTrue(form.getMessage(), form.getMessage().contains("Unauthorized (401)"));
-
-    }
-
-    @Test
-    public void testConnection() {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
-        UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
-                testProperties.getProperty("TEST_USERNAME"),
-                testProperties.getProperty("TEST_PASSWORD"));
-        FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId());
-        Assert.assertEquals(FormValidation.Kind.OK, form.kind);
-        Assert.assertTrue(form.getMessage(), form.getMessage().contains("Credentials valid for: " + testProperties.getProperty("TEST_HUB_SERVER_URL")));
-
-    }
-
-    @Test
     public void testCreateProjectAndCheckForNameAndRelease() throws Exception, InterruptedException {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
                 testProperties.getProperty("TEST_USERNAME"),
                 testProperties.getProperty("TEST_PASSWORD"));
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        addHubServerInfo(hubServerInfo);
 
         try {
-            FormValidation form = descriptor.doCreateHubProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
+            FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
                     "DEVELOPMENT", "EXTERNAL");
 
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
@@ -156,11 +126,12 @@ public class PostBuildScanDescriptorTest {
             // wait 1.5 seconds before checking for the project and release
             Thread.sleep(3000);
             // Need to wait a second before checking if the project exists or it will not be recognized
-            FormValidation form2 = descriptor.doCheckHubProjectName(testProperties.getProperty("TEST_PROJECT"), null);
+            FormValidation form2 = descriptor.doCheckHubWrapperProjectName(testProperties.getProperty("TEST_PROJECT"), null);
             Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
             Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectExistsIn_0_(testProperties.getProperty("TEST_HUB_SERVER_URL")));
 
-            FormValidation form3 = descriptor.doCheckHubProjectVersion(testProperties.getProperty("TEST_VERSION"), testProperties.getProperty("TEST_PROJECT"));
+            FormValidation form3 = descriptor.doCheckHubWrapperProjectVersion(testProperties.getProperty("TEST_VERSION"),
+                    testProperties.getProperty("TEST_PROJECT"));
             assertEquals(FormValidation.Kind.OK, form3.kind);
             assertTrue(form3.getMessage().contains(Messages.HubBuildScan_getVersionExistsIn_0_("")));
         } finally {
@@ -171,22 +142,22 @@ public class PostBuildScanDescriptorTest {
 
     @Test
     public void testCreateProjectDuplicateNameDifferentRelease() throws Exception, InterruptedException {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
                 testProperties.getProperty("TEST_USERNAME"),
                 testProperties.getProperty("TEST_PASSWORD"));
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        addHubServerInfo(hubServerInfo);
         try {
             Thread.sleep(3000);
-            FormValidation form = descriptor.doCreateHubProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
+            FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
                     "DEVELOPMENT", "EXTERNAL");
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
             Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectAndVersionCreated());
             Thread.sleep(3000);
-            FormValidation form2 = descriptor.doCreateHubProject(testProperties.getProperty("TEST_PROJECT"), "New Release", "DEVELOPMENT", "EXTERNAL");
+            FormValidation form2 = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), "New Release", "DEVELOPMENT", "EXTERNAL");
             Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
             Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectAndVersionCreated());
         } finally {
@@ -196,23 +167,23 @@ public class PostBuildScanDescriptorTest {
 
     @Test
     public void testCreateProjectDuplicateRelease() throws Exception, InterruptedException {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
                 testProperties.getProperty("TEST_USERNAME"),
                 testProperties.getProperty("TEST_PASSWORD"));
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        addHubServerInfo(hubServerInfo);
 
         try {
             Thread.sleep(3000);
-            FormValidation form = descriptor.doCreateHubProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
+            FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
                     "DEVELOPMENT", "EXTERNAL");
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
             Assert.assertEquals(Messages.HubBuildScan_getProjectAndVersionCreated(), form.getMessage());
             Thread.sleep(3000);
-            FormValidation form2 = descriptor.doCreateHubProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
+            FormValidation form2 = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
                     "DEVELOPMENT", "EXTERNAL");
             Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
             Assert.assertEquals(Messages.HubBuildScan_getProjectAndVersionExist(), form2.getMessage());
@@ -223,26 +194,26 @@ public class PostBuildScanDescriptorTest {
 
     @Test
     public void testCreateProjectVariables() throws Exception {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
                 testProperties.getProperty("TEST_USERNAME"),
                 testProperties.getProperty("TEST_PASSWORD"));
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        addHubServerInfo(hubServerInfo);
 
-        FormValidation form = descriptor.doCreateHubProject("${JOB_NAME}", testProperties.getProperty("TEST_VERSION"), "DEVELOPMENT", "EXTERNAL");
+        FormValidation form = descriptor.doCreateHubWrapperProject("${JOB_NAME}", testProperties.getProperty("TEST_VERSION"), "DEVELOPMENT", "EXTERNAL");
 
         Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNameContainsVariable());
 
-        FormValidation form2 = descriptor.doCreateHubProject(testProperties.getProperty("TEST_PROJECT"), "${BUILD_NUMBER}", "DEVELOPMENT", "EXTERNAL");
+        FormValidation form2 = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), "${BUILD_NUMBER}", "DEVELOPMENT", "EXTERNAL");
 
         Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
         Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectCreated() + " :: " + Messages.HubBuildScan_getProjectVersionContainsVariable());
 
-        FormValidation form3 = descriptor.doCreateHubProject("${JOB_NAME}", "${BUILD_NUMBER}", "DEVELOPMENT", "EXTERNAL");
+        FormValidation form3 = descriptor.doCreateHubWrapperProject("${JOB_NAME}", "${BUILD_NUMBER}", "DEVELOPMENT", "EXTERNAL");
 
         Assert.assertEquals(FormValidation.Kind.WARNING, form3.kind);
         Assert.assertEquals(form3.getMessage(), Messages.HubBuildScan_getProjectNameContainsVariable());
@@ -251,52 +222,52 @@ public class PostBuildScanDescriptorTest {
 
     @Test
     public void testCheckForProjectNameVariable() throws Exception {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
 
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId("FAKE ID");
         hubServerInfo.setServerUrl("FAKE SERVER");
-        descriptor.setHubServerInfo(hubServerInfo);
+        addHubServerInfo(hubServerInfo);
 
-        FormValidation form = descriptor.doCheckHubProjectName("${JOB_NAME}", null);
+        FormValidation form = descriptor.doCheckHubWrapperProjectName("${JOB_NAME}", null);
         Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNameContainsVariable());
     }
 
     @Test
     public void testCheckForProjectNameNotExistent() throws Exception {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
                 testProperties.getProperty("TEST_USERNAME"),
                 testProperties.getProperty("TEST_PASSWORD"));
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        addHubServerInfo(hubServerInfo);
 
-        FormValidation form = descriptor.doCheckHubProjectName(PROJECT_NAME_NOT_EXISTING, null);
+        FormValidation form = descriptor.doCheckHubWrapperProjectName(PROJECT_NAME_NOT_EXISTING, null);
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
         Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_()));
     }
 
     @Test
     public void testCheckForProjectReleaseNotExistent() throws Exception, InterruptedException {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
                 testProperties.getProperty("TEST_USERNAME"),
                 testProperties.getProperty("TEST_PASSWORD"));
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        addHubServerInfo(hubServerInfo);
 
         try {
-            FormValidation form = descriptor.doCreateHubProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
+            FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
                     "DEVELOPMENT", "EXTERNAL");
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
             Assert.assertEquals(Messages.HubBuildScan_getProjectAndVersionCreated(), form.getMessage());
             Thread.sleep(2000);
-            FormValidation form2 = descriptor.doCheckHubProjectVersion(PROJECT_RELEASE_NOT_EXISTING, testProperties.getProperty("TEST_PROJECT"));
+            FormValidation form2 = descriptor.doCheckHubWrapperProjectVersion(PROJECT_RELEASE_NOT_EXISTING, testProperties.getProperty("TEST_PROJECT"));
             Assert.assertEquals(FormValidation.Kind.ERROR, form2.kind);
             Assert.assertTrue(form2.getMessage(),
                     form2.getMessage().contains(Messages.HubBuildScan_getVersionNonExistingIn_0_(testProperties.getProperty("TEST_PROJECT"), "")));
@@ -307,67 +278,42 @@ public class PostBuildScanDescriptorTest {
 
     @Test
     public void testCheckForReleaseNameVariable() throws Exception {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId("FAKE ID");
         hubServerInfo.setServerUrl("FAKE SERVER");
-        descriptor.setHubServerInfo(hubServerInfo);
+        addHubServerInfo(hubServerInfo);
 
-        FormValidation form = descriptor.doCheckHubProjectVersion("${BUILD_NUMBER}", null);
+        FormValidation form = descriptor.doCheckHubWrapperProjectVersion("${BUILD_NUMBER}", null);
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProvideProjectName());
 
-        FormValidation form2 = descriptor.doCheckHubProjectVersion("${BUILD_NUMBER}", testProperties.getProperty("TEST_PROJECT"));
+        FormValidation form2 = descriptor.doCheckHubWrapperProjectVersion("${BUILD_NUMBER}", testProperties.getProperty("TEST_PROJECT"));
         Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
         Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectVersionContainsVariable());
     }
 
     @Test
     public void testCheckForProjectReleaseNotExistentProject() throws Exception {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
                 testProperties.getProperty("TEST_USERNAME"),
                 testProperties.getProperty("TEST_PASSWORD"));
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        addHubServerInfo(hubServerInfo);
 
-        FormValidation form = descriptor.doCheckHubProjectVersion(testProperties.getProperty("TEST_VERSION"), testProperties.getProperty("TEST_PROJECT"));
+        FormValidation form = descriptor
+                .doCheckHubWrapperProjectVersion(testProperties.getProperty("TEST_VERSION"), testProperties.getProperty("TEST_PROJECT"));
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
         Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_()));
     }
 
     @Test
-    public void testCheckInvalidMemory() throws Exception {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
-
-        FormValidation form = descriptor.doCheckScanMemory("This is not an Integer");
-        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getInvalidMemoryString()));
-    }
-
-    @Test
-    public void testCheckNoMemory() throws Exception {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
-
-        FormValidation form = descriptor.doCheckScanMemory("");
-        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getNeedMemory());
-    }
-
-    @Test
-    public void testCheckValidMemory() throws Exception {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
-
-        FormValidation form = descriptor.doCheckScanMemory("512");
-        Assert.assertEquals(FormValidation.Kind.OK, form.kind);
-    }
-
-    @Test
-    public void testDoFillHubVersionPhaseItems() throws Exception {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
-        ListBoxModel list = descriptor.doFillHubVersionPhaseItems();
+    public void testDoFillHubWrapperVersionPhaseItems() throws Exception {
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+        ListBoxModel list = descriptor.doFillHubWrapperVersionPhaseItems();
 
         assertTrue(list.contains(new ListBoxModel.Option(PhaseEnum.ARCHIVED.name(), PhaseEnum.ARCHIVED.name())));
         assertTrue(list.contains(new ListBoxModel.Option(PhaseEnum.DEPRECATED.name(), PhaseEnum.DEPRECATED.name())));
@@ -380,9 +326,9 @@ public class PostBuildScanDescriptorTest {
     }
 
     @Test
-    public void testDoFillHubVersionDistItems() throws Exception {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
-        ListBoxModel list = descriptor.doFillHubVersionDistItems();
+    public void testDoFillHubWrapperVersionDistItems() throws Exception {
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+        ListBoxModel list = descriptor.doFillHubWrapperVersionDistItems();
 
         assertTrue(list.contains(new ListBoxModel.Option(DistributionEnum.EXTERNAL.name(), DistributionEnum.EXTERNAL.name())));
         assertTrue(list.contains(new ListBoxModel.Option(DistributionEnum.INTERNAL.name(), DistributionEnum.INTERNAL.name())));
@@ -394,33 +340,93 @@ public class PostBuildScanDescriptorTest {
 
     @Test
     public void testDoAutoCompleteHubWrapperProjectNameNotExistent() throws Exception {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
                 testProperties.getProperty("TEST_USERNAME"),
                 testProperties.getProperty("TEST_PASSWORD"));
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        addHubServerInfo(hubServerInfo);
 
-        AutoCompletionCandidates matches = descriptor.doAutoCompleteHubProjectName(PROJECT_NAME_NOT_EXISTING);
+        AutoCompletionCandidates matches = descriptor.doAutoCompleteHubWrapperProjectName(PROJECT_NAME_NOT_EXISTING);
         assertTrue(matches.getValues().size() == 0);
 
     }
 
     @Test
     public void testDoAutoCompleteHubWrapperProjectName() throws Exception {
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
                 testProperties.getProperty("TEST_USERNAME"),
                 testProperties.getProperty("TEST_PASSWORD"));
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        addHubServerInfo(hubServerInfo);
 
-        AutoCompletionCandidates matches = descriptor.doAutoCompleteHubProjectName(testProperties.getProperty("TEST_PROJECT"));
+        AutoCompletionCandidates matches = descriptor.doAutoCompleteHubWrapperProjectName(testProperties.getProperty("TEST_PROJECT"));
         assertTrue(matches.getValues().size() > 0);
+
     }
+
+    @Test
+    public void testGetServerInfoNotConfigured() throws Exception {
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+
+        assertNull(descriptor.getHubServerInfo());
+
+    }
+
+    @Test
+    public void testGetServerInfo() throws Exception {
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+        UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
+                testProperties.getProperty("TEST_USERNAME"),
+                testProperties.getProperty("TEST_PASSWORD"));
+        HubServerInfo hubServerInfo = new HubServerInfo();
+        hubServerInfo.setCredentialsId(credential.getId());
+        hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+        addHubServerInfo(hubServerInfo);
+
+        HubServerInfo testServerInfo = descriptor.getHubServerInfo();
+
+        assertNotNull(testServerInfo);
+        assertEquals(testProperties.getProperty("TEST_USERNAME"), testServerInfo.getUsername());
+        assertEquals(testProperties.getProperty("TEST_PASSWORD"), testServerInfo.getPassword());
+    }
+
+    @Test
+    public void testIsApplicable() throws Exception {
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+        FreeStyleProject project = j.createFreeStyleProject("test");
+        assertTrue(descriptor.isApplicable(project));
+        MavenModuleSet mavenProject = j.createMavenProject();
+        assertTrue(!descriptor.isApplicable(project));
+    }
+
+    @Test
+    public void testGetDisplayName() throws Exception {
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+
+        assertTrue(StringUtils.isBlank(descriptor.getDisplayName()));
+    }
+
+    @WithoutJenkins
+    @Test
+    public void testGetPluginVersionUnknown() throws Exception {
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+
+        assertEquals(PluginHelper.UNKNOWN_VERSION, descriptor.getPluginVersion());
+    }
+
+    @Test
+    public void testGetPluginVersion() throws Exception {
+        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+
+        assertTrue(StringUtils.isNotBlank(descriptor.getPluginVersion()));
+    }
+
+    // Test checkscopes in the other descriptors
 
 }

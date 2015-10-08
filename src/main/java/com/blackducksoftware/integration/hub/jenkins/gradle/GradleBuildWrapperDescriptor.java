@@ -13,7 +13,6 @@ import javax.servlet.ServletException;
 
 import jenkins.model.Jenkins;
 
-import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapperDescriptor;
@@ -55,7 +54,7 @@ public class GradleBuildWrapperDescriptor extends BDBuildWrapperDescriptor {
 
     /*
      * (non-JSDoc)
-     *
+     * 
      * @see java.lang.Object#toString()
      */
     @Override
@@ -104,8 +103,4 @@ public class GradleBuildWrapperDescriptor extends BDBuildWrapperDescriptor {
         return doCreateHubWrapperProject(gradleHubProjectName, gradleHubProjectVersion, gradleHubVersionPhase, gradleHubVersionDist);
     }
 
-    public FormValidation doCheckGradleSameAsPostBuildScan(@QueryParameter("gradleSameAsPostBuildScan") final Boolean gradleSameAsPostBuildScan,
-            @AncestorInPath AbstractProject project) throws IOException, ServletException {
-        return doCheckSameAsPostBuildScan(gradleSameAsPostBuildScan, project);
-    }
 }

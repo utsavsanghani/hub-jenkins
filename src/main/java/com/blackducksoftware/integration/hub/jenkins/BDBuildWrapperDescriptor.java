@@ -2,7 +2,6 @@ package com.blackducksoftware.integration.hub.jenkins;
 
 import hudson.ProxyConfiguration;
 import hudson.model.AutoCompletionCandidates;
-import hudson.model.Describable;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.BuildWrapperDescriptor;
@@ -23,7 +22,6 @@ import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
@@ -31,6 +29,7 @@ import com.blackducksoftware.integration.hub.exception.BDCIScopeException;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.jenkins.gradle.GradleBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.maven.MavenBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.maven.Scope;
 import com.blackducksoftware.integration.hub.response.AutoCompleteItem;
@@ -62,7 +61,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
         load();
     }
 
-    protected HubServerInfo getHubServerInfo() {
+    public HubServerInfo getHubServerInfo() {
         PostBuildScanDescriptor descriptor = null;
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
@@ -167,7 +166,8 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
         return service;
     }
 
-    public AutoCompletionCandidates doAutoCompleteHubWrapperProjectName(@QueryParameter("value") final String hubWrapperProjectName) throws IOException,
+    public AutoCompletionCandidates doAutoCompleteHubWrapperProjectName(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName)
+            throws IOException,
             ServletException {
         AutoCompletionCandidates potentialMatches = new AutoCompletionCandidates();
         if (StringUtils.isNotBlank(getHubServerInfo().getServerUrl()) || StringUtils.isNotBlank(getHubServerInfo().getCredentialsId())) {
@@ -533,34 +533,20 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
         if (this instanceof MavenBuildWrapperDescriptor) {
             if (value.length() == 0) {
                 return FormValidation.error(Messages
-                        .CodeCenterBuildWrapper_getPleaseIncludeAScope());
+                        .HubMavenWrapper_getPleaseIncludeAScope());
             }
             try {
                 Scope.getScopeListFromString(value);
             } catch (BDCIScopeException e) {
                 String scope = e.getMessage().substring(e.getMessage().indexOf(":") + 1).trim();
-                return FormValidation.error(Messages.CodeCenterBuildWrapper_getIncludedInvalidScope_0_(scope));
+                return FormValidation.error(Messages.HubMavenWrapper_getIncludedInvalidScope_0_(scope));
+            }
+        } else if (this instanceof GradleBuildWrapperDescriptor) {
+            if (value.length() == 0) {
+                return FormValidation.error(Messages
+                        .HubGradleWrapper_getPleaseIncludeAConfiguration());
             }
         }
-        // else if (this instanceof CodeCenterGradleBuildWrapper.DescriptorImpl) {
-        // if (value.length() == 0) {
-        // return FormValidation.error(Messages
-        // .CodeCenterBuildWrapper_getPleaseIncludeAConfiguration());
-        // }
-        // }
-        return FormValidation.ok();
-    }
-
-    public FormValidation doCheckSameAsPostBuildScan(@QueryParameter("sameAsPostBuildScan") final Boolean sameAsPostBuildScan,
-            @AncestorInPath AbstractProject project) throws IOException, ServletException {
-
-        if (sameAsPostBuildScan) {
-            Describable hubScan = project.getPublishersList().get(PostBuildHubScan.class);
-            if (hubScan == null) {
-                return FormValidation.error(Messages.HubWrapper_getCLIScanNotConfigured());
-            }
-        }
-
         return FormValidation.ok();
     }
 
