@@ -21,8 +21,6 @@ import org.jvnet.hudson.test.JenkinsRule;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
-import com.blackducksoftware.integration.hub.response.DistributionEnum;
-import com.blackducksoftware.integration.hub.response.PhaseEnum;
 import com.blackducksoftware.integration.hub.response.ProjectItem;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider.UserFacingAction;
@@ -369,13 +367,7 @@ public class PostBuildScanDescriptorTest {
         PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         ListBoxModel list = descriptor.doFillHubVersionPhaseItems();
 
-        assertTrue(list.contains(new ListBoxModel.Option(PhaseEnum.ARCHIVED.name(), PhaseEnum.ARCHIVED.name())));
-        assertTrue(list.contains(new ListBoxModel.Option(PhaseEnum.DEPRECATED.name(), PhaseEnum.DEPRECATED.name())));
-        assertTrue(list.contains(new ListBoxModel.Option(PhaseEnum.DEVELOPMENT.name(), PhaseEnum.DEVELOPMENT.name())));
-        assertTrue(list.contains(new ListBoxModel.Option(PhaseEnum.PLANNING.name(), PhaseEnum.PLANNING.name())));
-        assertTrue(list.contains(new ListBoxModel.Option(PhaseEnum.RELEASED.name(), PhaseEnum.RELEASED.name())));
-
-        assertTrue(!list.contains(new ListBoxModel.Option(PhaseEnum.UNKNOWNPHASE.name(), PhaseEnum.UNKNOWNPHASE.name())));
+        assertTrue(list.size() == 5);
 
     }
 
@@ -384,11 +376,7 @@ public class PostBuildScanDescriptorTest {
         PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         ListBoxModel list = descriptor.doFillHubVersionDistItems();
 
-        assertTrue(list.contains(new ListBoxModel.Option(DistributionEnum.EXTERNAL.name(), DistributionEnum.EXTERNAL.name())));
-        assertTrue(list.contains(new ListBoxModel.Option(DistributionEnum.INTERNAL.name(), DistributionEnum.INTERNAL.name())));
-        assertTrue(list.contains(new ListBoxModel.Option(DistributionEnum.SAAS.name(), DistributionEnum.SAAS.name())));
-
-        assertTrue(!list.contains(new ListBoxModel.Option(DistributionEnum.UNKNOWNDISTRIBUTION.name(), DistributionEnum.UNKNOWNDISTRIBUTION.name())));
+        assertTrue(list.size() == 3);
 
     }
 

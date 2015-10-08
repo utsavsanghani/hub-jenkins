@@ -36,7 +36,6 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
-import com.blackducksoftware.integration.hub.maven.Scope;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 
@@ -344,7 +343,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
      *         CodeCenterApplication Name and CodeCenterApplicationVersion are
      *         not empty
      */
-    protected boolean isPluginEnabled() {
+    public boolean isPluginEnabled() {
         // Checks to make sure the user provided an application name and version
         // also checks to make sure a server url, username, and password were
         // provided
@@ -383,22 +382,26 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         HubServerInfo serverInfo = descriptor.getHubServerInfo();
 
         boolean isPluginConfigured = true;
-
-        if (StringUtils.isBlank(serverInfo.getServerUrl())) {
+        if (serverInfo == null) {
             isPluginConfigured = false;
-            logger.error("The Hub server URL is not configured!");
-        }
-        if (StringUtils.isBlank(serverInfo.getCredentialsId())) {
-            isPluginConfigured = false;
-            logger.error("No Hub credentials configured!");
+            logger.error("Could not find the Hub global configuration!");
         } else {
-            if (StringUtils.isBlank(serverInfo.getUsername())) {
+            if (StringUtils.isBlank(serverInfo.getServerUrl())) {
                 isPluginConfigured = false;
-                logger.error("No Hub username configured!");
+                logger.error("The Hub server URL is not configured!");
             }
-            if (StringUtils.isBlank(serverInfo.getPassword())) {
+            if (StringUtils.isBlank(serverInfo.getCredentialsId())) {
                 isPluginConfigured = false;
-                logger.error("No Hub password configured!");
+                logger.error("No Hub credentials configured!");
+            } else {
+                if (StringUtils.isBlank(serverInfo.getUsername())) {
+                    isPluginConfigured = false;
+                    logger.error("No Hub username configured!");
+                }
+                if (StringUtils.isBlank(serverInfo.getPassword())) {
+                    isPluginConfigured = false;
+                    logger.error("No Hub password configured!");
+                }
             }
         }
         if (StringUtils.isBlank(getHubWrapperProjectName())) {
@@ -417,10 +420,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
             isPluginConfigured = false;
             logger.error("No Hub project version configured!");
         }
-        if (StringUtils.isBlank(getUserScopesToInclude())) {
-            isPluginConfigured = false;
-            logger.error("No Maven scopes configured!");
-        } else {
+        if (hasScopes(logger, getUserScopesToInclude())) {
             List<String> scopes = getScopesAsList(logger);
             if (scopes == null || scopes.isEmpty()) {
                 isPluginConfigured = false;
@@ -430,10 +430,12 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         return isPluginConfigured;
     }
 
-    protected void checkScopesValid(List<String> errorMessage, List<String> scopes) {
-        if (scopes == null || scopes.isEmpty() || scopes.contains(Scope.UNKNOWNSCOPE.toString())) {
-            errorMessage.add("you must provide at least one valid scope to include");
+    protected boolean hasScopes(IntLogger logger, String scopes) {
+        if (StringUtils.isBlank(scopes)) {
+            logger.error("No Maven scopes configured!");
+            return false;
         }
+        return true;
     }
 
 }

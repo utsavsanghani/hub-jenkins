@@ -87,10 +87,12 @@ public class GradleBuildWrapper extends BDBuildWrapper {
     }
 
     @Override
-    protected void checkScopesValid(List<String> errorMessage, List<String> scopes) {
-        if (scopes == null || scopes.isEmpty()) {
-            errorMessage.add("you must provide at least one valid scope to include");
+    protected boolean hasScopes(IntLogger logger, String scopes) {
+        if (StringUtils.isBlank(scopes)) {
+            logger.error("No Gradle configurations configured!");
+            return false;
         }
+        return true;
     }
 
     @Override

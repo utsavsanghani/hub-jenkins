@@ -23,15 +23,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.WithoutJenkins;
 
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
-import com.blackducksoftware.integration.hub.jenkins.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
-import com.blackducksoftware.integration.hub.response.DistributionEnum;
-import com.blackducksoftware.integration.hub.response.PhaseEnum;
 import com.blackducksoftware.integration.hub.response.ProjectItem;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider.UserFacingAction;
@@ -314,27 +310,14 @@ public class BDBuildWrapperDescriptorTest {
     public void testDoFillHubWrapperVersionPhaseItems() throws Exception {
         BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
         ListBoxModel list = descriptor.doFillHubWrapperVersionPhaseItems();
-
-        assertTrue(list.contains(new ListBoxModel.Option(PhaseEnum.ARCHIVED.name(), PhaseEnum.ARCHIVED.name())));
-        assertTrue(list.contains(new ListBoxModel.Option(PhaseEnum.DEPRECATED.name(), PhaseEnum.DEPRECATED.name())));
-        assertTrue(list.contains(new ListBoxModel.Option(PhaseEnum.DEVELOPMENT.name(), PhaseEnum.DEVELOPMENT.name())));
-        assertTrue(list.contains(new ListBoxModel.Option(PhaseEnum.PLANNING.name(), PhaseEnum.PLANNING.name())));
-        assertTrue(list.contains(new ListBoxModel.Option(PhaseEnum.RELEASED.name(), PhaseEnum.RELEASED.name())));
-
-        assertTrue(!list.contains(new ListBoxModel.Option(PhaseEnum.UNKNOWNPHASE.name(), PhaseEnum.UNKNOWNPHASE.name())));
-
+        assertTrue(list.size() == 5);
     }
 
     @Test
     public void testDoFillHubWrapperVersionDistItems() throws Exception {
         BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
         ListBoxModel list = descriptor.doFillHubWrapperVersionDistItems();
-
-        assertTrue(list.contains(new ListBoxModel.Option(DistributionEnum.EXTERNAL.name(), DistributionEnum.EXTERNAL.name())));
-        assertTrue(list.contains(new ListBoxModel.Option(DistributionEnum.INTERNAL.name(), DistributionEnum.INTERNAL.name())));
-        assertTrue(list.contains(new ListBoxModel.Option(DistributionEnum.SAAS.name(), DistributionEnum.SAAS.name())));
-
-        assertTrue(!list.contains(new ListBoxModel.Option(DistributionEnum.UNKNOWNDISTRIBUTION.name(), DistributionEnum.UNKNOWNDISTRIBUTION.name())));
+        assertTrue(list.size() == 3);
 
     }
 
@@ -365,7 +348,7 @@ public class BDBuildWrapperDescriptorTest {
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         addHubServerInfo(hubServerInfo);
 
-        AutoCompletionCandidates matches = descriptor.doAutoCompleteHubWrapperProjectName(testProperties.getProperty("TEST_PROJECT"));
+        AutoCompletionCandidates matches = descriptor.doAutoCompleteHubWrapperProjectName("j");
         assertTrue(matches.getValues().size() > 0);
 
     }
@@ -402,7 +385,7 @@ public class BDBuildWrapperDescriptorTest {
         FreeStyleProject project = j.createFreeStyleProject("test");
         assertTrue(descriptor.isApplicable(project));
         MavenModuleSet mavenProject = j.createMavenProject();
-        assertTrue(!descriptor.isApplicable(project));
+        assertTrue(!descriptor.isApplicable(mavenProject));
     }
 
     @Test
@@ -410,14 +393,6 @@ public class BDBuildWrapperDescriptorTest {
         BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
 
         assertTrue(StringUtils.isBlank(descriptor.getDisplayName()));
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testGetPluginVersionUnknown() throws Exception {
-        BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
-
-        assertEquals(PluginHelper.UNKNOWN_VERSION, descriptor.getPluginVersion());
     }
 
     @Test

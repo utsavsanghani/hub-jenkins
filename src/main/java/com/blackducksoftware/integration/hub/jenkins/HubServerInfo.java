@@ -65,7 +65,7 @@ public class HubServerInfo implements Serializable {
     }
 
     public boolean isPluginConfigured() {
-        return !(StringUtils.isEmpty(getServerUrl()) || StringUtils.isEmpty(getCredentialsId()));
+        return StringUtils.isNotBlank(getServerUrl()) && StringUtils.isNotBlank(getCredentialsId());
     }
 
     public String getUsername() {
