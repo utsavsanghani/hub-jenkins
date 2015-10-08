@@ -33,8 +33,6 @@ public class GradleBuildWrapperDescriptorTest {
         assertEquals(Messages.HubMavenWrapper_getDisplayName(), descriptor.getDisplayName());
     }
 
-    // doCheckUserScopesToInclude
-
     @Test
     public void testDoCheckUserScopesToInclude() throws Exception {
         GradleBuildWrapperDescriptor descriptor = new GradleBuildWrapperDescriptor();

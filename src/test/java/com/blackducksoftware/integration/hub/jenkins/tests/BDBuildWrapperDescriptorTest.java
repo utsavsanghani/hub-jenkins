@@ -427,6 +427,4 @@ public class BDBuildWrapperDescriptorTest {
         assertTrue(StringUtils.isNotBlank(descriptor.getPluginVersion()));
     }
 
-    // Test checkscopes in the other descriptors
-
 }
