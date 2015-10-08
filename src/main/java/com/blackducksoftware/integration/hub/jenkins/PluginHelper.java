@@ -6,8 +6,10 @@ import jenkins.model.Jenkins;
 
 public class PluginHelper {
 
+    public static final String UNKNOWN_VERSION = "<unknown>";
+
     public static String getPluginVersion() {
-        String pluginVersion = "<unknwon>";
+        String pluginVersion = UNKNOWN_VERSION;
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
             // Jenkins still active
