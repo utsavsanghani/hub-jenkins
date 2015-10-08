@@ -1,56 +1,74 @@
-//this method from Jenkins hudson-behavior.js
-var scanChecker = function(el) {
-
-	var target = el.targetElement;
-	FormChecker.sendRequest(el.targetUrl(), {
-		method : 'post',
-		onComplete : function(x) {
-			target.innerHTML = x.responseText;
-			Behaviour.applySubtree(target);
-		}
-	});
-}
 
 function customCreateProject(method, withVars, button) {
 
 	validateButton(method, withVars, button);
 
-	var hubProjectName = getFieldByNameScan('_.hubProjectName');
-	var hubProjectVersion = getFieldByNameScan('_.hubProjectVersion');
+	var hubProjectName = getFieldByName('_.hubProjectName');
+	var hubProjectVersion = getFieldByName('_.hubProjectVersion');
 
 	// wait 1000 ms before running the checks
 	// otherwise it happens too quick and shows that the project doesnt
 	// exist yet
 	setTimeout(function() {
-		scanChecker(hubProjectName);
-		scanChecker(hubProjectVersion);
+		checker(hubProjectName);
+		checker(hubProjectVersion);
 	}, 1000);
 
-	if(checkWrapperIsEnabled()){
-		var sameAsPostBuildScan = getFieldByNameScan('_.sameAsPostBuildScan');
+	if(checkMavenWrapperIsEnabled()){
+		var sameAsPostBuildScan = getFieldByName('_.mavenSameAsPostBuildScan');
 		if (sameAsPostBuildScan && sameAsPostBuildScan.checked) {
 			// We found the Build wrapper checkbox and it is checked to use the same configuration as the Cli scan
 			// So we run the check on the wrapper fields as well
 			
-			var hubWrapperProjectName = getFieldByNameScan('_.hubWrapperProjectName');
-			var hubWrapperProjectVersion = getFieldByNameScan('_.hubWrapperProjectVersion');
+			var hubWrapperProjectName = getFieldByName('_.mavenHubProjectName');
+			var hubWrapperProjectVersion = getFieldByName('_.mavenHubProjectVersion');
 			
 			setTimeout(function() {
-				wrapperChecker(hubWrapperProjectName);
-				wrapperChecker(hubWrapperProjectVersion);
+				checker(hubWrapperProjectName);
+				checker(hubWrapperProjectVersion);
+			}, 1000);
+		}
+	} else if(checkGradleWrapperIsEnabled()){
+		var sameAsPostBuildScan = getFieldByName('_.gradleSameAsPostBuildScan');
+		if (sameAsPostBuildScan && sameAsPostBuildScan.checked) {
+			// We found the Build wrapper checkbox and it is checked to use the same configuration as the Cli scan
+			// So we run the check on the wrapper fields as well
+			
+			var hubWrapperProjectName = getFieldByName('_.gradleHubProjectName');
+			var hubWrapperProjectVersion = getFieldByName('_.gradleHubProjectVersion');
+			
+			setTimeout(function() {
+				checker(hubWrapperProjectName);
+				checker(hubWrapperProjectVersion);
 			}, 1000);
 		}
 	}
 }
 
-function checkWrapperIsEnabled(){
-	//add gradle when we have the gradle wrapper
-	var mavenWrapperCheckBox = getFieldByNameScan('com-blackducksoftware-integration-hub-jenkins-maven-MavenBuildWrapper');
-	if (mavenWrapperCheckBox && mavenWrapperCheckBox.checked) {
+function checkMavenWrapperIsEnabled(){
+	var mavenWrapperCheckBox = getFieldByName('com-blackducksoftware-integration-hub-jenkins-maven-MavenBuildWrapper');
+	
+	
+	if ((mavenWrapperCheckBox && mavenWrapperCheckBox.checked)) {
 		return true;
 	} else{
 		return false;
 	}
+}
+
+function checkGradleWrapperIsEnabled(){
+	
+	var gradleWrapperCheckBox = getFieldByName('com-blackducksoftware-integration-hub-jenkins-gradle-GradleBuildWrapper');
+	
+	if ((gradleWrapperCheckBox && gradleWrapperCheckBox.checked)) {
+		return true;
+	} else{
+		return false;
+	}
+}
+
+function checkBothWrappersAreEnabled(){
+		return checkMavenWrapperIsEnabled() && checkGradleWrapperIsEnabled();
 }
 
 function useSameAsBuildWrapper(checkbox, onload) {
@@ -62,15 +80,26 @@ function useSameAsBuildWrapper(checkbox, onload) {
 	
 	// When the window loads this will already run so we dont need to trigger it again
 	if(!onload){
-		if(checkWrapperIsEnabled()){
-			var sameAsPostBuildScan = getFieldByNameWrapper('_.sameAsPostBuildScan');
+		if(checkMavenWrapperIsEnabled()){
+			var sameAsPostBuildScan = getFieldByName('_.mavenSameAsPostBuildScan');
 			if (sameAsPostBuildScan){
 				if (sameAsPostBuildScan.checked) {
 					// We found the Build wrapper checkbox and it is checked to use the same configuration as the Cli scan
 					// So we trigger its enable method as well
-					enableSameAsPostBuildScan(false);
+					enableSameAsPostBuildScan(false,  '_.mavenHubProjectName','_.mavenHubProjectVersion','_.mavenHubVersionPhase','_.mavenHubVersionDist', 'sameAsMessageAreaMaven', '_.mavenSameAsPostBuildScan');
 				} else{
-					disableSameAsPostBuildScan(false);
+					disableSameAsPostBuildScan(false, 'sameAsMessageAreaMaven', '_.mavenHubProjectName','_.mavenHubProjectVersion','_.mavenHubVersionPhase','_.mavenHubVersionDist');
+				}
+			}
+		} else if(checkGradleWrapperIsEnabled()){
+			var sameAsPostBuildScan = getFieldByName('_.gradleSameAsPostBuildScan');
+			if (sameAsPostBuildScan){
+				if (sameAsPostBuildScan.checked) {
+					// We found the Build wrapper checkbox and it is checked to use the same configuration as the Cli scan
+					// So we trigger its enable method as well
+					enableSameAsPostBuildScan(false, '_.gradleHubProjectName','_.gradleHubProjectVersion','_.gradleHubVersionPhase','_.gradleHubVersionDist', 'sameAsMessageAreaGradle', '_.gradleSameAsPostBuildScan');
+				} else{
+					disableSameAsPostBuildScan(false, 'sameAsMessageAreaGradle', '_.gradleHubProjectName','_.gradleHubProjectVersion','_.gradleHubVersionPhase','_.gradleHubVersionDist');
 				}
 			}
 		}
@@ -78,31 +107,69 @@ function useSameAsBuildWrapper(checkbox, onload) {
 }
 
 function enableSameAsBuildWrapper(onload) {
-	var sameAsPostBuildScan = getFieldByNameScan('_.sameAsPostBuildScan');
-	if (checkWrapperIsEnabled() && sameAsPostBuildScan && sameAsPostBuildScan.checked) {
-		// The Build wrapper and the Cli are both checked to use the other configuration
-		// This is obviously an issue so we log an error to the screen
+	if(checkBothWrappersAreEnabled()){
+		// Both the maven and gradle wrappers are configured, so we cant determine which one to use with only one check box
 		
-		var sameAsBuildWrapperMessageArea = document.getElementById('sameAsBuildWrapperMessageArea');
-		sameAsBuildWrapperMessageArea.className = 'error';
-		var newScanSpan = document.createElement('span');
-		newScanSpan.innerHTML = "The Hub Build Environment is configured to use this configuration!";
-		sameAsBuildWrapperMessageArea.appendChild(newScanSpan);
-		disableScanFields();
-	} else {
+		enableScanFields();
+		addTextToMessageArea("Both of the Hub Build Environment's are configured. Can not determine which configuration to use!");
+		return;
+	}
+	
+	var foundError = false;
+	if(checkMavenWrapperIsEnabled()){
+		var sameAsPostBuildScan = getFieldByName('_.mavenSameAsPostBuildScan');
+		if (sameAsPostBuildScan && sameAsPostBuildScan.checked) {
+			// The Build wrapper and the Cli are both checked to use the other configuration
+			// This is obviously an issue so we log an error to the screen
+			
+			enableScanFields();
+			addTextToMessageArea("The Hub Maven Build Environment is configured to use this configuration!");
+			foundError = true;
+		}
+	} 
+	if(checkGradleWrapperIsEnabled()){
+		var sameAsPostBuildScan = getFieldByName('_.gradleSameAsPostBuildScan');
+		if (sameAsPostBuildScan && sameAsPostBuildScan.checked) {
+			// The Build wrapper and the Cli are both checked to use the other configuration
+			// This is obviously an issue so we log an error to the screen
+			
+			enableScanFields();
+			addTextToMessageArea("The Hub Gradle Build Environment is configured to use this configuration!");
+			foundError = true;
+		}
+	}
+	if(foundError){
+		return;
+	}
+	var hubWrapperProjectName;
+	var hubWrapperProjectVersion;
+	var hubWrapperVersionPhase;
+	var hubWrapperVersionDist;
+	
+	if(checkMavenWrapperIsEnabled()){
+		 hubWrapperProjectName = getFieldByName('_.mavenHubProjectName');
+		 hubWrapperProjectVersion = getFieldByName('_.mavenHubProjectVersion');
+		 hubWrapperVersionPhase = getFieldByName('_.mavenHubVersionPhase');
+		 hubWrapperVersionDist = getFieldByName('_.mavenHubVersionDist');
+	} else if(checkGradleWrapperIsEnabled()){
+		 hubWrapperProjectName = getFieldByName('_.gradleHubProjectName');
+		 hubWrapperProjectVersion = getFieldByName('_.gradleHubProjectVersion');
+		 hubWrapperVersionPhase = getFieldByName('_.gradleHubVersionPhase');
+		 hubWrapperVersionDist = getFieldByName('_.gradleHubVersionDist');
+	} else{
+		//No wrapper is configured so we cant use the same configuration as it
+		// so we log the error for the user
 		
-		var hubWrapperProjectName = getFieldByNameScan('_.hubWrapperProjectName');
-		var hubWrapperProjectVersion = getFieldByNameScan('_.hubWrapperProjectVersion');
-		var hubWrapperVersionPhase = getFieldByNameScan('_.hubWrapperVersionPhase');
-		var hubWrapperVersionDist = getFieldByNameScan('_.hubWrapperVersionDist');
+		enableScanFields();
+		addTextToMessageArea("There is no Hub Build Environment configured for this Job!");
+		return;
+	}
 
-		var hubProjectName = getFieldByNameScan('_.hubProjectName');
-		var hubProjectVersion = getFieldByNameScan('_.hubProjectVersion');
-		var hubVersionPhase = getFieldByNameScan('_.hubVersionPhase');
-		var hubVersionDist = getFieldByNameScan('_.hubVersionDist');
+		var hubProjectName = getFieldByName('_.hubProjectName');
+		var hubProjectVersion = getFieldByName('_.hubProjectVersion');
+		var hubVersionPhase = getFieldByName('_.hubVersionPhase');
+		var hubVersionDist = getFieldByName('_.hubVersionDist');
 
-		// Only run this if a wrapper has been configured
-		if (checkWrapperIsEnabled()) {
 			
 			addOnBlurToWrapperFields();
 			
@@ -119,35 +186,35 @@ function enableSameAsBuildWrapper(onload) {
 				// Only check if not onload
 				// These automatically get checked onload
 				setTimeout(function() {
-					scanChecker(hubProjectName);
-					scanChecker(hubProjectVersion);
+					checker(hubProjectName);
+					checker(hubProjectVersion);
 				}, 1000);
 			}
-		} else {
-			//The wrapper is not configured so we cant use the same configuration as it
-			// so we log the error for the user
-			
-			var sameAsBuildWrapperMessageArea = document
-					.getElementById('sameAsBuildWrapperMessageArea');
-			sameAsBuildWrapperMessageArea.className = 'error';
-			var newSpan = document.createElement('span');
-			newSpan.innerHTML = "There is no Hub Build Environment configured for this Job!";
-			sameAsBuildWrapperMessageArea.appendChild(newSpan);
-		}
-	}
 }
 
 function disableSameAsBuildWrapper(onload) {
 	//We enable the scan fields since we no longer want to use the wrapper fields
 	enableScanFields();
 	
+	if(checkMavenWrapperIsEnabled()){
+		// We remove the appropriate error messages from the UI
+		var sameAsPostBuildScanMessageArea = document.getElementById('sameAsMessageAreaMaven');
+		if (sameAsPostBuildScanMessageArea) {
+			sameAsPostBuildScanMessageArea.className = '';
+			while (sameAsPostBuildScanMessageArea.firstChild) {
+				sameAsPostBuildScanMessageArea.removeChild(sameAsPostBuildScanMessageArea.firstChild);
+			}
+		}
+	}
 	
-	// We remove the appropriate error messages from the UI
-	var sameAsPostBuildScanMessageArea = document.getElementById('sameAsPostBuildScanMessageArea');
-	if (sameAsPostBuildScanMessageArea) {
-		sameAsPostBuildScanMessageArea.className = '';
-		while (sameAsPostBuildScanMessageArea.firstChild) {
-			sameAsPostBuildScanMessageArea.removeChild(sameAsPostBuildScanMessageArea.firstChild);
+	if(checkGradleWrapperIsEnabled()){
+		// We remove the appropriate error messages from the UI
+		var sameAsPostBuildScanMessageArea = document.getElementById('sameAsMessageAreaGradle');
+		if (sameAsPostBuildScanMessageArea) {
+			sameAsPostBuildScanMessageArea.className = '';
+			while (sameAsPostBuildScanMessageArea.firstChild) {
+				sameAsPostBuildScanMessageArea.removeChild(sameAsPostBuildScanMessageArea.firstChild);
+			}
 		}
 	}
 
@@ -159,10 +226,10 @@ function disableSameAsBuildWrapper(onload) {
 }
 
 function enableScanFields() {
-	var hubProjectName = getFieldByNameScan('_.hubProjectName');
-	var hubProjectVersion = getFieldByNameScan('_.hubProjectVersion');
-	var hubVersionPhase = getFieldByNameScan('_.hubVersionPhase');
-	var hubVersionDist = getFieldByNameScan('_.hubVersionDist');
+	var hubProjectName = getFieldByName('_.hubProjectName');
+	var hubProjectVersion = getFieldByName('_.hubProjectVersion');
+	var hubVersionPhase = getFieldByName('_.hubVersionPhase');
+	var hubVersionDist = getFieldByName('_.hubVersionDist');
 
 	// Make sure the fields are no longer read only or disabled
 	hubProjectName.readOnly = false;
@@ -180,10 +247,10 @@ function enableScanFields() {
 }
 
 function disableScanFields() {
-	var hubProjectName = getFieldByNameScan('_.hubProjectName');
-	var hubProjectVersion = getFieldByNameScan('_.hubProjectVersion');
-	var hubVersionPhase = getFieldByNameScan('_.hubVersionPhase');
-	var hubVersionDist = getFieldByNameScan('_.hubVersionDist');
+	var hubProjectName = getFieldByName('_.hubProjectName');
+	var hubProjectVersion = getFieldByName('_.hubProjectVersion');
+	var hubVersionPhase = getFieldByName('_.hubVersionPhase');
+	var hubVersionDist = getFieldByName('_.hubVersionDist');
 
 	// Make sure the fields are read only or disabled
 	hubProjectName.readOnly = true;
@@ -203,61 +270,33 @@ var hubScanOldOnLoad = window.onload;
 window.onload = function() {
 	hubScanOldOnLoad();
 
-	var sameAsBuildWrapper = getFieldByNameScan('_.sameAsBuildWrapper');
+	var sameAsBuildWrapper = getFieldByName('_.sameAsBuildWrapper');
 	useSameAsBuildWrapper(sameAsBuildWrapper, true);
 };
 
 function addOnBlurToWrapperFields() {
-	projectScanOnBlur('_.hubProjectName', '_.hubProjectVersion', '_.hubWrapperProjectName');
-	projectScanOnBlur('_.hubProjectVersion', '_.hubProjectName', '_.hubWrapperProjectVersion');
-	scanOnBlur('_.hubVersionPhase', '_.hubWrapperVersionPhase');
-	scanOnBlur('_.hubVersionDist', '_.hubWrapperVersionDist');
+	doubleOnBlur('_.hubProjectName', '_.hubProjectVersion', '_.hubWrapperProjectName', '_.sameAsBuildWrapper');
+	doubleOnBlur('_.hubProjectVersion', '_.hubProjectName', '_.hubWrapperProjectVersion', '_.sameAsBuildWrapper');
+	singleOnBlur('_.hubVersionPhase', '_.hubWrapperVersionPhase', '_.sameAsBuildWrapper');
+	singleOnBlur('_.hubVersionDist', '_.hubWrapperVersionDist', '_.sameAsBuildWrapper');
 
 }
 
-function scanOnBlur(scanFieldName, wrapperFieldName) {
-	var wrapperField = getFieldByNameScan(wrapperFieldName);
-	if(wrapperField){
-		wrapperField.onblur = function() {
-			// When the wrapper field is changed and then loses focus, this method will run 
-			// This will trigger the specified scan field to update 
-			// ONLY IF the scan is set to use the same config as the wrapper
-			var sameAsBuildWrapper = getFieldByNameScan('_.sameAsBuildWrapper');
-			if (sameAsBuildWrapper && sameAsBuildWrapper.checked) {
-				var scanField = getFieldByNameScan(scanFieldName);
-				scanField.value = wrapperField.value
-				setTimeout(function() {
-					scanChecker(scanField);
-				}, 900);
-			}
-		};
+function addTextToMessageArea(txt){
+	var sameAsBuildWrapperMessageArea = document.getElementById('sameAsBuildWrapperMessageArea');
+	if(sameAsBuildWrapperMessageArea.className.indexOf('error') == -1){
+		sameAsBuildWrapperMessageArea.className = 'error';
 	}
-}
-
-function projectScanOnBlur(scanFirstFieldName, scanSecondFieldName, scanFieldName) {
-	//This is a separate method for when the project name or version is updated to trigger
-	// the validation of both of the appropriate fields
-	
-	var scanField = getFieldByNameWrapper(scanFieldName);
-	if(scanField){
-		scanField.onblur = function() {
-			// When the wrapper field is changed and then loses focus, this method will run 
-			// This will trigger the specified scan field to update 
-			// ONLY IF the scan is set to use the same config as the wrapper
-			var sameAsPostBuildScan = getFieldByNameWrapper('_.sameAsBuildWrapper');
-			if (sameAsPostBuildScan && sameAsPostBuildScan.checked) {
-				var scanFirstField = getFieldByNameWrapper(scanFirstFieldName);
-				var scanSecondField = getFieldByNameWrapper(scanSecondFieldName);
-				scanFirstField.value = scanField.value
-				setTimeout(function() {
-					wrapperChecker(scanFirstField);
-					wrapperChecker(scanSecondField);
-				}, 900);
-			}
-		};
+	if((sameAsBuildWrapperMessageArea.firstChild)){
+		if(sameAsBuildWrapperMessageArea.firstChild.innerHtml == txt){
+			return;
+		} else{
+			sameAsBuildWrapperMessageArea.firstChild.innerHtml = sameAsBuildWrapperMessageArea.firstChild.innerHtml + " " + txt;
+			return;
+		}
 	}
-}
-
-function getFieldByNameScan(fieldName){
-	return document.getElementsByName(fieldName)[0];
+	var newScanSpan = document.createElement('span');
+	newScanSpan.innerHTML = txt;
+	sameAsBuildWrapperMessageArea.appendChild(newScanSpan);
+	return;
 }

@@ -8,7 +8,7 @@
 		<script type="text/javascript"
 			src="${rootURL}/plugin/hub-jenkins/js/HubJenkinsSharedWrapper.js" />
 		<script type="text/javascript"
-			src="${rootURL}/plugin/hub-jenkins/js/HubJenkinsMavenWrapper.js" />
+			src="${rootURL}/plugin/hub-jenkins/js/HubJenkinsGradleWrapper.js" />
 		<link href="${rootURL}/plugin/hub-jenkins/css/BdHubCustom.css"  rel="stylesheet" type="text/css"  />
 	</st:once>
 	
@@ -16,35 +16,35 @@
 <f:section >
 		<f:block>
 			<table style="width:100%" id="ccBlackDuckTable">
-				<f:entry title="${%MavenScopesField}" field="userScopesToInclude">
-              		<f:textbox default="${%DefaultMavenScopes}" value="${it.userScopesToInclude}"/>
+				<f:entry title="${%GradleScopesField}" field="userScopesToInclude">
+              		<f:textbox default="${%DefaultGradleConfs}" value="${it.userScopesToInclude}"/>
             	</f:entry>
             	
-            	<f:entry field="mavenSameAsPostBuildScan">
+            	<f:entry field="gradleSameAsPostBuildScan">
                		<!-- define checkbox first, label after for label to the right of the checkbox layout -->
-               		<f:checkbox default="false" checked="${it.sameAsPostBuildScan}" onclick="mavenWrapperUseSameAsPostBuildScan(this, false);"/>
+               		<f:checkbox default="false" checked="${it.sameAsPostBuildScan}" onclick="gradleWrapperUseSameAsPostBuildScan(this, false);"/>
                		<label>${%SameAsPostBuildScanTitle}</label>
-               		<div class="" id="sameAsMessageAreaMaven"> </div>
+               		<div class="" id="sameAsMessageAreaGradle"> </div>
             	</f:entry>
 				
-				<f:entry field="mavenHubProjectName" title="${%ProjectNameTitle}">
+				<f:entry field="gradleHubProjectName" title="${%ProjectNameTitle}">
 					<f:textbox value="${it.getHubProjectName()}" default="${descriptor.getDefaultProjectName()}"/>
 				</f:entry>
 
-				<f:entry field="mavenHubProjectVersion" title="${%ProjectVersionTitle}">
+				<f:entry field="gradleHubProjectVersion" title="${%ProjectVersionTitle}">
 					<f:textbox value="${it.getHubProjectVersion()}" default="${descriptor.getDefaultProjectVersion()}"/>
 				</f:entry>
 
-				<f:entry field="mavenHubVersionPhase" title="${%VersionPhaseTitle}">
+				<f:entry field="gradleHubVersionPhase" title="${%VersionPhaseTitle}">
 					<f:select />
 				</f:entry>
-				<f:entry field="mavenHubVersionDist" title="${%VersionDistTitle}">
+				<f:entry field="gradleHubVersionDist" title="${%VersionDistTitle}">
 					<f:select />
 				</f:entry>
 				
 				<f:entry>
     				<div style="float:right">
-      					<input name="hubCreateButton" type="button" value="${%CreateProject}" class="yui-button validate-button" onclick="customWrapperCreateProject('${descriptor.descriptorFullUrl}/createHubWrapperProject', 'mavenHubProjectName,mavenHubProjectVersion,mavenHubVersionPhase,mavenHubVersionDist', this, 'mavenHubProjectName','mavenHubProjectVersion');" />
+      					<input name="hubCreateButton" type="button" value="${%CreateProject}" class="yui-button validate-button" onclick="customWrapperCreateProject('${descriptor.descriptorFullUrl}/createHubWrapperProject', 'gradleHubProjectName,gradleHubProjectVersion,gradleHubVersionPhase,gradleHubVersionDist', this, 'gradleHubProjectName','gradleHubProjectVersion');" />
     				</div>
     				<div style="display:none;">
       					<img src="${imagesURL}/spinner.gif" /> ${%CreateProjectProgress}

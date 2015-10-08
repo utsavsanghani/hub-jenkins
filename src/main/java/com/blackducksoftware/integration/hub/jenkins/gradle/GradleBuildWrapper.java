@@ -49,11 +49,11 @@ public class GradleBuildWrapper extends BDBuildWrapper {
     // Fields in config.jelly must match the parameter names in the
     // "DataBoundConstructor"
     @DataBoundConstructor
-    public GradleBuildWrapper(String userScopesToInclude, boolean sameAsPostBuildScan, String hubWrapperProjectName, String hubWrapperVersionPhase,
-            String hubWrapperVersionDist, String hubWrapperProjectVersion) {
+    public GradleBuildWrapper(String userScopesToInclude, boolean gradleSameAsPostBuildScan, String gradleHubProjectName, String gradleHubVersionPhase,
+            String gradleHubVersionDist, String gradleHubProjectVersion) {
 
-        super(userScopesToInclude, sameAsPostBuildScan, hubWrapperProjectName,
-                hubWrapperVersionPhase, hubWrapperVersionDist, hubWrapperProjectVersion);
+        super(userScopesToInclude, gradleSameAsPostBuildScan, gradleHubProjectName,
+                gradleHubVersionPhase, gradleHubVersionDist, gradleHubProjectVersion);
     }
 
     @Override

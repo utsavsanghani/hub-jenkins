@@ -6,6 +6,8 @@
 	<st:once>
 		<script type="text/javascript"
 			src="${rootURL}/plugin/hub-jenkins/js/HubJenkinsScan.js" />
+		<script type="text/javascript"
+			src="${rootURL}/plugin/hub-jenkins/js/HubJenkinsShared.js" />
 		<link href="${rootURL}/plugin/hub-jenkins/css/BdHubCustom.css"  rel="stylesheet" type="text/css"  />
 	</st:once>
 	
