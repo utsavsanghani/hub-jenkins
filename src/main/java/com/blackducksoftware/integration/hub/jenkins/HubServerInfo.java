@@ -87,7 +87,7 @@ public class HubServerInfo implements Serializable {
 
     }
 
-    protected UsernamePasswordCredentialsImpl getCredential() {
+    public UsernamePasswordCredentialsImpl getCredential() {
         // Only need to look up the credential when you first run a build or if the credential that the user wants to
         // use has changed.
         if (credential == null || !credential.getId().equals(hubCredentialsId)) {

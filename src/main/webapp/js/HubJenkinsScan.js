@@ -47,9 +47,10 @@ function customCreateProject(method, withVars, button) {
 
 function checkMavenWrapperIsEnabled(){
 	var mavenWrapperCheckBox = getFieldByName('com-blackducksoftware-integration-hub-jenkins-maven-MavenBuildWrapper');
+	var mavenReporterCheckBox = getFieldByName('com-blackducksoftware-integration-hub-jenkins-maven-HubMavenReporter');
 	
 	
-	if ((mavenWrapperCheckBox && mavenWrapperCheckBox.checked)) {
+	if ((mavenWrapperCheckBox && mavenWrapperCheckBox.checked) || (mavenReporterCheckBox && mavenReporterCheckBox.checked)) {
 		return true;
 	} else{
 		return false;
@@ -170,8 +171,11 @@ function enableSameAsBuildWrapper(onload) {
 		var hubVersionPhase = getFieldByName('_.hubVersionPhase');
 		var hubVersionDist = getFieldByName('_.hubVersionDist');
 
-			
-			addOnBlurToWrapperFields();
+		if(checkMavenWrapperIsEnabled()){
+			addOnBlurToWrapperFields('_.mavenHubProjectName', '_.mavenHubProjectVersion', '_.mavenHubVersionPhase', '_.mavenHubVersionDist', '_.mavenSameAsPostBuildScan');
+		}  else if(checkGradleWrapperIsEnabled()){
+			addOnBlurToWrapperFields('_.gradleHubProjectName', '_.gradleHubProjectVersion', '_.gradleHubVersionPhase', '_.gradleHubVersionDist', '_.gradleSameAsPostBuildScan');
+		}
 			
 			//We disable the scan fields since we want to use the wrapper fields
 			disableScanFields();
@@ -274,12 +278,11 @@ window.onload = function() {
 	useSameAsBuildWrapper(sameAsBuildWrapper, true);
 };
 
-function addOnBlurToWrapperFields() {
-	doubleOnBlur('_.hubProjectName', '_.hubProjectVersion', '_.hubWrapperProjectName', '_.sameAsBuildWrapper');
-	doubleOnBlur('_.hubProjectVersion', '_.hubProjectName', '_.hubWrapperProjectVersion', '_.sameAsBuildWrapper');
-	singleOnBlur('_.hubVersionPhase', '_.hubWrapperVersionPhase', '_.sameAsBuildWrapper');
-	singleOnBlur('_.hubVersionDist', '_.hubWrapperVersionDist', '_.sameAsBuildWrapper');
-
+function addOnBlurToWrapperFields(wrapperProjectFieldName, wrapperVersionFieldName, wrapperPhaseFieldName, wrapperDistFieldName, wrapperCheckBoxFieldName) {
+		doubleOnBlur('_.hubProjectName', '_.hubProjectVersion', wrapperProjectFieldName, wrapperCheckBoxFieldName);
+		doubleOnBlur('_.hubProjectVersion', '_.hubProjectName', wrapperVersionFieldName, wrapperCheckBoxFieldName);
+		singleOnBlur('_.hubVersionPhase', wrapperPhaseFieldName, wrapperCheckBoxFieldName);
+		singleOnBlur('_.hubVersionDist', wrapperDistFieldName, wrapperCheckBoxFieldName);
 }
 
 function addTextToMessageArea(txt){
