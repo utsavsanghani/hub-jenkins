@@ -13,8 +13,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.blackducksoftware.integration.hub.jenkins.gradle.BDGradleInitScriptWriter;
-import com.blackducksoftware.integration.hub.jenkins.tests.IntegrationTest;
-import com.blackducksoftware.integration.hub.jenkins.tests.TestLogger;
+import com.blackducksoftware.integration.hub.jenkins.tests.ScanIntegrationTest;
+import com.blackducksoftware.integration.hub.jenkins.tests.utils.TestLogger;
 
 public class BDGradleInitScriptWriterTest {
 
@@ -24,7 +24,7 @@ public class BDGradleInitScriptWriterTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        testWorkspace = IntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        testWorkspace = ScanIntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         testWorkspace = testWorkspace.substring(0, testWorkspace.indexOf(File.separator + "target"));
         testWorkspace = testWorkspace + File.separator + "test-workspace";
         testWorkspace = testWorkspace + File.separator + "scriptWriter";

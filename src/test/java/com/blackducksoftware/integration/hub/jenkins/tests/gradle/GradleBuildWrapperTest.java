@@ -23,7 +23,7 @@ import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.gradle.GradleBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.gradle.GradleBuildWrapper;
-import com.blackducksoftware.integration.hub.jenkins.tests.TestLogger;
+import com.blackducksoftware.integration.hub.jenkins.tests.utils.TestLogger;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider.UserFacingAction;
 import com.cloudbees.plugins.credentials.domains.Domain;
@@ -68,51 +68,43 @@ public class GradleBuildWrapperTest {
         return credential;
     }
 
-    public GradleBuildWrapper getGradleBuildWrapper(String userScopesToInclude, boolean sameAsPostBuildScan, String hubWrapperProjectName,
-            String hubWrapperVersionPhase,
-            String hubWrapperVersionDist, String hubWrapperProjectVersion) {
-        GradleBuildWrapper buildWrapper = new GradleBuildWrapper(userScopesToInclude, sameAsPostBuildScan, hubWrapperProjectName, hubWrapperVersionPhase,
-                hubWrapperVersionDist, hubWrapperProjectVersion);
-        return buildWrapper;
-    }
-
     @Test
     public void testIsPluginEnabled() {
         addGradleBuildWrapperDescriptor();
 
-        GradleBuildWrapper buildWrapper = getGradleBuildWrapper(null, false, null, null, null, null);
+        GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
         assertFalse(buildWrapper.isPluginEnabled());
 
-        buildWrapper = getGradleBuildWrapper("compile", false, null, null, null, null);
+        buildWrapper = new GradleBuildWrapper("compile", false, null, null, null, null);
         assertFalse(buildWrapper.isPluginEnabled());
 
-        buildWrapper = getGradleBuildWrapper("compile", false, "projectName", null, null, null);
+        buildWrapper = new GradleBuildWrapper("compile", false, "projectName", null, null, null);
         assertFalse(buildWrapper.isPluginEnabled());
 
-        buildWrapper = getGradleBuildWrapper("compile", false, "projectName", "phase", null, null);
+        buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", null, null);
         assertFalse(buildWrapper.isPluginEnabled());
 
-        buildWrapper = getGradleBuildWrapper("compile", false, "projectName", "phase", "dist", null);
+        buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", "dist", null);
         assertFalse(buildWrapper.isPluginEnabled());
 
-        buildWrapper = getGradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+        buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
         assertFalse(buildWrapper.isPluginEnabled());
 
         addHubServerInfo(new HubServerInfo());
-        buildWrapper = getGradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+        buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
         assertFalse(buildWrapper.isPluginEnabled());
 
         addHubServerInfo(new HubServerInfo("", null));
-        buildWrapper = getGradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+        buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
         assertFalse(buildWrapper.isPluginEnabled());
 
         addHubServerInfo(new HubServerInfo("testServer", null));
-        buildWrapper = getGradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+        buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
         assertFalse(buildWrapper.isPluginEnabled());
 
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("", "");
         addHubServerInfo(new HubServerInfo("testServer", credential.getId()));
-        buildWrapper = getGradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+        buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
         assertTrue(buildWrapper.isPluginEnabled());
 
     }
@@ -123,7 +115,7 @@ public class GradleBuildWrapperTest {
 
         TestLogger logger = new TestLogger(null);
 
-        GradleBuildWrapper buildWrapper = getGradleBuildWrapper(null, false, null, null, null, null);
+        GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
         assertFalse(buildWrapper.validateConfiguration(logger));
 
         String output = logger.getOutputString();
@@ -141,13 +133,33 @@ public class GradleBuildWrapperTest {
 
         addHubServerInfo(new HubServerInfo("", ""));
 
-        GradleBuildWrapper buildWrapper = getGradleBuildWrapper(null, false, null, null, null, null);
+        GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
         assertFalse(buildWrapper.validateConfiguration(logger));
 
         String output = logger.getOutputString();
         assertTrue(output, !output.contains("Could not find the Hub global configuration!"));
         assertTrue(output, output.contains("The Hub server URL is not configured!"));
         assertTrue(output, output.contains("No Hub credentials configured!"));
+    }
+
+    @Test
+    public void testValidateConfigurationWithGlobalConfigurationEmptyCredentials() {
+        addGradleBuildWrapperDescriptor();
+
+        TestLogger logger = new TestLogger(null);
+
+        UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("", "");
+        addHubServerInfo(new HubServerInfo("http://server.com", credential.getId()));
+
+        GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
+        assertFalse(buildWrapper.validateConfiguration(logger));
+
+        String output = logger.getOutputString();
+        assertTrue(output, output.contains("No Hub username configured!"));
+        assertTrue(output, output.contains("No Hub password configured!"));
+        assertTrue(output, !output.contains("Could not find the Hub global configuration!"));
+        assertTrue(output, !output.contains("The Hub server URL is not configured!"));
+        assertTrue(output, !output.contains("No Hub credentials configured!"));
     }
 
     @Test
@@ -159,7 +171,7 @@ public class GradleBuildWrapperTest {
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("User", "Password");
         addHubServerInfo(new HubServerInfo("http://server.com", credential.getId()));
 
-        GradleBuildWrapper buildWrapper = getGradleBuildWrapper(null, false, null, null, null, null);
+        GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
         assertFalse(buildWrapper.validateConfiguration(logger));
 
         String output = logger.getOutputString();
@@ -177,7 +189,7 @@ public class GradleBuildWrapperTest {
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("User", "Password");
         addHubServerInfo(new HubServerInfo("http://server.com", credential.getId()));
 
-        GradleBuildWrapper buildWrapper = getGradleBuildWrapper("Compile", false, "Project", null, null, "Version");
+        GradleBuildWrapper buildWrapper = new GradleBuildWrapper("Compile", false, "Project", null, null, "Version");
         assertTrue(buildWrapper.validateConfiguration(logger));
 
         String output = logger.getOutputString();
@@ -191,7 +203,7 @@ public class GradleBuildWrapperTest {
 
         addGradleBuildWrapperDescriptor();
 
-        GradleBuildWrapper buildWrapper = getGradleBuildWrapper(null, false, null, null, null, null);
+        GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
 
         HashMap<String, String> variables = new HashMap<String, String>();
 
@@ -202,7 +214,7 @@ public class GradleBuildWrapperTest {
     public void testHandleVariableReplacement() throws Exception {
         addGradleBuildWrapperDescriptor();
 
-        GradleBuildWrapper buildWrapper = getGradleBuildWrapper(null, false, null, null, null, null);
+        GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
 
         HashMap<String, String> variables = new HashMap<String, String>();
         variables.put("TEST", "Value");
@@ -214,7 +226,7 @@ public class GradleBuildWrapperTest {
     @Test
     public void testGetScopesAsListInvalidScopes() throws Exception {
         TestLogger logger = new TestLogger(null);
-        GradleBuildWrapper buildWrapper = getGradleBuildWrapper(null, false, null, null, null, null);
+        GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
         buildWrapper.getScopesAsList(logger);
         String output = logger.getOutputString();
         assertTrue(output, output.contains("Cannot get Configurations from an empty String"));
@@ -222,7 +234,7 @@ public class GradleBuildWrapperTest {
 
     @Test
     public void testGetScopesAsList() throws Exception {
-        GradleBuildWrapper buildWrapper = getGradleBuildWrapper("Compile, Test, Fake", false, null, null, null, null);
+        GradleBuildWrapper buildWrapper = new GradleBuildWrapper("Compile, Test, Fake", false, null, null, null, null);
         List<String> scopeList = buildWrapper.getScopesAsList(null);
 
         assertTrue(scopeList.contains("COMPILE"));

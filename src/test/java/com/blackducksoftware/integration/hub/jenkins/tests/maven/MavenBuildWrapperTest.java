@@ -23,7 +23,7 @@ import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.maven.MavenBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.maven.MavenBuildWrapper;
-import com.blackducksoftware.integration.hub.jenkins.tests.TestLogger;
+import com.blackducksoftware.integration.hub.jenkins.tests.utils.TestLogger;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider.UserFacingAction;
 import com.cloudbees.plugins.credentials.domains.Domain;
@@ -68,51 +68,43 @@ public class MavenBuildWrapperTest {
         return credential;
     }
 
-    public MavenBuildWrapper getMavenBuildWrapper(String userScopesToInclude, boolean sameAsPostBuildScan, String hubWrapperProjectName,
-            String hubWrapperVersionPhase,
-            String hubWrapperVersionDist, String hubWrapperProjectVersion) {
-        MavenBuildWrapper buildWrapper = new MavenBuildWrapper(userScopesToInclude, sameAsPostBuildScan, hubWrapperProjectName, hubWrapperVersionPhase,
-                hubWrapperVersionDist, hubWrapperProjectVersion);
-        return buildWrapper;
-    }
-
     @Test
     public void testIsPluginEnabled() {
         addMavenBuildWrapperDescriptor();
 
-        MavenBuildWrapper buildWrapper = getMavenBuildWrapper(null, false, null, null, null, null);
+        MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
         assertFalse(buildWrapper.isPluginEnabled());
 
-        buildWrapper = getMavenBuildWrapper("compile", false, null, null, null, null);
+        buildWrapper = new MavenBuildWrapper("compile", false, null, null, null, null);
         assertFalse(buildWrapper.isPluginEnabled());
 
-        buildWrapper = getMavenBuildWrapper("compile", false, "projectName", null, null, null);
+        buildWrapper = new MavenBuildWrapper("compile", false, "projectName", null, null, null);
         assertFalse(buildWrapper.isPluginEnabled());
 
-        buildWrapper = getMavenBuildWrapper("compile", false, "projectName", "phase", null, null);
+        buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", null, null);
         assertFalse(buildWrapper.isPluginEnabled());
 
-        buildWrapper = getMavenBuildWrapper("compile", false, "projectName", "phase", "dist", null);
+        buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", null);
         assertFalse(buildWrapper.isPluginEnabled());
 
-        buildWrapper = getMavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+        buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
         assertFalse(buildWrapper.isPluginEnabled());
 
         addHubServerInfo(new HubServerInfo());
-        buildWrapper = getMavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+        buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
         assertFalse(buildWrapper.isPluginEnabled());
 
         addHubServerInfo(new HubServerInfo("", null));
-        buildWrapper = getMavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+        buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
         assertFalse(buildWrapper.isPluginEnabled());
 
         addHubServerInfo(new HubServerInfo("testServer", null));
-        buildWrapper = getMavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+        buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
         assertFalse(buildWrapper.isPluginEnabled());
 
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("", "");
         addHubServerInfo(new HubServerInfo("testServer", credential.getId()));
-        buildWrapper = getMavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+        buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
         assertTrue(buildWrapper.isPluginEnabled());
 
     }
@@ -123,7 +115,7 @@ public class MavenBuildWrapperTest {
 
         TestLogger logger = new TestLogger(null);
 
-        MavenBuildWrapper buildWrapper = getMavenBuildWrapper(null, false, null, null, null, null);
+        MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
         assertFalse(buildWrapper.validateConfiguration(logger));
 
         String output = logger.getOutputString();
@@ -141,7 +133,7 @@ public class MavenBuildWrapperTest {
 
         addHubServerInfo(new HubServerInfo("", ""));
 
-        MavenBuildWrapper buildWrapper = getMavenBuildWrapper(null, false, null, null, null, null);
+        MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
         assertFalse(buildWrapper.validateConfiguration(logger));
 
         String output = logger.getOutputString();
@@ -159,7 +151,7 @@ public class MavenBuildWrapperTest {
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("User", "Password");
         addHubServerInfo(new HubServerInfo("http://server.com", credential.getId()));
 
-        MavenBuildWrapper buildWrapper = getMavenBuildWrapper(null, false, null, null, null, null);
+        MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
         assertFalse(buildWrapper.validateConfiguration(logger));
 
         String output = logger.getOutputString();
@@ -177,7 +169,7 @@ public class MavenBuildWrapperTest {
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("User", "Password");
         addHubServerInfo(new HubServerInfo("http://server.com", credential.getId()));
 
-        MavenBuildWrapper buildWrapper = getMavenBuildWrapper("Compile", false, "Project", null, null, "Version");
+        MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Compile", false, "Project", null, null, "Version");
         assertTrue(buildWrapper.validateConfiguration(logger));
 
         String output = logger.getOutputString();
@@ -189,7 +181,7 @@ public class MavenBuildWrapperTest {
         exception.expect(BDJenkinsHubPluginException.class);
         exception.expectMessage("Variable was not properly replaced. Value : ${TEST}, Result : ${TEST}. Make sure the variable has been properly defined.");
 
-        MavenBuildWrapper buildWrapper = getMavenBuildWrapper(null, false, null, null, null, null);
+        MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
 
         HashMap<String, String> variables = new HashMap<String, String>();
 
@@ -198,7 +190,7 @@ public class MavenBuildWrapperTest {
 
     @Test
     public void testHandleVariableReplacement() throws Exception {
-        MavenBuildWrapper buildWrapper = getMavenBuildWrapper(null, false, null, null, null, null);
+        MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
 
         HashMap<String, String> variables = new HashMap<String, String>();
         variables.put("TEST", "Value");
@@ -210,14 +202,14 @@ public class MavenBuildWrapperTest {
     @Test
     public void testGetScopesAsListInvalidScopes() throws Exception {
         TestLogger logger = new TestLogger(null);
-        MavenBuildWrapper buildWrapper = getMavenBuildWrapper("Invalid", false, null, null, null, null);
+        MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Invalid", false, null, null, null, null);
         buildWrapper.getScopesAsList(logger);
         String output = logger.getOutputString();
         assertTrue(output, output.contains("The user has provided an unknown scope :"));
 
         logger.resetAllOutput();
 
-        buildWrapper = getMavenBuildWrapper(null, false, null, null, null, null);
+        buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
         buildWrapper.getScopesAsList(logger);
         output = logger.getOutputString();
         assertTrue(output, output.contains("Cannot get Scopes from an empty String"));
@@ -225,7 +217,7 @@ public class MavenBuildWrapperTest {
 
     @Test
     public void testGetScopesAsList() throws Exception {
-        MavenBuildWrapper buildWrapper = getMavenBuildWrapper("Compile, Test", false, null, null, null, null);
+        MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Compile, Test", false, null, null, null, null);
         List<String> scopeList = buildWrapper.getScopesAsList(null);
 
         assertTrue(scopeList.contains("COMPILE"));

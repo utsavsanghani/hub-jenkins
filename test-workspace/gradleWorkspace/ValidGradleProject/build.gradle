@@ -1,0 +1,36 @@
+apply plugin: 'groovy'
+apply plugin: 'java'
+
+
+repositories {
+	maven { url "http://artifactory.blackducksoftware.com:8081/artifactory/blackduck-staging-repos/" }
+	maven { url "http://artifactory.blackducksoftware.com:8081/artifactory/product-protex/" }
+}
+
+ configurations {
+ 	customConfiguration
+ 	
+ 	myIntegrationTestsCompile.extendsFrom(testCompile)
+ }
+
+dependencies {
+	// overwrite the cxf version used
+	compile group: "org.apache.cxf", name: "cxf-bundle", version: "2.7.7"
+
+	compile group: "net.sf.opencsv", name: "opencsv", version: "2.3"
+	compile group: "org.apache.ant", name: "ant", version: "1.7.1"
+	compile group: "log4j", name: "log4j", version: "1.2.17"
+	compile group: "com.blackducksoftware.plugins", name: "protex-plugin-integration", version: "1.0.2"
+	compile group: "com.google.code.findbugs", name: "findbugs", version: "2.0.1" // for tagging acceptable sonar violations
+//	compile files("src/main/resources/log4j.xml")
+
+	testCompile group: "junit", name: "junit", version: "4.11"
+	testCompile group: "org.mockito", name: "mockito-all", version: "1.9.5"
+	testCompile group: "org.apache.ant", name: "ant-testutil", version: "1.7.1"
+
+
+	customConfiguration group: "commons-codec", name: "commons-codec", version: "1.8"
+	
+	myIntegrationTestsCompile group: "org.mockito", name: "mockito-all", version: "1.9.5"
+	myIntegrationTestsCompile group: "org.apache.ant", name: "ant-testutil", version: "1.7.1"
+}

@@ -1,4 +1,4 @@
-package com.blackducksoftware.integration.hub.jenkins.tests;
+package com.blackducksoftware.integration.hub.jenkins.tests.utils;
 
 import org.apache.commons.lang.StringUtils;
 import org.restlet.data.Cookie;
@@ -12,7 +12,7 @@ import com.blackducksoftware.integration.hub.jenkins.Messages;
 
 public class JenkinsHubIntTestHelper extends HubIntRestService {
 
-    protected JenkinsHubIntTestHelper(String baseUrl) {
+    public JenkinsHubIntTestHelper(String baseUrl) {
         super(baseUrl);
     }
 

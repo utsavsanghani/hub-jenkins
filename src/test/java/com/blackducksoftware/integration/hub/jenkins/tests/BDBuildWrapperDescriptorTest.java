@@ -28,6 +28,7 @@ import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
 import com.blackducksoftware.integration.hub.response.ProjectItem;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider.UserFacingAction;

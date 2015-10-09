@@ -1,4 +1,4 @@
-package com.blackducksoftware.integration.hub.jenkins.tests;
+package com.blackducksoftware.integration.hub.jenkins.tests.utils;
 
 import hudson.model.BuildListener;
 

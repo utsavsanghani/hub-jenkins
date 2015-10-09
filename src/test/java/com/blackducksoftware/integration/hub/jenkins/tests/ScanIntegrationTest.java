@@ -37,6 +37,7 @@ import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
 import com.blackducksoftware.integration.hub.response.DistributionEnum;
 import com.blackducksoftware.integration.hub.response.PhaseEnum;
 import com.blackducksoftware.integration.hub.response.ProjectItem;
@@ -46,7 +47,7 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
-public class IntegrationTest {
+public class ScanIntegrationTest {
 
     private static final String DEFAULT_ISCAN = "default";
 
@@ -79,7 +80,7 @@ public class IntegrationTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        basePath = IntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        basePath = ScanIntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf(File.separator + "target"));
         basePath = basePath + File.separator + "test-workspace";
         iScanInstallPath = basePath + File.separator + "scan.cli-2.1.2";

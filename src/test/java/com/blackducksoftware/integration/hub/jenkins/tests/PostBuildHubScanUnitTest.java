@@ -38,6 +38,7 @@ import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
+import com.blackducksoftware.integration.hub.jenkins.tests.utils.TestLogger;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 import com.google.common.base.Charsets;
 
@@ -68,7 +69,7 @@ public class PostBuildHubScanUnitTest {
 
     @BeforeClass
     public static void init() {
-        basePath = IntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        basePath = ScanIntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf("/target"));
         basePath = basePath + "/test-workspace";
         iScanInstallPath = basePath + "/scan.cli-2.1.2";
