@@ -75,7 +75,7 @@ public class BDBuildWrapperDescriptorTest {
 
     public static void projectCleanup() {
         try {
-            ProjectItem project = restHelper.getProjectByName(testProperties.getProperty("TEST_PROJECT"));
+            ProjectItem project = restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT"));
             if (project != null && project.getId() != null) {
                 restHelper.deleteHubProject(project.getId());
             }
@@ -85,9 +85,17 @@ public class BDBuildWrapperDescriptorTest {
     }
 
     public void addHubServerInfo(HubServerInfo hubServerInfo) {
+        resetPublisherDescriptors();
+
         PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         descriptor.setHubServerInfo(hubServerInfo);
         j.getInstance().getDescriptorList(Publisher.class).add(descriptor);
+    }
+
+    public void resetPublisherDescriptors() {
+        while (j.getInstance().getDescriptorList(Publisher.class).size() != 0) {
+            j.getInstance().getDescriptorList(Publisher.class).remove(0);
+        }
     }
 
     public UsernamePasswordCredentialsImpl addCredentialToGlobalStore(String username, String password) {
@@ -114,7 +122,8 @@ public class BDBuildWrapperDescriptorTest {
         addHubServerInfo(hubServerInfo);
 
         try {
-            FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
+            FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
+                    testProperties.getProperty("TEST_CREATE_VERSION"),
                     "DEVELOPMENT", "EXTERNAL");
 
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
@@ -123,16 +132,16 @@ public class BDBuildWrapperDescriptorTest {
             // wait 1.5 seconds before checking for the project and release
             Thread.sleep(3000);
             // Need to wait a second before checking if the project exists or it will not be recognized
-            FormValidation form2 = descriptor.doCheckHubWrapperProjectName(testProperties.getProperty("TEST_PROJECT"), null);
+            FormValidation form2 = descriptor.doCheckHubWrapperProjectName(testProperties.getProperty("TEST_CREATE_PROJECT"), null);
             Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
             Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectExistsIn_0_(testProperties.getProperty("TEST_HUB_SERVER_URL")));
 
-            FormValidation form3 = descriptor.doCheckHubWrapperProjectVersion(testProperties.getProperty("TEST_VERSION"),
-                    testProperties.getProperty("TEST_PROJECT"));
+            FormValidation form3 = descriptor.doCheckHubWrapperProjectVersion(testProperties.getProperty("TEST_CREATE_VERSION"),
+                    testProperties.getProperty("TEST_CREATE_PROJECT"));
             assertEquals(FormValidation.Kind.OK, form3.kind);
             assertTrue(form3.getMessage().contains(Messages.HubBuildScan_getVersionExistsIn_0_("")));
         } finally {
-            restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_PROJECT")).getId());
+            restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
         }
 
     }
@@ -149,16 +158,18 @@ public class BDBuildWrapperDescriptorTest {
         addHubServerInfo(hubServerInfo);
         try {
             Thread.sleep(3000);
-            FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
+            FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
+                    testProperties.getProperty("TEST_CREATE_VERSION"),
                     "DEVELOPMENT", "EXTERNAL");
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
             Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectAndVersionCreated());
             Thread.sleep(3000);
-            FormValidation form2 = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), "New Release", "DEVELOPMENT", "EXTERNAL");
+            FormValidation form2 = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"), "New Release", "DEVELOPMENT",
+                    "EXTERNAL");
             Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
             Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectAndVersionCreated());
         } finally {
-            restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_PROJECT")).getId());
+            restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
         }
     }
 
@@ -175,17 +186,19 @@ public class BDBuildWrapperDescriptorTest {
 
         try {
             Thread.sleep(3000);
-            FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
+            FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
+                    testProperties.getProperty("TEST_CREATE_VERSION"),
                     "DEVELOPMENT", "EXTERNAL");
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
             Assert.assertEquals(Messages.HubBuildScan_getProjectAndVersionCreated(), form.getMessage());
             Thread.sleep(3000);
-            FormValidation form2 = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
+            FormValidation form2 = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
+                    testProperties.getProperty("TEST_CREATE_VERSION"),
                     "DEVELOPMENT", "EXTERNAL");
             Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
             Assert.assertEquals(Messages.HubBuildScan_getProjectAndVersionExist(), form2.getMessage());
         } finally {
-            restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_PROJECT")).getId());
+            restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
         }
     }
 
@@ -200,12 +213,13 @@ public class BDBuildWrapperDescriptorTest {
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         addHubServerInfo(hubServerInfo);
 
-        FormValidation form = descriptor.doCreateHubWrapperProject("${JOB_NAME}", testProperties.getProperty("TEST_VERSION"), "DEVELOPMENT", "EXTERNAL");
+        FormValidation form = descriptor.doCreateHubWrapperProject("${JOB_NAME}", testProperties.getProperty("TEST_CREATE_VERSION"), "DEVELOPMENT", "EXTERNAL");
 
         Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNameContainsVariable());
 
-        FormValidation form2 = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), "${BUILD_NUMBER}", "DEVELOPMENT", "EXTERNAL");
+        FormValidation form2 = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"), "${BUILD_NUMBER}", "DEVELOPMENT",
+                "EXTERNAL");
 
         Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
         Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectCreated() + " :: " + Messages.HubBuildScan_getProjectVersionContainsVariable());
@@ -259,17 +273,18 @@ public class BDBuildWrapperDescriptorTest {
         addHubServerInfo(hubServerInfo);
 
         try {
-            FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_PROJECT"), testProperties.getProperty("TEST_VERSION"),
+            FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
+                    testProperties.getProperty("TEST_CREATE_VERSION"),
                     "DEVELOPMENT", "EXTERNAL");
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
             Assert.assertEquals(Messages.HubBuildScan_getProjectAndVersionCreated(), form.getMessage());
             Thread.sleep(2000);
-            FormValidation form2 = descriptor.doCheckHubWrapperProjectVersion(PROJECT_RELEASE_NOT_EXISTING, testProperties.getProperty("TEST_PROJECT"));
+            FormValidation form2 = descriptor.doCheckHubWrapperProjectVersion(PROJECT_RELEASE_NOT_EXISTING, testProperties.getProperty("TEST_CREATE_PROJECT"));
             Assert.assertEquals(FormValidation.Kind.ERROR, form2.kind);
             Assert.assertTrue(form2.getMessage(),
-                    form2.getMessage().contains(Messages.HubBuildScan_getVersionNonExistingIn_0_(testProperties.getProperty("TEST_PROJECT"), "")));
+                    form2.getMessage().contains(Messages.HubBuildScan_getVersionNonExistingIn_0_(testProperties.getProperty("TEST_CREATE_PROJECT"), "")));
         } finally {
-            restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_PROJECT")).getId());
+            restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
         }
     }
 
@@ -285,7 +300,7 @@ public class BDBuildWrapperDescriptorTest {
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProvideProjectName());
 
-        FormValidation form2 = descriptor.doCheckHubWrapperProjectVersion("${BUILD_NUMBER}", testProperties.getProperty("TEST_PROJECT"));
+        FormValidation form2 = descriptor.doCheckHubWrapperProjectVersion("${BUILD_NUMBER}", testProperties.getProperty("TEST_CREATE_PROJECT"));
         Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
         Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectVersionContainsVariable());
     }
@@ -302,7 +317,7 @@ public class BDBuildWrapperDescriptorTest {
         addHubServerInfo(hubServerInfo);
 
         FormValidation form = descriptor
-                .doCheckHubWrapperProjectVersion(testProperties.getProperty("TEST_VERSION"), testProperties.getProperty("TEST_PROJECT"));
+                .doCheckHubWrapperProjectVersion(testProperties.getProperty("TEST_CREATE_VERSION"), testProperties.getProperty("TEST_CREATE_PROJECT"));
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
         Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_()));
     }

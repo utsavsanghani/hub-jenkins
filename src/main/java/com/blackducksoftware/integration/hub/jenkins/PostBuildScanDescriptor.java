@@ -585,7 +585,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            HubIntRestService service = getRestService(getHubServerUrl(), null, null);
+            HubIntRestService service = getRestService(serverUrl, null, null);
 
             int responseCode = service.setCookies(credentialUserName, credentialPassword);
 

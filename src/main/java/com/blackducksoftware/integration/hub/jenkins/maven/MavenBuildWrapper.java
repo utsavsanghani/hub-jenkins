@@ -41,6 +41,7 @@ import com.blackducksoftware.integration.hub.jenkins.remote.GetPathSeparator;
 import com.blackducksoftware.integration.hub.maven.BdMavenConfigurator;
 import com.blackducksoftware.integration.hub.maven.Scope;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
+import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
 import com.google.gson.Gson;
 
 /**
@@ -70,6 +71,27 @@ public class MavenBuildWrapper extends BDBuildWrapper {
             String mavenHubVersionDist, String mavenHubProjectVersion) {
         super(userScopesToInclude, mavenSameAsPostBuildScan, mavenHubProjectName,
                 mavenHubVersionPhase, mavenHubVersionDist, mavenHubProjectVersion);
+    }
+
+    // Need these getters for the UI
+    public boolean isMavenSameAsPostBuildScan() {
+        return isSameAsPostBuildScan();
+    }
+
+    public String getMavenHubProjectName() {
+        return getHubWrapperProjectName();
+    }
+
+    public String getMavenHubVersionPhase() {
+        return getHubWrapperVersionPhase();
+    }
+
+    public String getMavenHubVersionDist() {
+        return getHubWrapperVersionDist();
+    }
+
+    public String getMavenHubProjectVersion() {
+        return getHubWrapperProjectVersion();
     }
 
     // Overridden for better type safety.
@@ -103,6 +125,7 @@ public class MavenBuildWrapper extends BDBuildWrapper {
             InterruptedException {
         // no failure to report yet
         HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
+        buildLogger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
         Maven mavenBuilder = null;
         if (build.getProject() instanceof FreeStyleProject) {
             // Project should always be a FreeStyleProject, thats why we have the isApplicable() method

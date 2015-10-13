@@ -303,7 +303,7 @@ public class PostBuildHubScan extends Recorder {
                     String versionId = null;
                     if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
                         projectId = ensureProjectExists(service, logger, projectName);
-
+                        Thread.sleep(500);
                         versionId = ensureVersionExists(service, logger, projectVersion, projectId);
 
                         if (StringUtils.isEmpty(projectId)) {

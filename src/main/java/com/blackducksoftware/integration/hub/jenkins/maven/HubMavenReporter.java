@@ -1,6 +1,7 @@
 package com.blackducksoftware.integration.hub.jenkins.maven;
 
 import hudson.Launcher;
+import hudson.Util;
 import hudson.ProxyConfiguration;
 import hudson.maven.MavenBuildProxy;
 import hudson.maven.MavenReporter;
@@ -19,6 +20,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import jenkins.model.Jenkins;
@@ -39,6 +41,7 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.maven.Scope;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
+import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
 
 public class HubMavenReporter extends MavenReporter {
 
@@ -140,6 +143,7 @@ public class HubMavenReporter extends MavenReporter {
             BuildListener listener) throws InterruptedException, IOException {
 
         HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
+        buildLogger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
         buildLogger.info("Collecting dependencies info");
         dependencies = new HashSet<BuildDependency>();
         buildArtifact = createBuildArtifact(pom);
@@ -158,11 +162,9 @@ public class HubMavenReporter extends MavenReporter {
     public boolean postExecute(MavenBuildProxy build, MavenProject pom,
             MojoInfo mojo, BuildListener listener, Throwable error)
             throws InterruptedException, IOException {
-        // buildLogger.infobuildLogger("[MavenDependenciesRecorder] mojo: " +
-        // mojo.getClass() + ":" + mojo.getGoal());
-        // buildLogger.infobuildLogger("[MavenDependenciesRecorder] dependencies: "
-        // + pom.getArtifacts());
+
         HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
+        buildLogger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
         buildLogger.debug("postExecute()");
         recordMavenDependencies(pom.getArtifacts());
         build.registerAsProjectAction(this);
@@ -175,46 +177,8 @@ public class HubMavenReporter extends MavenReporter {
     @Override
     public boolean postBuild(MavenBuildProxy build, MavenProject pom, BuildListener listener) throws InterruptedException,
             IOException {
-        // build.executeAsync(new BuildCallable<Void, IOException>() {
-        // // record is transient, so needs to make a copy first
-        // private final Set<Artifact> d = dependencies;
-        //
-        // public Void call(MavenBuild build) throws IOException,
-        // InterruptedException {
-        // // add the action
-        // //TODO: [by yl] These actions are persisted into the build.xml of
-        // each build run - we need another
-        // //context to store these actions
-        // build.getActions().add(new MavenDependenciesRecord(build, d));
-        // return null;
-        // }
-        // });
-        // List<BuildDependency> projectDependencies = new
-        // ArrayList<BuildDependency>();
-        // for (Dependency d : dependencies) {
-        // BuildDependency currentDependency = new BuildDependency();
-        // org.sonatype.aether.artifact.Artifact artifact = d.getArtifact();
-        // currentDependency.setGroup(artifact.getGroupId());
-        // currentDependency.setArtifactId(artifact.getArtifactId());
-        // currentDependency.setVersion(artifact.getVersion());
-        // currentDependency.setScope(d.getScope());
-        // currentDependency.setClassifier(artifact.getClassifier());
-        // currentDependency.setExtension(artifact.getExtension());
-        // projectDependencies.add(currentDependency);
-        // }
-
-        // buildLogger.infobuildLogger(build.getWorkspace() + " - exists: " + build.getWorkspace().exists());
-        // FilePath buildInfoPath = new FilePath(build.getWorkspace(), BuildInfo.OUTPUT_FILE_NAME);
-        // buildLogger.infobuildLogger("May fail on slave - : " + in.getRemote());
-        // buildLogger.infobuildLogger("exists " + in.exists());
-        // BuildInfo buildInfo;
-        // try {
-        // buildInfo = BuildInfo.parseFileForDependencies(in.read(), build.getId());
-        // } catch (Exception e) {
-        // buildLogger.error(e.getMessage(), e);
-        // throw new RuntimeException(e);
-        // }
         HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
+        buildLogger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -245,7 +209,7 @@ public class HubMavenReporter extends MavenReporter {
     @Override
     public boolean end(MavenBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
-
+        buildLogger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
         buildLogger.info("Hub Jenkins Plugin version : " + getDescriptor().getPluginVersion());
         if (build == null) {
             buildLogger.error("Build: null. The Hub Maven Reporter will not run.");
@@ -260,73 +224,75 @@ public class HubMavenReporter extends MavenReporter {
                     // Single module was built
                     rootBuild = build;
                 }
-                // try {
-                // if (HubMavenReporter.class.getClassLoader() != originalClassLoader) {
-                // changed = true;
-                // Thread.currentThread().setContextClassLoader(HubMavenReporter.class.getClassLoader());
-                // }
-                // CodeCenterBuildWrapper.DescriptorImpl desc = getBuildWrapperDesc();
-                // buildLogger.debug("Descriptor: " + desc);
-                // CodeCenterCIFacade facade = getFacade(desc, buildLogger);
-                //
-                // // add action
-                // boolean reportComplete = false;
-                // CodeCenterGovernanceReportAction reportAction =
-                // rootBuild.getAction(CodeCenterGovernanceReportAction.class);
-                // if (reportAction == null) {
-                // reportAction = new CodeCenterGovernanceReportAction(rootBuild);
-                // buildLogger.debug("Adding Action " + reportAction);
-                // rootBuild.addAction(reportAction);
-                // } else {
-                // reportComplete = true;
-                // }
-                // BuildInfoAction biAction = rootBuild.getAction(BuildInfoAction.class);
-                // if (biAction != null) {
-                // buildLogger.debug(
-                // "BuildInfo :" + biAction.getBuildInfo().getBuildId() + "==" + rootBuild.getId());
-                // // We don't want that action anymore
-                // rootBuild.getActions().remove(biAction);
-                // GovernanceReportGenerator reportGenerator = new GovernanceReportGenerator(facade,
-                // biAction.getBuildInfo(),
-                // getCodeCenterApplicationName(), getCodeCenterApplicationVersion(), isAutoCreateComponentRequests(),
-                // isSubmitComponentRequests(), isAutoSwitchNotInUseRequests(),
-                // getScopesAsList(buildLogger), build);
-                //
-                // Result result = rootBuild.getResult();
-                // try {
-                // result = reportGenerator.generateReport(reportAction, buildLogger, BuilderType.MAVEN);
-                // } catch (BDCIFacadeException e) {
-                // buildLogger.error(e.getMessage(), e);
-                // rootBuild.setResult(Result.UNSTABLE);
-                // }
-                // rootBuild.setResult(result);
-                //
-                // } else {
-                // if (!reportComplete) {
-                // buildLogger.warn("No buildInfoAction found on build: " + rootBuild.getId());
-                // // } else {
-                // // The report has already been completed.
-                // // This method runs after the entire multi-module build is done
-                // // This is called for each module
-                // // We only need one report
-                // }
-                // }
-                // // for (hudson.model.Action a : build.getActions()) {
-                // // buildLogger.info("Action: " + a.getDisplayName() + " (" + a.getClass().getName() + ")");
-                // // if (a instanceof CodeCenterGovernanceReportAction) {
-                // // CodeCenterGovernanceReportAction b = (CodeCenterGovernanceReportAction) a;
-                // // buildLogger.info("** Application: " + b.getApplication() + "::" + b.getBuild());
-                // // }
-                // // }
-                // } catch (Exception e1) {
-                // buildLogger.error(e1.getMessage(), e1);
-                // rootBuild.setResult(Result.UNSTABLE);
-                // } finally {
-                // if (changed) {
-                // Thread.currentThread().setContextClassLoader(
-                // originalClassLoader);
-                // }
-                // }
+                try {
+                    if (HubMavenReporter.class.getClassLoader() != originalClassLoader) {
+                        changed = true;
+                        Thread.currentThread().setContextClassLoader(HubMavenReporter.class.getClassLoader());
+                    }
+
+                    // add action
+                    // boolean reportComplete = false;
+                    // CodeCenterGovernanceReportAction reportAction =
+                    // rootBuild.getAction(CodeCenterGovernanceReportAction.class);
+                    // if (reportAction == null) {
+                    // reportAction = new CodeCenterGovernanceReportAction(rootBuild);
+                    // buildLogger.debug("Adding Action " + reportAction);
+                    // rootBuild.addAction(reportAction);
+                    // } else {
+                    // reportComplete = true;
+                    // }
+
+                    BuildInfoAction biAction = rootBuild.getAction(BuildInfoAction.class);
+                    if (biAction != null) {
+                        buildLogger.debug(
+                                "BuildInfo :" + biAction.getBuildInfo().getBuildId() + "==" + rootBuild.getId());
+                        // We don't want that action anymore
+
+                        // rootBuild.getActions().remove(biAction);
+
+                        // GovernanceReportGenerator reportGenerator = new GovernanceReportGenerator(facade,
+                        // biAction.getBuildInfo(),
+                        // getCodeCenterApplicationName(), getCodeCenterApplicationVersion(),
+                        // isAutoCreateComponentRequests(),
+                        // isSubmitComponentRequests(), isAutoSwitchNotInUseRequests(),
+                        // getScopesAsList(buildLogger), build);
+                        //
+                        // Result result = rootBuild.getResult();
+                        // try {
+                        // result = reportGenerator.generateReport(reportAction, buildLogger, BuilderType.MAVEN);
+                        // } catch (BDCIFacadeException e) {
+                        // buildLogger.error(e.getMessage(), e);
+                        // rootBuild.setResult(Result.UNSTABLE);
+                        // }
+
+                        // rootBuild.setResult(result);
+
+                    } else {
+                        // if (!reportComplete) {
+                        buildLogger.warn("No buildInfoAction found on build: " + rootBuild.getId());
+                        // } else {
+                        // The report has already been completed.
+                        // This method runs after the entire multi-module build is done
+                        // This is called for each module
+                        // We only need one report
+                        // }
+                    }
+                    // for (hudson.model.Action a : build.getActions()) {
+                    // buildLogger.info("Action: " + a.getDisplayName() + " (" + a.getClass().getName() + ")");
+                    // if (a instanceof CodeCenterGovernanceReportAction) {
+                    // CodeCenterGovernanceReportAction b = (CodeCenterGovernanceReportAction) a;
+                    // buildLogger.info("** Application: " + b.getApplication() + "::" + b.getBuild());
+                    // }
+                    // }
+                } catch (Exception e1) {
+                    buildLogger.error(e1.getMessage(), e1);
+                    rootBuild.setResult(Result.UNSTABLE);
+                } finally {
+                    if (changed) {
+                        Thread.currentThread().setContextClassLoader(
+                                originalClassLoader);
+                    }
+                }
             } else {
                 AbstractBuild<?, ?> rootBuild = build.getRootBuild();
                 rootBuild.setResult(Result.UNSTABLE);
@@ -510,6 +476,30 @@ public class HubMavenReporter extends MavenReporter {
             return false;
         }
         return true;
+    }
+
+    /**
+     *
+     * @param variables
+     *            Map of variables
+     * @param value
+     *            String to check for variables
+     * @return the new Value with the variables replaced
+     * @throws BDJenkinsHubPluginException
+     */
+    public String handleVariableReplacement(Map<String, String> variables, String value) throws BDJenkinsHubPluginException {
+        if (value != null) {
+
+            String newValue = Util.replaceMacro(value, variables);
+
+            if (newValue.contains("$")) {
+                throw new BDJenkinsHubPluginException("Variable was not properly replaced. Value : " + value + ", Result : " + newValue
+                        + ". Make sure the variable has been properly defined.");
+            }
+            return newValue;
+        } else {
+            return null;
+        }
     }
 
 }

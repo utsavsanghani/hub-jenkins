@@ -12,9 +12,9 @@ var checker = function(el) {
 }
 
 function singleOnBlur(fieldNameToUpdate, fieldNameToBlur, checkBoxFieldName) {
-	var fieldToUpdate = getFieldByName(fieldNameToBlur);
-	if(fieldToUpdate){
-		fieldToUpdate.onblur = function() {
+	var fieldToBlur = getFieldByName(fieldNameToBlur);
+	if(fieldToBlur){
+		fieldToBlur.onblur = function() {
 			// When the field to blur is changed and then loses focus, this method will run 
 			// This will trigger the specified field to update 
 			// ONLY IF the checkbox is checked
@@ -22,9 +22,9 @@ function singleOnBlur(fieldNameToUpdate, fieldNameToBlur, checkBoxFieldName) {
 			var checkbox = getFieldByName(checkBoxFieldName);
 			if (checkbox && checkbox.checked) {
 				var fieldToUpdate = getFieldByName(fieldNameToUpdate);
-				fieldToUpdate.value = fieldToUpdate.value
+				fieldToUpdate.value = fieldToBlur.value
 				setTimeout(function() {
-					wrapperChecker(fieldToUpdate);
+					checker(fieldToUpdate);
 				}, 900);
 			}
 		};
@@ -34,9 +34,9 @@ function singleOnBlur(fieldNameToUpdate, fieldNameToBlur, checkBoxFieldName) {
 function doubleOnBlur(firstFieldNameToUpdate, secondFieldNameToUpdate, fieldNameToBlur, checkBoxFieldName) {
 	//This is a separate method for when there are two fields need to be check when the blur field is changed
 	
-	var fieldToUpdate = getFieldByName(fieldNameToBlur);
-	if(fieldToUpdate){
-		fieldToUpdate.onblur = function() {
+	var fieldToBlur = getFieldByName(fieldNameToBlur);
+	if(fieldToBlur){
+		fieldToBlur.onblur = function() {
 			// When the field to blur is changed and then loses focus, this method will run 
 			// This will trigger the specified field to update 
 			// ONLY IF the checkbox is checked
@@ -45,10 +45,10 @@ function doubleOnBlur(firstFieldNameToUpdate, secondFieldNameToUpdate, fieldName
 			if (checkbox && checkbox.checked) {
 				var firstField = getFieldByName(firstFieldNameToUpdate);
 				var secondField = getFieldByName(secondFieldNameToUpdate);
-				firstField.value = fieldToUpdate.value
+				firstField.value = fieldToBlur.value
 				setTimeout(function() {
-					wrapperChecker(firstField);
-					wrapperChecker(secondField);
+					checker(firstField);
+					checker(secondField);
 				}, 900);
 			}
 		};

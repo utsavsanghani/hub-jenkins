@@ -172,9 +172,9 @@ function enableSameAsBuildWrapper(onload) {
 		var hubVersionDist = getFieldByName('_.hubVersionDist');
 
 		if(checkMavenWrapperIsEnabled()){
-			addOnBlurToWrapperFields('_.mavenHubProjectName', '_.mavenHubProjectVersion', '_.mavenHubVersionPhase', '_.mavenHubVersionDist', '_.mavenSameAsPostBuildScan');
+			addOnBlurToWrapperFields('_.mavenHubProjectName', '_.mavenHubProjectVersion', '_.mavenHubVersionPhase', '_.mavenHubVersionDist', '_.sameAsBuildWrapper');
 		}  else if(checkGradleWrapperIsEnabled()){
-			addOnBlurToWrapperFields('_.gradleHubProjectName', '_.gradleHubProjectVersion', '_.gradleHubVersionPhase', '_.gradleHubVersionDist', '_.gradleSameAsPostBuildScan');
+			addOnBlurToWrapperFields('_.gradleHubProjectName', '_.gradleHubProjectVersion', '_.gradleHubVersionPhase', '_.gradleHubVersionDist', '_.sameAsBuildWrapper');
 		}
 			
 			//We disable the scan fields since we want to use the wrapper fields
@@ -278,11 +278,11 @@ window.onload = function() {
 	useSameAsBuildWrapper(sameAsBuildWrapper, true);
 };
 
-function addOnBlurToWrapperFields(wrapperProjectFieldName, wrapperVersionFieldName, wrapperPhaseFieldName, wrapperDistFieldName, wrapperCheckBoxFieldName) {
-		doubleOnBlur('_.hubProjectName', '_.hubProjectVersion', wrapperProjectFieldName, wrapperCheckBoxFieldName);
-		doubleOnBlur('_.hubProjectVersion', '_.hubProjectName', wrapperVersionFieldName, wrapperCheckBoxFieldName);
-		singleOnBlur('_.hubVersionPhase', wrapperPhaseFieldName, wrapperCheckBoxFieldName);
-		singleOnBlur('_.hubVersionDist', wrapperDistFieldName, wrapperCheckBoxFieldName);
+function addOnBlurToWrapperFields(wrapperProjectFieldName, wrapperVersionFieldName, wrapperPhaseFieldName, wrapperDistFieldName, scanCheckBoxFieldName) {
+		doubleOnBlur('_.hubProjectName', '_.hubProjectVersion', wrapperProjectFieldName, scanCheckBoxFieldName);
+		doubleOnBlur('_.hubProjectVersion', '_.hubProjectName', wrapperVersionFieldName, scanCheckBoxFieldName);
+		singleOnBlur('_.hubVersionPhase', wrapperPhaseFieldName, scanCheckBoxFieldName);
+		singleOnBlur('_.hubVersionDist', wrapperDistFieldName, scanCheckBoxFieldName);
 }
 
 function addTextToMessageArea(txt){

@@ -2,6 +2,7 @@ package com.blackducksoftware.integration.hub.jenkins.tests.utils;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import hudson.maven.MavenModuleSet;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.Maven;
 
@@ -54,5 +55,11 @@ public class MavenSupport {
         assertTrue("Please set your M2_HOME, as maven is not been found " + mvnHomeDir.getCanonicalPath(), mvnHomeDir.exists());
 
         return new Maven.MavenInstallation("default", mvnHomeDir.getCanonicalPath(), null);
+    }
+
+    public static void addMavenToModuleSet(MavenModuleSet project, Maven.MavenInstallation mavenToAdd) throws Exception {
+        Maven.MavenInstallation[] installations = new Maven.MavenInstallation[1];
+        installations[0] = mavenToAdd;
+        project.getDescriptor().getMavenDescriptor().setInstallations(installations);
     }
 }

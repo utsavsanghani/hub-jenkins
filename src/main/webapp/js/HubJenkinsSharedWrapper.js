@@ -30,7 +30,7 @@ function customWrapperCreateProject(method, withVars, button,  projectFieldName,
 }
 
 
-function enableSameAsPostBuildScan(onload, projectFieldName, versionFieldName, phaseFieldName, distFieldName, messageAreaId, checkBoxName) {
+function enableSameAsPostBuildScan(onload, projectFieldName, versionFieldName, phaseFieldName, distFieldName, messageAreaId, wrapperCheckBoxName) {
 
 	var sameAsBuildWrapper = getFieldByName('_.sameAsBuildWrapper');
 	if (sameAsBuildWrapper && sameAsBuildWrapper.checked) {
@@ -54,7 +54,7 @@ function enableSameAsPostBuildScan(onload, projectFieldName, versionFieldName, p
 		// Only run this if the scan has been configured
 		if ((hubProjectName) && (hubProjectVersion) && (hubVersionPhase)
 				&& (hubVersionDist)) {
-			addOnBlurToScanFields(projectFieldName, versionFieldName, phaseFieldName, distFieldName, checkBoxName);
+			addOnBlurToScanFields(projectFieldName, versionFieldName, phaseFieldName, distFieldName, wrapperCheckBoxName);
 				
 			//We disable the wrapper fields since we want to use the scan fields
 			disableWrapperFields(projectFieldName, versionFieldName, phaseFieldName, distFieldName);
@@ -135,11 +135,11 @@ function disableWrapperFields(projectFieldName, versionFieldName, phaseFieldName
 	hubWrapperVersionDist.className = hubWrapperVersionDist.className + ' bdReadOnly';
 }
 
-function addOnBlurToScanFields(projectFieldName, versionFieldName, phaseFieldName, distFieldName, checkBoxName) {
-	doubleOnBlur(projectFieldName, versionFieldName, '_.hubProjectName', checkBoxName);
-	doubleOnBlur(versionFieldName, projectFieldName, '_.hubProjectVersion', checkBoxName);
-	singleOnBlur(phaseFieldName, '_.hubVersionPhase', checkBoxName);
-	singleOnBlur(distFieldName, '_.hubVersionDist', checkBoxName);
+function addOnBlurToScanFields(projectFieldName, versionFieldName, phaseFieldName, distFieldName, wrapperCheckBoxName) {
+	doubleOnBlur(projectFieldName, versionFieldName, '_.hubProjectName', wrapperCheckBoxName);
+	doubleOnBlur(versionFieldName, projectFieldName, '_.hubProjectVersion', wrapperCheckBoxName);
+	singleOnBlur(phaseFieldName, '_.hubVersionPhase', wrapperCheckBoxName);
+	singleOnBlur(distFieldName, '_.hubVersionDist', wrapperCheckBoxName);
 
 }
 

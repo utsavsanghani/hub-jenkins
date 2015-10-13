@@ -24,13 +24,13 @@ public class GradleBuildWrapperDescriptorTest {
         FreeStyleProject project = j.createFreeStyleProject("test");
         assertTrue(descriptor.isApplicable(project));
         MavenModuleSet mavenProject = j.createMavenProject();
-        assertTrue(!descriptor.isApplicable(project));
+        assertTrue(!descriptor.isApplicable(mavenProject));
     }
 
     @Test
     public void testGetDisplayName() throws Exception {
         GradleBuildWrapperDescriptor descriptor = new GradleBuildWrapperDescriptor();
-        assertEquals(Messages.HubMavenWrapper_getDisplayName(), descriptor.getDisplayName());
+        assertEquals(Messages.HubGradleWrapper_getDisplayName(), descriptor.getDisplayName());
     }
 
     @Test

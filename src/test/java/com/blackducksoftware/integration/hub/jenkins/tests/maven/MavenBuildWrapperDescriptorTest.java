@@ -24,7 +24,7 @@ public class MavenBuildWrapperDescriptorTest {
         FreeStyleProject project = j.createFreeStyleProject("test");
         assertTrue(descriptor.isApplicable(project));
         MavenModuleSet mavenProject = j.createMavenProject();
-        assertTrue(!descriptor.isApplicable(project));
+        assertTrue(!descriptor.isApplicable(mavenProject));
     }
 
     @Test

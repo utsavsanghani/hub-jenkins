@@ -243,7 +243,7 @@ public class GradleBuildWrapperIntegrationTest {
 
     @Test
     public void testRunConfiguredNoDependencies() throws Exception {
-        File buildInfo = new File(testWorkspace, "ValidGradleProject");
+        File buildInfo = new File(testWorkspace, "GradleNoDependencies");
         buildInfo = new File(buildInfo, "build");
         buildInfo = new File(buildInfo, "BlackDuck");
         buildInfo = new File(buildInfo, "build-info.json");
@@ -272,7 +272,7 @@ public class GradleBuildWrapperIntegrationTest {
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             assertTrue(buildOutput, buildOutput.contains("Will create build-info.json"));
             assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
-            assertTrue(buildInfo.exists());
+            assertTrue(buildOutput, buildInfo.exists());
         } finally {
             if (buildInfo.exists()) {
                 buildInfo.delete();

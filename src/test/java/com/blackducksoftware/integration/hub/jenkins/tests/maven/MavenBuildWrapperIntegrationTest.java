@@ -57,8 +57,8 @@ public class MavenBuildWrapperIntegrationTest {
     }
 
     public void resetPublisherDescriptors() {
-        while (Jenkins.getInstance().getDescriptorList(Publisher.class).size() != 0) {
-            Jenkins.getInstance().getDescriptorList(Publisher.class).remove(0);
+        while (j.getInstance().getDescriptorList(Publisher.class).size() != 0) {
+            j.getInstance().getDescriptorList(Publisher.class).remove(0);
         }
     }
 

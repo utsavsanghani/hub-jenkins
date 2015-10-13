@@ -30,6 +30,7 @@ import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSeparator;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
+import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
 
 /**
  * Sample {@link Builder}.
@@ -54,6 +55,27 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 
         super(userScopesToInclude, gradleSameAsPostBuildScan, gradleHubProjectName,
                 gradleHubVersionPhase, gradleHubVersionDist, gradleHubProjectVersion);
+    }
+
+    // Need these getters for the UI
+    public boolean isGradleSameAsPostBuildScan() {
+        return isSameAsPostBuildScan();
+    }
+
+    public String getGradleHubProjectName() {
+        return getHubWrapperProjectName();
+    }
+
+    public String getGradleHubVersionPhase() {
+        return getHubWrapperVersionPhase();
+    }
+
+    public String getGradleHubVersionDist() {
+        return getHubWrapperVersionDist();
+    }
+
+    public String getGradleHubProjectVersion() {
+        return getHubWrapperProjectVersion();
     }
 
     @Override
@@ -101,6 +123,7 @@ public class GradleBuildWrapper extends BDBuildWrapper {
             InterruptedException {
         // no failure to report yet
         HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
+        buildLogger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
         Gradle gradleBuilder = null;
         if (build.getProject() instanceof FreeStyleProject) {
             // Project should always be a FreeStyleProject, thats why we have the isApplicable() method
