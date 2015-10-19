@@ -24,6 +24,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import com.blackducksoftware.integration.build.BuildInfo;
 import com.blackducksoftware.integration.gradle.BDCustomTask;
+import com.blackducksoftware.integration.gradle.BDGradlePlugin;
 import com.blackducksoftware.integration.hub.BuilderType;
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapper;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
@@ -179,6 +180,7 @@ public class GradleBuildWrapper extends BDBuildWrapper {
             // public void buildEnvVars(Map<String, String> env) {
             BDGradleInitScriptWriter writer = new BDGradleInitScriptWriter(build, buildLogger);
             FilePath workspace = build.getWorkspace();
+            FilePath dependencyTreeFile = new FilePath(workspace, "dependencyTree.txt");
             FilePath initScript;
             String initScriptPath;
             try {
@@ -201,6 +203,10 @@ public class GradleBuildWrapper extends BDBuildWrapper {
                         if (!originalSwitches.get().contains(" -D" + BDCustomTask.BUILD_ID_PROPERTY)) {
                             newSwitches = newSwitches + " -D" + BDCustomTask.BUILD_ID_PROPERTY + "=" + build.getId();
                         }
+                        if (!originalSwitches.get().contains(" -D" + BDGradlePlugin.DEPENDENCY_REPORT_OUTPUT)) {
+                            newSwitches = newSwitches + " -D" + BDGradlePlugin.DEPENDENCY_REPORT_OUTPUT + "=" + dependencyTreeFile.getRemote();
+                        }
+
                         if (!originalTasks.get().contains("bdCustomTask")) {
                             newTasks = newTasks + " bdCustomTask";
                         }

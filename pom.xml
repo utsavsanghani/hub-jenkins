@@ -191,7 +191,7 @@
 		<dependency>
 			<groupId>com.blackducksoftware.integration.gradle</groupId>
 			<artifactId>build-info-gradle</artifactId>
-			<version>1.0.6</version>
+			<version>1.0.7-SNAPSHOT</version>
 		</dependency>
 		
 		<dependency>
@@ -369,5 +369,5 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-	<version>1.4.X-SNAPSHOT</version>
+	<version>1.4.0-SNAPSHOT</version>
 </project>
