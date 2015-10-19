@@ -204,11 +204,15 @@ public class GradleBuildWrapper extends BDBuildWrapper {
                             newSwitches = newSwitches + " -D" + BDCustomTask.BUILD_ID_PROPERTY + "=" + build.getId();
                         }
                         if (!originalSwitches.get().contains(" -D" + BDGradlePlugin.DEPENDENCY_REPORT_OUTPUT)) {
-                            newSwitches = newSwitches + " -D" + BDGradlePlugin.DEPENDENCY_REPORT_OUTPUT + "=" + dependencyTreeFile.getRemote();
+                            newSwitches = newSwitches + " -D" + BDGradlePlugin.DEPENDENCY_REPORT_OUTPUT + "='" + dependencyTreeFile.getRemote() + "'";
                         }
 
                         if (!originalTasks.get().contains("bdCustomTask")) {
                             newTasks = newTasks + " bdCustomTask";
+                        }
+
+                        if (!originalTasks.get().contains("dependencyReport")) {
+                            newTasks = newTasks + " dependencyReport";
                         }
                         setField(gradleBuilder, "switches", newSwitches);
                         setField(gradleBuilder, "tasks", newTasks);
