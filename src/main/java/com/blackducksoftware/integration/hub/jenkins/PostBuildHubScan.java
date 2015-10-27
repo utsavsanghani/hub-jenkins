@@ -601,7 +601,7 @@ public class PostBuildHubScan extends Recorder {
         scan.setScanMemory(scanMemory);
         scan.setWorkingDirectory(getWorkingDirectory().getRemote());
         scan.setTestScan(isTEST());
-        scan.setVerboseRun(isVerbose());
+        // scan.setVerboseRun(isVerbose());
         if (mappingComparison != null && mappingComparison.getNumericResult() <= 0 &&
                 StringUtils.isNotBlank(projectName)
                 && StringUtils.isNotBlank(versionName)) {
