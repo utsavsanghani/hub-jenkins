@@ -37,6 +37,7 @@ import com.blackducksoftware.integration.hub.exception.BDCIScopeException;
 import com.blackducksoftware.integration.hub.exception.BDMavenRetrieverException;
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapper;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetPathSeparator;
 import com.blackducksoftware.integration.hub.maven.BdMavenConfigurator;
 import com.blackducksoftware.integration.hub.maven.Scope;
@@ -189,7 +190,14 @@ public class MavenBuildWrapper extends BDBuildWrapper {
                         FilePath buildInfoFile = new FilePath(build.getWorkspace(),
                                 BuildInfo.OUTPUT_FILE_NAME);
                         if (buildInfoFile.exists()) {
-                            return universalTearDown(build, buildLogger, buildInfoFile, getDescriptor(), BuilderType.MAVEN);
+                            String buildInfoFilePath = null;
+                            try {
+                                buildInfoFilePath = build.getBuiltOn().getChannel().call(new GetCanonicalPath(new File(buildInfoFile.getRemote())));
+                            } catch (IOException e) {
+                                buildLogger.error("Problem getting the build info file on this node. Error : " + e.getMessage(), e);
+                            }
+
+                            return universalTearDown(build, buildLogger, buildInfoFilePath, getDescriptor(), BuilderType.MAVEN);
                         } else {
                             buildLogger.error("The " + BuildInfo.OUTPUT_FILE_NAME + " file does not exist at : " + buildInfoFile.getRemote());
                             build.setResult(Result.UNSTABLE);

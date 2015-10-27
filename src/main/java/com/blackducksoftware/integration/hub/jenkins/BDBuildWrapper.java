@@ -1,6 +1,5 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
-import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.ProxyConfiguration;
@@ -9,8 +8,8 @@ import hudson.model.AbstractBuild;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.Builder;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
@@ -36,6 +35,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.jenkins.remote.RemoteReadBuildInfo;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 
@@ -128,7 +128,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
     @Override
     public abstract Environment setUp(final AbstractBuild build, Launcher launcher, final BuildListener listener) throws IOException, InterruptedException;
 
-    public boolean universalTearDown(AbstractBuild build, IntLogger buildLogger, FilePath buildInfoFile, BDBuildWrapperDescriptor descriptor,
+    public boolean universalTearDown(AbstractBuild build, IntLogger buildLogger, String buildInfoFilePath, BDBuildWrapperDescriptor descriptor,
             BuilderType buidler) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException,
             IOException {
 
@@ -146,8 +146,11 @@ public abstract class BDBuildWrapper extends BuildWrapper {
                 buildLogger.error("Build: null. The Hub build wrapper will not run.");
             } else if (BuildHelper.isOngoing(build) || BuildHelper.isSuccess(build)) {
                 if (validateConfiguration(buildLogger)) {
-                    // // ** read build-info.json file
-                    // BuildInfo buildInfo = readBuildInfo(buildInfoFile, build.getId(), buildLogger);
+
+                    // read build-info.json file
+                    // BuildInfo buildInfo = readBuildInfo(build, buildInfoFilePath, build.getId(), buildLogger);
+
+                    // buildLogger.info("# of Dependencies : " + buildInfo.getDependencies().size());
                     // CodeCenterCIFacade facade = getFacade(descriptor, buildLogger);
                     // // This initialized the report action and defines the Code
                     // // Center application
@@ -220,32 +223,34 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         return service;
     }
 
-    protected BuildInfo readBuildInfo(FilePath filePath, String buildId, IntLogger buildLogger) {
+    protected BuildInfo readBuildInfo(AbstractBuild build, String buildInfoFilePath, String buildId, IntLogger buildLogger) {
         BuildInfo buildInfo = new BuildInfo();
         // Gets the build-info.json file so we can retrieve
         // the dependencies that were recorded to it
         // This parses the build-info.json file for the
         // dependencies and resolves them to catalog
         // components
-        InputStream in = null;
+        // InputStream in = null;
         try {
-            buildLogger.info("Reading BuildInfo from " + (filePath.isRemote() ? "@" : "") + filePath.getRemote());
-            in = filePath.read();
+            // buildLogger.info("Reading BuildInfo from " + buildInfoFilePath);
+            // in = filePath.read();
 
-            buildInfo.parseFileForDependencies(in, buildId);
+            String buildInfoContent = build.getBuiltOn().getChannel().call(new RemoteReadBuildInfo(new File(buildInfoFilePath)));
+
+            buildInfo.parseFileForDependencies(buildInfoContent, buildId);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    buildLogger.error(e.getMessage(), e);
-                    // eat exception
-                }
-            }
+            // if (in != null) {
+            // try {
+            // in.close();
+            // } catch (IOException e) {
+            // buildLogger.error(e.getMessage(), e);
+            // // eat exception
+            // }
+            // }
         }
         return buildInfo;
     }

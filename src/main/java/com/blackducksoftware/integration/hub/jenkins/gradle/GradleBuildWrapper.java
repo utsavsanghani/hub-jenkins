@@ -28,6 +28,7 @@ import com.blackducksoftware.integration.hub.BuilderType;
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapper;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSeparator;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
@@ -275,49 +276,74 @@ public class GradleBuildWrapper extends BDBuildWrapper {
                                 fileSeparator = File.separator;
                             }
 
-                            FilePath workspace = build.getWorkspace();
-                            if (workspace == null) {
-                                buildLogger.error("Workspace: null");
-                                build.setResult(Result.UNSTABLE);
-                                return true;
+                            File workspaceFile = null;
+                            if (build.getWorkspace() == null) {
+                                // might be using custom workspace
+                                workspaceFile = new File(build.getProject().getCustomWorkspace());
                             } else {
-                                if (!StringUtils.startsWithIgnoreCase(rootBuildScriptDir, workspace.getRemote())) {
-                                    if (workspace.getRemote().endsWith(fileSeparator)) {
-                                        rootBuildScriptDir = workspace + rootBuildScriptDir;
-                                    } else {
-                                        rootBuildScriptDir = workspace + fileSeparator + rootBuildScriptDir;
-                                    }
-                                }
+                                workspaceFile = new File(build.getWorkspace().getRemote());
+                            }
 
-                                FilePath buildInfoFile = null;
-                                Node buildOn = build.getBuiltOn();
-                                if (buildOn == null) {
-                                    buildLogger.error("Node build on: null");
+                            // FilePath workspace = build.getWorkspace();
+                            // if (workspaceFile == null) {
+                            // buildLogger.error("Workspace: null");
+                            // build.setResult(Result.UNSTABLE);
+                            // return true;
+                            // } else {
+
+                            String workingDirectory = "";
+                            try {
+                                workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(workspaceFile));
+                            } catch (IOException e) {
+                                buildLogger.error("Problem getting the working directory on this node. Error : " + e.getMessage(), e);
+                            }
+
+                            if (!StringUtils.startsWithIgnoreCase(rootBuildScriptDir, workingDirectory)) {
+                                if (workingDirectory.endsWith(fileSeparator)) {
+                                    rootBuildScriptDir = workingDirectory + rootBuildScriptDir;
                                 } else {
-                                    VirtualChannel channel = buildOn.getChannel();
-                                    if (channel == null) {
-                                        buildLogger.error("Channel build on: null");
-                                    } else {
-                                        buildInfoFile = new FilePath(channel, rootBuildScriptDir);
-                                        buildInfoFile = new FilePath(buildInfoFile, "build");
-                                        buildInfoFile = new FilePath(buildInfoFile, "BlackDuck");
-                                        buildInfoFile = new FilePath(buildInfoFile, BuildInfo.OUTPUT_FILE_NAME);
-                                    }
+                                    rootBuildScriptDir = workingDirectory + fileSeparator + rootBuildScriptDir;
                                 }
-                                if (buildInfoFile != null) {
-                                    if (buildInfoFile.exists()) {
-                                        return universalTearDown(build, buildLogger, buildInfoFile, getDescriptor(), BuilderType.GRADLE);
-                                    } else {
-                                        buildLogger.error("The " + BuildInfo.OUTPUT_FILE_NAME + " file does not exist at : " + buildInfoFile.getRemote());
-                                    }
+                            }
+
+                            String buildInfoFilePath = null;
+                            FilePath buildInfo = null;
+                            Node buildOn = build.getBuiltOn();
+                            if (buildOn == null) {
+                                buildLogger.error("Node build on: null");
+                            } else {
+                                VirtualChannel channel = buildOn.getChannel();
+                                if (channel == null) {
+                                    buildLogger.error("Channel build on: null");
                                 } else {
-                                    buildLogger.error("The " + BuildInfo.OUTPUT_FILE_NAME + " file does not exist on: "
-                                            + (buildOn == null ? "null" : buildOn.getDisplayName()));
+                                    // buildInfoFile = new FilePath(channel, workspacePath);
+                                    buildInfo = new FilePath(channel, rootBuildScriptDir);
+                                    buildInfo = new FilePath(buildInfo, "build");
+                                    buildInfo = new FilePath(buildInfo, "BlackDuck");
+                                    buildInfo = new FilePath(buildInfo, BuildInfo.OUTPUT_FILE_NAME);
+
+                                    try {
+                                        buildInfoFilePath = channel.call(new GetCanonicalPath(new File(buildInfo.getRemote())));
+                                    } catch (IOException e) {
+                                        buildLogger.error("Problem getting the build info file on this node. Error : " + e.getMessage(), e);
+                                    }
+
+                                }
+                            }
+
+                            if (buildInfoFilePath != null) {
+
+                                if (buildInfo.exists()) {
+                                    // FIXME looks like the wrong file is being read or it is being read incorrectly
+                                    return universalTearDown(build, buildLogger, buildInfoFilePath, getDescriptor(), BuilderType.GRADLE);
+                                } else {
+                                    buildLogger.error("The " + BuildInfo.OUTPUT_FILE_NAME + " file does not exist at : " + buildInfoFilePath
+                                            + ", on machine : " + (buildOn == null ? "null" : buildOn.getDisplayName()));
                                     build.setResult(Result.UNSTABLE);
                                     return true;
                                 }
-                                return true;
                             }
+                            // }
                         } else {
                             buildLogger.error("[WARNING] no gradle build step found");
                             build.setResult(Result.UNSTABLE);
@@ -346,6 +372,7 @@ public class GradleBuildWrapper extends BDBuildWrapper {
                             }
                         }
                     }
+                    return true;
                 }
             };
         } finally {
