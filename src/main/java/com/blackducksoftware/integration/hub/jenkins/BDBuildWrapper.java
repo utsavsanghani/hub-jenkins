@@ -1,15 +1,17 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.ProxyConfiguration;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.Builder;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
@@ -35,7 +37,6 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
-import com.blackducksoftware.integration.hub.jenkins.remote.RemoteReadBuildInfo;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 
@@ -128,7 +129,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
     @Override
     public abstract Environment setUp(final AbstractBuild build, Launcher launcher, final BuildListener listener) throws IOException, InterruptedException;
 
-    public boolean universalTearDown(AbstractBuild build, IntLogger buildLogger, String buildInfoFilePath, BDBuildWrapperDescriptor descriptor,
+    public boolean universalTearDown(AbstractBuild build, IntLogger buildLogger, FilePath buildInfoFilePath, BDBuildWrapperDescriptor descriptor,
             BuilderType buidler) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException,
             IOException {
 
@@ -146,35 +147,41 @@ public abstract class BDBuildWrapper extends BuildWrapper {
                 buildLogger.error("Build: null. The Hub build wrapper will not run.");
             } else if (BuildHelper.isOngoing(build) || BuildHelper.isSuccess(build)) {
                 if (validateConfiguration(buildLogger)) {
+                    try {
+                        // read build-info.json file
+                        BuildInfo buildInfo = readBuildInfo(build, buildInfoFilePath, build.getId(), buildLogger);
 
-                    // read build-info.json file
-                    // BuildInfo buildInfo = readBuildInfo(build, buildInfoFilePath, build.getId(), buildLogger);
+                        buildLogger.info("# of Dependencies : " + buildInfo.getDependencies().size());
+                        // CodeCenterCIFacade facade = getFacade(descriptor, buildLogger);
+                        // // This initialized the report action and defines the Code
+                        // // Center application
+                        // CodeCenterGovernanceReportAction reportAction = new CodeCenterGovernanceReportAction(build);
+                        // build.addAction(reportAction);
+                        // CodeCenterApplication application = new CodeCenterApplication();
+                        // application.setApplicationName(getCodeCenterApplicationName());
+                        // application
+                        // .setApplicationVersion(getCodeCenterApplicationVersion());
+                        // reportAction.setApplication(application);
+                        // GovernanceReportGenerator reportGenerator = new GovernanceReportGenerator(facade, buildInfo,
+                        // getCodeCenterApplicationName(),
+                        // getCodeCenterApplicationVersion(), isAutoCreateComponentRequests(),
+                        // isSubmitComponentRequests(),
+                        // isAutoSwitchNotInUseRequests(),
+                        // getScopesAsList(buildLogger),
+                        // build);
+                        // Result result = build.getResult();
+                        // try {
+                        // result = reportGenerator.generateReport(reportAction, buildLogger, buidler);
+                        // } catch (BDCIFacadeException e) {
+                        // buildLogger.error(e.getMessage(), e);
+                        // build.setResult(Result.UNSTABLE);
+                        // }
+                        // build.setResult(result);
 
-                    // buildLogger.info("# of Dependencies : " + buildInfo.getDependencies().size());
-                    // CodeCenterCIFacade facade = getFacade(descriptor, buildLogger);
-                    // // This initialized the report action and defines the Code
-                    // // Center application
-                    // CodeCenterGovernanceReportAction reportAction = new CodeCenterGovernanceReportAction(build);
-                    // build.addAction(reportAction);
-                    // CodeCenterApplication application = new CodeCenterApplication();
-                    // application.setApplicationName(getCodeCenterApplicationName());
-                    // application
-                    // .setApplicationVersion(getCodeCenterApplicationVersion());
-                    // reportAction.setApplication(application);
-                    // GovernanceReportGenerator reportGenerator = new GovernanceReportGenerator(facade, buildInfo,
-                    // getCodeCenterApplicationName(),
-                    // getCodeCenterApplicationVersion(), isAutoCreateComponentRequests(), isSubmitComponentRequests(),
-                    // isAutoSwitchNotInUseRequests(),
-                    // getScopesAsList(buildLogger),
-                    // build);
-                    // Result result = build.getResult();
-                    // try {
-                    // result = reportGenerator.generateReport(reportAction, buildLogger, buidler);
-                    // } catch (BDCIFacadeException e) {
-                    // buildLogger.error(e.getMessage(), e);
-                    // build.setResult(Result.UNSTABLE);
-                    // }
-                    // build.setResult(result);
+                    } catch (BDJenkinsHubPluginException e) {
+                        buildLogger.error(e);
+                        build.setResult(Result.UNSTABLE);
+                    }
                 }
             } else {
                 buildLogger.error("The build was not successful. The Code Center plugin will not run.");
@@ -223,34 +230,36 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         return service;
     }
 
-    protected BuildInfo readBuildInfo(AbstractBuild build, String buildInfoFilePath, String buildId, IntLogger buildLogger) {
+    protected BuildInfo readBuildInfo(AbstractBuild build, FilePath buildInfoFilePath, String buildId, IntLogger buildLogger)
+            throws BDJenkinsHubPluginException {
         BuildInfo buildInfo = new BuildInfo();
         // Gets the build-info.json file so we can retrieve
         // the dependencies that were recorded to it
         // This parses the build-info.json file for the
         // dependencies and resolves them to catalog
         // components
-        // InputStream in = null;
+        InputStream in = null;
         try {
-            // buildLogger.info("Reading BuildInfo from " + buildInfoFilePath);
-            // in = filePath.read();
+            buildLogger.info("Reading BuildInfo from " + buildInfoFilePath);
+            in = buildInfoFilePath.read();
 
-            String buildInfoContent = build.getBuiltOn().getChannel().call(new RemoteReadBuildInfo(new File(buildInfoFilePath)));
+            // String buildInfoContent = build.getBuiltOn().getChannel().call(new RemoteReadBuildInfo(new
+            // File(buildInfoFilePath)));
 
-            buildInfo.parseFileForDependencies(buildInfoContent, buildId);
+            buildInfo.parseFileForDependencies(in, buildId);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new BDJenkinsHubPluginException(e);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new BDJenkinsHubPluginException(e);
         } finally {
-            // if (in != null) {
-            // try {
-            // in.close();
-            // } catch (IOException e) {
-            // buildLogger.error(e.getMessage(), e);
-            // // eat exception
-            // }
-            // }
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    buildLogger.error(e.getMessage(), e);
+                    // eat exception
+                }
+            }
         }
         return buildInfo;
     }

@@ -103,6 +103,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
     @Override
     protected Result executeScan(List<String> cmd, String logDirectoryPath) throws HubIntegrationException, InterruptedException {
         try {
+
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             ProcStarter ps = launcher.launch();
             if (ps != null) {
@@ -175,10 +176,10 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     }
                 }
 
-                if (outputString.contains("Finished in") && outputString.contains("with status SUCCESS")) {
-                    return Result.SUCCESS;
-                } else {
+                if (outputString.contains("Finished in") && outputString.contains("with status FAILURE")) {
                     return Result.FAILURE;
+                } else {
+                    return Result.SUCCESS;
                 }
 
             } else {
@@ -193,5 +194,4 @@ public class JenkinsScanExecutor extends ScanExecutor {
         }
         return Result.SUCCESS;
     }
-
 }

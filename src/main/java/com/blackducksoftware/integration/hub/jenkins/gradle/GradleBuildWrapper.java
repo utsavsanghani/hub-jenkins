@@ -202,6 +202,12 @@ public class GradleBuildWrapper extends BDBuildWrapper {
                         if (!originalSwitches.get().contains(" -D" + BDCustomTask.BUILD_ID_PROPERTY)) {
                             newSwitches = newSwitches + " -D" + BDCustomTask.BUILD_ID_PROPERTY + "=" + build.getId();
                         }
+                        if (!originalSwitches.get().contains(" -D" + BDCustomTask.INCLUDED_CONFIGURATIONS_PROPERTY)) {
+                            String configurations = getUserScopesToInclude();
+                            configurations = configurations.replaceAll(" ", "");
+
+                            newSwitches = newSwitches + " -D" + BDCustomTask.INCLUDED_CONFIGURATIONS_PROPERTY + "=" + configurations;
+                        }
                         // if (!originalSwitches.get().contains(" -D" + BDGradlePlugin.DEPENDENCY_REPORT_OUTPUT)) {
                         // FilePath dependencyTreeFile = new FilePath(workspace, "dependencyTree.txt");
                         // newSwitches = newSwitches + " -D" + BDGradlePlugin.DEPENDENCY_REPORT_OUTPUT + "='" +
@@ -284,13 +290,6 @@ public class GradleBuildWrapper extends BDBuildWrapper {
                                 workspaceFile = new File(build.getWorkspace().getRemote());
                             }
 
-                            // FilePath workspace = build.getWorkspace();
-                            // if (workspaceFile == null) {
-                            // buildLogger.error("Workspace: null");
-                            // build.setResult(Result.UNSTABLE);
-                            // return true;
-                            // } else {
-
                             String workingDirectory = "";
                             try {
                                 workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(workspaceFile));
@@ -306,7 +305,6 @@ public class GradleBuildWrapper extends BDBuildWrapper {
                                 }
                             }
 
-                            String buildInfoFilePath = null;
                             FilePath buildInfo = null;
                             Node buildOn = build.getBuiltOn();
                             if (buildOn == null) {
@@ -322,22 +320,15 @@ public class GradleBuildWrapper extends BDBuildWrapper {
                                     buildInfo = new FilePath(buildInfo, "BlackDuck");
                                     buildInfo = new FilePath(buildInfo, BuildInfo.OUTPUT_FILE_NAME);
 
-                                    try {
-                                        buildInfoFilePath = channel.call(new GetCanonicalPath(new File(buildInfo.getRemote())));
-                                    } catch (IOException e) {
-                                        buildLogger.error("Problem getting the build info file on this node. Error : " + e.getMessage(), e);
-                                    }
-
                                 }
                             }
 
-                            if (buildInfoFilePath != null) {
+                            if (buildInfo != null) {
 
                                 if (buildInfo.exists()) {
-                                    // FIXME looks like the wrong file is being read or it is being read incorrectly
-                                    return universalTearDown(build, buildLogger, buildInfoFilePath, getDescriptor(), BuilderType.GRADLE);
+                                    return universalTearDown(build, buildLogger, buildInfo, getDescriptor(), BuilderType.GRADLE);
                                 } else {
-                                    buildLogger.error("The " + BuildInfo.OUTPUT_FILE_NAME + " file does not exist at : " + buildInfoFilePath
+                                    buildLogger.error("The " + BuildInfo.OUTPUT_FILE_NAME + " file does not exist at : " + buildInfo.getRemote()
                                             + ", on machine : " + (buildOn == null ? "null" : buildOn.getDisplayName()));
                                     build.setResult(Result.UNSTABLE);
                                     return true;
