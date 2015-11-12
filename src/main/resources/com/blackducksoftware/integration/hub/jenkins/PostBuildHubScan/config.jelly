@@ -12,12 +12,12 @@
 	</st:once>
 	
 		
-<f:entry field="sameAsBuildWrapper">
-	<!-- define checkbox first, label after for label to the right of the checkbox layout -->
+<!-- <f:entry field="sameAsBuildWrapper">
+	define checkbox first, label after for label to the right of the checkbox layout
 	<f:checkbox default="false" checked="${it.sameAsBuildWrapper}" onclick="useSameAsBuildWrapper(this, false);"/>
 	<label>${%SameAsPostBuildScanTitle}</label>
 	<div class="" id="sameAsBuildWrapperMessageArea"> </div>
-</f:entry>
+</f:entry> -->
 		
 <f:entry field="hubProjectName" title="${%ProjectNameTitle}">
 	<f:textbox value="${it.getHubProjectName()}" default="${descriptor.getDefaultProjectName()}"/>

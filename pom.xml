@@ -369,5 +369,5 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-	<version>1.4.0-SNAPSHOT</version>
+	<version>1.3.5-SNAPSHOT</version>
 </project>

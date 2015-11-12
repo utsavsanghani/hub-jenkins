@@ -275,7 +275,10 @@ window.onload = function() {
 	hubScanOldOnLoad();
 
 	var sameAsBuildWrapper = getFieldByName('_.sameAsBuildWrapper');
-	useSameAsBuildWrapper(sameAsBuildWrapper, true);
+	if(sameAsBuildWrapper){
+		useSameAsBuildWrapper(sameAsBuildWrapper, true);
+	}
+	
 };
 
 function addOnBlurToWrapperFields(wrapperProjectFieldName, wrapperVersionFieldName, wrapperPhaseFieldName, wrapperDistFieldName, scanCheckBoxFieldName) {

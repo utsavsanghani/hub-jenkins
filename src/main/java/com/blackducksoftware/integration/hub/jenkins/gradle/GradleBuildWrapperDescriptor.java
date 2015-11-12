@@ -1,6 +1,5 @@
 package com.blackducksoftware.integration.hub.jenkins.gradle;
 
-import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.AbstractProject;
@@ -18,7 +17,8 @@ import org.kohsuke.stapler.QueryParameter;
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 
-@Extension(optional = true)
+// TODO Uncomment extension to add the gradle wrapper back in
+// @Extension(optional = true)
 public class GradleBuildWrapperDescriptor extends BDBuildWrapperDescriptor {
 
     /**

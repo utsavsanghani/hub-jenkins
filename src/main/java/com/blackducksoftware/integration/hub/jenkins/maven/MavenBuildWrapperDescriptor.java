@@ -1,6 +1,5 @@
 package com.blackducksoftware.integration.hub.jenkins.maven;
 
-import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.AbstractProject;
@@ -18,7 +17,8 @@ import org.kohsuke.stapler.QueryParameter;
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 
-@Extension(optional = true)
+// TODO Uncomment extension to add the maven wrapper back in
+// @Extension(optional = true)
 public class MavenBuildWrapperDescriptor extends BDBuildWrapperDescriptor {
 
     /**
@@ -54,7 +54,7 @@ public class MavenBuildWrapperDescriptor extends BDBuildWrapperDescriptor {
 
     /*
      * (non-JSDoc)
-     *
+     * 
      * @see java.lang.Object#toString()
      */
     @Override

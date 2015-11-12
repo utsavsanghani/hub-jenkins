@@ -1,6 +1,5 @@
 package com.blackducksoftware.integration.hub.jenkins.maven;
 
-import hudson.Extension;
 import hudson.ProxyConfiguration;
 import hudson.maven.MavenReporterDescriptor;
 import hudson.model.AutoCompletionCandidates;
@@ -40,7 +39,8 @@ import com.blackducksoftware.integration.hub.response.ProjectItem;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
-@Extension(optional = true)
+// TODO Uncomment extension to add the maven reporter back in
+// @Extension(optional = true)
 // This indicates to Jenkins that this is an implementation of an extension
 // point.
 public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
