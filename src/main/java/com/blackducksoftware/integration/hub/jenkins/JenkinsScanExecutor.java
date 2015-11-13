@@ -176,10 +176,10 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     }
                 }
 
-                if (outputString.contains("Finished in") && outputString.contains("with status FAILURE")) {
-                    return Result.FAILURE;
-                } else {
+                if (outputString.contains("Finished in") && outputString.contains("with status SUCCESS")) {
                     return Result.SUCCESS;
+                } else {
+                    return Result.FAILURE;
                 }
 
             } else {
