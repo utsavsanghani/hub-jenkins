@@ -34,6 +34,7 @@ import com.blackducksoftware.integration.build.BuildArtifact;
 import com.blackducksoftware.integration.build.BuildDependency;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDCIScopeException;
+import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
@@ -203,7 +204,7 @@ public class HubMavenReporter extends MavenReporter {
 
     /*
      * (non-JSDoc)
-     * 
+     *
      * @see hudson.maven.MavenReporter#end(hudson.maven.MavenBuild, hudson.Launcher, hudson.model.BuildListener)
      */
     @Override
@@ -342,7 +343,7 @@ public class HubMavenReporter extends MavenReporter {
     }
 
     public HubIntRestService getRestService(IntLogger logger) throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException,
-            MalformedURLException {
+            MalformedURLException, BDRestException {
         HubIntRestService service = new HubIntRestService(getDescriptor().getHubServerInfo().getServerUrl());
         service.setLogger(logger);
         Jenkins jenkins = Jenkins.getInstance();

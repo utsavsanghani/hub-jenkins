@@ -196,7 +196,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
     }
 
     public HubIntRestService getRestService(IntLogger logger) throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException,
-            MalformedURLException {
+            MalformedURLException, BDRestException {
         HubIntRestService service = new HubIntRestService(getDescriptor().getHubServerInfo().getServerUrl());
         service.setLogger(logger);
         Jenkins jenkins = Jenkins.getInstance();

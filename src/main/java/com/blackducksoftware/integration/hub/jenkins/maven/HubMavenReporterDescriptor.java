@@ -139,7 +139,7 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
 
     public HubIntRestService getRestService(String serverUrl, String username, String password) throws BDJenkinsHubPluginException,
             HubIntegrationException, URISyntaxException,
-            MalformedURLException {
+            MalformedURLException, BDRestException {
         HubIntRestService service = new HubIntRestService(serverUrl);
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {

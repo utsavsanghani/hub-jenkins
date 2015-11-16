@@ -113,7 +113,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     public HubIntRestService getRestService(String serverUrl, String username, String password) throws BDJenkinsHubPluginException,
             HubIntegrationException, URISyntaxException,
-            MalformedURLException {
+            MalformedURLException, BDRestException {
         HubIntRestService service = new HubIntRestService(serverUrl);
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
@@ -376,8 +376,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName,
-            @QueryParameter("hubProjectVersion") final String hubProjectVersion) throws IOException, ServletException {
+    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName) throws IOException, ServletException {
         // Query for the project version so hopefully the check methods run for boths fields
         // when the User changes the Name of the project
         if (hubProjectName.length() > 0) {
