@@ -14,8 +14,10 @@ import hudson.util.ListBoxModel;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.Authenticator;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -321,7 +323,42 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     .HubBuildScan_getNotAValidUrl());
         }
         try {
-            URLConnection connection = url.openConnection();
+            Proxy proxy = null;
+
+            Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins != null) {
+                final ProxyConfiguration proxyConfig = jenkins.proxy;
+                if (proxyConfig != null) {
+                    proxy = ProxyConfiguration.createProxy(url.getHost(), proxyConfig.name, proxyConfig.port,
+                            proxyConfig.noProxyHost);
+
+                    if (proxy != null && proxy != Proxy.NO_PROXY) {
+
+                        if (StringUtils.isNotBlank(proxyConfig.getUserName()) && StringUtils.isNotBlank(proxyConfig.getPassword())) {
+                            Authenticator.setDefault(
+                                    new Authenticator() {
+                                        @Override
+                                        public PasswordAuthentication getPasswordAuthentication() {
+                                            return new PasswordAuthentication(
+                                                    proxyConfig.getUserName(),
+                                                    proxyConfig.getPassword().toCharArray());
+                                        }
+                                    }
+                                    );
+                        } else {
+                            Authenticator.setDefault(null);
+                        }
+                    }
+                }
+            }
+
+            URLConnection connection = null;
+            if (proxy != null) {
+                connection = url.openConnection(proxy);
+            } else {
+                connection = url.openConnection();
+            }
+
             connection.getContent();
         } catch (IOException ioe) {
             return FormValidation.error(ioe, Messages
@@ -415,7 +452,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getHubServerUrl()));
                 }
             } catch (BDRestException e) {
-                e.printStackTrace();
+                String message;
+                if (e.getCause() != null) {
+                    message = e.getCause().toString();
+                    if (message.contains("(407)")) {
+                        return FormValidation.error(e, message);
+                    }
+                }
                 return FormValidation.error(e, e.getMessage());
             } catch (Exception e) {
                 String message;
@@ -511,6 +554,15 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 }
 
                 return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(project.getName(), projectVersions.toString()));
+            } catch (BDRestException e) {
+                String message;
+                if (e.getCause() != null) {
+                    message = e.getCause().toString();
+                    if (message.contains("(407)")) {
+                        return FormValidation.error(e, message);
+                    }
+                }
+                return FormValidation.error(e, e.getMessage());
             } catch (Exception e) {
                 String message;
                 if (e.getCause() != null && e.getCause().getCause() != null) {
@@ -596,6 +648,15 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             } else {
                 return FormValidation.error(Messages.HubBuildScan_getErrorConnectingTo_0_(responseCode));
             }
+        } catch (BDRestException e) {
+            String message;
+            if (e.getCause() != null) {
+                message = e.getCause().toString();
+                if (message.contains("(407)")) {
+                    return FormValidation.error(e, message);
+                }
+            }
+            return FormValidation.error(e, e.getMessage());
         } catch (Exception e) {
             String message = null;
             if (e instanceof BDJenkinsHubPluginException) {
@@ -733,6 +794,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 } else if (e.getResource().getResponse().getStatus().getCode() == 401) {
                     // If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
                     return FormValidation.error(e, Messages.HubBuildScan_getCredentialsInValidFor_0_(getHubServerUrl()));
+                } else if (e.getResource().getResponse().getStatus().getCode() == 407) {
+                    return FormValidation.error(e, Messages.HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
                 } else {
                     return FormValidation.error(e, Messages.HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
                 }
