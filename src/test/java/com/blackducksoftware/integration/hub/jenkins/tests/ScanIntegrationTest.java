@@ -1,13 +1,10 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
 import static org.junit.Assert.assertNotNull;
-import hudson.EnvVars;
 import hudson.ProxyConfiguration;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
-import hudson.model.JDK;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tools.ToolDescriptor;
 
 import java.io.File;
@@ -951,125 +948,6 @@ public class ScanIntegrationTest {
 
         Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
         Assert.assertTrue(buildOutput, buildOutput.contains("Unauthorized (401)"));
-    }
-
-    @Test
-    public void setJDKUserSelectedNonExistent() throws IOException, InterruptedException, ExecutionException {
-        Jenkins jenkins = j.jenkins;
-
-        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-        System.err.println("iScanInstall: " + iScanInstall + "(\"" + iScanInstallPath + "\")");
-
-        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-        System.err.println("iScanDescriptor: " + iScanDesc);
-
-        iScanDesc.setInstallations(iScanInstall);
-
-        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
-        UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
-                testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
-        store.addCredentials(Domain.global(), credential);
-
-        HubServerInfo serverInfo = new HubServerInfo();
-        serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        serverInfo.setCredentialsId(credential.getId());
-
-        ScanJobs oneScan = new ScanJobs("");
-        ScanJobs[] scans = new ScanJobs[1];
-        scans[0] = oneScan;
-
-        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-        scanDesc.setHubServerInfo(serverInfo);
-
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, null, null, null, null, "4096");
-        pbScan.setverbose(false);
-        pbScan.setTEST(true);
-
-        JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");
-
-        // build.getProject().getJDK(); // Will return null if the jdk doesn't exist.
-
-        FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
-        project.setCustomWorkspace(testWorkspace);
-        project.setJDK(nonexistentJDK);
-        project.getPublishersList().add(pbScan);
-
-        EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
-        EnvVars envVars = prop.getEnvVars();
-        envVars.put("JAVA_HOME", "");
-        j.jenkins.getGlobalNodeProperties().add(prop);
-
-        FreeStyleBuild build = project.scheduleBuild2(0).get();
-
-        String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-
-        System.out.println(buildOutput);
-        // FIXME Need to check the Jdk exists before using it
-        //
-        // Assert.assertTrue(buildOutputList.get(3).contains("Could not find the specified Java installation, checking the JAVA_HOME variable."));
-        // Assert.assertTrue(buildOutputList
-        // .get(4)
-        // .contains(
-        // "Need to define a JAVA_HOME or select an installed JDK."));
-    }
-
-    @Test
-    public void setJDKEnvSelectedNonExistent() throws IOException, InterruptedException, ExecutionException {
-
-        Jenkins jenkins = j.jenkins;
-
-        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-
-        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-        iScanDesc.setInstallations(iScanInstall);
-
-        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
-        UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
-                testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
-        store.addCredentials(Domain.global(), credential);
-
-        HubServerInfo serverInfo = new HubServerInfo();
-        serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        serverInfo.setCredentialsId(credential.getId());
-
-        ScanJobs oneScan = new ScanJobs("");
-        ScanJobs[] scans = new ScanJobs[1];
-        scans[0] = oneScan;
-
-        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-        scanDesc.setHubServerInfo(serverInfo);
-
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, null, null, null, null, "4096");
-        pbScan.setverbose(false);
-        pbScan.setTEST(true);
-
-        JDK nonexistentJDK = new JDK("FAKE", "/assert/this/is/fake/path");
-        // build.getProject().getJDK(); Will return null if the jdk doesn't exist.
-
-        EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
-        EnvVars envVars = prop.getEnvVars();
-        envVars.put("JAVA_HOME", "/assert/this/is/fake/path");
-        j.jenkins.getGlobalNodeProperties().add(prop);
-
-        FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
-        project.setJDK(nonexistentJDK); // Will set the JDK to null if the JDK doesn't exist.
-        project.setCustomWorkspace(testWorkspace);
-        project.getPublishersList().add(pbScan);
-
-        FreeStyleBuild build = project.scheduleBuild2(0).get();
-        String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-
-        System.out.println(buildOutput);
-        // FIXME Need to check the Jdk exists before using it
-        //
-        // Assert.assertTrue(buildOutputList
-        // .get(3)
-        // .contains(
-        // "Could not find the specified Java installation, checking the JAVA_HOME variable."));
-        // Assert.assertTrue(buildOutputList
-        // .get(4)
-        // .contains(
-        // "Could not find the specified Java installation at:"));
     }
 
 }

@@ -42,6 +42,7 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissing
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostName;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSeparator;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.blackducksoftware.integration.hub.response.VersionComparison;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
@@ -702,10 +703,28 @@ public class PostBuildHubScan extends Recorder {
         if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
             logger.info("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
             // Empty node name indicates master
-            javaHomeTemp = build.getProject().getJDK();
+
+            String byteCodeVersion = System.getProperty("java.class.version");
+            Double majorVersion = Double.valueOf(byteCodeVersion);
+            if (majorVersion >= 51.0) {
+                // Java 7 bytecode
+                String javaHome = System.getProperty("java.home");
+                javaHomeTemp = new JDK("Java running master agent", javaHome);
+            } else {
+                javaHomeTemp = build.getProject().getJDK();
+            }
         } else {
             logger.info("Getting Jdk on node  : " + build.getBuiltOn().getNodeName());
-            javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), logger.getJenkinsListener());
+
+            String byteCodeVersion = build.getBuiltOn().getChannel().call(new GetSystemProperty("java.class.version"));
+            Double majorVersion = Double.valueOf(byteCodeVersion);
+            if (majorVersion >= 51.0) {
+                // Java 7 bytecode
+                String javaHome = build.getBuiltOn().getChannel().call(new GetSystemProperty("java.home"));
+                javaHomeTemp = new JDK("Java running slave agent", javaHome);
+            } else {
+                javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), logger.getJenkinsListener());
+            }
         }
         if (javaHomeTemp != null && javaHomeTemp.getHome() != null) {
             logger.info("JDK home : " + javaHomeTemp.getHome());
@@ -719,13 +738,19 @@ public class PostBuildHubScan extends Recorder {
             // In case the user did not select a java installation, set to the environment variable JAVA_HOME
             javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
         }
-        FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), javaHomeTemp.getHome());
-        if (!javaExec.exists()) {
+        FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), javaHomeTemp.getHome());
+        if (!javaHome.exists()) {
             throw new HubConfigurationException("Could not find the specified Java installation at: " +
-                    javaExec.getRemote());
+                    javaHome.getRemote());
         }
         java = javaHomeTemp;
     }
+
+    // private Integer getJavaMajorVersion(String versionString) {
+    // String[] versionSplit = versionString.split(".");
+    // Integer majorVersion = Integer.valueOf(versionSplit[0]);
+    // return majorVersion;
+    // }
 
     /**
      * Looks through the ScanInstallations to find the one that the User chose, then looks for the scan.cli.sh in the
