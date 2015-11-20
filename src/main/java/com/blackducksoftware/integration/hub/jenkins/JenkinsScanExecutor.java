@@ -140,7 +140,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
                 // closing it.
                 String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
 
-                if (outputString.contains("Illegal character in path")
+                if (outputString.contains("Illegal character in")
                         && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
