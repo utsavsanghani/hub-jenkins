@@ -7,6 +7,7 @@ import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -140,7 +141,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
                 // closing it.
                 String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
 
-                if (outputString.contains("Illegal character in")
+                if (outputString.contains("Illegal character in path")
                         && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
@@ -149,6 +150,29 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
                     String logPath = cmd.get(indexOfLogOption);
                     logPath = logPath.replace(" ", "%20");
+                    cmd.remove(indexOfLogOption);
+                    cmd.add(indexOfLogOption, logPath);
+
+                    byteStream = new ByteArrayOutputStream();
+
+                    ps.cmds(cmd);
+                    ps.stdout(byteStream);
+                    ps.join();
+
+                    byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
+                    outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
+                } else if (outputString.contains("Illegal character in opaque")
+                        && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
+                    // This version of the CLI can not handle spaces in the log directory
+                    // Not sure which version of the CLI this issue was fixed
+
+                    int indexOfLogOption = cmd.indexOf("--logDir") + 1;
+
+                    String logPath = cmd.get(indexOfLogOption);
+
+                    File logFile = new File(logPath);
+
+                    logPath = logFile.toURI().toString();
                     cmd.remove(indexOfLogOption);
                     cmd.add(indexOfLogOption, logPath);
 
