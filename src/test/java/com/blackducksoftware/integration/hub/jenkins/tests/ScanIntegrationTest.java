@@ -1,11 +1,6 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
 import static org.junit.Assert.assertNotNull;
-import hudson.ProxyConfiguration;
-import hudson.model.FreeStyleBuild;
-import hudson.model.Descriptor;
-import hudson.model.FreeStyleProject;
-import hudson.tools.ToolDescriptor;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,8 +9,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
-
-import jenkins.model.Jenkins;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
@@ -29,20 +22,28 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
 import com.blackducksoftware.integration.hub.response.DistributionEnum;
 import com.blackducksoftware.integration.hub.response.PhaseEnum;
 import com.blackducksoftware.integration.hub.response.ProjectItem;
+import com.blackducksoftware.integration.hub.response.VersionComparison;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+
+import hudson.ProxyConfiguration;
+import hudson.model.Descriptor;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.tools.ToolDescriptor;
+import jenkins.model.Jenkins;
 
 public class ScanIntegrationTest {
 
@@ -235,12 +236,17 @@ public class ScanIntegrationTest {
                     "You can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+            if (isLessThanVersion("2.3.2")) {
+                // Only to be asserted if run against hub <2.3.2, because the plugin does the
+                // project/version/codelocation
+
+                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+                Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+            }
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
@@ -297,12 +303,16 @@ public class ScanIntegrationTest {
                     "You can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id:"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+            if (isLessThanVersion("2.3.2")) {
+                // Only to be asserted if run against hub <2.3.2, because the plugin does the
+                // project/version/codelocation
+                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+                Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+            }
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(restHelper.getProjectByName(projectName).getId());
@@ -378,12 +388,16 @@ public class ScanIntegrationTest {
                     + testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH") + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+            if (isLessThanVersion("2.3.2")) {
+                // Only to be asserted if run against hub <2.3.2, because the plugin does the
+                // project/version/codelocation
+                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+                Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+            }
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
         } finally {
@@ -466,12 +480,16 @@ public class ScanIntegrationTest {
     // + testProperties.getProperty("TEST_PROXY_PORT_BASIC") + "'"));
     // Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
     // Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+    /*
+     * Only to be asserted if run against hub <2.3.1
+     *
+     * // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+     * // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+     * // Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+     * // Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+     * // Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+     * // Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+     */
     // Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
     //
     // } finally {
@@ -555,12 +573,15 @@ public class ScanIntegrationTest {
     // + testProperties.getProperty("TEST_PROXY_PORT_DIGEST") + "'"));
     // Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
     // Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+    // if (isLessThanVersion("2.3.2")) {
+    // Only to be asserted if run against hub <2.3.2, because the plugin does the project/version/codelocation
     // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
     // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
     // Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
     // Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
     // Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
     // Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+    // }
     // Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
     //
     // } finally {
@@ -636,17 +657,33 @@ public class ScanIntegrationTest {
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+            if (isLessThanVersion("2.3.2")) {
+                // Only to be asserted if run against hub <2.3.2, because the plugin does the
+                // project/version/codelocation
+                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+                Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+            }
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
         } finally {
             restHelper.deleteHubProject(projectId);
         }
+    }
+
+    private boolean isLessThanVersion(String version) throws IOException, BDRestException, URISyntaxException {
+        VersionComparison compare = restHelper.compareWithHubVersion(version + "-SNAPSHOT");
+        if (Integer.valueOf(0) == compare.getNumericResult()) {
+            return false;
+        }
+        compare = restHelper.compareWithHubVersion(version);
+        if (Integer.valueOf(-1) == compare.getNumericResult()) {
+            return true;
+        }
+        return false;
     }
 
     @Test
@@ -700,7 +737,11 @@ public class ScanIntegrationTest {
                     "You can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan"));
+            if (isLessThanVersion("2.3.2")) {
+                // Only to be asserted if run against hub <2.3.2, because the plugin does the
+                // project/version/codelocation
+                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan"));
+            }
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
         } finally {
@@ -766,7 +807,11 @@ public class ScanIntegrationTest {
                     "You can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan"));
+            if (isLessThanVersion("2.3.2")) {
+                // Only to be asserted if run against hub <2.3.2, because the plugin does the
+                // project/version/codelocation
+                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan"));
+            }
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
         } finally {
@@ -837,12 +882,16 @@ public class ScanIntegrationTest {
                     "You can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+            if (isLessThanVersion("2.3.2")) {
+                // Only to be asserted if run against hub <2.3.2, because the plugin does the
+                // project/version/codelocation
+                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+                Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+            }
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
             // Second run, scans should already be mapped
@@ -857,13 +906,15 @@ public class ScanIntegrationTest {
                     "You can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+            if (isLessThanVersion("2.3.2")) {
+                // Only to be asserted if run against hub <2.3.2, because the plugin does the
+                // project/version/codelocation
+                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+            }
             Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
