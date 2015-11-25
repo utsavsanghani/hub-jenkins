@@ -7,8 +7,10 @@ import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -108,22 +110,20 @@ public class JenkinsScanExecutor extends ScanExecutor {
             ProcStarter ps = launcher.launch();
             if (ps != null) {
                 // ////////////////////// Code to mask the password in the logs
-                int indexOfPassword = cmd.indexOf("--password");
-                int indexOfProxyPassword = -1;
+                ArrayList<Integer> indexToMask = new ArrayList<Integer>();
+                // The User's password will be at the next index
+                indexToMask.add(cmd.indexOf("--password") + 1);
+
                 for (int i = 0; i < cmd.size(); i++) {
-                    if (cmd.get(i).contains("-Dhttp.proxyPassword")) {
-                        indexOfProxyPassword = i;
-                        break;
+                    if (cmd.get(i).contains("-Dhttp") && cmd.get(i).contains("proxyPassword")) {
+                        indexToMask.add(i);
                     }
                 }
                 boolean[] masks = new boolean[cmd.size()];
                 Arrays.fill(masks, false);
 
-                // The Users password should appear after --password
-                masks[indexOfPassword + 1] = true;
-
-                if (indexOfProxyPassword != -1) {
-                    masks[indexOfProxyPassword] = true;
+                for (Integer index : indexToMask) {
+                    masks[index] = true;
                 }
 
                 ps.masks(masks);
@@ -150,6 +150,29 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
                     String logPath = cmd.get(indexOfLogOption);
                     logPath = logPath.replace(" ", "%20");
+                    cmd.remove(indexOfLogOption);
+                    cmd.add(indexOfLogOption, logPath);
+
+                    byteStream = new ByteArrayOutputStream();
+
+                    ps.cmds(cmd);
+                    ps.stdout(byteStream);
+                    ps.join();
+
+                    byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
+                    outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
+                } else if (outputString.contains("Illegal character in opaque")
+                        && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
+                    // This version of the CLI can not handle spaces in the log directory
+                    // Not sure which version of the CLI this issue was fixed
+
+                    int indexOfLogOption = cmd.indexOf("--logDir") + 1;
+
+                    String logPath = cmd.get(indexOfLogOption);
+
+                    File logFile = new File(logPath);
+
+                    logPath = logFile.toURI().toString();
                     cmd.remove(indexOfLogOption);
                     cmd.add(indexOfLogOption, logPath);
 
