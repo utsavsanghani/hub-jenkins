@@ -571,12 +571,15 @@ public class PostBuildHubScan extends Recorder {
         VersionComparison parseStatusComparison = null;
         Boolean mappingDone = false;
         try {
-            // The logDir option wasnt added until Hub version 2.0.1
-            logOptionComparison = service.compareWithHubVersion("2.0.1");
+            // FIXME not very efficient, if it is 2.3.0 or older then we know the answers for the others
+            // we dont need to make all three connections
+            parseStatusComparison = service.compareWithHubVersion("2.3.0");
 
             mappingComparison = service.compareWithHubVersion("2.2.0");
 
-            parseStatusComparison = service.compareWithHubVersion("2.3.0");
+            // The logDir option wasnt added until Hub version 2.0.1
+            logOptionComparison = service.compareWithHubVersion("2.0.1");
+
         } catch (BDRestException e) {
             if (e.getResourceException().getStatus().equals(Status.CLIENT_ERROR_NOT_FOUND)) {
                 // The Hub server is version 2.0.0 and the version endpoint does not exist
