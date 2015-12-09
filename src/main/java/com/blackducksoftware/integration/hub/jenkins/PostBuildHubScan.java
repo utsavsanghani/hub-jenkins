@@ -568,12 +568,15 @@ public class PostBuildHubScan extends Recorder {
         validateScanTargets(logger, scanTargets, build.getBuiltOn().getChannel());
         VersionComparison logOptionComparison = null;
         VersionComparison mappingComparison = null;
+        VersionComparison parseStatusComparison = null;
         Boolean mappingDone = false;
         try {
             // The logDir option wasnt added until Hub version 2.0.1
             logOptionComparison = service.compareWithHubVersion("2.0.1");
 
             mappingComparison = service.compareWithHubVersion("2.2.0");
+
+            parseStatusComparison = service.compareWithHubVersion("2.3.0");
         } catch (BDRestException e) {
             if (e.getResourceException().getStatus().equals(Status.CLIENT_ERROR_NOT_FOUND)) {
                 // The Hub server is version 2.0.0 and the version endpoint does not exist
@@ -602,6 +605,14 @@ public class PostBuildHubScan extends Recorder {
         scan.setScanMemory(scanMemory);
         scan.setWorkingDirectory(getWorkingDirectory().getRemote());
         scan.setTestScan(isTEST());
+
+        if (parseStatusComparison != null && parseStatusComparison.getNumericResult() <= 0) {
+            // Should check the exit status code instead
+            scan.setShouldParseStatus(false);
+        } else {
+            scan.setShouldParseStatus(true);
+        }
+
         // scan.setVerboseRun(isVerbose());
         if (mappingComparison != null && mappingComparison.getNumericResult() <= 0 &&
                 StringUtils.isNotBlank(projectName)

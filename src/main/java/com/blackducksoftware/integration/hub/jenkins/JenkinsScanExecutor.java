@@ -108,6 +108,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             ProcStarter ps = launcher.launch();
+            int exitCode = 0;
             if (ps != null) {
                 // ////////////////////// Code to mask the password in the logs
                 ArrayList<Integer> indexToMask = new ArrayList<Integer>();
@@ -132,7 +133,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
                 ps.envs(build.getEnvironment(listener));
                 ps.cmds(cmd);
                 ps.stdout(byteStream);
-                ps.join();
+                exitCode = ps.join();
 
                 ByteArrayOutputStream byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
 
@@ -157,7 +158,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
                     ps.cmds(cmd);
                     ps.stdout(byteStream);
-                    ps.join();
+                    exitCode = ps.join();
 
                     byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
                     outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
@@ -180,7 +181,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
                     ps.cmds(cmd);
                     ps.stdout(byteStream);
-                    ps.join();
+                    exitCode = ps.join();
 
                     byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
                     outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
@@ -199,10 +200,18 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     }
                 }
 
-                if (outputString.contains("Finished in") && outputString.contains("with status SUCCESS")) {
-                    return Result.SUCCESS;
+                if (shouldParseStatus()) {
+                    if (outputString.contains("Finished in") && outputString.contains("with status SUCCESS")) {
+                        return Result.SUCCESS;
+                    } else {
+                        return Result.FAILURE;
+                    }
                 } else {
-                    return Result.FAILURE;
+                    if (exitCode == 0) {
+                        return Result.SUCCESS;
+                    } else {
+                        return Result.FAILURE;
+                    }
                 }
 
             } else {
