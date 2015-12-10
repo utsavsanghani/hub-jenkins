@@ -41,6 +41,7 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfiguration
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostName;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetHostNameFromNetworkInterfaces;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSeparator;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
@@ -237,7 +238,15 @@ public class PostBuildHubScan extends Recorder {
                 try {
                     localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
                 } catch (IOException e) {
-                    logger.error("Problem getting the Local Host name : " + e.getMessage(), e);
+                    // logger.error("Problem getting the Local Host name : " + e.getMessage(), e);
+                    // ignore the error, try to get the host name from the network interfaces
+                }
+                if (StringUtils.isBlank(localHostName)) {
+                    try {
+                        localHostName = build.getBuiltOn().getChannel().call(new GetHostNameFromNetworkInterfaces());
+                    } catch (IOException e) {
+                        logger.error("Problem getting the Local Host name : " + e.getMessage(), e);
+                    }
                 }
                 logger.info("Hub Plugin running on machine : " + localHostName);
                 ScanInstallation[] iScanTools = null;
