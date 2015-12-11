@@ -1,4 +1,4 @@
-package com.blackducksoftware.integration.hub.jenkins;
+package com.blackducksoftware.integration.hub.jenkins.scan;
 
 import hudson.FilePath;
 import hudson.Launcher;
@@ -6,9 +6,10 @@ import hudson.Launcher.ProcStarter;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +25,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
     private final BuildListener listener;
 
-    protected JenkinsScanExecutor(String hubUrl, String hubUsername, String hubPassword, List<String> scanTargets, Integer buildNumber, AbstractBuild build,
+    public JenkinsScanExecutor(String hubUrl, String hubUsername, String hubPassword, List<String> scanTargets, Integer buildNumber, AbstractBuild build,
             Launcher launcher, BuildListener listener) {
         super(hubUrl, hubUsername, hubPassword, scanTargets, buildNumber);
         this.build = build;
@@ -32,7 +33,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
         this.listener = listener;
     }
 
-    protected void setTestScan(Boolean isTest) {
+    public void setTestScan(Boolean isTest) {
         setIsTest(isTest);
     }
 
@@ -105,8 +106,11 @@ public class JenkinsScanExecutor extends ScanExecutor {
     @Override
     protected Result executeScan(List<String> cmd, String logDirectoryPath) throws HubIntegrationException, InterruptedException {
         try {
-
-            ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+            File logBaseDirectory = new File(getLogDirectoryPath());
+            logBaseDirectory.mkdirs();
+            File standardOutFile = new File(logBaseDirectory, "CLI_Output.txt");
+            standardOutFile.createNewFile();
+            FileOutputStream fileOutputStream = new FileOutputStream(standardOutFile);
             ProcStarter ps = launcher.launch();
             int exitCode = 0;
             if (ps != null) {
@@ -126,24 +130,19 @@ public class JenkinsScanExecutor extends ScanExecutor {
                 for (Integer index : indexToMask) {
                     masks[index] = true;
                 }
-
                 ps.masks(masks);
                 // ///////////////////////
-
                 ps.envs(build.getEnvironment(listener));
-                ps.cmds(cmd);
-                ps.stdout(byteStream);
-                exitCode = ps.join();
 
-                ByteArrayOutputStream byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
+                String outputString = "";
 
-                // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will
-                // handle
-                // closing it.
-                String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
+                exitCode = runScan(ps, cmd, fileOutputStream, standardOutFile, outputString);
 
                 if (outputString.contains("Illegal character in path")
                         && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
+                    standardOutFile.delete();
+                    standardOutFile.createNewFile();
+
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
 
@@ -154,16 +153,13 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     cmd.remove(indexOfLogOption);
                     cmd.add(indexOfLogOption, logPath);
 
-                    byteStream = new ByteArrayOutputStream();
+                    exitCode = runScan(ps, cmd, fileOutputStream, standardOutFile, outputString);
 
-                    ps.cmds(cmd);
-                    ps.stdout(byteStream);
-                    exitCode = ps.join();
-
-                    byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
-                    outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
                 } else if (outputString.contains("Illegal character in opaque")
                         && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
+                    standardOutFile.delete();
+                    standardOutFile.createNewFile();
+
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
 
@@ -177,17 +173,9 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     cmd.remove(indexOfLogOption);
                     cmd.add(indexOfLogOption, logPath);
 
-                    byteStream = new ByteArrayOutputStream();
+                    exitCode = runScan(ps, cmd, fileOutputStream, standardOutFile, outputString);
 
-                    ps.cmds(cmd);
-                    ps.stdout(byteStream);
-                    exitCode = ps.join();
-
-                    byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
-                    outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
                 }
-
-                getLogger().info(outputString);
 
                 if (logDirectoryPath != null) {
                     FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), logDirectoryPath);
@@ -213,7 +201,6 @@ public class JenkinsScanExecutor extends ScanExecutor {
                         return Result.FAILURE;
                     }
                 }
-
             } else {
                 getLogger().error("Could not find a ProcStarter to run the process!");
             }
@@ -226,4 +213,24 @@ public class JenkinsScanExecutor extends ScanExecutor {
         }
         return Result.SUCCESS;
     }
+
+    private int runScan(ProcStarter ps, List<String> cmd, OutputStream stream, File cliOutput, String outputString) throws IOException, InterruptedException {
+        ps.cmds(cmd);
+        ps.stdout(stream);
+
+        ReaderThread thread = null;
+        try {
+            thread = new ReaderThread(getLogger(), cliOutput);
+            thread.start();
+            return ps.join();
+        } finally {
+            if (thread != null) {
+                if (thread.hasOutput()) {
+                    outputString = thread.getOutputString();
+                }
+                thread.interrupt();
+            }
+        }
+    }
+
 }
