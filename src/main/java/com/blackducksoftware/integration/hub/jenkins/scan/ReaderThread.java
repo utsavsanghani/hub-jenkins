@@ -1,21 +1,21 @@
 package com.blackducksoftware.integration.hub.jenkins.scan;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 
 public class ReaderThread extends Thread {
 
-    private final File cliOutput;
+    private final InputStream cliOutput;
 
     private final IntLogger logger;
 
     private StringBuilder outputBuilder = new StringBuilder();
 
-    public ReaderThread(IntLogger logger, File cliOutput) {
+    public ReaderThread(IntLogger logger, InputStream cliOutput) {
         this.logger = logger;
         this.cliOutput = cliOutput;
     }
@@ -32,7 +32,7 @@ public class ReaderThread extends Thread {
     public void run() {
         BufferedReader buffReader = null;
         try {
-            buffReader = new BufferedReader(new FileReader(cliOutput));
+            buffReader = new BufferedReader(new InputStreamReader(cliOutput));
             String line = null;
             while (true) {
                 line = buffReader.readLine();
