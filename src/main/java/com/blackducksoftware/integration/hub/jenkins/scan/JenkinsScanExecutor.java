@@ -138,13 +138,20 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
                 String outputString = "";
 
-                exitCode = runScan(ps, cmd, fileOutputStream, standardOutFile, outputString);
+                ReaderThread thread = new ReaderThread(getLogger(), standardOutFile);
+
+                exitCode = runScan(ps, cmd, fileOutputStream, thread);
+
+                if (thread.hasOutput()) {
+                    outputString = thread.getOutputString();
+                }
 
                 if (outputString.contains("Illegal character in path")
                         && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
                     standardOutFile.delete();
                     standardOutFile.createNewFile();
 
+                    thread = new ReaderThread(getLogger(), standardOutFile);
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
 
@@ -155,12 +162,18 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     cmd.remove(indexOfLogOption);
                     cmd.add(indexOfLogOption, logPath);
 
-                    exitCode = runScan(ps, cmd, fileOutputStream, standardOutFile, outputString);
+                    exitCode = runScan(ps, cmd, fileOutputStream, thread);
+
+                    if (thread.hasOutput()) {
+                        outputString = thread.getOutputString();
+                    }
 
                 } else if (outputString.contains("Illegal character in opaque")
                         && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
                     standardOutFile.delete();
                     standardOutFile.createNewFile();
+
+                    thread = new ReaderThread(getLogger(), standardOutFile);
 
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
@@ -175,7 +188,11 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     cmd.remove(indexOfLogOption);
                     cmd.add(indexOfLogOption, logPath);
 
-                    exitCode = runScan(ps, cmd, fileOutputStream, standardOutFile, outputString);
+                    exitCode = runScan(ps, cmd, fileOutputStream, thread);
+
+                    if (thread.hasOutput()) {
+                        outputString = thread.getOutputString();
+                    }
 
                 }
 
@@ -216,21 +233,16 @@ public class JenkinsScanExecutor extends ScanExecutor {
         return Result.SUCCESS;
     }
 
-    private int runScan(ProcStarter ps, List<String> cmd, OutputStream stream, File cliOutput, String outputString) throws IOException, InterruptedException {
+    private int runScan(ProcStarter ps, List<String> cmd, OutputStream stream, ReaderThread thread) throws IOException, InterruptedException {
         ps.cmds(cmd);
         ps.stdout(stream);
 
-        ReaderThread thread = null;
         try {
-            thread = new ReaderThread(getLogger(), cliOutput);
             thread.start();
             return ps.join();
         } finally {
             Thread.sleep(THREAD_SLEEP);
             if (thread != null) {
-                if (thread.hasOutput()) {
-                    outputString = thread.getOutputString();
-                }
                 thread.interrupt();
             }
         }

@@ -338,6 +338,11 @@ public class PostBuildScanDescriptorTest {
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         descriptor.setHubServerInfo(hubServerInfo);
 
+        try {
+            restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
+        } catch (Exception e) {
+            // ignore all exceptions
+        }
         FormValidation form = descriptor.doCheckHubProjectVersion(testProperties.getProperty("TEST_CREATE_VERSION"),
                 testProperties.getProperty("TEST_CREATE_PROJECT"));
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
