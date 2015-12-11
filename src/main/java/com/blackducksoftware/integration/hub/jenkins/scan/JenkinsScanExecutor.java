@@ -19,6 +19,8 @@ import com.blackducksoftware.integration.hub.ScanExecutor;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 
 public class JenkinsScanExecutor extends ScanExecutor {
+    public static final Integer THREAD_SLEEP = 100;
+
     private final AbstractBuild build;
 
     private final Launcher launcher;
@@ -224,7 +226,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
             thread.start();
             return ps.join();
         } finally {
-            Thread.sleep(500);
+            Thread.sleep(THREAD_SLEEP);
             if (thread != null) {
                 if (thread.hasOutput()) {
                     outputString = thread.getOutputString();

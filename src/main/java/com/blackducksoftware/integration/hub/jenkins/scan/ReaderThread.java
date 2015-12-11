@@ -37,7 +37,7 @@ public class ReaderThread extends Thread {
             while (true) {
                 line = buffReader.readLine();
                 if (line == null) {
-                    Thread.sleep(500);
+                    Thread.sleep(JenkinsScanExecutor.THREAD_SLEEP);
                 } else {
                     // Only interested in the error logs and the warning logs
                     if (line.contains("Exception")) {
