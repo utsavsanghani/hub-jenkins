@@ -224,6 +224,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
             thread.start();
             return ps.join();
         } finally {
+            Thread.sleep(500);
             if (thread != null) {
                 if (thread.hasOutput()) {
                     outputString = thread.getOutputString();
@@ -232,5 +233,4 @@ public class JenkinsScanExecutor extends ScanExecutor {
             }
         }
     }
-
 }

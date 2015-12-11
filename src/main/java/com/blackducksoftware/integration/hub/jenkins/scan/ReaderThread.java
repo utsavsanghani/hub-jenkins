@@ -40,7 +40,10 @@ public class ReaderThread extends Thread {
                     Thread.sleep(500);
                 } else {
                     // Only interested in the error logs and the warning logs
-                    if (line.contains("ERROR:")) {
+                    if (line.contains("Exception")) {
+                        outputBuilder.append(line + System.getProperty("line.separator"));
+                        logger.error(line);
+                    } else if (line.contains("ERROR:")) {
                         outputBuilder.append(line + System.getProperty("line.separator"));
                         logger.error(line);
                     } else if (line.contains("WARN:")) {
