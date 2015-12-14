@@ -156,7 +156,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         }
 
         try {
-            Integer.valueOf(scanMemory);
+            Integer scanMem = Integer.valueOf(scanMemory);
+            if (scanMem < 256) {
+                return FormValidation.error(Messages.HubBuildScan_getInvalidMemoryString());
+            }
         } catch (NumberFormatException e) {
             return FormValidation.error(e, Messages
                     .HubBuildScan_getInvalidMemoryString());
