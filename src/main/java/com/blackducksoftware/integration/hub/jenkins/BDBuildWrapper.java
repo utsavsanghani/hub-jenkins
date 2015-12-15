@@ -264,7 +264,8 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         return buildInfo;
     }
 
-    private String ensureProjectExists(HubIntRestService service, IntLogger logger, String projectName) throws IOException, URISyntaxException,
+    private String ensureProjectExists(HubIntRestService service, IntLogger logger, String projectName, String projectVersion) throws IOException,
+            URISyntaxException,
             BDJenkinsHubPluginException {
         String projectId = null;
         try {
@@ -276,8 +277,8 @@ public abstract class BDBuildWrapper extends BuildWrapper {
                     // Project was not found, try to create it
                     try {
 
-                        projectId = service.createHubProject(projectName);
-                        logger.debug("Project created!");
+                        projectId = service.createHubProjectAndVersion(projectName, projectVersion, getHubWrapperVersionPhase(), getHubWrapperVersionDist());
+                        logger.debug("Project and Version created!");
 
                     } catch (BDRestException e1) {
                         if (e1.getResource() != null) {
