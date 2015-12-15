@@ -189,7 +189,7 @@ public class PostBuildScanDescriptorTest {
             Assert.assertEquals(FormValidation.Kind.OK, form.kind);
             Thread.sleep(6000);
             FormValidation form2 = descriptor.doCreateHubProject(testProperties.getProperty("TEST_CREATE_PROJECT"), "New Release", "DEVELOPMENT", "EXTERNAL");
-            Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectAndVersionCreated());
+            Assert.assertEquals(Messages.HubBuildScan_getVersionCreated(), form2.getMessage());
             Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
         } finally {
             restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
@@ -244,7 +244,7 @@ public class PostBuildScanDescriptorTest {
         FormValidation form2 = descriptor.doCreateHubProject(testProperties.getProperty("TEST_CREATE_PROJECT"), "${BUILD_NUMBER}", "DEVELOPMENT", "EXTERNAL");
 
         Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
-        Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectCreated() + " :: " + Messages.HubBuildScan_getProjectVersionContainsVariable());
+        Assert.assertEquals(Messages.HubBuildScan_getProjectVersionContainsVariable(), form2.getMessage());
 
         FormValidation form3 = descriptor.doCreateHubProject("${JOB_NAME}", "${BUILD_NUMBER}", "DEVELOPMENT", "EXTERNAL");
 

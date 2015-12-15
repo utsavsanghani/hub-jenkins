@@ -313,8 +313,7 @@ public class PostBuildHubScan extends Recorder {
                     String projectId = null;
                     String versionId = null;
                     if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
-                        projectId = ensureProjectExists(service, logger, projectName);
-                        Thread.sleep(500);
+                        projectId = ensureProjectExists(service, logger, projectName, projectVersion);
                         versionId = ensureVersionExists(service, logger, projectVersion, projectId);
 
                         if (StringUtils.isEmpty(projectId)) {
@@ -373,7 +372,8 @@ public class PostBuildHubScan extends Recorder {
         return true;
     }
 
-    private String ensureProjectExists(HubIntRestService service, IntLogger logger, String projectName) throws IOException, URISyntaxException,
+    private String ensureProjectExists(HubIntRestService service, IntLogger logger, String projectName, String projectVersion) throws IOException,
+            URISyntaxException,
             BDJenkinsHubPluginException {
         String projectId = null;
         try {
@@ -385,8 +385,8 @@ public class PostBuildHubScan extends Recorder {
                     // Project was not found, try to create it
                     try {
 
-                        projectId = service.createHubProject(projectName);
-                        logger.debug("Project created!");
+                        projectId = service.createHubProjectAndVersion(projectName, projectVersion, getHubVersionPhase(), getHubVersionDist());
+                        logger.debug("Project and Version created!");
 
                     } catch (BDRestException e1) {
                         if (e1.getResource() != null) {
