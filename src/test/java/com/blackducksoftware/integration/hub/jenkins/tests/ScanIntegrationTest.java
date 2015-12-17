@@ -1,6 +1,7 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
 import static org.junit.Assert.assertNotNull;
+import hudson.ExtensionList;
 import hudson.ProxyConfiguration;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Descriptor;
@@ -47,6 +48,8 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
 public class ScanIntegrationTest {
 
+    private static final String CLI_VERSION = "2.1.2";
+
     private static final String DEFAULT_ISCAN = "default";
 
     private static final String PASSWORD_WRONG = "Assert.failurePassword";
@@ -81,8 +84,8 @@ public class ScanIntegrationTest {
         basePath = ScanIntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf(File.separator + "target"));
         basePath = basePath + File.separator + "test-workspace";
-        iScanInstallPath = basePath + File.separator + "scan.cli-2.3.2-SNAPSHOT";
-        System.out.println("*************** " + iScanInstallPath);
+        iScanInstallPath = basePath + File.separator + "scan.cli-" + CLI_VERSION;
+        System.err.println("*************** " + iScanInstallPath);
         testWorkspace = basePath + File.separator + "workspace";
 
         testProperties = new Properties();
@@ -103,7 +106,7 @@ public class ScanIntegrationTest {
     }
 
     @AfterClass
-    public static void tearDown() throws BDRestException, IOException, URISyntaxException {
+    public static void tearDown() {
         projectCleanup();
     }
 
@@ -128,7 +131,8 @@ public class ScanIntegrationTest {
 
         ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
 
-        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
+        ExtensionList<ToolDescriptor> tools = jenkins.getExtensionList(ToolDescriptor.class);
+        IScanDescriptor iScanDesc = tools.get(IScanDescriptor.class);
         iScanDesc.setInstallations(iScanInstall);
 
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
@@ -480,7 +484,7 @@ public class ScanIntegrationTest {
     // Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
     /*
      * Only to be asserted if run against hub <2.3.1
-     * 
+     *
      * // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
      * // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
      * // Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));

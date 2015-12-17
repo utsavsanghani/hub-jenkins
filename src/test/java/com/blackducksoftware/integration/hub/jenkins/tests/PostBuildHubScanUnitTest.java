@@ -44,7 +44,9 @@ import com.google.common.base.Charsets;
 
 public class PostBuildHubScanUnitTest {
 
-    private static final String TEST_CLI_PATH = "/lib/scan.cli-2.3.2-SNAPSHOT-standalone.jar";
+    private static final String CLI_VERSION = "2.1.2";
+
+    private static final String TEST_CLI_PATH = "/lib/scan.cli-" + CLI_VERSION + "-standalone.jar";
 
     private static String VALID_CREDENTIAL = "Valid Credential Id";
 
@@ -72,7 +74,7 @@ public class PostBuildHubScanUnitTest {
         basePath = ScanIntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf("/target"));
         basePath = basePath + "/test-workspace";
-        iScanInstallPath = basePath + "/scan.cli-2.3.2-SNAPSHOT";
+        iScanInstallPath = basePath + "/scan.cli-" + CLI_VERSION;
 
         byteOutput = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(byteOutput);
