@@ -519,15 +519,16 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
                 }
                 if (StringUtils.isBlank(hubProjectName)) {
-                    return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
+                    // Error will be displayed for the project name field
+                    return FormValidation.ok();
                 }
                 if (hubProjectVersion.contains("$")) {
                     return FormValidation
                             .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
                 }
                 if (hubProjectName.contains("$")) {
-                    return FormValidation
-                            .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
+                    // Warning will be displayed for the project name field
+                    return FormValidation.ok();
                 }
 
                 String credentialUserName = null;
