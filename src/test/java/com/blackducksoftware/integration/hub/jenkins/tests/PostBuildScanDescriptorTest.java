@@ -343,8 +343,7 @@ public class PostBuildScanDescriptorTest {
         descriptor.setHubServerInfo(hubServerInfo);
 
         FormValidation form = descriptor.doCheckHubProjectVersion("${BUILD_NUMBER}", null);
-        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProvideProjectName());
+        Assert.assertEquals(FormValidation.Kind.OK, form.kind);
 
         FormValidation form2 = descriptor.doCheckHubProjectVersion("${BUILD_NUMBER}", testProperties.getProperty("TEST_CREATE_PROJECT"));
         Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
