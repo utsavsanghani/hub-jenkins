@@ -1,6 +1,9 @@
 Hub plugin for Jenkins. This plugin provides ability to run a BD Hub CLi on build input or output. It offers to run multiple code locations.
 
 ## Release Notes:
+### 1.3.6
+* Improves compatibility with non Oracle JREs
+* Improves determination of the local hostname 
 ### 1.3.5
 * Fix an issue with Code locations being mapped to multiple projects (IJH-83)
 * Fix an issue with scanning >10 code locations in a single job (IJH-93)
