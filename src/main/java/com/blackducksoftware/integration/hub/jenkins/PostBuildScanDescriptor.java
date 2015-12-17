@@ -37,6 +37,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
+import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.response.AutoCompleteItem;
@@ -457,6 +458,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 } else {
                     return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getHubServerUrl()));
                 }
+            } catch (ProjectDoesNotExistException e) {
+                return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getHubServerUrl()));
             } catch (BDRestException e) {
                 String message;
                 if (e.getCause() != null) {
@@ -546,8 +549,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 ProjectItem project = null;
                 try {
                     project = service.getProjectByName(hubProjectName);
-                } catch (BDRestException e) {
-                    return FormValidation.error(e, e.getMessage());
+                } catch (ProjectDoesNotExistException e) {
+                    // This error will already show up for the name field
+                    return FormValidation.ok();
                 }
                 List<ReleaseItem> releases = service.getVersionsForProject(project.getId());
 
@@ -761,9 +765,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     projectExists = true;
                 }
 
-            } catch (BDRestException e) {
-                // Either doesnt exist or cant connect to the server.
-                // Assume it doesnt exist for now
+            } catch (ProjectDoesNotExistException e) {
+                // Project Doesnt exist
             }
 
             String projectId = null;

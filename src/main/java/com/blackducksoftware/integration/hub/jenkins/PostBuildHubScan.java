@@ -36,6 +36,7 @@ import org.restlet.data.Status;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
+import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
@@ -379,29 +380,27 @@ public class PostBuildHubScan extends Recorder {
         try {
             projectId = service.getProjectByName(projectName).getId();
 
+        } catch (ProjectDoesNotExistException e) {
+            // Project was not found, try to create it
+            try {
+
+                projectId = service.createHubProjectAndVersion(projectName, projectVersion, getHubVersionPhase(), getHubVersionDist());
+                logger.debug("Project and Version created!");
+
+            } catch (BDRestException e1) {
+                if (e1.getResource() != null) {
+                    logger.error("Status : " + e1.getResource().getStatus().getCode());
+                    logger.error("Response : " + e1.getResource().getResponse().getEntityAsText());
+                }
+                throw new BDJenkinsHubPluginException("Problem creating the Project. ", e1);
+            }
         } catch (BDRestException e) {
             if (e.getResource() != null) {
-                if (e.getResource().getResponse().getStatus().getCode() == 404) {
-                    // Project was not found, try to create it
-                    try {
-
-                        projectId = service.createHubProjectAndVersion(projectName, projectVersion, getHubVersionPhase(), getHubVersionDist());
-                        logger.debug("Project and Version created!");
-
-                    } catch (BDRestException e1) {
-                        if (e1.getResource() != null) {
-                            logger.error("Status : " + e1.getResource().getStatus().getCode());
-                            logger.error("Response : " + e1.getResource().getResponse().getEntityAsText());
-                        }
-                        throw new BDJenkinsHubPluginException("Problem creating the Project. ", e1);
-                    }
-                } else {
-                    if (e.getResource() != null) {
-                        logger.error("Status : " + e.getResource().getStatus().getCode());
-                        logger.error("Response : " + e.getResource().getResponse().getEntityAsText());
-                    }
-                    throw new BDJenkinsHubPluginException("Problem getting the Project. ", e);
+                if (e.getResource() != null) {
+                    logger.error("Status : " + e.getResource().getStatus().getCode());
+                    logger.error("Response : " + e.getResource().getResponse().getEntityAsText());
                 }
+                throw new BDJenkinsHubPluginException("Problem getting the Project. ", e);
             }
         }
 

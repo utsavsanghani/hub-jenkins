@@ -12,6 +12,7 @@ import org.restlet.util.Series;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
+import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.response.ProjectItem;
 
@@ -56,13 +57,15 @@ public class JenkinsHubIntTestHelper extends HubIntRestService {
     }
 
     @Override
-    public ProjectItem getProjectByName(String projectName) throws IOException, BDRestException, URISyntaxException {
+    public ProjectItem getProjectByName(String projectName) throws IOException, URISyntaxException {
         try {
             return super.getProjectByName(projectName);
+        } catch (ProjectDoesNotExistException e) {
+            e.printStackTrace();
         } catch (BDRestException e) {
             e.printStackTrace();
         }
+        // e.printStackTrace();
         return new ProjectItem();
     }
-
 }

@@ -285,7 +285,8 @@ public class PostBuildScanDescriptorTest {
         }
 
         FormValidation form = descriptor.doCheckHubProjectName(PROJECT_NAME_NOT_EXISTING, null);
-        Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_()));
+        Assert.assertTrue(form.getMessage(),
+                form.getMessage().contains(Messages.HubBuildScan_getProjectNonExistingIn_0_(testProperties.getProperty("TEST_HUB_SERVER_URL"))));
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
     }
 
@@ -368,8 +369,8 @@ public class PostBuildScanDescriptorTest {
         }
         FormValidation form = descriptor.doCheckHubProjectVersion(testProperties.getProperty("TEST_CREATE_VERSION"),
                 testProperties.getProperty("TEST_CREATE_PROJECT"));
-        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-        Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_()));
+        // This is OK because we expect the Name field to catch this error
+        Assert.assertEquals(FormValidation.Kind.OK, form.kind);
     }
 
     @Test
