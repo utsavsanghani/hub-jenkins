@@ -320,6 +320,11 @@ public class PostBuildScanDescriptorTest {
         descriptor.setHubServerInfo(hubServerInfo);
 
         try {
+            restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
+        } catch (Exception e) {
+        }
+
+        try {
             FormValidation form = descriptor.doCreateHubProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
                     testProperties.getProperty("TEST_CREATE_VERSION"),
                     "DEVELOPMENT", "EXTERNAL");
