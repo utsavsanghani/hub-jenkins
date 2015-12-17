@@ -1,4 +1,4 @@
-package com.blackducksoftware.integration.hub.jenkins;
+package com.blackducksoftware.integration.hub.jenkins.scan;
 
 import hudson.FilePath;
 import hudson.Launcher;
@@ -6,7 +6,6 @@ import hudson.Launcher.ProcStarter;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -18,13 +17,15 @@ import com.blackducksoftware.integration.hub.ScanExecutor;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 
 public class JenkinsScanExecutor extends ScanExecutor {
+    public static final Integer THREAD_SLEEP = 100;
+
     private final AbstractBuild build;
 
     private final Launcher launcher;
 
     private final BuildListener listener;
 
-    protected JenkinsScanExecutor(String hubUrl, String hubUsername, String hubPassword, List<String> scanTargets, Integer buildNumber, AbstractBuild build,
+    public JenkinsScanExecutor(String hubUrl, String hubUsername, String hubPassword, List<String> scanTargets, Integer buildNumber, AbstractBuild build,
             Launcher launcher, BuildListener listener) {
         super(hubUrl, hubUsername, hubPassword, scanTargets, buildNumber);
         this.build = build;
@@ -32,7 +33,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
         this.listener = listener;
     }
 
-    protected void setTestScan(Boolean isTest) {
+    public void setTestScan(Boolean isTest) {
         setIsTest(isTest);
     }
 
@@ -105,9 +106,12 @@ public class JenkinsScanExecutor extends ScanExecutor {
     @Override
     protected Result executeScan(List<String> cmd, String logDirectoryPath) throws HubIntegrationException, InterruptedException {
         try {
-
-            ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+            FilePath logBaseDirectory = new FilePath(build.getBuiltOn().getChannel(), getLogDirectoryPath());
+            logBaseDirectory.mkdirs();
+            FilePath standardOutFile = new FilePath(logBaseDirectory, "CLI_Output.txt");
+            standardOutFile.touch(0);
             ProcStarter ps = launcher.launch();
+            int exitCode = 0;
             if (ps != null) {
                 // ////////////////////// Code to mask the password in the logs
                 ArrayList<Integer> indexToMask = new ArrayList<Integer>();
@@ -125,24 +129,26 @@ public class JenkinsScanExecutor extends ScanExecutor {
                 for (Integer index : indexToMask) {
                     masks[index] = true;
                 }
-
                 ps.masks(masks);
                 // ///////////////////////
-
                 ps.envs(build.getEnvironment(listener));
-                ps.cmds(cmd);
-                ps.stdout(byteStream);
-                ps.join();
 
-                ByteArrayOutputStream byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
+                String outputString = "";
 
-                // DO NOT close this PrintStream or Jenkins will not be able to log any more messages. Jenkins will
-                // handle
-                // closing it.
-                String outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
+                ReaderThread thread = new ReaderThread(getLogger(), standardOutFile.read());
+
+                exitCode = runScan(ps, cmd, standardOutFile, thread);
+
+                if (thread.hasOutput()) {
+                    outputString = thread.getOutputString();
+                }
 
                 if (outputString.contains("Illegal character in path")
                         && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
+                    standardOutFile.delete();
+                    standardOutFile.touch(0);
+
+                    thread = new ReaderThread(getLogger(), standardOutFile.read());
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
 
@@ -153,16 +159,19 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     cmd.remove(indexOfLogOption);
                     cmd.add(indexOfLogOption, logPath);
 
-                    byteStream = new ByteArrayOutputStream();
+                    exitCode = runScan(ps, cmd, standardOutFile, thread);
 
-                    ps.cmds(cmd);
-                    ps.stdout(byteStream);
-                    ps.join();
+                    if (thread.hasOutput()) {
+                        outputString = thread.getOutputString();
+                    }
 
-                    byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
-                    outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
                 } else if (outputString.contains("Illegal character in opaque")
                         && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
+                    standardOutFile.delete();
+                    standardOutFile.touch(0);
+
+                    thread = new ReaderThread(getLogger(), standardOutFile.read());
+
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
 
@@ -176,18 +185,13 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     cmd.remove(indexOfLogOption);
                     cmd.add(indexOfLogOption, logPath);
 
-                    byteStream = new ByteArrayOutputStream();
+                    exitCode = runScan(ps, cmd, standardOutFile, thread);
 
-                    ps.cmds(cmd);
-                    ps.stdout(byteStream);
-                    ps.join();
+                    if (thread.hasOutput()) {
+                        outputString = thread.getOutputString();
+                    }
 
-                    byteStreamOutput = (ByteArrayOutputStream) ps.stdout();
-                    outputString = new String(byteStreamOutput.toByteArray(), "UTF-8");
                 }
-
-                getLogger().info(outputString);
-
                 if (logDirectoryPath != null) {
                     FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), logDirectoryPath);
                     if (logDirectory.exists() && doesHubSupportLogOption()) {
@@ -199,12 +203,19 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     }
                 }
 
-                if (outputString.contains("Finished in") && outputString.contains("with status SUCCESS")) {
-                    return Result.SUCCESS;
+                if (shouldParseStatus()) {
+                    if (outputString.contains("Finished in") && outputString.contains("with status SUCCESS")) {
+                        return Result.SUCCESS;
+                    } else {
+                        return Result.FAILURE;
+                    }
                 } else {
-                    return Result.FAILURE;
+                    if (exitCode == 0) {
+                        return Result.SUCCESS;
+                    } else {
+                        return Result.FAILURE;
+                    }
                 }
-
             } else {
                 getLogger().error("Could not find a ProcStarter to run the process!");
             }
@@ -216,5 +227,20 @@ public class JenkinsScanExecutor extends ScanExecutor {
             throw new HubIntegrationException(e.getMessage(), e);
         }
         return Result.SUCCESS;
+    }
+
+    private int runScan(ProcStarter ps, List<String> cmd, FilePath stream, ReaderThread thread) throws IOException, InterruptedException {
+        ps.cmds(cmd);
+        ps.stdout(stream.write());
+
+        try {
+            thread.start();
+            return ps.join();
+        } finally {
+            Thread.sleep(THREAD_SLEEP);
+            if (thread != null) {
+                thread.interrupt();
+            }
+        }
     }
 }

@@ -1,6 +1,11 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
 import static org.junit.Assert.assertNotNull;
+import hudson.ProxyConfiguration;
+import hudson.model.FreeStyleBuild;
+import hudson.model.Descriptor;
+import hudson.model.FreeStyleProject;
+import hudson.tools.ToolDescriptor;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +14,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
+
+import jenkins.model.Jenkins;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
@@ -37,13 +44,6 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-
-import hudson.ProxyConfiguration;
-import hudson.model.Descriptor;
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
-import hudson.tools.ToolDescriptor;
-import jenkins.model.Jenkins;
 
 public class ScanIntegrationTest {
 
@@ -81,7 +81,8 @@ public class ScanIntegrationTest {
         basePath = ScanIntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf(File.separator + "target"));
         basePath = basePath + File.separator + "test-workspace";
-        iScanInstallPath = basePath + File.separator + "scan.cli-2.1.2";
+        iScanInstallPath = basePath + File.separator + "scan.cli-2.3.2-SNAPSHOT";
+        System.out.println("*************** " + iScanInstallPath);
         testWorkspace = basePath + File.separator + "workspace";
 
         testProperties = new Properties();
@@ -109,11 +110,8 @@ public class ScanIntegrationTest {
     /**
      * Cleans up any project that may be left over from interrupted tests.
      *
-     * @throws BDRestException
-     * @throws IOException
-     * @throws URISyntaxException
      */
-    public static void projectCleanup() throws BDRestException, IOException, URISyntaxException {
+    public static void projectCleanup() {
         try {
             ProjectItem project = restHelper.getProjectByName(testProperties.getProperty("TEST_PROJECT"));
             if (project != null && project.getId() != null) {
@@ -482,7 +480,7 @@ public class ScanIntegrationTest {
     // Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
     /*
      * Only to be asserted if run against hub <2.3.1
-     *
+     * 
      * // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
      * // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
      * // Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));

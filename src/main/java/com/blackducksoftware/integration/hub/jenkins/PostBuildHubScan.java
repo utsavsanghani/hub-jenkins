@@ -41,8 +41,10 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfiguration
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostName;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetHostNameFromNetworkInterfaces;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSeparator;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
+import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.blackducksoftware.integration.hub.response.VersionComparison;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
@@ -237,7 +239,15 @@ public class PostBuildHubScan extends Recorder {
                 try {
                     localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
                 } catch (IOException e) {
-                    logger.error("Problem getting the Local Host name : " + e.getMessage(), e);
+                    // logger.error("Problem getting the Local Host name : " + e.getMessage(), e);
+                    // ignore the error, try to get the host name from the network interfaces
+                }
+                if (StringUtils.isBlank(localHostName)) {
+                    try {
+                        localHostName = build.getBuiltOn().getChannel().call(new GetHostNameFromNetworkInterfaces());
+                    } catch (IOException e) {
+                        logger.error("Problem getting the Local Host name : " + e.getMessage(), e);
+                    }
                 }
                 logger.info("Hub Plugin running on machine : " + localHostName);
                 ScanInstallation[] iScanTools = null;
@@ -303,8 +313,7 @@ public class PostBuildHubScan extends Recorder {
                     String projectId = null;
                     String versionId = null;
                     if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
-                        projectId = ensureProjectExists(service, logger, projectName);
-                        Thread.sleep(500);
+                        projectId = ensureProjectExists(service, logger, projectName, projectVersion);
                         versionId = ensureVersionExists(service, logger, projectVersion, projectId);
 
                         if (StringUtils.isEmpty(projectId)) {
@@ -363,7 +372,8 @@ public class PostBuildHubScan extends Recorder {
         return true;
     }
 
-    private String ensureProjectExists(HubIntRestService service, IntLogger logger, String projectName) throws IOException, URISyntaxException,
+    private String ensureProjectExists(HubIntRestService service, IntLogger logger, String projectName, String projectVersion) throws IOException,
+            URISyntaxException,
             BDJenkinsHubPluginException {
         String projectId = null;
         try {
@@ -375,8 +385,8 @@ public class PostBuildHubScan extends Recorder {
                     // Project was not found, try to create it
                     try {
 
-                        projectId = service.createHubProject(projectName);
-                        logger.debug("Project created!");
+                        projectId = service.createHubProjectAndVersion(projectName, projectVersion, getHubVersionPhase(), getHubVersionDist());
+                        logger.debug("Project and Version created!");
 
                     } catch (BDRestException e1) {
                         if (e1.getResource() != null) {
@@ -568,12 +578,18 @@ public class PostBuildHubScan extends Recorder {
         validateScanTargets(logger, scanTargets, build.getBuiltOn().getChannel());
         VersionComparison logOptionComparison = null;
         VersionComparison mappingComparison = null;
+        VersionComparison parseStatusComparison = null;
         Boolean mappingDone = false;
         try {
+            // FIXME not very efficient, if it is 2.3.0 or older then we know the answers for the others
+            // we dont need to make all three connections
+            parseStatusComparison = service.compareWithHubVersion("2.3.0");
+
+            mappingComparison = service.compareWithHubVersion("2.2.0");
+
             // The logDir option wasnt added until Hub version 2.0.1
             logOptionComparison = service.compareWithHubVersion("2.0.1");
 
-            mappingComparison = service.compareWithHubVersion("2.2.0");
         } catch (BDRestException e) {
             if (e.getResourceException().getStatus().equals(Status.CLIENT_ERROR_NOT_FOUND)) {
                 // The Hub server is version 2.0.0 and the version endpoint does not exist
@@ -602,7 +618,15 @@ public class PostBuildHubScan extends Recorder {
         scan.setScanMemory(scanMemory);
         scan.setWorkingDirectory(getWorkingDirectory().getRemote());
         scan.setTestScan(isTEST());
-        // scan.setVerboseRun(isVerbose());
+
+        if (parseStatusComparison != null && parseStatusComparison.getNumericResult() <= 0) {
+            // Should check the exit status code instead
+            scan.setShouldParseStatus(false);
+        } else {
+            scan.setShouldParseStatus(true);
+        }
+
+        scan.setVerboseRun(isVerbose());
         if (mappingComparison != null && mappingComparison.getNumericResult() <= 0 &&
                 StringUtils.isNotBlank(projectName)
                 && StringUtils.isNotBlank(versionName)) {

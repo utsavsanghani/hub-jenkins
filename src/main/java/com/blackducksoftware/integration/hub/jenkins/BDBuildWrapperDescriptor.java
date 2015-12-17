@@ -406,6 +406,16 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 return FormValidation
                         .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
             }
+            if (hubWrapperProjectVersion.contains("$")) {
+                return FormValidation
+                        .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
+            }
+            if (StringUtils.isBlank(hubWrapperVersionPhase)) {
+                return FormValidation.error(Messages.HubBuildScan_getProvideVersionPhase());
+            }
+            if (StringUtils.isBlank(hubWrapperVersionDist)) {
+                return FormValidation.error(Messages.HubBuildScan_getProvideVersionDist());
+            }
 
             String credentialUserName = null;
             String credentialPassword = null;
@@ -420,7 +430,6 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
             HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword);
 
             boolean projectExists = false;
-            boolean projectCreated = false;
 
             ProjectItem project = null;
             try {
@@ -437,63 +446,44 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
             String projectId = null;
             if (!projectExists) {
                 try {
-                    projectId = service.createHubProject(hubWrapperProjectName);
-                    if (projectId != null) {
-                        projectCreated = true;
-                    }
+                    projectId = service.createHubProjectAndVersion(hubWrapperProjectName, hubWrapperProjectVersion, hubWrapperVersionPhase,
+                            hubWrapperVersionDist);
+                    return FormValidation.ok(Messages.HubBuildScan_getProjectAndVersionCreated());
                 } catch (BDRestException e) {
-                    return FormValidation.error(e.getMessage());
+                    return FormValidation.error(e, e.getMessage());
                 }
             } else {
                 projectId = project.getId();
-            }
+                String versionId = null;
+                try {
+                    List<ReleaseItem> releases = service.getVersionsForProject(projectId);
+                    for (ReleaseItem release : releases) {
+                        if (release.getVersion().equals(hubWrapperProjectVersion)) {
+                            versionId = release.getId();
+                        }
 
-            if (hubWrapperProjectVersion.contains("$")) {
-                if (projectCreated) {
-                    return FormValidation
-                            .warning(Messages._HubBuildScan_getProjectCreated() + " :: " + Messages.HubBuildScan_getProjectVersionContainsVariable());
-                } else {
-                    return FormValidation
-                            .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
-                }
-            }
-            if (StringUtils.isBlank(hubWrapperVersionPhase)) {
-                return FormValidation.error(Messages.HubBuildScan_getProvideVersionPhase());
-            }
-            if (StringUtils.isBlank(hubWrapperVersionDist)) {
-                return FormValidation.error(Messages.HubBuildScan_getProvideVersionDist());
-            }
-            String versionId = null;
-            try {
-                List<ReleaseItem> releases = service.getVersionsForProject(projectId);
-                for (ReleaseItem release : releases) {
-                    if (release.getVersion().equals(hubWrapperProjectVersion)) {
-                        versionId = release.getId();
+                    }
+                    if (projectExists && versionId != null) {
+                        return FormValidation
+                                .warning(Messages.HubBuildScan_getProjectAndVersionExist());
                     }
 
+                    if (versionId == null) {
+                        versionId = service.createHubVersion(hubWrapperProjectVersion, projectId, hubWrapperVersionPhase, hubWrapperVersionDist);
+                    }
+                    return FormValidation.ok(Messages.HubBuildScan_getVersionCreated());
+                } catch (BDRestException e) {
+                    if (e.getResource().getResponse().getStatus().getCode() == 412) {
+                        return FormValidation.error(e, Messages.HubBuildScan_getProjectVersionCreationProblem());
+                    } else if (e.getResource().getResponse().getStatus().getCode() == 401) {
+                        // If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
+                        return FormValidation.error(e, Messages.HubBuildScan_getCredentialsInValidFor_0_(getHubServerInfo().getServerUrl()));
+                    } else if (e.getResource().getResponse().getStatus().getCode() == 407) {
+                        return FormValidation.error(e, Messages.HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
+                    } else {
+                        return FormValidation.error(e, Messages.HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
+                    }
                 }
-                if (projectExists && versionId != null) {
-                    return FormValidation
-                            .warning(Messages.HubBuildScan_getProjectAndVersionExist());
-                }
-
-                if (versionId == null) {
-                    versionId = service.createHubVersion(hubWrapperProjectVersion, projectId, hubWrapperVersionPhase, hubWrapperVersionDist);
-                }
-            } catch (BDRestException e) {
-                if (e.getResource().getResponse().getStatus().getCode() == 412) {
-                    return FormValidation.error(e, Messages.HubBuildScan_getProjectVersionCreationProblem());
-                } else if (e.getResource().getResponse().getStatus().getCode() == 401) {
-                    // If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
-                    return FormValidation.error(e, Messages.HubBuildScan_getCredentialsInValidFor_0_(getHubServerInfo().getServerUrl()));
-                } else {
-                    return FormValidation.error(e, Messages.HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
-                }
-            }
-            if (StringUtils.isNotBlank(versionId)) {
-                return FormValidation.ok(Messages.HubBuildScan_getProjectAndVersionCreated());
-            } else {
-                return FormValidation.error(Messages.HubBuildScan_getProjectVersionCreationProblem());
             }
 
         } catch (Exception e) {
