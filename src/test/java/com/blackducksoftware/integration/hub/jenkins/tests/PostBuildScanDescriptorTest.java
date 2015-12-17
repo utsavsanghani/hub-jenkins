@@ -278,6 +278,12 @@ public class PostBuildScanDescriptorTest {
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         descriptor.setHubServerInfo(hubServerInfo);
 
+        try {
+            restHelper.deleteHubProject(restHelper.getProjectByName(PROJECT_NAME_NOT_EXISTING).getId());
+        } catch (Exception e) {
+            // ignore all exceptions
+        }
+
         FormValidation form = descriptor.doCheckHubProjectName(PROJECT_NAME_NOT_EXISTING, null);
         Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_()));
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
