@@ -412,11 +412,14 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * the Hub with this name.
      *
      * @param hubProjectName
-     *            This parameter receives the value that the user has typed.
+     *            This parameter receives the value for the project name
+     * @param hubProjectVersion
+     *            This parameter receives the value for the project version
      * @return Indicates the outcome of the validation. This is sent to the
      *         browser.
      */
-    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName) throws IOException, ServletException {
+    public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName,
+            @QueryParameter("hubProjectVersion") final String hubProjectVersion) throws IOException, ServletException {
         // Query for the project version so hopefully the check methods run for boths fields
         // when the User changes the Name of the project
         if (hubProjectName.length() > 0) {
@@ -483,6 +486,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     Thread.currentThread().setContextClassLoader(
                             originalClassLoader);
                 }
+            }
+        } else {
+            if (StringUtils.isNotBlank(hubProjectVersion)) {
+                return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
             }
         }
         return FormValidation.ok();
@@ -586,6 +593,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     Thread.currentThread().setContextClassLoader(
                             originalClassLoader);
                 }
+            }
+        } else {
+            if (StringUtils.isNotBlank(hubProjectName)) {
+                return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
             }
         }
         return FormValidation.ok();

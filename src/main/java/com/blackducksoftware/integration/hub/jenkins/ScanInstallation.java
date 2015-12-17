@@ -9,8 +9,8 @@ import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeSpecific;
-import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolProperty;
+import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
 
 import java.io.IOException;
@@ -26,8 +26,8 @@ import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 public class ScanInstallation extends ToolInstallation implements NodeSpecific<ScanInstallation>, EnvironmentSpecific<ScanInstallation> {
 
     /**
-	 *
-	 */
+     *
+     */
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor

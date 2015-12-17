@@ -156,7 +156,7 @@ public class PostBuildScanDescriptorTest {
             // wait before checking for the project and release
             Thread.sleep(6000);
             // Need to wait a second before checking if the project exists or it will not be recognized
-            FormValidation form2 = descriptor.doCheckHubProjectName(testProperties.getProperty("TEST_CREATE_PROJECT"));
+            FormValidation form2 = descriptor.doCheckHubProjectName(testProperties.getProperty("TEST_CREATE_PROJECT"), null);
             Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectExistsIn_0_(testProperties.getProperty("TEST_HUB_SERVER_URL")));
             Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
 
@@ -262,7 +262,7 @@ public class PostBuildScanDescriptorTest {
         hubServerInfo.setServerUrl("FAKE SERVER");
         descriptor.setHubServerInfo(hubServerInfo);
 
-        FormValidation form = descriptor.doCheckHubProjectName("${JOB_NAME}");
+        FormValidation form = descriptor.doCheckHubProjectName("${JOB_NAME}", null);
         Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
         Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNameContainsVariable());
     }
@@ -278,8 +278,26 @@ public class PostBuildScanDescriptorTest {
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         descriptor.setHubServerInfo(hubServerInfo);
 
-        FormValidation form = descriptor.doCheckHubProjectName(PROJECT_NAME_NOT_EXISTING);
+        FormValidation form = descriptor.doCheckHubProjectName(PROJECT_NAME_NOT_EXISTING, null);
         Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_()));
+        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+    }
+
+    @Test
+    public void testCheckForProjectNameEmptyWithVersion() throws Exception {
+        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+        FormValidation form = descriptor.doCheckHubProjectName("", "testVersion");
+        Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getProvideProjectName()));
+        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+    }
+
+    @Test
+    public void testCheckForProjectVersionEmptyWithName() throws Exception {
+        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+        FormValidation form = descriptor.doCheckHubProjectVersion("", "testName");
+        Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getProvideProjectVersion()));
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
     }
 

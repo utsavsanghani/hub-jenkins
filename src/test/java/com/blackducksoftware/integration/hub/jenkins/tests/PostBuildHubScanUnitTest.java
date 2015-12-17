@@ -31,10 +31,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
+import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
@@ -44,7 +44,9 @@ import com.google.common.base.Charsets;
 
 public class PostBuildHubScanUnitTest {
 
-    private static final String TEST_CLI_PATH = "/lib/scan.cli-2.1.2-standalone.jar";
+    private static final String CLI_VERSION = "2.1.2";
+
+    private static final String TEST_CLI_PATH = "/lib/scan.cli-" + CLI_VERSION + "-standalone.jar";
 
     private static String VALID_CREDENTIAL = "Valid Credential Id";
 
@@ -72,7 +74,7 @@ public class PostBuildHubScanUnitTest {
         basePath = ScanIntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf("/target"));
         basePath = basePath + "/test-workspace";
-        iScanInstallPath = basePath + "/scan.cli-2.1.2";
+        iScanInstallPath = basePath + "/scan.cli-" + CLI_VERSION;
 
         byteOutput = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(byteOutput);
