@@ -135,7 +135,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
                 String outputString = "";
 
-                ReaderThread thread = new ReaderThread(getLogger(), standardOutFile.read());
+                ReaderThread thread = new ReaderThread(getLogger(), new File(standardOutFile.getRemote()), build);
 
                 exitCode = runScan(ps, cmd, standardOutFile, thread);
 
@@ -148,7 +148,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     standardOutFile.delete();
                     standardOutFile.touch(0);
 
-                    thread = new ReaderThread(getLogger(), standardOutFile.read());
+                    thread = new ReaderThread(getLogger(), new File(standardOutFile.getRemote()), build);
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
 
@@ -170,7 +170,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     standardOutFile.delete();
                     standardOutFile.touch(0);
 
-                    thread = new ReaderThread(getLogger(), standardOutFile.read());
+                    thread = new ReaderThread(getLogger(), new File(standardOutFile.getRemote()), build);
 
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
