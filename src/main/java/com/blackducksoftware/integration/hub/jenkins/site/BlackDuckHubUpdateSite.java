@@ -1,6 +1,7 @@
 package com.blackducksoftware.integration.hub.jenkins.site;
 
 import static hudson.util.TimeUnit2.DAYS;
+import hudson.model.DownloadService;
 import hudson.model.Hudson;
 import hudson.model.UpdateSite;
 import hudson.util.FormValidation;
@@ -14,6 +15,8 @@ import java.io.ObjectStreamException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.security.DigestOutputStream;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
@@ -30,8 +33,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletContext;
 
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.io.IOUtils;
@@ -39,6 +44,8 @@ import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.jvnet.hudson.crypto.CertificateUtil;
 import org.jvnet.hudson.crypto.SignatureOutputStream;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest;
 
 import com.trilead.ssh2.crypto.Base64;
@@ -167,6 +174,14 @@ public class BlackDuckHubUpdateSite extends UpdateSite {
         return new TextFile(new File(Hudson.getInstance().getRootDir(), "updates/" + getId() + ".json"));
     }
 
+    @Override
+    @Restricted(NoExternalUse.class)
+    public @Nonnull FormValidation updateDirectlyNow(boolean signatureCheck) throws IOException {
+        return updateData(
+                DownloadService.loadJSON(new URL(getUrl() + "?id=" + URLEncoder.encode(getId(), "UTF-8") + "&version="
+                        + URLEncoder.encode(Jenkins.VERSION, "UTF-8"))), signatureCheck);
+    }
+
     /**
      * This is the endpoint that receives the update center data file from the browser.
      * Mirrors {@link UpdateSite#doPostBack(org.kohsuke.stapler.StaplerRequest)} as there is no other way to override
@@ -174,8 +189,11 @@ public class BlackDuckHubUpdateSite extends UpdateSite {
      */
     @Override
     public FormValidation doPostBack(StaplerRequest req) throws IOException, GeneralSecurityException {
+        return updateData(IOUtils.toString(req.getInputStream(), "UTF-8"), true);
+    }
+
+    private FormValidation updateData(String json, boolean signatureCheck) throws IOException {
         setDataTimestamp(System.currentTimeMillis());
-        String json = hudson.util.IOUtils.toString(req.getInputStream(), "UTF-8");
         JSONObject o = JSONObject.fromObject(json);
 
         int v = o.getInt("updateCenterVersion");
@@ -183,7 +201,6 @@ public class BlackDuckHubUpdateSite extends UpdateSite {
             throw new IllegalArgumentException("Unrecognized update center version: " + v);
         }
 
-        boolean signatureCheck = true;
         try {
             Field signatureCheckField = UpdateSite.class.getField("signatureCheck");
             signatureCheck = signatureCheckField.getBoolean(null);
