@@ -1,6 +1,8 @@
 Hub plugin for Jenkins. This plugin provides ability to run a BD Hub CLi on build input or output. It offers to run multiple code locations.
 
 ## Release Notes:
+### 1.3.7
+* Fix issue where builds run on slaves log less messages to the console log, than when run on master
 ### 1.3.6
 * Improves compatibility with non Oracle JREs
 * Improves determination of the local hostname 
