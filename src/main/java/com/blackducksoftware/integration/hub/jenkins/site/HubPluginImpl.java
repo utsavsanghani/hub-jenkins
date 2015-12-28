@@ -82,7 +82,7 @@ public class HubPluginImpl extends Plugin {
      * The plugins that can and/or should be installed/upgraded.
      */
     private static final Dependency[] PLUGIN_DEPENDENCIES = {
-            require("credentials", "1.9.4"),
+            require("credentials", "1.9.4")
     };
 
     /**
