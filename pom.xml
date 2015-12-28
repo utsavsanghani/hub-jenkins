@@ -11,7 +11,7 @@
 
 	<groupId>com.blackducksoftware.integration</groupId>
 	<artifactId>hub-jenkins</artifactId>
-	<version>1.3.7</version>
+	<version>1.3.X-SNAPSHOT</version>
 	<!-- !!! Also update the url below on release !!! -->
 	<packaging>hpi</packaging>
 	<name>Black Duck Hub Plug-In for Jenkins</name>
