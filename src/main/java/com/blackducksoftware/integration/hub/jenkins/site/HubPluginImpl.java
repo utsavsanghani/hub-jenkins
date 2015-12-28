@@ -45,6 +45,7 @@ public class HubPluginImpl extends Plugin {
      */
     private static final Logger LOGGER = Logger.getLogger(HubPluginImpl.class.getName());
 
+    // FIXME must change this URL to the correct update center json file
     /**
      * The current update center URL.
      */
