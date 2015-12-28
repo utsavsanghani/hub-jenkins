@@ -50,6 +50,10 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import com.trilead.ssh2.crypto.Base64;
 
+/**
+ * Majority of the code was copied from http://github.com/jenkinsci/cloudbees-plugin-gateway
+ *
+ */
 public class BlackDuckHubUpdateSite extends UpdateSite {
     /**
      * Our logger

@@ -34,6 +34,10 @@ import org.jvnet.localizer.Localizable;
 
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 
+/**
+ * Majority of the code was copied from http://github.com/jenkinsci/cloudbees-plugin-gateway
+ *
+ */
 public class HubPluginImpl extends Plugin {
 
     /**
