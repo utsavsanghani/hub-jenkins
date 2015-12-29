@@ -255,6 +255,13 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
 		<plugins>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -355,21 +362,6 @@
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.16</version>
-					<configuration>
-						<!-- Sets the VM argument line used when unit tests are run. -->
-						<argLine>${surefireArgLine}</argLine>
-						<!-- Skips unit tests if the value of skip.unit.tests property is true -->
-						<skipTests>${skip.unit.tests}</skipTests>
-						<!-- Excludes integration tests when unit tests are run. -->
-						<excludes>
-							<exclude>**/IT*.java</exclude>
-						</excludes>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-eclipse-plugin</artifactId>
 					<configuration>
 						<classpathContainers>
@@ -412,5 +404,77 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+
 	</build>
+
+	<profiles>
+		<profile>
+			<!-- Internal testing profile -->
+			<id>integration</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<filters>
+					<filter>internal.properties</filter>
+				</filters>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>2.16</version>
+						<configuration>
+							<argLine>-Dfile.encoding=UTF-8</argLine>
+							<!-- Sets the VM argument line used when unit tests are run. -->
+							<argLine>${surefireArgLine}</argLine>
+							<!-- Skips unit tests if the value of skip.unit.tests property is 
+								true -->
+							<skipTests>${skip.unit.tests}</skipTests>
+							<!-- Excludes integration tests when unit tests are run. -->
+							<excludes>
+								<exclude>**/com/blackducksoftware/integration/hub/jenkins/tests/release/PluginReleaseTest.java</exclude>
+								<exclude>**/IT*.java</exclude>
+							</excludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<!-- Release profile -->
+			<id>production-integration</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<filters>
+					<filter>deployment.properties</filter>
+				</filters>
+
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>2.16</version>
+						<configuration>
+							<argLine>-Dfile.encoding=UTF-8</argLine>
+							<includes>
+								<include>**/PluginReleaseTest.java</include>
+							</includes>
+							<!-- Sets the VM argument line used when unit tests are run. -->
+							<argLine>${surefireArgLine}</argLine>
+							<!-- Skips unit tests if the value of skip.unit.tests property is 
+								true -->
+							<skipTests>${skip.unit.tests}</skipTests>
+							<!-- Excludes integration tests when unit tests are run. -->
+							<excludes>
+								<exclude>**/com/blackducksoftware/integration/hub/jenkins/tests/release/PluginSnapShotTest.java</exclude>
+								<exclude>**/IT*.java</exclude>
+							</excludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

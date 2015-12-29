@@ -18,10 +18,12 @@ import hudson.util.TimeUnit2;
 import hudson.util.VersionNumber;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,16 +43,29 @@ import com.blackducksoftware.integration.hub.jenkins.Messages;
 public class HubPluginImpl extends Plugin {
 
     /**
+     * The current update center URL.
+     */
+    private static String HUB_UPDATE_CENTER_URL;
+
+    static {
+        UpdateCenter.XSTREAM.alias("blackDuck-hub-proprietary", BlackDuckHubUpdateSite.class);
+
+        Properties properties = new Properties();
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        InputStream is = classLoader.getResourceAsStream("updateSite.properties");
+        try {
+            properties.load(is);
+        } catch (IOException e) {
+            System.err.println("reading updateSite.properties failed!");
+        }
+        HUB_UPDATE_CENTER_URL = properties.getProperty("hub.update.site.url");
+
+    }
+
+    /**
      * Our logger.
      */
     private static final Logger LOGGER = Logger.getLogger(HubPluginImpl.class.getName());
-
-    // FIXME must change this URL to the correct update center json file
-    /**
-     * The current update center URL.
-     */
-    private static final String HUB_UPDATE_CENTER_URL =
-            "http://eng-jenkins-update.blackducksoftware.com:8080/userContent/ReleaseUpdateCenter/update-center.json";
 
     /**
      * The current update center URL and any previous URLs that were used for the same content and should be migrated
@@ -472,10 +487,6 @@ public class HubPluginImpl extends Plugin {
                 return !pendingPluginInstalls.isEmpty();
             }
         }
-    }
-
-    static {
-        UpdateCenter.XSTREAM.alias("blackDuck-hub-proprietary", BlackDuckHubUpdateSite.class);
     }
 
     private static Dependency require(String name) {
