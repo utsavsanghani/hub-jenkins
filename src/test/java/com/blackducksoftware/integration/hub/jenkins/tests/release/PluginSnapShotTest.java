@@ -24,17 +24,17 @@ public class PluginSnapShotTest {
             fail(e.toString());
         }
 
-        Properties releaseProperties = new Properties();
+        Properties snapshotProperties = new Properties();
         File releasePropertiesFile = new File("internal.properties");
         System.out.println(releasePropertiesFile.getCanonicalPath());
         InputStream inputStream = new FileInputStream(releasePropertiesFile);
         // InputStream is = classLoader.getResourceAsStream("deployment.properties");
         try {
-            releaseProperties.load(inputStream);
+            snapshotProperties.load(inputStream);
         } catch (IOException e) {
             fail(e.toString());
         }
 
-        assertEquals(releaseProperties.getProperty("update.site.url"), pluginProperties.getProperty("hub.update.site.url"));
+        assertEquals(snapshotProperties.getProperty("update.site.url"), pluginProperties.getProperty("hub.update.site.url"));
     }
 }
