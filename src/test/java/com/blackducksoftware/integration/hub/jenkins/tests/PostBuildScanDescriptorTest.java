@@ -449,7 +449,7 @@ public class PostBuildScanDescriptorTest {
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         descriptor.setHubServerInfo(hubServerInfo);
 
-        AutoCompletionCandidates matches = descriptor.doAutoCompleteHubProjectName("j");
+        AutoCompletionCandidates matches = descriptor.doAutoCompleteHubProjectName("KEEP");
         assertTrue(matches.getValues().size() > 0);
     }
 

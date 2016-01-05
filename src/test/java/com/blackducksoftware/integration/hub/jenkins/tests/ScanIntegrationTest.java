@@ -30,11 +30,11 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
 import com.blackducksoftware.integration.hub.response.DistributionEnum;
 import com.blackducksoftware.integration.hub.response.PhaseEnum;
@@ -238,7 +238,7 @@ public class ScanIntegrationTest {
                     "You can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            if (isLessThanVersion("2.3.2")) {
+            if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
 
@@ -305,7 +305,7 @@ public class ScanIntegrationTest {
                     "You can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id:"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            if (isLessThanVersion("2.3.2")) {
+            if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
                 Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
@@ -390,7 +390,7 @@ public class ScanIntegrationTest {
                     + testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH") + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            if (isLessThanVersion("2.3.2")) {
+            if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
                 Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
@@ -575,7 +575,7 @@ public class ScanIntegrationTest {
     // + testProperties.getProperty("TEST_PROXY_PORT_DIGEST") + "'"));
     // Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
     // Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-    // if (isLessThanVersion("2.3.2")) {
+    // if (isHubOlderThanThisVersion("2.3.2")) {
     // Only to be asserted if run against hub <2.3.2, because the plugin does the project/version/codelocation
     // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
     // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
@@ -659,7 +659,7 @@ public class ScanIntegrationTest {
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            if (isLessThanVersion("2.3.2")) {
+            if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
                 Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
@@ -676,13 +676,16 @@ public class ScanIntegrationTest {
         }
     }
 
-    private boolean isLessThanVersion(String version) throws IOException, BDRestException, URISyntaxException {
+    private boolean isHubOlderThanThisVersion(String version) throws IOException, BDRestException, URISyntaxException {
         VersionComparison compare = restHelper.compareWithHubVersion(version + "-SNAPSHOT");
         if (Integer.valueOf(0) == compare.getNumericResult()) {
+            // same version, the Hub is not older than this
             return false;
         }
         compare = restHelper.compareWithHubVersion(version);
-        if (Integer.valueOf(-1) == compare.getNumericResult()) {
+        if (Integer.valueOf(1) == compare.getNumericResult()) {
+            // The version you have provided is newer than this Hub instance
+            // The actual version of the Hub is less than the one specified
             return true;
         }
         return false;
@@ -739,7 +742,7 @@ public class ScanIntegrationTest {
                     "You can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
-            if (isLessThanVersion("2.3.2")) {
+            if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
                 Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan"));
@@ -809,7 +812,7 @@ public class ScanIntegrationTest {
                     "You can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
-            if (isLessThanVersion("2.3.2")) {
+            if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
                 Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan"));
@@ -884,7 +887,7 @@ public class ScanIntegrationTest {
                     "You can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            if (isLessThanVersion("2.3.2")) {
+            if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
                 Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
@@ -908,7 +911,7 @@ public class ScanIntegrationTest {
                     "You can view the BlackDuck Scan CLI logs at :"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-            if (isLessThanVersion("2.3.2")) {
+            if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
                 Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
