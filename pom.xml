@@ -446,8 +446,8 @@
 		</profile>
 		<profile>
 			<properties>
-				<repo-id>bds-artifactory</repo-id>
-				<repo-url>http://artifactory.blackducksoftware.com:8081/artifactory/bds-jenkins-hub-plugins</repo-url>
+				<repo-id>suiterepo</repo-id>
+				<repo-url>http://suiterepo.blackducksoftware.com:8181/artifactory/bds-jenkins-hub-plugins</repo-url>
 			</properties>
 			<!-- Release profile -->
 			<id>jenkins-production-integration</id>
