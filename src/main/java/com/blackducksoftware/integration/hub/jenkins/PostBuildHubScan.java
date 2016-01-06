@@ -83,8 +83,6 @@ public class PostBuildHubScan extends Recorder {
 
     // private HubIntRestService service = null;
 
-    private boolean test = false;
-
     private Boolean verbose;
 
     @DataBoundConstructor
@@ -122,16 +120,6 @@ public class PostBuildHubScan extends Recorder {
 
     }
 
-    public boolean isTEST() {
-        return test;
-    }
-
-    // Set to true run the integration test without running the Hub scan.
-    public void setTEST(boolean test) {
-        this.test = test;
-    }
-
-    // Set to true run the integration test without running the Hub scan.
     public void setverbose(boolean verbose) {
         this.verbose = verbose;
     }
@@ -616,7 +604,6 @@ public class PostBuildHubScan extends Recorder {
         }
         scan.setScanMemory(scanMemory);
         scan.setWorkingDirectory(getWorkingDirectory().getRemote());
-        scan.setTestScan(isTEST());
 
         if (parseStatusComparison != null && parseStatusComparison.getNumericResult() <= 0) {
             // Should check the exit status code instead

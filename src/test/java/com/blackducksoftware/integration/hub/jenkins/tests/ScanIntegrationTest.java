@@ -365,7 +365,6 @@ public class ScanIntegrationTest {
                     testProperties.getProperty("TEST_VERSION"), null,
                     null, "4096");
             pbScan.setverbose(false);
-            pbScan.setTEST(true);
             jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
                     Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH")));
 
@@ -375,6 +374,10 @@ public class ScanIntegrationTest {
             project.getPublishersList().add(pbScan);
 
             FreeStyleBuild build = project.scheduleBuild2(0).get();
+
+            File logFile = build.getLogFile();
+            System.out.println("Log File : " + logFile.getAbsolutePath() + "!!!!!!!!!!");
+
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
 
@@ -452,7 +455,6 @@ public class ScanIntegrationTest {
     // PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
     // testProperties.getProperty("TEST_VERSION"), null,
     // null, "4096");
-    // pbScan.setTEST(true);
     // jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_BASIC"),
     // Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_BASIC")),
     // testProperties.getProperty("TEST_PROXY_USER_BASIC"),
@@ -484,7 +486,7 @@ public class ScanIntegrationTest {
     // Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
     /*
      * Only to be asserted if run against hub <2.3.1
-     *
+     * 
      * // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
      * // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
      * // Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
@@ -545,7 +547,6 @@ public class ScanIntegrationTest {
     // testProperties.getProperty("TEST_VERSION"), null,
     // null, "4096");
     // pbScan.setverbose(false);
-    // pbScan.setTEST(true);
     // jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_DIGEST"),
     // Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_DIGEST")),
     // testProperties.getProperty("TEST_PROXY_USER_DIGEST"),
@@ -635,7 +636,6 @@ public class ScanIntegrationTest {
                     testProperties.getProperty("TEST_VERSION"), null,
                     null, "4096");
             pbScan.setverbose(false);
-            pbScan.setTEST(true);
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
 
             jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
@@ -721,7 +721,6 @@ public class ScanIntegrationTest {
                     PhaseEnum.DEVELOPMENT.name(),
                     DistributionEnum.EXTERNAL.name(), "4096");
             pbScan.setverbose(false);
-            pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
 
@@ -791,7 +790,6 @@ public class ScanIntegrationTest {
                     DistributionEnum.EXTERNAL.name(),
                     "4096");
             pbScan.setverbose(false);
-            pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
 
@@ -869,7 +867,6 @@ public class ScanIntegrationTest {
                     PhaseEnum.DEVELOPMENT.name(), DistributionEnum.EXTERNAL.name(),
                     "4096");
             pbScan.setverbose(false);
-            pbScan.setTEST(true);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
 
