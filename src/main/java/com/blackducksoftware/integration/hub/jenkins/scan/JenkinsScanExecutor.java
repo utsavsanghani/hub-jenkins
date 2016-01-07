@@ -135,12 +135,17 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
                 String outputString = "";
 
-                ReaderThread thread = new ReaderThread(getLogger(), new File(standardOutFile.getRemote()), build);
+                ScannerSplitStream splitStream = new ScannerSplitStream(listener, standardOutFile.write());
 
-                exitCode = runScan(ps, cmd, standardOutFile, thread);
+                // ReaderThread thread = new ReaderThread(getLogger(), new File(standardOutFile.getRemote()), build);
+                exitCode = runScan(ps, cmd, splitStream);
+                // exitCode = runScan(ps, cmd, standardOutFile, thread);
 
-                if (thread.hasOutput()) {
-                    outputString = thread.getOutputString();
+                // if (thread.hasOutput()) {
+                // outputString = thread.getOutputString();
+                // }
+                if (splitStream.hasOutput()) {
+                    outputString = splitStream.getOutput();
                 }
 
                 if (outputString.contains("Illegal character in path")
@@ -148,7 +153,8 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     standardOutFile.delete();
                     standardOutFile.touch(0);
 
-                    thread = new ReaderThread(getLogger(), new File(standardOutFile.getRemote()), build);
+                    splitStream = new ScannerSplitStream(listener, standardOutFile.write());
+                    // thread = new ReaderThread(getLogger(), new File(standardOutFile.getRemote()), build);
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
 
@@ -158,11 +164,14 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     logPath = logPath.replace(" ", "%20");
                     cmd.remove(indexOfLogOption);
                     cmd.add(indexOfLogOption, logPath);
+                    exitCode = runScan(ps, cmd, splitStream);
+                    // exitCode = runScan(ps, cmd, standardOutFile, thread);
 
-                    exitCode = runScan(ps, cmd, standardOutFile, thread);
-
-                    if (thread.hasOutput()) {
-                        outputString = thread.getOutputString();
+                    // if (thread.hasOutput()) {
+                    // outputString = thread.getOutputString();
+                    // }
+                    if (splitStream.hasOutput()) {
+                        outputString = splitStream.getOutput();
                     }
 
                 } else if (outputString.contains("Illegal character in opaque")
@@ -170,7 +179,8 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     standardOutFile.delete();
                     standardOutFile.touch(0);
 
-                    thread = new ReaderThread(getLogger(), new File(standardOutFile.getRemote()), build);
+                    splitStream = new ScannerSplitStream(listener, standardOutFile.write());
+                    // thread = new ReaderThread(getLogger(), new File(standardOutFile.getRemote()), build);
 
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
@@ -184,11 +194,14 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     logPath = logFile.toURI().toString();
                     cmd.remove(indexOfLogOption);
                     cmd.add(indexOfLogOption, logPath);
+                    exitCode = runScan(ps, cmd, splitStream);
+                    // exitCode = runScan(ps, cmd, standardOutFile, thread);
 
-                    exitCode = runScan(ps, cmd, standardOutFile, thread);
-
-                    if (thread.hasOutput()) {
-                        outputString = thread.getOutputString();
+                    // if (thread.hasOutput()) {
+                    // outputString = thread.getOutputString();
+                    // }
+                    if (splitStream.hasOutput()) {
+                        outputString = splitStream.getOutput();
                     }
 
                 }
@@ -229,18 +242,37 @@ public class JenkinsScanExecutor extends ScanExecutor {
         return Result.SUCCESS;
     }
 
-    private int runScan(ProcStarter ps, List<String> cmd, FilePath stream, ReaderThread thread) throws IOException, InterruptedException {
+    private int runScan(ProcStarter ps, List<String> cmd, ScannerSplitStream splitStream) throws IOException, InterruptedException {
         ps.cmds(cmd);
-        ps.stdout(stream.write());
 
-        try {
-            thread.start();
-            return ps.join();
-        } finally {
-            Thread.sleep(THREAD_SLEEP);
-            if (thread != null) {
-                thread.interrupt();
-            }
-        }
+        ps.stdout(splitStream);
+        // ps.stdout(stream.write());
+        // try {
+        // thread.start();
+        return ps.join();
+        // } finally {
+        // Thread.sleep(THREAD_SLEEP);
+        // if (thread != null) {
+        // thread.interrupt();
+        // }
+        // }
     }
+
+    // private int runScan(ProcStarter ps, List<String> cmd, FilePath stream, ReaderThread thread) throws IOException,
+    // InterruptedException {
+    // ps.cmds(cmd);
+    //
+    // ScannerSplitStream splitStream = new ScannerSplitStream(listener, stream.write());
+    // ps.stdout(stream.write());
+    // // ps.stdout(stream.write());
+    // try {
+    // thread.start();
+    // return ps.join();
+    // } finally {
+    // Thread.sleep(THREAD_SLEEP);
+    // if (thread != null) {
+    // thread.interrupt();
+    // }
+    // }
+    // }
 }
