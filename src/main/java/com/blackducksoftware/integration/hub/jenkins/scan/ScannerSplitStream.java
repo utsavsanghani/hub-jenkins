@@ -64,7 +64,7 @@ public class ScannerSplitStream extends OutputStream {
     public void write(int b) throws IOException {
         outputFileStream.write(b);
 
-        String stringAcii = Character.toString((char) b);
+        String stringAcii = new String(Character.toChars(b));
 
         String currentLine = currentLineBuffer.toString();
         switch (b) {
@@ -93,7 +93,6 @@ public class ScannerSplitStream extends OutputStream {
     }
 
     private Boolean isLoggableLine(String line) {
-        String deb = DEBUG;
         if (line.startsWith(ERROR) || line.contains(ERROR)) {
             return true;
         }
@@ -122,7 +121,7 @@ public class ScannerSplitStream extends OutputStream {
         if (lineBuffer.length() == 0) {
             // First log line found, put it in the buffer
 
-            lineBuffer.append(line + System.getProperty("line.separator"));
+            lineBuffer.append(line);
 
         } else if (isLoggableLine(line)) {
             // next real log message came in, print the log in the buffer
@@ -131,14 +130,14 @@ public class ScannerSplitStream extends OutputStream {
 
             // clear and add current line to the buffer
             lineBuffer = new StringBuilder();
-            lineBuffer.append(line + System.getProperty("line.separator"));
+            lineBuffer.append(line);
 
         } else {
             // We assume that each new log starts with the log level, if this line does not contain a log level it
             // must only be a piece of a log
 
             // needs to be added into the buffer
-            lineBuffer.append(line + System.getProperty("line.separator"));
+            lineBuffer.append(System.getProperty("line.separator") + line);
 
         }
     }
@@ -148,15 +147,33 @@ public class ScannerSplitStream extends OutputStream {
         outputFileStream.write(byteArray);
 
         String currentLine = new String(byteArray, "UTF-8");
-        processLine(currentLine);
+
+        if (currentLine.contains(System.getProperty("line.separator"))) {
+            String[] splitLines = currentLine.split(System.getProperty("line.separator"));
+
+            for (String line : splitLines) {
+                processLine(line);
+            }
+        } else {
+            processLine(currentLine);
+        }
     }
 
     @Override
     public void write(byte[] byteArray, int offset, int length) throws IOException {
         outputFileStream.write(byteArray, offset, length);
 
-        String currentLine = new String(byteArray, offset, length);
-        processLine(currentLine);
+        String currentLine = new String(byteArray, offset, length, "UTF-8");
+
+        if (currentLine.contains(System.getProperty("line.separator"))) {
+            String[] splitLines = currentLine.split(System.getProperty("line.separator"));
+
+            for (String line : splitLines) {
+                processLine(line);
+            }
+        } else {
+            processLine(currentLine);
+        }
     }
 
     @Override
