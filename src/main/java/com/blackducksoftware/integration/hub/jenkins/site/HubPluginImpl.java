@@ -47,6 +47,11 @@ public class HubPluginImpl extends Plugin {
      */
     private static String HUB_UPDATE_CENTER_URL;
 
+    /**
+     * The current update center ID.
+     */
+    private static String HUB_UPDATE_CENTER_ID;
+
     static {
         UpdateCenter.XSTREAM.alias("blackDuck-hub-proprietary", BlackDuckHubUpdateSite.class);
 
@@ -59,7 +64,7 @@ public class HubPluginImpl extends Plugin {
             System.err.println("reading updateSite.properties failed!");
         }
         HUB_UPDATE_CENTER_URL = properties.getProperty("hub.update.site.url");
-
+        HUB_UPDATE_CENTER_ID = properties.getProperty("hub.update.site.id");
     }
 
     /**
@@ -74,11 +79,6 @@ public class HubPluginImpl extends Plugin {
     private static final Set<String> hubUpdateCenterUrls = new HashSet<String>(Arrays.asList(
             HUB_UPDATE_CENTER_URL
             ));
-
-    /**
-     * The current update center ID.
-     */
-    private static final String HUB_UPDATE_CENTER_ID = "blackDuck-hub-proprietary";
 
     /**
      * The Jenkins default update site ID.
