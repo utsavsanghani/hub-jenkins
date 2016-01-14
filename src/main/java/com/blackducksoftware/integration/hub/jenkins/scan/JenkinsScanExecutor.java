@@ -14,7 +14,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.blackducksoftware.integration.hub.ScanExecutor;
+import com.blackducksoftware.integration.hub.ScannerSplitStream;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
+import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 
 public class JenkinsScanExecutor extends ScanExecutor {
     public static final Integer THREAD_SLEEP = 100;
@@ -31,10 +33,6 @@ public class JenkinsScanExecutor extends ScanExecutor {
         this.build = build;
         this.launcher = launcher;
         this.listener = listener;
-    }
-
-    public void setTestScan(Boolean isTest) {
-        setIsTest(isTest);
     }
 
     @Override
@@ -135,7 +133,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
                 String outputString = "";
 
-                ScannerSplitStream splitStream = new ScannerSplitStream(listener, standardOutFile.write());
+                ScannerSplitStream splitStream = new ScannerSplitStream(new HubJenkinsLogger(listener), standardOutFile.write());
 
                 exitCode = runScan(ps, cmd, splitStream);
                 splitStream.flush();
@@ -150,7 +148,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     standardOutFile.delete();
                     standardOutFile.touch(0);
 
-                    splitStream = new ScannerSplitStream(listener, standardOutFile.write());
+                    splitStream = new ScannerSplitStream(new HubJenkinsLogger(listener), standardOutFile.write());
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
 
@@ -173,7 +171,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     standardOutFile.delete();
                     standardOutFile.touch(0);
 
-                    splitStream = new ScannerSplitStream(listener, standardOutFile.write());
+                    splitStream = new ScannerSplitStream(new HubJenkinsLogger(listener), standardOutFile.write());
 
                     // This version of the CLI can not handle spaces in the log directory
                     // Not sure which version of the CLI this issue was fixed
