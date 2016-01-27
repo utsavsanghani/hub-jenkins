@@ -245,15 +245,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             // FIXME should get this list from the Hub server, ticket HUB-1610
             for (PhaseEnum phase : PhaseEnum.values()) {
                 if (phase != PhaseEnum.UNKNOWNPHASE) {
-                    items.add(phase.name(), phase.name());
+                    items.add(phase.getDisplayValue(), phase.name());
                 }
             }
-            // items.add("PLANNING", "PLANNING");
-            // items.add("DEVELOPMENT", "DEVELOPMENT");
-            // items.add("RELEASED", "RELEASED");
-            // items.add("DEPRECATED", "DEPRECATED");
-            // items.add("ARCHIVED", "ARCHIVED");
-
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(e.getMessage());
@@ -280,13 +274,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             // FIXME should get this list from the Hub server, ticket HUB-1610
             for (DistributionEnum distribution : DistributionEnum.values()) {
                 if (distribution != DistributionEnum.UNKNOWNDISTRIBUTION) {
-                    items.add(distribution.name(), distribution.name());
+                    items.add(distribution.getDisplayValue(), distribution.name());
                 }
             }
-            // items.add("EXTERNAL", "EXTERNAL");
-            // items.add("SAAS", "SAAS");
-            // items.add("INTERNAL", "INTERNAL");
-
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(e.getMessage());
