@@ -418,7 +418,7 @@ public class PostBuildScanDescriptorTest {
         PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         ListBoxModel list = descriptor.doFillHubVersionDistItems();
 
-        assertTrue(list.size() == 3);
+        assertTrue(list.size() == 4);
 
     }
 
