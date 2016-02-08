@@ -101,6 +101,7 @@ public class ScanIntegrationTest {
         System.out.println(testProperties.getProperty("TEST_USERNAME"));
         System.out.println(testProperties.getProperty("TEST_PASSWORD"));
         restHelper = new JenkinsHubIntTestHelper(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+        restHelper.setTimeout(300);
         restHelper.setCookies(testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
         projectCleanup();
     }
@@ -143,6 +144,7 @@ public class ScanIntegrationTest {
         HubServerInfo serverInfo = new HubServerInfo();
         serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         serverInfo.setCredentialsId(credential.getId());
+        serverInfo.setTimeout(200);
 
         ScanJobs oneScan = new ScanJobs("");
         ScanJobs[] scans = new ScanJobs[1];
@@ -195,6 +197,7 @@ public class ScanIntegrationTest {
         HubServerInfo serverInfo = new HubServerInfo();
         serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         serverInfo.setCredentialsId(credential.getId());
+        serverInfo.setTimeout(200);
 
         ScanJobs oneScan = new ScanJobs("");
         ScanJobs twoScan = new ScanJobs("ch-simple-web/simple-webapp/target");
@@ -272,6 +275,7 @@ public class ScanIntegrationTest {
         HubServerInfo serverInfo = new HubServerInfo();
         serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         serverInfo.setCredentialsId(credential.getId());
+        serverInfo.setTimeout(200);
 
         ScanJobs oneScan = new ScanJobs("");
         ScanJobs twoScan = new ScanJobs("ch-simple-web/simple-webapp/target");
@@ -338,6 +342,7 @@ public class ScanIntegrationTest {
         HubServerInfo serverInfo = new HubServerInfo();
         serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         serverInfo.setCredentialsId(credential.getId());
+        serverInfo.setTimeout(200);
 
         ScanJobs oneScan = new ScanJobs("");
         ScanJobs twoScan = new ScanJobs("ch-simple-web/simple-webapp/target");
@@ -609,6 +614,7 @@ public class ScanIntegrationTest {
         HubServerInfo serverInfo = new HubServerInfo();
         serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         serverInfo.setCredentialsId(credential.getId());
+        serverInfo.setTimeout(200);
 
         ScanJobs oneScan = new ScanJobs("");
         ScanJobs twoScan = new ScanJobs("ch-simple-web/simple-webapp/target");
@@ -709,6 +715,7 @@ public class ScanIntegrationTest {
             HubServerInfo serverInfo = new HubServerInfo();
             serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
             serverInfo.setCredentialsId(credential.getId());
+            serverInfo.setTimeout(200);
 
             ScanJobs oneScan = new ScanJobs("");
             ScanJobs[] scans = new ScanJobs[1];
@@ -770,6 +777,7 @@ public class ScanIntegrationTest {
         HubServerInfo serverInfo = new HubServerInfo();
         serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         serverInfo.setCredentialsId(credential.getId());
+        serverInfo.setTimeout(200);
 
         ScanJobs oneScan = new ScanJobs("");
         ScanJobs[] scans = new ScanJobs[1];
@@ -839,6 +847,7 @@ public class ScanIntegrationTest {
         HubServerInfo serverInfo = new HubServerInfo();
         serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         serverInfo.setCredentialsId(credential.getId());
+        serverInfo.setTimeout(200);
 
         ScanJobs oneScan = new ScanJobs("");
         ScanJobs twoScan = new ScanJobs("ch-simple-web/simple-webapp/target");

@@ -137,10 +137,11 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
         return items;
     }
 
-    public HubIntRestService getRestService(String serverUrl, String username, String password) throws BDJenkinsHubPluginException,
+    public HubIntRestService getRestService(String serverUrl, String username, String password, int timeout) throws BDJenkinsHubPluginException,
             HubIntegrationException, URISyntaxException,
             MalformedURLException, BDRestException {
         HubIntRestService service = new HubIntRestService(serverUrl);
+        service.setTimeout(timeout);
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
             ProxyConfiguration proxyConfig = jenkins.proxy;
@@ -183,7 +184,7 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
                 }
 
                 HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo()
-                        .getPassword());
+                        .getPassword(), getHubServerInfo().getTimeout());
 
                 List<AutoCompleteItem> suggestions = service.getProjectMatches(mavenHubProjectName);
 
@@ -245,7 +246,8 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword);
+                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
+                        .getTimeout());
 
                 ProjectItem project = service.getProjectByName(mavenHubProjectName);
 
@@ -328,7 +330,8 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword);
+                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
+                        .getTimeout());
 
                 ProjectItem project = null;
                 try {
@@ -430,7 +433,8 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword);
+            HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
+                    .getTimeout());
 
             boolean projectExists = false;
 

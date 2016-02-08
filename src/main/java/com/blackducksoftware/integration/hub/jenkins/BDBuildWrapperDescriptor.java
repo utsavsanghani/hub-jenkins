@@ -134,10 +134,11 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
         return items;
     }
 
-    public HubIntRestService getRestService(String serverUrl, String username, String password) throws BDJenkinsHubPluginException,
+    public HubIntRestService getRestService(String serverUrl, String username, String password, int timeout) throws BDJenkinsHubPluginException,
             HubIntegrationException, URISyntaxException,
             MalformedURLException, BDRestException {
         HubIntRestService service = new HubIntRestService(serverUrl);
+        service.setTimeout(timeout);
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
             ProxyConfiguration proxyConfig = jenkins.proxy;
@@ -180,7 +181,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 }
 
                 HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo()
-                        .getPassword());
+                        .getPassword(), getHubServerInfo().getTimeout());
 
                 List<AutoCompleteItem> suggestions = service.getProjectMatches(hubWrapperProjectName);
 
@@ -242,7 +243,8 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword);
+                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
+                        .getTimeout());
 
                 ProjectItem project = service.getProjectByName(hubWrapperProjectName);
 
@@ -325,7 +327,8 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword);
+                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
+                        .getTimeout());
 
                 ProjectItem project = null;
                 try {
@@ -427,7 +430,8 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword);
+            HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
+                    .getTimeout());
 
             boolean projectExists = false;
 

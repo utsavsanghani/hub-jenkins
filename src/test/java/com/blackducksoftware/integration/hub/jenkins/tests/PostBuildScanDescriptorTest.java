@@ -96,7 +96,7 @@ public class PostBuildScanDescriptorTest {
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
                 testProperties.getProperty("TEST_USERNAME"),
                 testProperties.getProperty("TEST_PASSWORD"));
-        FormValidation form = descriptor.doTestConnection("http://ASSERTNONEXISTENTURL", credential.getId());
+        FormValidation form = descriptor.doTestConnection("http://ASSERTNONEXISTENTURL", credential.getId(), "120");
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
         Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getCanNotReachThisServer_0_("http://ASSERTNONEXISTENTURL")));
 
@@ -105,7 +105,7 @@ public class PostBuildScanDescriptorTest {
     @Test
     public void testConnectionNonExistentUser() {
         PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
-        FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), "NONEXITENTCREDENTIAL");
+        FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), "NONEXITENTCREDENTIAL", "120");
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
         Assert.assertTrue(form.getMessage().contains("User needs to specify which credentials to use."));
 
@@ -116,7 +116,7 @@ public class PostBuildScanDescriptorTest {
         PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(USERNAME_NON_EXISTING,
                 PASSWORD_WRONG);
-        FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId());
+        FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId(), "120");
         Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
         Assert.assertTrue(form.getMessage(), form.getMessage().contains("Unauthorized (401)"));
 
@@ -128,7 +128,7 @@ public class PostBuildScanDescriptorTest {
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
                 testProperties.getProperty("TEST_USERNAME"),
                 testProperties.getProperty("TEST_PASSWORD"));
-        FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId());
+        FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId(), "120");
         Assert.assertEquals(FormValidation.Kind.OK, form.kind);
         Assert.assertTrue(form.getMessage(), form.getMessage().contains("Credentials valid for: " + testProperties.getProperty("TEST_HUB_SERVER_URL")));
 

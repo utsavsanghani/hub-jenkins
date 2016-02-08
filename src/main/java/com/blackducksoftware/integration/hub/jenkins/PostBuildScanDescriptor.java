@@ -10,10 +10,13 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.Kind;
+import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.StringReader;
 import java.net.Authenticator;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -26,6 +29,16 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.ServletException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -33,6 +46,13 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.WebMethod;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
@@ -70,9 +90,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     private static final String FORM_SERVER_URL = "hubServerUrl";
 
-    // private static final String FORM_TIMEOUT = "timeout";
-
-    // private static final long DEFAULT_TIMEOUT = 300;
+    private static final String FORM_TIMEOUT = "hubTimeout";
 
     private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
@@ -114,10 +132,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return "<unnamed>";
     }
 
-    public HubIntRestService getRestService(String serverUrl, String username, String password) throws BDJenkinsHubPluginException,
+    public HubIntRestService getRestService(String serverUrl, String username, String password, int hubTimeout) throws BDJenkinsHubPluginException,
             HubIntegrationException, URISyntaxException,
             MalformedURLException, BDRestException {
         HubIntRestService service = new HubIntRestService(serverUrl);
+        service.setTimeout(hubTimeout);
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
             ProxyConfiguration proxyConfig = jenkins.proxy;
@@ -289,6 +308,25 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return items;
     }
 
+    public FormValidation doCheckTimeout(@QueryParameter("hubTimeout") String hubTimeout)
+            throws IOException, ServletException {
+        if (hubTimeout.length() == 0) {
+            return FormValidation.error(Messages.HubBuildScan_getPleaseSetTimeout());
+        }
+        Integer i = 0;
+        try {
+            i = Integer.valueOf(hubTimeout);
+        } catch (NumberFormatException e) {
+            return FormValidation
+                    .error(Messages.HubBuildScan_getTimeoutMustBeInteger());
+        }
+        if (i.equals(0)) {
+            return FormValidation
+                    .error(Messages.HubBuildScan_getTimeoutCantBeZero());
+        }
+        return FormValidation.ok();
+    }
+
     /**
      * Performs on-the-fly validation of the form field 'serverUrl'.
      *
@@ -376,7 +414,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     return potentialMatches;
                 }
 
-                HubIntRestService service = getRestService(getHubServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword());
+                HubIntRestService service = getRestService(getHubServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword(),
+                        getHubServerInfo().getTimeout());
 
                 List<AutoCompleteItem> suggestions = service.getProjectMatches(hubProjectName);
 
@@ -439,7 +478,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                HubIntRestService service = getRestService(getHubServerUrl(), credentialUserName, credentialPassword);
+                HubIntRestService service = getRestService(getHubServerUrl(), credentialUserName, credentialPassword, getHubServerInfo().getTimeout());
 
                 ProjectItem project = service.getProjectByName(hubProjectName);
 
@@ -534,7 +573,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                HubIntRestService service = getRestService(getHubServerUrl(), credentialUserName, credentialPassword);
+                HubIntRestService service = getRestService(getHubServerUrl(), credentialUserName, credentialPassword, getHubServerInfo().getTimeout());
 
                 ProjectItem project = null;
                 try {
@@ -609,7 +648,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @throws ServletException
      */
     public FormValidation doTestConnection(@QueryParameter("hubServerUrl") final String serverUrl,
-            @QueryParameter("hubCredentialsId") final String hubCredentialsId) {
+            @QueryParameter("hubCredentialsId") final String hubCredentialsId, @QueryParameter("hubTimeout") String hubTimeout) {
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -645,7 +684,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            HubIntRestService service = getRestService(serverUrl, null, null);
+            HubIntRestService service = getRestService(serverUrl, null, null, Integer.valueOf(hubTimeout));
 
             int responseCode = service.setCookies(credentialUserName, credentialPassword);
 
@@ -744,7 +783,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            HubIntRestService service = getRestService(getHubServerUrl(), credentialUserName, credentialPassword);
+            HubIntRestService service = getRestService(getHubServerUrl(), credentialUserName, credentialPassword, getHubServerInfo().getTimeout());
 
             boolean projectExists = false;
 
@@ -825,6 +864,119 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     }
 
+    /**
+     * Code from https://github.com/jenkinsci/jenkins/blob/master/core/src/main/java/hudson/model/AbstractItem.java#L602
+     *
+     * @throws TransformerException
+     * @throws hudson.model.Descriptor.FormException
+     * @throws SAXException
+     * @throws ParserConfigurationException
+     */
+    // This global configuration can now be accessed at {jenkinsUrl}/descriptorByName/{package}.{ClassName}/config.xml
+    // EX:
+    // http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor/config.xml
+    @WebMethod(name = "config.xml")
+    public void doConfigDotXml(StaplerRequest req, StaplerResponse rsp)
+            throws IOException, TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
+        ClassLoader originalClassLoader = Thread.currentThread()
+                .getContextClassLoader();
+        boolean changed = false;
+        try {
+            if (PostBuildScanDescriptor.class.getClassLoader() != originalClassLoader) {
+                changed = true;
+                Thread.currentThread().setContextClassLoader(PostBuildScanDescriptor.class.getClassLoader());
+            }
+            if (req.getMethod().equals("GET")) {
+                // read
+                // checkPermission(EXTENDED_READ);
+                rsp.setContentType("application/xml");
+                IOUtils.copy(getConfigFile().getFile(), rsp.getOutputStream());
+                return;
+            }
+            if (req.getMethod().equals("POST")) {
+                // submission
+                updateByXml(new StreamSource(req.getReader()));
+                return;
+            }
+            // huh?
+            rsp.sendError(javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+        } finally {
+            if (changed) {
+                Thread.currentThread().setContextClassLoader(
+                        originalClassLoader);
+            }
+        }
+    }
+
+    public void updateByXml(Source source) throws IOException, TransformerException, ParserConfigurationException, SAXException {
+
+        TransformerFactory tFactory = TransformerFactory.newInstance();
+        Transformer transformer = tFactory.newTransformer();
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+        ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
+
+        // StreamResult result = new StreamResult(new OutputStreamWriter(System.out, "UTF-8"));
+        StreamResult result = new StreamResult(byteOutput);
+        transformer.transform(source, result);
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        InputSource is = new InputSource(new StringReader(byteOutput.toString("UTF-8")));
+        Document doc = builder.parse(is);
+
+        HubServerInfo serverInfo = new HubServerInfo();
+
+        if (doc.getElementsByTagName("hubServerInfo").getLength() > 0) {
+            Node hubServerInfoNode = doc.getElementsByTagName("hubServerInfo").item(0);
+            if (hubServerInfoNode != null && hubServerInfoNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element hubServerInfoElement = (Element) hubServerInfoNode;
+
+                Node credentialsNode = hubServerInfoElement.getElementsByTagName("credentialsId").item(0);
+                String credentialId = "";
+                if (credentialsNode != null && credentialsNode.getChildNodes() != null && credentialsNode.getChildNodes().item(0) != null) {
+                    credentialId = credentialsNode.getChildNodes().item(0).getNodeValue();
+                    if (credentialId != null) {
+                        credentialId = credentialId.trim();
+                    }
+                }
+
+                Node serverUrlNode = hubServerInfoElement.getElementsByTagName("serverUrl").item(0);
+                String serverUrl = "";
+                if (serverUrlNode != null && serverUrlNode.getChildNodes() != null && serverUrlNode.getChildNodes().item(0) != null) {
+                    serverUrl = serverUrlNode.getChildNodes().item(0).getNodeValue();
+                    if (serverUrl != null) {
+                        serverUrl = serverUrl.trim();
+                    }
+                }
+                Node timeoutNode = hubServerInfoElement.getElementsByTagName("hubTimeout").item(0);
+                String hubTimeout = String.valueOf(HubServerInfo.getDefaultTimeout()); // default timeout
+                if (timeoutNode != null && timeoutNode.getChildNodes() != null && timeoutNode.getChildNodes().item(0) != null) {
+                    hubTimeout = timeoutNode.getChildNodes().item(0).getNodeValue();
+                    if (hubTimeout != null) {
+                        hubTimeout = hubTimeout.trim();
+                    }
+                }
+
+                serverInfo.setCredentialsId(credentialId);
+                serverInfo.setServerUrl(serverUrl);
+
+                int serverTimeout = 300;
+                try {
+                    serverTimeout = Integer.valueOf(hubTimeout);
+                } catch (NumberFormatException e) {
+                    System.err.println("Could not convert the provided timeout : " + hubTimeout + ", to an int value.");
+                    e.printStackTrace(System.err);
+                }
+                serverInfo.setTimeout(serverTimeout);
+            }
+        }
+        hubServerInfo = serverInfo;
+
+        save();
+    }
+
     @Override
     public boolean isApplicable(Class aClass) {
         // Indicates that this builder can be used with all kinds of project
@@ -865,7 +1017,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             throws Descriptor.FormException {
         // To persist global configuration information,
         // set that to properties and call save().
-        hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID));
+        hubServerInfo = new HubServerInfo(formData.getString(FORM_SERVER_URL), formData.getString(FORM_CREDENTIALSID), formData.getInt(FORM_TIMEOUT));
         // formData.getLong(FORM_TIMEOUT));
         // ^Can also use req.bindJSON(this, formData);
         // (easier when there are many fields; need set* methods for this,
@@ -874,26 +1026,20 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return super.configure(req, formData);
     }
 
-    // public String getIScanToolLocation() {
-    // return (iScanInfo == null ? "" : (iScanInfo
-    // .getToolLocation() == null ? "" : iScanInfo
-    // .getToolLocation()));
-    // }
-
     public String getHubServerUrl() {
         return (hubServerInfo == null ? "" : (hubServerInfo
                 .getServerUrl() == null ? "" : hubServerInfo
                 .getServerUrl()));
     }
 
-    // public long getTimeout() {
-    // return hubServerInfo == null ? getDefaultTimeout()
-    // : hubServerInfo.getTimeout();
-    // }
-    //
-    // public long getDefaultTimeout() {
-    // return DEFAULT_TIMEOUT;
-    // }
+    public String getDefaultTimeout() {
+        return String.valueOf(HubServerInfo.getDefaultTimeout());
+    }
+
+    public String getHubTimeout() {
+        return hubServerInfo == null ? getDefaultTimeout()
+                : String.valueOf(hubServerInfo.getTimeout());
+    }
 
     public String getHubCredentialsId() {
         return (hubServerInfo == null ? "" : (hubServerInfo.getCredentialsId() == null ? "" : hubServerInfo.getCredentialsId()));
