@@ -998,10 +998,20 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 .getServerUrl()));
     }
 
+    /**
+     * We return a String here instead of an int or Integer because the UI needs a String to display correctly
+     * 
+     * @return
+     */
     public String getDefaultTimeout() {
         return String.valueOf(HubServerInfo.getDefaultTimeout());
     }
 
+    /**
+     * We return a String here instead of an int or Integer because the UI needs a String to display correctly
+     * 
+     * @return
+     */
     public String getHubTimeout() {
         return hubServerInfo == null ? getDefaultTimeout()
                 : String.valueOf(hubServerInfo.getTimeout());
