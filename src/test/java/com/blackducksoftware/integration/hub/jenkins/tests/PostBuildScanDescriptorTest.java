@@ -135,6 +135,18 @@ public class PostBuildScanDescriptorTest {
     }
 
     @Test
+    public void testConnectionZeroTimeout() {
+        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+        UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
+                testProperties.getProperty("TEST_USERNAME"),
+                testProperties.getProperty("TEST_PASSWORD"));
+        FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId(), "0");
+        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+        Assert.assertTrue(form.getMessage(), form.getMessage().contains("Can not set the timeout to zero"));
+
+    }
+
+    @Test
     public void testCreateProjectAndCheckForNameAndRelease() throws Exception, InterruptedException {
         PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
