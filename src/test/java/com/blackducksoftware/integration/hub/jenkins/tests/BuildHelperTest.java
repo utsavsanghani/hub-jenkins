@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
 
-import com.blackducksoftware.integration.hub.jenkins.BuildHelper;
+import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 
 public class BuildHelperTest {
 

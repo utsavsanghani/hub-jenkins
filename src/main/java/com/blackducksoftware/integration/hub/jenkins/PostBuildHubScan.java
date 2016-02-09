@@ -40,6 +40,7 @@ import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistExcept
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
+import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostName;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostNameFromNetworkInterfaces;
@@ -298,7 +299,10 @@ public class PostBuildHubScan extends Recorder {
 
                     FilePath scanExec = getScanCLI(iScanTools, logger, build);
 
-                    HubIntRestService service = getRestService(logger);
+                    HubIntRestService service = BuildHelper.getRestService(logger, getDescriptor().getHubServerUrl(),
+                            getDescriptor().getHubServerInfo().getUsername(),
+                            getDescriptor().getHubServerInfo().getPassword(),
+                            getDescriptor().getHubServerInfo().getTimeout());
                     String projectId = null;
                     String versionId = null;
                     if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
@@ -439,42 +443,6 @@ public class PostBuildHubScan extends Recorder {
             logger.debug("There was an issue getting the Scan Location Id's for the defined scan targets.");
         }
 
-    }
-
-    public HubIntRestService getRestService(IntLogger logger) throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException,
-            MalformedURLException, BDRestException {
-        HubIntRestService service = new HubIntRestService(getDescriptor().getHubServerInfo().getServerUrl());
-        service.setTimeout(getDescriptor().getHubServerInfo().getTimeout());
-        service.setLogger(logger);
-        Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins != null) {
-            ProxyConfiguration proxyConfig = jenkins.proxy;
-            if (proxyConfig != null) {
-
-                URL serverUrl = new URL(getDescriptor().getHubServerInfo().getServerUrl());
-
-                Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name, proxyConfig.port,
-                        proxyConfig.noProxyHost);
-
-                if (proxy.address() != null) {
-                    InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
-                    if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
-                        if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
-                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, jenkins.proxy.getUserName(),
-                                    jenkins.proxy.getPassword());
-                        } else {
-                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, null, null);
-                        }
-                        if (logger != null) {
-                            logger.debug("Using proxy: '" + proxyAddress.getHostName() + "' at Port: '" + proxyAddress.getPort() + "'");
-                        }
-                    }
-                }
-            }
-        }
-        service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
-                getDescriptor().getHubServerInfo().getPassword());
-        return service;
     }
 
     /**

@@ -3,7 +3,6 @@ package com.blackducksoftware.integration.hub.jenkins;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.ProxyConfiguration;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
@@ -12,11 +11,7 @@ import hudson.tasks.Builder;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.Proxy;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -26,8 +21,6 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
-import jenkins.model.Jenkins;
-
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -35,9 +28,9 @@ import com.blackducksoftware.integration.build.BuildInfo;
 import com.blackducksoftware.integration.hub.BuilderType;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
-import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 
@@ -194,42 +187,6 @@ public abstract class BDBuildWrapper extends BuildWrapper {
                         originalClassLoader);
             }
         }
-    }
-
-    public HubIntRestService getRestService(IntLogger logger) throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException,
-            MalformedURLException, BDRestException {
-        HubIntRestService service = new HubIntRestService(getDescriptor().getHubServerInfo().getServerUrl());
-        service.setTimeout(getDescriptor().getHubServerInfo().getTimeout());
-        service.setLogger(logger);
-        Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins != null) {
-            ProxyConfiguration proxyConfig = jenkins.proxy;
-            if (proxyConfig != null) {
-
-                URL serverUrl = new URL(getDescriptor().getHubServerInfo().getServerUrl());
-
-                Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name, proxyConfig.port,
-                        proxyConfig.noProxyHost);
-
-                if (proxy.address() != null) {
-                    InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
-                    if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
-                        if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
-                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, jenkins.proxy.getUserName(),
-                                    jenkins.proxy.getPassword());
-                        } else {
-                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, null, null);
-                        }
-                        if (logger != null) {
-                            logger.debug("Using proxy: '" + proxyAddress.getHostName() + "' at Port: '" + proxyAddress.getPort() + "'");
-                        }
-                    }
-                }
-            }
-        }
-        service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
-                getDescriptor().getHubServerInfo().getPassword());
-        return service;
     }
 
     protected BuildInfo readBuildInfo(AbstractBuild build, FilePath buildInfoFilePath, String buildId, IntLogger buildLogger)

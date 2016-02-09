@@ -1,6 +1,5 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
-import hudson.ProxyConfiguration;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
@@ -10,11 +9,6 @@ import hudson.util.ListBoxModel;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -27,9 +21,9 @@ import org.kohsuke.stapler.QueryParameter;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDCIScopeException;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
-import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
-import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.gradle.GradleBuildWrapperDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.maven.MavenBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.maven.Scope;
 import com.blackducksoftware.integration.hub.response.AutoCompleteItem;
@@ -134,39 +128,6 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
         return items;
     }
 
-    public HubIntRestService getRestService(String serverUrl, String username, String password, int timeout) throws BDJenkinsHubPluginException,
-            HubIntegrationException, URISyntaxException,
-            MalformedURLException, BDRestException {
-        HubIntRestService service = new HubIntRestService(serverUrl);
-        service.setTimeout(timeout);
-        Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins != null) {
-            ProxyConfiguration proxyConfig = jenkins.proxy;
-            if (proxyConfig != null) {
-
-                URL actualUrl = new URL(serverUrl);
-
-                Proxy proxy = ProxyConfiguration.createProxy(actualUrl.getHost(), proxyConfig.name, proxyConfig.port,
-                        proxyConfig.noProxyHost);
-
-                if (proxy.address() != null) {
-                    InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
-                    if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
-                        if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
-                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, jenkins.proxy.getUserName(),
-                                    jenkins.proxy.getPassword());
-                        } else {
-                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, null, null);
-                        }
-                    }
-                }
-            }
-        }
-        service.setCookies(username,
-                password);
-        return service;
-    }
-
     public AutoCompletionCandidates doAutoCompleteHubWrapperProjectName(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName)
             throws IOException,
             ServletException {
@@ -180,7 +141,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                     return potentialMatches;
                 }
 
-                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo()
+                HubIntRestService service = BuildHelper.getRestService(getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo()
                         .getPassword(), getHubServerInfo().getTimeout());
 
                 List<AutoCompleteItem> suggestions = service.getProjectMatches(hubWrapperProjectName);
@@ -243,8 +204,9 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
-                        .getTimeout());
+                HubIntRestService service = BuildHelper.getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword,
+                        getHubServerInfo()
+                                .getTimeout());
 
                 ProjectItem project = service.getProjectByName(hubWrapperProjectName);
 
@@ -327,8 +289,9 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
-                        .getTimeout());
+                HubIntRestService service = BuildHelper.getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword,
+                        getHubServerInfo()
+                                .getTimeout());
 
                 ProjectItem project = null;
                 try {
@@ -430,8 +393,9 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
-                    .getTimeout());
+            HubIntRestService service = BuildHelper.getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword,
+                    getHubServerInfo()
+                            .getTimeout());
 
             boolean projectExists = false;
 

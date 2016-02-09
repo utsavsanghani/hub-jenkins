@@ -1,17 +1,11 @@
 package com.blackducksoftware.integration.hub.jenkins.maven;
 
-import hudson.ProxyConfiguration;
 import hudson.maven.MavenReporterDescriptor;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -24,13 +18,12 @@ import org.kohsuke.stapler.QueryParameter;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDCIScopeException;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
-import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
-import com.blackducksoftware.integration.hub.jenkins.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
-import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.maven.Scope;
 import com.blackducksoftware.integration.hub.response.AutoCompleteItem;
 import com.blackducksoftware.integration.hub.response.DistributionEnum;
@@ -137,39 +130,6 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
         return items;
     }
 
-    public HubIntRestService getRestService(String serverUrl, String username, String password, int timeout) throws BDJenkinsHubPluginException,
-            HubIntegrationException, URISyntaxException,
-            MalformedURLException, BDRestException {
-        HubIntRestService service = new HubIntRestService(serverUrl);
-        service.setTimeout(timeout);
-        Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins != null) {
-            ProxyConfiguration proxyConfig = jenkins.proxy;
-            if (proxyConfig != null) {
-
-                URL actualUrl = new URL(serverUrl);
-
-                Proxy proxy = ProxyConfiguration.createProxy(actualUrl.getHost(), proxyConfig.name, proxyConfig.port,
-                        proxyConfig.noProxyHost);
-
-                if (proxy.address() != null) {
-                    InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
-                    if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
-                        if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
-                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, jenkins.proxy.getUserName(),
-                                    jenkins.proxy.getPassword());
-                        } else {
-                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, null, null);
-                        }
-                    }
-                }
-            }
-        }
-        service.setCookies(username,
-                password);
-        return service;
-    }
-
     public AutoCompletionCandidates doAutoCompleteMavenHubProjectName(@QueryParameter("mavenHubProjectName") final String mavenHubProjectName)
             throws IOException,
             ServletException {
@@ -183,7 +143,7 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
                     return potentialMatches;
                 }
 
-                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo()
+                HubIntRestService service = BuildHelper.getRestService(getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo()
                         .getPassword(), getHubServerInfo().getTimeout());
 
                 List<AutoCompleteItem> suggestions = service.getProjectMatches(mavenHubProjectName);
@@ -246,8 +206,9 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
-                        .getTimeout());
+                HubIntRestService service = BuildHelper.getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword,
+                        getHubServerInfo()
+                                .getTimeout());
 
                 ProjectItem project = service.getProjectByName(mavenHubProjectName);
 
@@ -330,8 +291,9 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
-                        .getTimeout());
+                HubIntRestService service = BuildHelper.getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword,
+                        getHubServerInfo()
+                                .getTimeout());
 
                 ProjectItem project = null;
                 try {
@@ -433,8 +395,9 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            HubIntRestService service = getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
-                    .getTimeout());
+            HubIntRestService service = BuildHelper.getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword,
+                    getHubServerInfo()
+                            .getTimeout());
 
             boolean projectExists = false;
 

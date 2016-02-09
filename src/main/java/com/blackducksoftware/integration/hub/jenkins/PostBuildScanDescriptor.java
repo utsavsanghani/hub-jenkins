@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.net.Authenticator;
-import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
@@ -56,10 +55,11 @@ import org.xml.sax.SAXException;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
-import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.response.AutoCompleteItem;
 import com.blackducksoftware.integration.hub.response.DistributionEnum;
 import com.blackducksoftware.integration.hub.response.PhaseEnum;
@@ -130,42 +130,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
     public String getDefaultProjectVersion() {
         return "<unnamed>";
-    }
-
-    public HubIntRestService getRestService(String serverUrl, String username, String password, int hubTimeout) throws BDJenkinsHubPluginException,
-            HubIntegrationException, URISyntaxException,
-            MalformedURLException, BDRestException {
-        HubIntRestService service = new HubIntRestService(serverUrl);
-        service.setTimeout(hubTimeout);
-        Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins != null) {
-            ProxyConfiguration proxyConfig = jenkins.proxy;
-            if (proxyConfig != null) {
-
-                URL actualUrl = new URL(serverUrl);
-
-                Proxy proxy = ProxyConfiguration.createProxy(actualUrl.getHost(), proxyConfig.name, proxyConfig.port,
-                        proxyConfig.noProxyHost);
-
-                if (proxy.address() != null) {
-                    InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
-                    if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
-                        if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
-                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, jenkins.proxy.getUserName(),
-                                    jenkins.proxy.getPassword());
-                        } else {
-                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, null, null);
-                        }
-                    }
-                }
-            }
-        }
-        if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
-            service.setCookies(username,
-                    password);
-        }
-
-        return service;
     }
 
     public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") String scanMemory)
@@ -414,7 +378,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     return potentialMatches;
                 }
 
-                HubIntRestService service = getRestService(getHubServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword(),
+                HubIntRestService service = BuildHelper.getRestService(getHubServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword(),
                         getHubServerInfo().getTimeout());
 
                 List<AutoCompleteItem> suggestions = service.getProjectMatches(hubProjectName);
@@ -478,7 +442,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                HubIntRestService service = getRestService(getHubServerUrl(), credentialUserName, credentialPassword, getHubServerInfo().getTimeout());
+                HubIntRestService service = BuildHelper.getRestService(getHubServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
+                        .getTimeout());
 
                 ProjectItem project = service.getProjectByName(hubProjectName);
 
@@ -573,7 +538,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 credentialUserName = credential.getUsername();
                 credentialPassword = credential.getPassword().getPlainText();
 
-                HubIntRestService service = getRestService(getHubServerUrl(), credentialUserName, credentialPassword, getHubServerInfo().getTimeout());
+                HubIntRestService service = BuildHelper.getRestService(getHubServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
+                        .getTimeout());
 
                 ProjectItem project = null;
                 try {
@@ -684,7 +650,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            HubIntRestService service = getRestService(serverUrl, null, null, Integer.valueOf(hubTimeout));
+            HubIntRestService service = BuildHelper.getRestService(serverUrl, null, null, Integer.valueOf(hubTimeout));
 
             int responseCode = service.setCookies(credentialUserName, credentialPassword);
 
@@ -783,7 +749,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             credentialUserName = credential.getUsername();
             credentialPassword = credential.getPassword().getPlainText();
 
-            HubIntRestService service = getRestService(getHubServerUrl(), credentialUserName, credentialPassword, getHubServerInfo().getTimeout());
+            HubIntRestService service = BuildHelper.getRestService(getHubServerUrl(), credentialUserName, credentialPassword, getHubServerInfo().getTimeout());
 
             boolean projectExists = false;
 

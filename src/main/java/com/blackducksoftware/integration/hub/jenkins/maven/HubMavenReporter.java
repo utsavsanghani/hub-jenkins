@@ -2,7 +2,6 @@ package com.blackducksoftware.integration.hub.jenkins.maven;
 
 import hudson.Launcher;
 import hudson.Util;
-import hudson.ProxyConfiguration;
 import hudson.maven.MavenBuildProxy;
 import hudson.maven.MavenReporter;
 import hudson.maven.MojoInfo;
@@ -12,18 +11,11 @@ import hudson.model.Result;
 import hudson.model.AbstractBuild;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import jenkins.model.Jenkins;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.artifact.Artifact;
@@ -32,14 +24,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.build.BuildArtifact;
 import com.blackducksoftware.integration.build.BuildDependency;
-import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDCIScopeException;
-import com.blackducksoftware.integration.hub.exception.BDRestException;
-import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
-import com.blackducksoftware.integration.hub.jenkins.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.maven.Scope;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
@@ -204,7 +193,7 @@ public class HubMavenReporter extends MavenReporter {
 
     /*
      * (non-JSDoc)
-     * 
+     *
      * @see hudson.maven.MavenReporter#end(hudson.maven.MavenBuild, hudson.Launcher, hudson.model.BuildListener)
      */
     @Override
@@ -340,42 +329,6 @@ public class HubMavenReporter extends MavenReporter {
         dependency.setScope(scopes);
         dependency.setExtension(artifact.getType());
         return dependency;
-    }
-
-    public HubIntRestService getRestService(IntLogger logger) throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException,
-            MalformedURLException, BDRestException {
-        HubIntRestService service = new HubIntRestService(getDescriptor().getHubServerInfo().getServerUrl());
-        service.setTimeout(getDescriptor().getHubServerInfo().getTimeout());
-        service.setLogger(logger);
-        Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins != null) {
-            ProxyConfiguration proxyConfig = jenkins.proxy;
-            if (proxyConfig != null) {
-
-                URL serverUrl = new URL(getDescriptor().getHubServerInfo().getServerUrl());
-
-                Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name, proxyConfig.port,
-                        proxyConfig.noProxyHost);
-
-                if (proxy.address() != null) {
-                    InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
-                    if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
-                        if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
-                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, jenkins.proxy.getUserName(),
-                                    jenkins.proxy.getPassword());
-                        } else {
-                            service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, null, null);
-                        }
-                        if (logger != null) {
-                            logger.debug("Using proxy: '" + proxyAddress.getHostName() + "' at Port: '" + proxyAddress.getPort() + "'");
-                        }
-                    }
-                }
-            }
-        }
-        service.setCookies(getDescriptor().getHubServerInfo().getUsername(),
-                getDescriptor().getHubServerInfo().getPassword());
-        return service;
     }
 
     /**
