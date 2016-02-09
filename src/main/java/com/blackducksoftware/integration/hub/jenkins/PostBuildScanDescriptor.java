@@ -11,6 +11,7 @@ import hudson.tasks.Publisher;
 import hudson.tools.ToolInstaller;
 import hudson.tools.ToolProperty;
 import hudson.tools.InstallSourceProperty;
+import hudson.tools.ToolInstallation;
 import hudson.tools.ZipExtractionInstaller;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.Kind;
@@ -62,6 +63,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
+import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallationDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
@@ -110,6 +112,11 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         load();
 
         checkHubScanTool(hubServerInfo.getServerUrl());
+
+        if (Jenkins.getInstance().getDescriptorByType(HubScanInstallationDescriptor.class) == null) {
+            HubScanInstallationDescriptor descriptor = new HubScanInstallationDescriptor();
+            Jenkins.getInstance().getDescriptorList(ToolInstallation.class).add(descriptor);
+        }
     }
 
     /**
@@ -281,6 +288,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         save();
 
         checkHubScanTool(hubServerInfo.getServerUrl());
+        if (Jenkins.getInstance().getDescriptorByType(HubScanInstallationDescriptor.class) == null) {
+            HubScanInstallationDescriptor descriptor = new HubScanInstallationDescriptor();
+            Jenkins.getInstance().getDescriptorList(ToolInstallation.class).add(descriptor);
+        }
     }
 
     @Override
@@ -313,6 +324,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         // like setUseFrench)
         save();
         checkHubScanTool(hubServerUrl);
+        if (Jenkins.getInstance().getDescriptorByType(HubScanInstallationDescriptor.class) == null) {
+            HubScanInstallationDescriptor descriptor = new HubScanInstallationDescriptor();
+            Jenkins.getInstance().getDescriptorList(ToolInstallation.class).add(descriptor);
+        }
 
         return super.configure(req, formData);
     }
