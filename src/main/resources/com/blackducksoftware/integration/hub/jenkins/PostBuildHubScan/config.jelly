@@ -45,9 +45,9 @@
 </f:entry>
        
          
-<f:entry field="scanName" title="${%ScanInstallationsTitle}">
+<!-- <f:entry field="scanName" title="${%ScanInstallationsTitle}">
 	<f:select />
-</f:entry>
+</f:entry> -->
 <f:entry field="scanMemory" title="${%MemoryAllocation}">
 	<f:textbox value="${it.scanMemory}" default="4096" />
 </f:entry>

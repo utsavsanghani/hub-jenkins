@@ -13,7 +13,6 @@ import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Recorder;
-import hudson.tools.ToolDescriptor;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +57,7 @@ public class PostBuildHubScan extends Recorder {
 
     private final ScanJobs[] scans;
 
-    private final String scanName;
+    // private final String scanName;
 
     protected final boolean sameAsBuildWrapper;
 
@@ -87,11 +86,11 @@ public class PostBuildHubScan extends Recorder {
     private Boolean verbose;
 
     @DataBoundConstructor
-    public PostBuildHubScan(ScanJobs[] scans, String scanName, boolean sameAsBuildWrapper, String hubProjectName, String hubProjectVersion,
+    public PostBuildHubScan(ScanJobs[] scans, boolean sameAsBuildWrapper, String hubProjectName, String hubProjectVersion,
             String hubVersionPhase, String hubVersionDist,
             String scanMemory) {
         this.scans = scans;
-        this.scanName = scanName;
+        // this.scanName = scanName;
         this.sameAsBuildWrapper = sameAsBuildWrapper;
         if (StringUtils.isNotBlank(hubProjectName)) {
             this.hubProjectName = hubProjectName.trim();
@@ -178,9 +177,9 @@ public class PostBuildHubScan extends Recorder {
         return scans;
     }
 
-    public String getScanName() {
-        return scanName;
-    }
+    // public String getScanName() {
+    // return scanName;
+    // }
 
     public FilePath getWorkingDirectory() {
         return workingDirectory;
@@ -240,12 +239,17 @@ public class PostBuildHubScan extends Recorder {
                     }
                 }
                 logger.info("Hub Plugin running on machine : " + localHostName);
-                ScanInstallation[] iScanTools = null;
-                ToolDescriptor<ScanInstallation> iScanDescriptor = (ToolDescriptor<ScanInstallation>) build.getDescriptorByName(ScanInstallation.class
-                        .getSimpleName());
-                iScanTools = iScanDescriptor.getInstallations();
+
+                // TODO
+                // ScanInstallation[] iScanTools = null;
+                // ToolDescriptor<ScanInstallation> iScanDescriptor = (ToolDescriptor<ScanInstallation>)
+                // build.getDescriptorByName(ScanInstallation.class
+                // .getSimpleName());
+                // iScanTools = iScanDescriptor.getInstallations();
                 // installations?
-                if (validateConfiguration(iScanTools, getScans())) {
+                ScanInstallation hubScanInstallation = HubServerInfoSingleton.getInstance().getScanInstallation();
+
+                if (validateConfiguration(hubScanInstallation, getScans())) {
                     // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any
                     // file even outside of the Jenkins directories
                     File workspace = null;
@@ -297,7 +301,7 @@ public class PostBuildHubScan extends Recorder {
                     }
                     printConfiguration(build, logger, projectName, projectVersion, scanTargets);
 
-                    FilePath scanExec = getScanCLI(iScanTools, logger, build);
+                    FilePath scanExec = getScanCLI(hubScanInstallation, logger, build.getBuiltOn());
 
                     HubIntRestService service = BuildHelper.getRestService(logger, getDescriptor().getHubServerUrl(),
                             getDescriptor().getHubServerInfo().getUsername(),
@@ -740,8 +744,8 @@ public class PostBuildHubScan extends Recorder {
      *            IScanInstallation[] User defined iScan installations
      * @param listener
      *            BuildListener
-     * @param build
-     *            AbstractBuild
+     * @param node
+     *            Node
      *
      * @return File the scan.cli.sh
      * @throws IScanToolMissingException
@@ -749,40 +753,36 @@ public class PostBuildHubScan extends Recorder {
      * @throws InterruptedException
      * @throws HubConfigurationException
      */
-    public FilePath getScanCLI(ScanInstallation[] scanTools, HubJenkinsLogger logger, AbstractBuild build)
+    public FilePath getScanCLI(ScanInstallation hubScanInstallation, HubJenkinsLogger logger, Node node)
             throws IScanToolMissingException, IOException,
             InterruptedException, HubConfigurationException {
         FilePath scanExecutable = null;
-        for (ScanInstallation scanInstallation : scanTools) {
-            Node node = build.getBuiltOn();
-            if (StringUtils.isEmpty(node.getNodeName())) {
-                // Empty node name indicates master
-                logger.debug("Running on : master");
-            } else {
-                logger.debug("Running on : " + node.getNodeName());
-                scanInstallation = scanInstallation.forNode(node, logger.getJenkinsListener()); // Need to get the Slave
-                                                                                                // iScan
+
+        // for (ScanInstallation scanInstallation : scanTools) {
+        // TODO fix the name of the tool
+        // if (scanInstallation.getName().equals("Auto Installed Hub Scan")) {
+        hubScanInstallation = hubScanInstallation.forNode(node, logger.getJenkinsListener()); // Need to get the Slave
+        // CLI
+
+        if (hubScanInstallation.getExists(node.getChannel(), logger)) {
+            scanExecutable = hubScanInstallation.getCLI(node.getChannel());
+            if (scanExecutable == null) {
+                // Should not get here unless there are no iScan Installations defined
+                // But we check this just in case
+                throw new HubConfigurationException("You need to select which BlackDuck Scan installation to use.");
             }
-            if (scanInstallation.getName().equals(getScanName())) {
-                if (scanInstallation.getExists(node.getChannel(), logger)) {
-                    scanExecutable = scanInstallation.getCLI(node.getChannel());
-                    if (scanExecutable == null) {
-                        // Should not get here unless there are no iScan Installations defined
-                        // But we check this just in case
-                        throw new HubConfigurationException("You need to select which BlackDuck Scan installation to use.");
-                    }
-                    logger.debug("Using this BlackDuck Scan CLI at : " + scanExecutable.getRemote());
-                } else {
-                    logger.error("Could not find the CLI file in : " + scanInstallation.getHome());
-                    throw new IScanToolMissingException("Could not find the CLI file to execute at : '" + scanInstallation.getHome() + "'");
-                }
-            }
+            logger.debug("Using this BlackDuck Scan CLI at : " + scanExecutable.getRemote());
+        } else {
+            logger.error("Could not find the CLI file in : " + hubScanInstallation.getHome());
+            throw new IScanToolMissingException("Could not find the CLI file to execute at : '" + hubScanInstallation.getHome() + "'");
         }
-        if (scanExecutable == null) {
-            // Should not get here unless there are no iScan Installations defined
-            // But we check this just in case
-            throw new HubConfigurationException("You need to select which BlackDuck Scan installation to use.");
-        }
+        // }
+        // }
+        // if (scanExecutable == null) {
+        // // Should not get here unless there are no iScan Installations defined
+        // // But we check this just in case
+        // throw new HubConfigurationException("You need to select which BlackDuck Scan installation to use.");
+        // }
         return scanExecutable;
     }
 
@@ -800,8 +800,10 @@ public class PostBuildHubScan extends Recorder {
      * @throws IScanToolMissingException
      * @throws HubConfigurationException
      */
-    public boolean validateConfiguration(ScanInstallation[] iScanTools, ScanJobs[] scans) throws IScanToolMissingException, HubConfigurationException {
-        if (iScanTools == null || iScanTools.length == 0 || iScanTools[0] == null) {
+    public boolean validateConfiguration(ScanInstallation hubScanInstallation, ScanJobs[] scans) throws IScanToolMissingException, HubConfigurationException {
+        // if (iScanTools == null || iScanTools.length == 0 || iScanTools[0] == null) {
+        if (hubScanInstallation == null) {
+            // FIXME lets add the installation if the URL is configured
             throw new IScanToolMissingException("Could not find an Black Duck Scan Installation to use.");
         }
         if (scans == null || scans.length == 0) {

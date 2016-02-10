@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 import hudson.FilePath;
 import hudson.model.BuildListener;
 import hudson.model.StreamBuildListener;
-import hudson.model.AbstractBuild;
 import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.DumbSlave;
@@ -31,10 +30,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
@@ -147,13 +146,8 @@ public class PostBuildHubScanUnitTest {
         // getIscanScript with empty nodeName (indicates master), with valid iScan installation configured and selected,
         // and with the script existing
 
-        AbstractBuild mockBuild = mock(AbstractBuild.class, Mockito.RETURNS_DEEP_STUBS);
-        when(mockBuild.getBuiltOn().getNodeName()).thenReturn("");
-
         DumbSlave slave = j.createSlave();
         slave.setNodeName("");
-        Node node = slave;
-        when(mockBuild.getBuiltOn()).thenReturn(node);
 
         ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
         ScanInstallation[] iScanInstallations = new ScanInstallation[1];
@@ -162,11 +156,10 @@ public class PostBuildHubScanUnitTest {
         PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", false, null, null, null, null, "4096");
 
         TestLogger logger = new TestLogger(listener);
-        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, mockBuild);
+        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, slave);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
         String output = logger.getOutputString();
-        Assert.assertTrue(output, output.contains("Running on : master"));
         Assert.assertTrue(output, output.contains("Using this BlackDuck Scan CLI at : "));
     }
 
@@ -175,12 +168,8 @@ public class PostBuildHubScanUnitTest {
         // getIscanScript with nodeName "Slave machine", with valid iScan installation configured and selected,
         // and with the script existing
 
-        AbstractBuild mockBuild = mock(AbstractBuild.class, Mockito.RETURNS_DEEP_STUBS);
-        when(mockBuild.getBuiltOn().getNodeName()).thenReturn("");
         DumbSlave slave = j.createSlave("Slave machine", null);
         slave.setNodeName("testSlave");
-        Node node = slave;
-        when(mockBuild.getBuiltOn()).thenReturn(node);
 
         // IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
         ScanInstallation mockIScanInstall = mock(ScanInstallation.class);
@@ -197,11 +186,10 @@ public class PostBuildHubScanUnitTest {
         PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", false, null, null, null, null, "4096");
 
         TestLogger logger = new TestLogger(listener);
-        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, mockBuild);
+        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, slave);
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
         String output = logger.getOutputString();
-        Assert.assertTrue(output, output.contains("Running on : testSlave"));
         Assert.assertTrue(output, output.contains("Using this BlackDuck Scan CLI at : "));
     }
 
@@ -231,12 +219,8 @@ public class PostBuildHubScanUnitTest {
         exception.expect(IScanToolMissingException.class);
         exception.expectMessage("Could not find the CLI file to execute at : '");
 
-        AbstractBuild mockBuild = mock(AbstractBuild.class);
-
         DumbSlave slave = j.createSlave();
         slave.setNodeName("");
-        Node node = slave;
-        when(mockBuild.getBuiltOn()).thenReturn(node);
 
         ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath + "/FAKE/PATH/scan.cli.jar", null);
         ScanInstallation[] iScanInstallations = new ScanInstallation[1];
@@ -245,7 +229,7 @@ public class PostBuildHubScanUnitTest {
         PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", false, null, null, null, null, "4096");
 
         TestLogger logger = new TestLogger(listener);
-        pbScan.getScanCLI(iScanInstallations, logger, mockBuild);
+        pbScan.getScanCLI(iScanInstallations, logger, slave);
     }
 
     // validateConfiguration

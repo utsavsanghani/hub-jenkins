@@ -28,6 +28,10 @@ import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 
 public class ScanInstallation extends ToolInstallation implements NodeSpecific<ScanInstallation>, EnvironmentSpecific<ScanInstallation> {
 
+    public static final String AUTO_INSTALL_TOOL_NAME = "Hub Scan Installation";
+
+    private String url;
+
     /**
      *
      */
@@ -51,6 +55,14 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
     @Override
     public IScanDescriptor getDescriptor() {
         return (IScanDescriptor) super.getDescriptor();
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     /**
