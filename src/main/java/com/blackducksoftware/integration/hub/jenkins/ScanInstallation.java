@@ -9,9 +9,12 @@ import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeSpecific;
+import hudson.tools.ToolInstaller;
 import hudson.tools.ToolProperty;
+import hudson.tools.ToolPropertyDescriptor;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
+import hudson.util.DescribableList;
 
 import java.io.IOException;
 import java.util.List;
@@ -149,38 +152,57 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
     @Extension
     public static class IScanDescriptor extends ToolDescriptor<ScanInstallation> {
 
-        private ScanInstallation[] installations = new ScanInstallation[0];
+        // private ScanInstallation[] installations = new ScanInstallation[0];
 
         public IScanDescriptor() {
-            load();
+            // load();
         }
 
         @Override
         public void setInstallations(ScanInstallation... installations) {
-            this.installations = installations;
-            save();
+            // this.installations = installations;
+            // save();
+        }
+
+        @Override
+        public List<? extends ToolInstaller> getDefaultInstallers() {
+            return null;
+        }
+
+        @Override
+        public DescribableList<ToolProperty<?>, ToolPropertyDescriptor> getDefaultProperties() throws IOException {
+            return null;
+        }
+
+        @Override
+        public List<ToolPropertyDescriptor> getPropertyDescriptors() {
+            return null;
         }
 
         @Override
         public ScanInstallation[] getInstallations() {
-            return installations;
+            return new ScanInstallation[0];
+            // return installations;
         }
 
         @Override
         public String getDisplayName() {
-            return "BlackDuck Scan";
+            return null;
+            // return "BlackDuck Scan";
         }
 
         @Override
         public ScanInstallation newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            return (ScanInstallation) super.newInstance(req, formData.getJSONObject("IScanInstallation"));
+            // return (ScanInstallation) super.newInstance(req, formData.getJSONObject("IScanInstallation"));
+            return null;
         }
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData)
                 throws Descriptor.FormException {
-            save();
-            return super.configure(req, formData);
+            // save();
+            // return super.configure(req, formData);
+            return false;
         }
     }
 }
