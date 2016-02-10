@@ -10,8 +10,6 @@ import java.util.List;
 
 import javax.servlet.ServletException;
 
-import jenkins.model.Jenkins;
-
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -19,9 +17,8 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDCIScopeException;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
+import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.maven.Scope;
@@ -58,18 +55,7 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
     }
 
     public HubServerInfo getHubServerInfo() {
-        PostBuildScanDescriptor descriptor = null;
-        Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins != null) {
-            descriptor = (PostBuildScanDescriptor) jenkins.getDescriptor(
-                    PostBuildHubScan.class);
-        }
-        if (descriptor != null) {
-            if (descriptor.getHubServerInfo() != null) {
-                return descriptor.getHubServerInfo();
-            }
-        }
-        return null;
+        return HubServerInfoSingleton.getInstance().getServerInfo();
     }
 
     /**
@@ -134,6 +120,7 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
             throws IOException,
             ServletException {
         AutoCompletionCandidates potentialMatches = new AutoCompletionCandidates();
+
         if (StringUtils.isNotBlank(getHubServerInfo().getServerUrl()) || StringUtils.isNotBlank(getHubServerInfo().getCredentialsId())) {
             ClassLoader originalClassLoader = Thread.currentThread()
                     .getContextClassLoader();
@@ -361,9 +348,6 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
                 .getContextClassLoader();
         boolean changed = false;
         try {
-
-            save();
-
             if (StringUtils.isBlank(mavenHubProjectName)) {
                 return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
             }

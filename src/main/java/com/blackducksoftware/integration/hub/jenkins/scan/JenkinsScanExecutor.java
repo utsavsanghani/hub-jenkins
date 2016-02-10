@@ -17,6 +17,7 @@ import com.blackducksoftware.integration.hub.ScanExecutor;
 import com.blackducksoftware.integration.hub.ScannerSplitStream;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
+import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 
 public class JenkinsScanExecutor extends ScanExecutor {
     public static final Integer THREAD_SLEEP = 100;
@@ -27,9 +28,9 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
     private final BuildListener listener;
 
-    public JenkinsScanExecutor(String hubUrl, String hubUsername, String hubPassword, List<String> scanTargets, Integer buildNumber, AbstractBuild build,
+    public JenkinsScanExecutor(HubServerInfo serverInfo, List<String> scanTargets, Integer buildNumber, AbstractBuild build,
             Launcher launcher, BuildListener listener) {
-        super(hubUrl, hubUsername, hubPassword, scanTargets, buildNumber);
+        super(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), scanTargets, buildNumber);
         this.build = build;
         this.launcher = launcher;
         this.listener = listener;

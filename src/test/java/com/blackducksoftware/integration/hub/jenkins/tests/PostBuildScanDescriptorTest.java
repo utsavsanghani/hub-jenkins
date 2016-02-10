@@ -12,6 +12,7 @@ import java.util.Properties;
 
 import junit.framework.Assert;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -19,6 +20,7 @@ import org.junit.rules.ExpectedException;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
+import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
@@ -62,9 +64,16 @@ public class PostBuildScanDescriptorTest {
         String user = testProperties.getProperty("TEST_USERNAME");
         String pass = testProperties.getProperty("TEST_PASSWORD");
         String url = testProperties.getProperty("TEST_HUB_SERVER_URL");
+
         restHelper = new JenkinsHubIntTestHelper(url);
         restHelper.setCookies(user, pass);
         projectCleanup();
+    }
+
+    @Before
+    public void resetServerInfo() {
+        HubServerInfoSingleton.getInstance().setServerInfo(null);
+
     }
 
     public static void projectCleanup() {
@@ -155,7 +164,7 @@ public class PostBuildScanDescriptorTest {
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         try {
             FormValidation form = descriptor.doCreateHubProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
@@ -191,7 +200,7 @@ public class PostBuildScanDescriptorTest {
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
         try {
             Thread.sleep(6000);
             FormValidation form = descriptor.doCreateHubProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
@@ -217,7 +226,7 @@ public class PostBuildScanDescriptorTest {
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         try {
             Thread.sleep(6000);
@@ -246,7 +255,7 @@ public class PostBuildScanDescriptorTest {
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         FormValidation form = descriptor.doCreateHubProject("${JOB_NAME}", testProperties.getProperty("TEST_CREATE_VERSION"), "DEVELOPMENT", "EXTERNAL");
 
@@ -272,7 +281,7 @@ public class PostBuildScanDescriptorTest {
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId("FAKE ID");
         hubServerInfo.setServerUrl("FAKE SERVER");
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         FormValidation form = descriptor.doCheckHubProjectName("${JOB_NAME}", null);
         Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
@@ -288,7 +297,7 @@ public class PostBuildScanDescriptorTest {
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         try {
             restHelper.deleteHubProject(restHelper.getProjectByName(PROJECT_NAME_NOT_EXISTING).getId());
@@ -329,7 +338,7 @@ public class PostBuildScanDescriptorTest {
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         try {
             restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
@@ -358,7 +367,7 @@ public class PostBuildScanDescriptorTest {
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId("FAKE ID");
         hubServerInfo.setServerUrl("FAKE SERVER");
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         FormValidation form = descriptor.doCheckHubProjectVersion("${BUILD_NUMBER}", null);
         Assert.assertEquals(FormValidation.Kind.OK, form.kind);
@@ -377,7 +386,7 @@ public class PostBuildScanDescriptorTest {
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         try {
             restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
@@ -443,7 +452,7 @@ public class PostBuildScanDescriptorTest {
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         AutoCompletionCandidates matches = descriptor.doAutoCompleteHubProjectName("SHOULDNOTAUTOCOMPLETETOANYTHING");
         assertTrue(matches.getValues().size() == 0);
@@ -459,7 +468,7 @@ public class PostBuildScanDescriptorTest {
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         AutoCompletionCandidates matches = descriptor.doAutoCompleteHubProjectName("KEEP");
         assertTrue(matches.getValues().size() > 0);

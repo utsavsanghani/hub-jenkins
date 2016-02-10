@@ -1,12 +1,9 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
 import static org.junit.Assert.assertNotNull;
-import hudson.ExtensionList;
 import hudson.ProxyConfiguration;
 import hudson.model.FreeStyleBuild;
-import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
-import hudson.tools.ToolDescriptor;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +18,7 @@ import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,11 +28,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
-import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
-import com.blackducksoftware.integration.hub.jenkins.ScanInstallation.IScanDescriptor;
+import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
 import com.blackducksoftware.integration.hub.response.DistributionEnum;
 import com.blackducksoftware.integration.hub.response.PhaseEnum;
@@ -49,8 +46,6 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 public class ScanIntegrationTest {
 
     private static final String CLI_VERSION = "2.1.2";
-
-    private static final String DEFAULT_ISCAN = "default";
 
     private static final String PASSWORD_WRONG = "Assert.failurePassword";
 
@@ -100,10 +95,21 @@ public class ScanIntegrationTest {
         System.out.println(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         System.out.println(testProperties.getProperty("TEST_USERNAME"));
         System.out.println(testProperties.getProperty("TEST_PASSWORD"));
+
+        HubScanInstallation iScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, iScanInstallPath, null);
+
+        HubServerInfoSingleton.getInstance().setHubScanInstallation(iScanInstall);
+
         restHelper = new JenkinsHubIntTestHelper(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         restHelper.setTimeout(300);
         restHelper.setCookies(testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
         projectCleanup();
+    }
+
+    @Before
+    public void resetServerInfo() {
+        HubServerInfoSingleton.getInstance().setServerInfo(null);
+
     }
 
     @AfterClass
@@ -130,12 +136,6 @@ public class ScanIntegrationTest {
     public void completeRunthroughAndScan() throws IOException, InterruptedException, ExecutionException {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-
-        ExtensionList<ToolDescriptor> tools = jenkins.getExtensionList(ToolDescriptor.class);
-        IScanDescriptor iScanDesc = tools.get(IScanDescriptor.class);
-        iScanDesc.setInstallations(iScanInstall);
-
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
@@ -150,10 +150,9 @@ public class ScanIntegrationTest {
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-        scanDesc.setHubServerInfo(serverInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
         pbScan.setverbose(false);
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
@@ -184,11 +183,6 @@ public class ScanIntegrationTest {
     public void completeRunthroughAndScanWithMapping() throws Exception {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-
-        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-        iScanDesc.setInstallations(iScanInstall);
-
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
@@ -207,8 +201,7 @@ public class ScanIntegrationTest {
         scans[1] = twoScan;
         scans[2] = threeScan;
 
-        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-        scanDesc.setHubServerInfo(serverInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
         String projectId = null;
         try {
             projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
@@ -221,7 +214,7 @@ public class ScanIntegrationTest {
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, testProperties.getProperty("TEST_PROJECT"),
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
                     null, "4096");
             pbScan.setverbose(false);
@@ -262,11 +255,6 @@ public class ScanIntegrationTest {
     public void completeRunthroughAndScanWithMappingVariableProjectName() throws Exception {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-
-        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-        iScanDesc.setInstallations(iScanInstall);
-
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
@@ -286,10 +274,9 @@ public class ScanIntegrationTest {
         scans[2] = threeScan;
         String projectName = "Jenkins Hub Integration Variable Project Name";
         try {
-            PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-            scanDesc.setHubServerInfo(serverInfo);
+            HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, "${JOB_NAME}", testProperties.getProperty("TEST_VERSION"),
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, "${JOB_NAME}", testProperties.getProperty("TEST_VERSION"),
                     PhaseEnum.DEVELOPMENT.name(),
                     DistributionEnum.EXTERNAL.name(), "4096");
             pbScan.setverbose(false);
@@ -329,11 +316,6 @@ public class ScanIntegrationTest {
     public void completeRunthroughAndScanWithMappingThroughProxy() throws Exception {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-
-        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-        iScanDesc.setInstallations(iScanInstall);
-
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
@@ -352,8 +334,7 @@ public class ScanIntegrationTest {
         scans[1] = twoScan;
         scans[2] = threeScan;
 
-        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-        scanDesc.setHubServerInfo(serverInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
         String projectId = null;
         try {
             projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
@@ -366,7 +347,7 @@ public class ScanIntegrationTest {
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, testProperties.getProperty("TEST_PROJECT"),
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
                     null, "4096");
             pbScan.setverbose(false);
@@ -419,7 +400,7 @@ public class ScanIntegrationTest {
     // public void completeRunthroughAndScanWithMappingThroughBASICProxy() throws Exception {
     // Jenkins jenkins = j.jenkins;
     //
-    // ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
+    // HubScanInstallation iScanInstall = new HubScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
     //
     // IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
     // iScanDesc.setInstallations(iScanInstall);
@@ -491,7 +472,7 @@ public class ScanIntegrationTest {
     // Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
     /*
      * Only to be asserted if run against hub <2.3.1
-     * 
+     *
      * // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
      * // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
      * // Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
@@ -510,7 +491,7 @@ public class ScanIntegrationTest {
     // public void completeRunthroughAndScanWithMappingThroughDIGESTProxy() throws Exception {
     // Jenkins jenkins = j.jenkins;
     //
-    // ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
+    // HubScanInstallation iScanInstall = new HubScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
     //
     // IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
     // iScanDesc.setInstallations(iScanInstall);
@@ -601,11 +582,6 @@ public class ScanIntegrationTest {
     public void completeRunthroughAndScanWithMappingWithProxyIgnored() throws Exception {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-
-        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-        iScanDesc.setInstallations(iScanInstall);
-
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
@@ -623,9 +599,7 @@ public class ScanIntegrationTest {
         scans[0] = oneScan;
         scans[1] = twoScan;
         scans[2] = threeScan;
-
-        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-        scanDesc.setHubServerInfo(serverInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
         String projectId = null;
         try {
             projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
@@ -638,7 +612,7 @@ public class ScanIntegrationTest {
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, testProperties.getProperty("TEST_PROJECT"),
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
                     null, "4096");
             pbScan.setverbose(false);
@@ -702,11 +676,6 @@ public class ScanIntegrationTest {
         try {
             Jenkins jenkins = j.jenkins;
 
-            ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-
-            IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-            iScanDesc.setInstallations(iScanInstall);
-
             CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
             UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                     testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
@@ -721,10 +690,9 @@ public class ScanIntegrationTest {
             ScanJobs[] scans = new ScanJobs[1];
             scans[0] = oneScan;
 
-            PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-            scanDesc.setHubServerInfo(serverInfo);
+            HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING,
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING,
                     PhaseEnum.DEVELOPMENT.name(),
                     DistributionEnum.EXTERNAL.name(), "4096");
             pbScan.setverbose(false);
@@ -764,11 +732,6 @@ public class ScanIntegrationTest {
     public void completeRunthroughAndScanWithMappingToNonExistentVersion() throws Exception {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-
-        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-        iScanDesc.setInstallations(iScanInstall);
-
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
@@ -783,8 +746,7 @@ public class ScanIntegrationTest {
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-        scanDesc.setHubServerInfo(serverInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
         String projectId = null;
         try {
             projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
@@ -792,7 +754,7 @@ public class ScanIntegrationTest {
             // Give server time to recognize the Project
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, testProperties.getProperty("TEST_PROJECT"),
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     PROJECT_RELEASE_NOT_EXISTING,
                     PhaseEnum.DEVELOPMENT.name(),
                     DistributionEnum.EXTERNAL.name(),
@@ -834,11 +796,6 @@ public class ScanIntegrationTest {
     public void completeRunthroughAndScanWithMappingScansAlreadyMapped() throws Exception {
         Jenkins jenkins = j.jenkins;
 
-        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-
-        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-        iScanDesc.setInstallations(iScanInstall);
-
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
@@ -857,8 +814,7 @@ public class ScanIntegrationTest {
         scans[1] = twoScan;
         scans[2] = threeScan;
 
-        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-        scanDesc.setHubServerInfo(serverInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
         String projectId = null;
         try {
             projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
@@ -871,7 +827,7 @@ public class ScanIntegrationTest {
             // Give server time to recognize the Version
             Thread.sleep(2000);
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, testProperties.getProperty("TEST_PROJECT"),
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"),
                     PhaseEnum.DEVELOPMENT.name(), DistributionEnum.EXTERNAL.name(),
                     "4096");
@@ -939,11 +895,6 @@ public class ScanIntegrationTest {
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
 
-        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-
-        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-        iScanDesc.setInstallations(iScanInstall);
-
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 testProperties.getProperty("TEST_USERNAME"), PASSWORD_WRONG);
@@ -957,10 +908,9 @@ public class ScanIntegrationTest {
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-        scanDesc.setHubServerInfo(serverInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
         pbScan.setverbose(false);
         project.getPublishersList().add(pbScan);
 
@@ -979,11 +929,6 @@ public class ScanIntegrationTest {
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
 
-        ScanInstallation iScanInstall = new ScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-
-        IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-        iScanDesc.setInstallations(iScanInstall);
-
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
         UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
                 USERNAME_NON_EXISTING, testProperties.getProperty("TEST_PASSWORD"));
@@ -997,10 +942,9 @@ public class ScanIntegrationTest {
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-        scanDesc.setHubServerInfo(serverInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, false, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
         pbScan.setverbose(false);
         project.getPublishersList().add(pbScan);
 

@@ -61,6 +61,7 @@ import org.xml.sax.SAXException;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
+import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
@@ -108,27 +109,18 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         super(PostBuildHubScan.class);
         load();
 
-        checkHubScanTool(hubServerInfo.getServerUrl());
+        if (hubServerInfo != null) {
+            checkHubScanTool(hubServerInfo.getServerUrl());
+        }
 
-        // if (Jenkins.getInstance().getDescriptorByType(HubScanInstallationDescriptor.class) == null) {
-        // HubScanInstallationDescriptor descriptor = new HubScanInstallationDescriptor();
-        // Jenkins.getInstance().getDescriptorList(ToolInstallation.class).add(descriptor);
-        // }
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
     }
 
     /**
      * @return the hubServerInfo
      */
     public HubServerInfo getHubServerInfo() {
-        return hubServerInfo;
-    }
-
-    /**
-     * @param hubServerInfo
-     *            the hubServerInfo to set
-     */
-    public void setHubServerInfo(HubServerInfo hubServerInfo) {
-        this.hubServerInfo = hubServerInfo;
+        return HubServerInfoSingleton.getInstance().getServerInfo();
     }
 
     public String getPluginVersion() {
@@ -144,8 +136,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     public String getHubServerUrl() {
-        return (hubServerInfo == null ? "" : (hubServerInfo
-                .getServerUrl() == null ? "" : hubServerInfo
+        return (getHubServerInfo() == null ? "" : (getHubServerInfo()
+                .getServerUrl() == null ? "" : getHubServerInfo()
                 .getServerUrl()));
     }
 
@@ -164,12 +156,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * @return
      */
     public String getHubTimeout() {
-        return hubServerInfo == null ? getDefaultTimeout()
-                : String.valueOf(hubServerInfo.getTimeout());
+        return getHubServerInfo() == null ? getDefaultTimeout()
+                : String.valueOf(getHubServerInfo().getTimeout());
     }
 
     public String getHubCredentialsId() {
-        return (hubServerInfo == null ? "" : (hubServerInfo.getCredentialsId() == null ? "" : hubServerInfo.getCredentialsId()));
+        return (getHubServerInfo() == null ? "" : (getHubServerInfo().getCredentialsId() == null ? "" : getHubServerInfo().getCredentialsId()));
     }
 
     /**
@@ -283,12 +275,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         hubServerInfo = serverInfo;
 
         save();
-
-        checkHubScanTool(hubServerInfo.getServerUrl());
-        // if (Jenkins.getInstance().getDescriptorByType(HubScanInstallationDescriptor.class) == null) {
-        // HubScanInstallationDescriptor descriptor = new HubScanInstallationDescriptor();
-        // Jenkins.getInstance().getDescriptorList(ToolInstallation.class).add(descriptor);
-        // }
+        if (hubServerInfo != null) {
+            checkHubScanTool(hubServerInfo.getServerUrl());
+        }
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
     }
 
     @Override
@@ -320,28 +310,27 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         // (easier when there are many fields; need set* methods for this,
         // like setUseFrench)
         save();
-        checkHubScanTool(hubServerUrl);
-        // if (Jenkins.getInstance().getDescriptorByType(ScanInstallation.IScanDescriptor.class) == null) {
-        // ScanInstallation.IScanDescriptor descriptor = new ScanInstallation.IScanDescriptor();
-        // Jenkins.getInstance().getDescriptorList(ToolInstallation.class).add(descriptor);
-        // }
+        if (hubServerInfo != null) {
+            checkHubScanTool(hubServerInfo.getServerUrl());
+        }
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         return super.configure(req, formData);
     }
 
     public void checkHubScanTool(String hubUrl) {
-        ScanInstallation hubScanInstallation = HubServerInfoSingleton.getInstance().getScanInstallation();
+        HubScanInstallation hubScanInstallation = HubServerInfoSingleton.getInstance().getHubScanInstallation();
 
         if (hubScanInstallation == null) {
-            HubServerInfoSingleton.getInstance().setScanInstallation(createCliInsallation(hubUrl));
+            HubServerInfoSingleton.getInstance().setHubScanInstallation(createCliInsallation(hubUrl));
         } else {
             if (!hubScanInstallation.getUrl().equals(hubUrl)) {
-                HubServerInfoSingleton.getInstance().setScanInstallation(createCliInsallation(hubUrl));
+                HubServerInfoSingleton.getInstance().setHubScanInstallation(createCliInsallation(hubUrl));
             }
         }
     }
 
-    private ScanInstallation createCliInsallation(String hubUrl) {
+    private HubScanInstallation createCliInsallation(String hubUrl) {
         if (hubUrl == null) {
             return null;
         }
@@ -371,7 +360,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         }
         properties.add(sourceProperty);
 
-        ScanInstallation scanInstallation = new ScanInstallation(ScanInstallation.AUTO_INSTALL_TOOL_NAME, "", properties);
+        HubScanInstallation scanInstallation = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, "", properties);
 
         scanInstallation.setUrl(hubUrl);
 
@@ -693,18 +682,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                             .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
                 }
 
-                String credentialUserName = null;
-                String credentialPassword = null;
-
-                UsernamePasswordCredentialsImpl credential = hubServerInfo.getCredential();
-                if (credential == null) {
-                    return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
-                }
-                credentialUserName = credential.getUsername();
-                credentialPassword = credential.getPassword().getPlainText();
-
-                HubIntRestService service = BuildHelper.getRestService(getHubServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
-                        .getTimeout());
+                HubIntRestService service = BuildHelper.getRestService(getHubServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword(),
+                        getHubServerInfo()
+                                .getTimeout());
 
                 ProjectItem project = service.getProjectByName(hubProjectName);
 
@@ -789,18 +769,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                     return FormValidation.ok();
                 }
 
-                String credentialUserName = null;
-                String credentialPassword = null;
-
-                UsernamePasswordCredentialsImpl credential = hubServerInfo.getCredential();
-                if (credential == null) {
-                    return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
-                }
-                credentialUserName = credential.getUsername();
-                credentialPassword = credential.getPassword().getPlainText();
-
-                HubIntRestService service = BuildHelper.getRestService(getHubServerUrl(), credentialUserName, credentialPassword, getHubServerInfo()
-                        .getTimeout());
+                HubIntRestService service = BuildHelper.getRestService(getHubServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword(),
+                        getHubServerInfo()
+                                .getTimeout());
 
                 ProjectItem project = null;
                 try {
@@ -1003,7 +974,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
             String credentialUserName = null;
             String credentialPassword = null;
 
-            UsernamePasswordCredentialsImpl credential = hubServerInfo.getCredential();
+            UsernamePasswordCredentialsImpl credential = getHubServerInfo().getCredential();
             if (credential == null) {
                 return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
             }

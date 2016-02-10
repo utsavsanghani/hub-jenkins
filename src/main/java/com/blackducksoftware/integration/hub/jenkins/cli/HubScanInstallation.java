@@ -1,4 +1,4 @@
-package com.blackducksoftware.integration.hub.jenkins;
+package com.blackducksoftware.integration.hub.jenkins.cli;
 
 import hudson.EnvVars;
 import hudson.Extension;
@@ -24,9 +24,10 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 
-public class ScanInstallation extends ToolInstallation implements NodeSpecific<ScanInstallation>, EnvironmentSpecific<ScanInstallation> {
+public class HubScanInstallation extends ToolInstallation implements NodeSpecific<HubScanInstallation>, EnvironmentSpecific<HubScanInstallation> {
 
     public static final String AUTO_INSTALL_TOOL_NAME = "Hub Scan Installation";
 
@@ -38,23 +39,23 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor
-    public ScanInstallation(String name, String home, List<? extends ToolProperty<?>> properties) {
+    public HubScanInstallation(String name, String home, List<? extends ToolProperty<?>> properties) {
         super(name, home, properties);
     }
 
     @Override
-    public ScanInstallation forEnvironment(EnvVars environment) {
-        return new ScanInstallation(getName(), environment.expand(getHome()), getProperties().toList());
+    public HubScanInstallation forEnvironment(EnvVars environment) {
+        return new HubScanInstallation(getName(), environment.expand(getHome()), getProperties().toList());
     }
 
     @Override
-    public ScanInstallation forNode(Node node, TaskListener log) throws IOException, InterruptedException {
-        return new ScanInstallation(getName(), translateFor(node, log), getProperties().toList());
+    public HubScanInstallation forNode(Node node, TaskListener log) throws IOException, InterruptedException {
+        return new HubScanInstallation(getName(), translateFor(node, log), getProperties().toList());
     }
 
     @Override
-    public IScanDescriptor getDescriptor() {
-        return (IScanDescriptor) super.getDescriptor();
+    public HubScanInstallationDescriptor getDescriptor() {
+        return (HubScanInstallationDescriptor) super.getDescriptor();
     }
 
     public String getUrl() {
@@ -76,10 +77,25 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
      * @throws InterruptedException
      */
     public boolean getExists(VirtualChannel channel, IntLogger logger) throws IOException, InterruptedException {
-        FilePath homeFilePath = new FilePath(channel, getHome());
+        FilePath autoInstallHomeFilePath = new FilePath(channel, getHome());
+        if (!autoInstallHomeFilePath.exists() || autoInstallHomeFilePath.list().isEmpty()) {
+            return false;
+        }
+        FilePath cliHomeFilePath = null;
+        for (FilePath autoInstalledFile : autoInstallHomeFilePath.list()) {
+            if (autoInstalledFile.getName().toLowerCase().contains("scan.cli")) {
+                cliHomeFilePath = autoInstalledFile;
+                break;
+            }
+        }
+        if (cliHomeFilePath == null) {
+            // This was not an auto-installed CLI, this is most likely a test
+            cliHomeFilePath = autoInstallHomeFilePath;
+        }
+
         // find the lib folder in the iScan directory
-        logger.debug("BlackDuck Scan directory: " + homeFilePath.getRemote());
-        List<FilePath> files = homeFilePath.listDirectories();
+        logger.debug("BlackDuck Scan directory: " + cliHomeFilePath.getRemote());
+        List<FilePath> files = cliHomeFilePath.listDirectories();
         if (files != null) {
             logger.debug("directories in the BlackDuck Scan directory: " + files.size());
             if (!files.isEmpty()) {
@@ -114,6 +130,7 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
         } else {
             return false;
         }
+
     }
 
     /**
@@ -127,9 +144,23 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
      * @throws InterruptedException
      */
     public FilePath getCLI(VirtualChannel channel) throws IOException, InterruptedException {
-        FilePath homeFilePath = new FilePath(channel, getHome());
+        FilePath autoInstallHomeFilePath = new FilePath(channel, getHome());
+        if (!autoInstallHomeFilePath.exists() || autoInstallHomeFilePath.list().isEmpty()) {
+            return null;
+        }
+        FilePath cliHomeFilePath = null;
+        for (FilePath autoInstalledFile : autoInstallHomeFilePath.list()) {
+            if (autoInstalledFile.getName().toLowerCase().contains("scan.cli")) {
+                cliHomeFilePath = autoInstalledFile;
+                break;
+            }
+        }
+        if (cliHomeFilePath == null) {
+            // This was not an auto-installed CLI, this is most likely a test
+            cliHomeFilePath = autoInstallHomeFilePath;
+        }
 
-        List<FilePath> files = homeFilePath.listDirectories();
+        List<FilePath> files = cliHomeFilePath.listDirectories();
         if (files != null) {
             if (!files.isEmpty()) {
                 FilePath libFolder = null;
@@ -162,16 +193,16 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
     }
 
     @Extension
-    public static class IScanDescriptor extends ToolDescriptor<ScanInstallation> {
+    public static class HubScanInstallationDescriptor extends ToolDescriptor<HubScanInstallation> {
 
         // private ScanInstallation[] installations = new ScanInstallation[0];
 
-        public IScanDescriptor() {
+        public HubScanInstallationDescriptor() {
             // load();
         }
 
         @Override
-        public void setInstallations(ScanInstallation... installations) {
+        public void setInstallations(HubScanInstallation... installations) {
             // this.installations = installations;
             // save();
         }
@@ -192,19 +223,25 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
         }
 
         @Override
-        public ScanInstallation[] getInstallations() {
-            return new ScanInstallation[0];
-            // return installations;
+        public HubScanInstallation[] getInstallations() {
+            HubScanInstallation scanInstallation = HubServerInfoSingleton.getInstance().getHubScanInstallation();
+
+            HubScanInstallation[] scanInstallations = new HubScanInstallation[1];
+
+            if (scanInstallation != null) {
+                scanInstallations[0] = scanInstallation;
+            }
+
+            return scanInstallations;
         }
 
         @Override
         public String getDisplayName() {
-            return null;
-            // return "BlackDuck Scan";
+            return "BlackDuck Scan";
         }
 
         @Override
-        public ScanInstallation newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public HubScanInstallation newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             // return (ScanInstallation) super.newInstance(req, formData.getJSONObject("IScanInstallation"));
             return null;
         }
@@ -217,4 +254,5 @@ public class ScanInstallation extends ToolInstallation implements NodeSpecific<S
             return false;
         }
     }
+
 }
