@@ -29,6 +29,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
@@ -177,6 +178,60 @@ public class ScanIntegrationTest {
         Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
         Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
         Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+    }
+
+    @Test
+    public void completeRunthroughAndScanWithCLIAutoInstall() throws IOException, InterruptedException, ExecutionException {
+        HubScanInstallation orgHubInstall = HubServerInfoSingleton.getInstance().getHubScanInstallation();
+        try {
+            Jenkins jenkins = j.jenkins;
+
+            CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+            UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
+                    testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+            store.addCredentials(Domain.global(), credential);
+
+            HubServerInfo serverInfo = new HubServerInfo();
+            serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+            serverInfo.setCredentialsId(credential.getId());
+            serverInfo.setTimeout(200);
+
+            ScanJobs oneScan = new ScanJobs("");
+            ScanJobs[] scans = new ScanJobs[1];
+            scans[0] = oneScan;
+
+            HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
+
+            PostBuildScanDescriptor.checkHubScanTool(serverInfo.getServerUrl());
+
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
+            pbScan.setverbose(false);
+            FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+            project.setCustomWorkspace(testWorkspace);
+
+            project.getPublishersList().add(pbScan);
+
+            FreeStyleBuild build = project.scheduleBuild2(0).get();
+            String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+            System.out.println(buildOutput);
+
+            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Running on : master"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan directory:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("directories in the BlackDuck Scan directory"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib directory:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib file:"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Using this BlackDuck Scan CLI at : "));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
+            URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Using this Hub hostname : '" + url.getHost()));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Using this java installation : "));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+        } finally {
+            HubServerInfoSingleton.getInstance().setHubScanInstallation(orgHubInstall);
+        }
     }
 
     @Test

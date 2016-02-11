@@ -51,7 +51,7 @@ public class JenkinsHubIntTestHelper extends HubIntRestService {
                 return true;
             }
         } catch (ResourceException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return false;
     }
@@ -61,9 +61,9 @@ public class JenkinsHubIntTestHelper extends HubIntRestService {
         try {
             return super.getProjectByName(projectName);
         } catch (ProjectDoesNotExistException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         } catch (BDRestException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         // e.printStackTrace();
         return new ProjectItem();

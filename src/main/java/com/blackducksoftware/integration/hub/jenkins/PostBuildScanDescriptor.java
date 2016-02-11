@@ -318,19 +318,19 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return super.configure(req, formData);
     }
 
-    public void checkHubScanTool(String hubUrl) {
+    public static void checkHubScanTool(String hubUrl) {
         HubScanInstallation hubScanInstallation = HubServerInfoSingleton.getInstance().getHubScanInstallation();
 
         if (hubScanInstallation == null) {
             HubServerInfoSingleton.getInstance().setHubScanInstallation(createCliInsallation(hubUrl));
         } else {
-            if (!hubScanInstallation.getUrl().equals(hubUrl)) {
+            if (StringUtils.isBlank(hubScanInstallation.getUrl()) || !hubScanInstallation.getUrl().equals(hubUrl)) {
                 HubServerInfoSingleton.getInstance().setHubScanInstallation(createCliInsallation(hubUrl));
             }
         }
     }
 
-    private HubScanInstallation createCliInsallation(String hubUrl) {
+    private static HubScanInstallation createCliInsallation(String hubUrl) {
         if (hubUrl == null) {
             return null;
         }
