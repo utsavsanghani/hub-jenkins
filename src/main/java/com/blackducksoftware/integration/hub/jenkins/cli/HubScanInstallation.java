@@ -195,43 +195,45 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
     @Extension
     public static class HubScanInstallationDescriptor extends ToolDescriptor<HubScanInstallation> {
 
-        // private ScanInstallation[] installations = new ScanInstallation[0];
-
         public HubScanInstallationDescriptor() {
-            // load();
+            // nothing to load
         }
 
         @Override
         public void setInstallations(HubScanInstallation... installations) {
-            // this.installations = installations;
-            // save();
+            // We do not allow the User to define CLI installation so we dont need to do anything here
+
+            // We create our installation in the PostBuildScanDescriptor when the configuration is loaded and when the
+            // configuration is saved
         }
 
         @Override
         public List<? extends ToolInstaller> getDefaultInstallers() {
+            // We dont need to define our installer here unless we wanted it to show up in the UI
             return null;
         }
 
         @Override
         public DescribableList<ToolProperty<?>, ToolPropertyDescriptor> getDefaultProperties() throws IOException {
+            // We return null so the User can't add an Auto-installer to the installation in the UI
+            // This prevents the UI from rendering the drop-down list of installers
             return null;
         }
 
         @Override
         public List<ToolPropertyDescriptor> getPropertyDescriptors() {
+            // We return null because this is used for the UI when the User is configuring the tool
             return null;
         }
 
         @Override
         public HubScanInstallation[] getInstallations() {
             HubScanInstallation scanInstallation = HubServerInfoSingleton.getInstance().getHubScanInstallation();
-
             HubScanInstallation[] scanInstallations = new HubScanInstallation[1];
-
             if (scanInstallation != null) {
+                // We add the installation that we define so that the UI shows that something has been configured
                 scanInstallations[0] = scanInstallation;
             }
-
             return scanInstallations;
         }
 
@@ -242,15 +244,16 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
 
         @Override
         public HubScanInstallation newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            // return (ScanInstallation) super.newInstance(req, formData.getJSONObject("IScanInstallation"));
+            // We return null because we dont allow the User to create new installations from the UI
             return null;
         }
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData)
                 throws Descriptor.FormException {
-            // save();
-            // return super.configure(req, formData);
+            // nothing to save, we do not persist the installation we created
+            // We create our installation in the PostBuildScanDescriptor when the configuration is loaded and when the
+            // configuration is saved
             return false;
         }
     }
