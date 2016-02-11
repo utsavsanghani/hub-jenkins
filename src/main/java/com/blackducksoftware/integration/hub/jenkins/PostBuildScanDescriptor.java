@@ -11,7 +11,6 @@ import hudson.tasks.Publisher;
 import hudson.tools.ToolInstaller;
 import hudson.tools.ToolProperty;
 import hudson.tools.InstallSourceProperty;
-import hudson.tools.ZipExtractionInstaller;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.Kind;
 import hudson.util.IOUtils;
@@ -61,6 +60,7 @@ import org.xml.sax.SAXException;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
+import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstaller;
 import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
@@ -345,7 +345,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
         ArrayList<ToolInstaller> installers = new ArrayList<ToolInstaller>();
 
-        ZipExtractionInstaller autoInstaller = new ZipExtractionInstaller(null, urlBuilder.toString(), null);
+        HubScanInstaller autoInstaller = new HubScanInstaller(null, urlBuilder.toString());
 
         installers.add(autoInstaller);
 
