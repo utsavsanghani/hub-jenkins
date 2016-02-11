@@ -24,25 +24,32 @@ public class HubServerInfo implements Serializable {
 
     private UsernamePasswordCredentialsImpl credential;
 
-    // private long timeout;
+    private int timeout;
 
     public HubServerInfo() {
     }
 
-    public HubServerInfo(String serverUrl, String hubCredentialsId) {
+    public HubServerInfo(String serverUrl, String hubCredentialsId, int timeout) {
         super();
         this.serverUrl = serverUrl;
         this.hubCredentialsId = hubCredentialsId;
-        // this.timeout = timeout;
+        this.timeout = timeout;
     }
 
-    // public long getTimeout() {
-    // return timeout;
-    // }
-    //
-    // public void setTimeout(long timeout) {
-    // this.timeout = timeout;
-    // }
+    public static int getDefaultTimeout() {
+        return 120;
+    }
+
+    public int getTimeout() {
+        if (timeout == 0) {
+            return getDefaultTimeout();
+        }
+        return timeout;
+    }
+
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
 
     public String getServerUrl() {
         return serverUrl;

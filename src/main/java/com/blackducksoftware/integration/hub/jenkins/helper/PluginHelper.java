@@ -1,4 +1,4 @@
-package com.blackducksoftware.integration.hub.jenkins;
+package com.blackducksoftware.integration.hub.jenkins.helper;
 
 import hudson.Plugin;
 import hudson.PluginWrapper;

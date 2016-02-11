@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
 
-import com.blackducksoftware.integration.hub.jenkins.PluginHelper;
+import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 
 public class PluginHelperTest {
 
