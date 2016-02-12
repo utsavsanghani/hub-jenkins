@@ -111,19 +111,22 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
                 }
                 logger.debug("BlackDuck Scan lib directory: " + libFolder.getRemote());
                 FilePath[] cliFiles = libFolder.list("scan.cli*.jar");
-                FilePath iScanScript = null;
+                FilePath hubScanJar = null;
                 if (cliFiles == null) {
                     return false;
                 } else {
                     for (FilePath file : cliFiles) {
                         logger.debug("BlackDuck Scan lib file: " + file.getRemote());
                         if (file.getName().contains("scan.cli")) {
-                            iScanScript = file;
+                            hubScanJar = file;
                             break;
                         }
                     }
                 }
-                return iScanScript.exists();
+                if (hubScanJar == null) {
+                    return false;
+                }
+                return hubScanJar.exists();
             } else {
                 return false;
             }
