@@ -460,9 +460,22 @@ public class PostBuildScanDescriptorTest {
         hubServerInfo.setCredentialsId(credential.getId());
         hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         descriptor.setHubServerInfo(hubServerInfo);
+        String projectAutoCompleteName = "AutoCompleteName";
+        try {
+            descriptor.doCreateHubProject(projectAutoCompleteName,
+                    testProperties.getProperty("TEST_CREATE_VERSION"),
+                    "DEVELOPMENT", "EXTERNAL");
 
-        AutoCompletionCandidates matches = descriptor.doAutoCompleteHubProjectName("KEEP");
-        assertTrue(matches.getValues().size() > 0);
+            // Need to sleep 1 second, otherwise the project not be available when we try the auto complete
+            Thread.sleep(1000l);
+
+            AutoCompletionCandidates matches = descriptor.doAutoCompleteHubProjectName(projectAutoCompleteName);
+            assertTrue(matches.getValues().size() > 0);
+
+        } finally {
+            restHelper.deleteHubProject(restHelper.getProjectByName(projectAutoCompleteName).getId());
+        }
+
     }
 
 }
