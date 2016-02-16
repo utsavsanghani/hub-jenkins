@@ -118,6 +118,10 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         return (BDBuildWrapperDescriptor) super.getDescriptor();
     }
 
+    public HubServerInfo getHubServerInfo() {
+        return HubServerInfoSingleton.getInstance().getServerInfo();
+    }
+
     public abstract List<String> getScopesAsList(IntLogger logger);
 
     @Override
@@ -319,10 +323,8 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         // Checks to make sure the user provided an application name and version
         // also checks to make sure a server url, username, and password were
         // provided
-        BDBuildWrapperDescriptor descriptor = getDescriptor();
-        HubServerInfo serverInfo = descriptor.getHubServerInfo();
-        boolean isPluginConfigured = serverInfo != null
-                && serverInfo.isPluginConfigured();
+        boolean isPluginConfigured = getHubServerInfo() != null
+                && getHubServerInfo().isPluginConfigured();
         boolean isPluginEnabled = StringUtils
                 .isNotBlank(getHubWrapperProjectName()) &&
                 StringUtils.isNotBlank(getHubWrapperVersionPhase()) &&
@@ -350,27 +352,25 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         // Checks to make sure the user provided an application name and version
         // also checks to make sure a server url, username, and password were
         // provided
-        BDBuildWrapperDescriptor descriptor = getDescriptor();
-        HubServerInfo serverInfo = descriptor.getHubServerInfo();
 
         boolean isPluginConfigured = true;
-        if (serverInfo == null) {
+        if (getHubServerInfo() == null) {
             isPluginConfigured = false;
             logger.error("Could not find the Hub global configuration!");
         } else {
-            if (StringUtils.isBlank(serverInfo.getServerUrl())) {
+            if (StringUtils.isBlank(getHubServerInfo().getServerUrl())) {
                 isPluginConfigured = false;
                 logger.error("The Hub server URL is not configured!");
             }
-            if (StringUtils.isBlank(serverInfo.getCredentialsId())) {
+            if (StringUtils.isBlank(getHubServerInfo().getCredentialsId())) {
                 isPluginConfigured = false;
                 logger.error("No Hub credentials configured!");
             } else {
-                if (StringUtils.isBlank(serverInfo.getUsername())) {
+                if (StringUtils.isBlank(getHubServerInfo().getUsername())) {
                     isPluginConfigured = false;
                     logger.error("No Hub username configured!");
                 }
-                if (StringUtils.isBlank(serverInfo.getPassword())) {
+                if (StringUtils.isBlank(getHubServerInfo().getPassword())) {
                     isPluginConfigured = false;
                     logger.error("No Hub password configured!");
                 }

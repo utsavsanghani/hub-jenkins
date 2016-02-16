@@ -27,6 +27,7 @@ import com.blackducksoftware.integration.build.BuildDependency;
 import com.blackducksoftware.integration.hub.exception.BDCIScopeException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
+import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.maven.Scope;
@@ -110,6 +111,10 @@ public class HubMavenReporter extends MavenReporter {
     @Override
     public HubMavenReporterDescriptor getDescriptor() {
         return (HubMavenReporterDescriptor) super.getDescriptor();
+    }
+
+    public HubServerInfo getHubServerInfo() {
+        return HubServerInfoSingleton.getInstance().getServerInfo();
     }
 
     public List<String> getScopesAsList(IntLogger buildLogger) {
@@ -342,10 +347,8 @@ public class HubMavenReporter extends MavenReporter {
         // Checks to make sure the user provided an application name and version
         // also checks to make sure a server url, username, and password were
         // provided
-        HubMavenReporterDescriptor descriptor = getDescriptor();
-        HubServerInfo serverInfo = descriptor.getHubServerInfo();
-        boolean isPluginConfigured = serverInfo != null
-                && serverInfo.isPluginConfigured();
+        boolean isPluginConfigured = getHubServerInfo() != null
+                && getHubServerInfo().isPluginConfigured();
         boolean isPluginEnabled = StringUtils
                 .isNotBlank(getMavenHubProjectName()) &&
                 StringUtils.isNotBlank(getMavenHubVersionPhase()) &&
@@ -373,27 +376,25 @@ public class HubMavenReporter extends MavenReporter {
         // Checks to make sure the user provided an application name and version
         // also checks to make sure a server url, username, and password were
         // provided
-        HubMavenReporterDescriptor descriptor = getDescriptor();
-        HubServerInfo serverInfo = descriptor.getHubServerInfo();
 
         boolean isPluginConfigured = true;
-        if (serverInfo == null) {
+        if (getHubServerInfo() == null) {
             isPluginConfigured = false;
             logger.error("Could not find the Hub global configuration!");
         } else {
-            if (StringUtils.isBlank(serverInfo.getServerUrl())) {
+            if (StringUtils.isBlank(getHubServerInfo().getServerUrl())) {
                 isPluginConfigured = false;
                 logger.error("The Hub server URL is not configured!");
             }
-            if (StringUtils.isBlank(serverInfo.getCredentialsId())) {
+            if (StringUtils.isBlank(getHubServerInfo().getCredentialsId())) {
                 isPluginConfigured = false;
                 logger.error("No Hub credentials configured!");
             } else {
-                if (StringUtils.isBlank(serverInfo.getUsername())) {
+                if (StringUtils.isBlank(getHubServerInfo().getUsername())) {
                     isPluginConfigured = false;
                     logger.error("No Hub username configured!");
                 }
-                if (StringUtils.isBlank(serverInfo.getPassword())) {
+                if (StringUtils.isBlank(getHubServerInfo().getPassword())) {
                     isPluginConfigured = false;
                     logger.error("No Hub password configured!");
                 }

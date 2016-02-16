@@ -13,8 +13,6 @@ import java.util.List;
 
 import javax.servlet.ServletException;
 
-import jenkins.model.Jenkins;
-
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -56,18 +54,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
     }
 
     public HubServerInfo getHubServerInfo() {
-        PostBuildScanDescriptor descriptor = null;
-        Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins != null) {
-            descriptor = (PostBuildScanDescriptor) jenkins.getDescriptor(
-                    PostBuildHubScan.class);
-        }
-        if (descriptor != null) {
-            if (descriptor.getHubServerInfo() != null) {
-                return descriptor.getHubServerInfo();
-            }
-        }
-        return null;
+        return HubServerInfoSingleton.getInstance().getServerInfo();
     }
 
     /**

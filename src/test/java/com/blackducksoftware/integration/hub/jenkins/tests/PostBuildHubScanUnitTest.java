@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 import hudson.FilePath;
 import hudson.model.BuildListener;
 import hudson.model.StreamBuildListener;
-import hudson.model.AbstractBuild;
 import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.DumbSlave;
@@ -22,6 +21,7 @@ import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,10 +31,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.ScanInstallation;
+import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
@@ -54,7 +54,7 @@ public class PostBuildHubScanUnitTest {
 
     private static String basePath;
 
-    private static String iScanInstallPath;
+    private static String hubScanInstallPath;
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
@@ -71,14 +71,20 @@ public class PostBuildHubScanUnitTest {
 
     @BeforeClass
     public static void init() {
-        basePath = ScanIntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        basePath = PostBuildHubScanUnitTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf("/target"));
         basePath = basePath + "/test-workspace";
-        iScanInstallPath = basePath + "/scan.cli-" + CLI_VERSION;
+        hubScanInstallPath = basePath + "/scan.cli-" + CLI_VERSION;
 
         byteOutput = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(byteOutput);
         listener = new StreamBuildListener(ps, Charsets.UTF_8);
+    }
+
+    @Before
+    public void resetServerInfo() {
+        HubServerInfoSingleton.getInstance().setServerInfo(null);
+
     }
 
     @After
@@ -147,26 +153,18 @@ public class PostBuildHubScanUnitTest {
         // getIscanScript with empty nodeName (indicates master), with valid iScan installation configured and selected,
         // and with the script existing
 
-        AbstractBuild mockBuild = mock(AbstractBuild.class, Mockito.RETURNS_DEEP_STUBS);
-        when(mockBuild.getBuiltOn().getNodeName()).thenReturn("");
-
         DumbSlave slave = j.createSlave();
         slave.setNodeName("");
-        Node node = slave;
-        when(mockBuild.getBuiltOn()).thenReturn(node);
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
-        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
-        iScanInstallations[0] = iScanInstall;
+        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", false, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096");
 
         TestLogger logger = new TestLogger(listener);
-        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, mockBuild);
+        FilePath script = pbScan.getScanCLI(hubScanInstall, logger, slave);
         Assert.assertTrue(script.exists());
-        Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
+        Assert.assertTrue(script.getRemote().equals(hubScanInstallPath + TEST_CLI_PATH));
         String output = logger.getOutputString();
-        Assert.assertTrue(output, output.contains("Running on : master"));
         Assert.assertTrue(output, output.contains("Using this BlackDuck Scan CLI at : "));
     }
 
@@ -175,52 +173,40 @@ public class PostBuildHubScanUnitTest {
         // getIscanScript with nodeName "Slave machine", with valid iScan installation configured and selected,
         // and with the script existing
 
-        AbstractBuild mockBuild = mock(AbstractBuild.class, Mockito.RETURNS_DEEP_STUBS);
-        when(mockBuild.getBuiltOn().getNodeName()).thenReturn("");
         DumbSlave slave = j.createSlave("Slave machine", null);
         slave.setNodeName("testSlave");
-        Node node = slave;
-        when(mockBuild.getBuiltOn()).thenReturn(node);
 
-        // IScanInstallation iScanInstall = new IScanInstallation("default", iScanInstallPath, null);
-        ScanInstallation mockIScanInstall = mock(ScanInstallation.class);
-        when(mockIScanInstall.getName()).thenReturn("default");
-        when(mockIScanInstall.getHome()).thenReturn(iScanInstallPath);
+        HubScanInstallation mockIScanInstall = mock(HubScanInstallation.class);
+        when(mockIScanInstall.getName()).thenReturn(HubScanInstallation.AUTO_INSTALL_TOOL_NAME);
+        when(mockIScanInstall.getHome()).thenReturn(hubScanInstallPath);
         when(mockIScanInstall.forNode(Mockito.any(Node.class), Mockito.any(BuildListener.class))).thenReturn(mockIScanInstall);
         when(mockIScanInstall.getCLI(Mockito.any(VirtualChannel.class))).thenCallRealMethod();
         when(mockIScanInstall.getExists(Mockito.any(VirtualChannel.class), Mockito.any(IntLogger.class))).thenCallRealMethod();
-        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
-        iScanInstallations[0] = mockIScanInstall;
 
-        // iScan.forNode(build.getBuiltOn(), listener);
-
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", false, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096");
 
         TestLogger logger = new TestLogger(listener);
-        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, mockBuild);
+        FilePath script = pbScan.getScanCLI(mockIScanInstall, logger, slave);
         Assert.assertTrue(script.exists());
-        Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
+        Assert.assertTrue(script.getRemote().equals(hubScanInstallPath + TEST_CLI_PATH));
         String output = logger.getOutputString();
-        Assert.assertTrue(output, output.contains("Running on : testSlave"));
         Assert.assertTrue(output, output.contains("Using this BlackDuck Scan CLI at : "));
     }
 
     @Test
-    public void testGetIScanScriptNoiScanInstallations() throws Exception {
+    public void testGetIScanScriptNoiHubScanInstallations() throws Exception {
         // getIscanScript with empty nodeName (indicates master), with no iScan installation configured and one
         // selected, and with the script existing
 
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("You need to select which BlackDuck Scan installation to use.");
 
-        ScanInstallation[] iScanInstallations = new ScanInstallation[0];
-
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", false, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096");
 
         TestLogger logger = new TestLogger(listener);
-        FilePath script = pbScan.getScanCLI(iScanInstallations, logger, null);
+        FilePath script = pbScan.getScanCLI(null, logger, null);
         Assert.assertTrue(script.exists());
-        Assert.assertTrue(script.getRemote().equals(iScanInstallPath + TEST_CLI_PATH));
+        Assert.assertTrue(script.getRemote().equals(hubScanInstallPath + TEST_CLI_PATH));
     }
 
     @Test
@@ -231,231 +217,175 @@ public class PostBuildHubScanUnitTest {
         exception.expect(IScanToolMissingException.class);
         exception.expectMessage("Could not find the CLI file to execute at : '");
 
-        AbstractBuild mockBuild = mock(AbstractBuild.class);
-
         DumbSlave slave = j.createSlave();
         slave.setNodeName("");
-        Node node = slave;
-        when(mockBuild.getBuiltOn()).thenReturn(node);
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath + "/FAKE/PATH/scan.cli.jar", null);
-        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
-        iScanInstallations[0] = iScanInstall;
+        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME,
+                hubScanInstallPath + "/FAKE/PATH/scan.cli.jar", null);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, "default", false, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096");
 
         TestLogger logger = new TestLogger(listener);
-        pbScan.getScanCLI(iScanInstallations, logger, mockBuild);
+        pbScan.getScanCLI(hubScanInstall, logger, slave);
     }
 
     // validateConfiguration
     @Test
     public void testValidateConfigurationValid() throws Exception {
-        // validateConfiguration with correct IScanInstallations and IScanJobs
+        // validateConfiguration with correct IHubScanInstallations and IScanJobs
 
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(VALID_CREDENTIAL);
         hubServerInfo.setServerUrl(VALID_SERVERURL);
-        descriptor.setHubServerInfo(hubServerInfo);
-
-        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
-        when(mockpbScan.getDescriptor()).thenReturn(descriptor);
-        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
-
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
-        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
-        iScanInstallations[0] = iScanInstall;
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         ScanJobs oneScan = new ScanJobs(basePath);
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        Assert.assertTrue(mockpbScan.validateConfiguration(iScanInstallations, scans));
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
+
+        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
+
+        Assert.assertTrue(postBuildScan.validateConfiguration(hubScanInstall, scans));
     }
 
     @Test
-    public void testValidateConfigurationNoiScanInstallations() throws Exception {
-        // validateConfiguration with no IScanInstallations and correct IScanJobs
+    public void testValidateConfigurationNullHubScanInstallations() throws Exception {
+        // validateConfiguration with null IHubScanInstallations and correct IScanJobs
 
         exception.expect(IScanToolMissingException.class);
         exception.expectMessage("Could not find an Black Duck Scan Installation to use.");
 
-        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
-        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
-
-        ScanInstallation[] iScanInstallations = new ScanInstallation[0];
-
         ScanJobs oneScan = new ScanJobs(basePath);
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        Assert.assertTrue(mockpbScan.validateConfiguration(iScanInstallations, scans));
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
+
+        Assert.assertTrue(postBuildScan.validateConfiguration(null, scans));
     }
 
     @Test
-    public void testValidateConfigurationNulliScanInstallations() throws Exception {
-        // validateConfiguration with null IScanInstallations and correct IScanJobs
-
-        exception.expect(IScanToolMissingException.class);
-        exception.expectMessage("Could not find an Black Duck Scan Installation to use.");
-
-        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
-        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
-
-        ScanJobs oneScan = new ScanJobs(basePath);
-        ScanJobs[] scans = new ScanJobs[1];
-        scans[0] = oneScan;
-
-        Assert.assertTrue(mockpbScan.validateConfiguration(null, scans));
-    }
-
-    @Test
-    public void testValidateConfigurationNoIScanJobs() throws Exception {
-        // validateConfiguration with correct IScanInstallations and no IScanJobs
+    public void testValidateConfigurationNoScanJobs() throws Exception {
+        // validateConfiguration with correct IHubScanInstallations and no IScanJobs
 
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("Could not find any targets to scan.");
-
-        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
-        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
-
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
-        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
-        iScanInstallations[0] = iScanInstall;
 
         ScanJobs[] scans = new ScanJobs[0];
 
-        Assert.assertTrue(mockpbScan.validateConfiguration(iScanInstallations, scans));
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
+
+        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
+
+        Assert.assertTrue(postBuildScan.validateConfiguration(hubScanInstall, scans));
     }
 
     @Test
-    public void testValidateConfigurationNullIScanJobs() throws Exception {
-        // validateConfiguration with correct IScanInstallations and null IScanJobs
+    public void testValidateConfigurationNullScanJobs() throws Exception {
+        // validateConfiguration with correct IHubScanInstallations and null IScanJobs
 
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("Could not find any targets to scan.");
 
-        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
-        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096");
 
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
-        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
-        iScanInstallations[0] = iScanInstall;
+        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
 
-        Assert.assertTrue(mockpbScan.validateConfiguration(iScanInstallations, null));
+        Assert.assertTrue(postBuildScan.validateConfiguration(hubScanInstall, null));
     }
 
     @Test
     public void testValidateConfigurationNoServerURL() throws Exception {
-        // validateConfiguration with correct IScanInstallations and IScanJobs
+        // validateConfiguration with correct IHubScanInstallations and IScanJobs
 
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("No Hub URL was provided.");
 
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(VALID_CREDENTIAL);
         hubServerInfo.setServerUrl("");
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
-        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
-        when(mockpbScan.getDescriptor()).thenReturn(descriptor);
-        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
-
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
-        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
-        iScanInstallations[0] = iScanInstall;
+        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
 
         ScanJobs oneScan = new ScanJobs(basePath);
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        Assert.assertTrue(mockpbScan.validateConfiguration(iScanInstallations, scans));
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
+
+        Assert.assertTrue(postBuildScan.validateConfiguration(hubScanInstall, scans));
     }
 
     @Test
     public void testValidateConfigurationNullServerURL() throws Exception {
-        // validateConfiguration with correct IScanInstallations and IScanJobs
+        // validateConfiguration with correct IHubScanInstallations and IScanJobs
 
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("No Hub URL was provided.");
 
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(VALID_CREDENTIAL);
         hubServerInfo.setServerUrl(null);
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
-        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
-        when(mockpbScan.getDescriptor()).thenReturn(descriptor);
-        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
-
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
-        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
-        iScanInstallations[0] = iScanInstall;
+        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
 
         ScanJobs oneScan = new ScanJobs(basePath);
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        Assert.assertTrue(mockpbScan.validateConfiguration(iScanInstallations, scans));
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
+
+        Assert.assertTrue(postBuildScan.validateConfiguration(hubScanInstall, scans));
     }
 
     @Test
     public void testValidateConfigurationNoCredential() throws Exception {
-        // validateConfiguration with correct IScanInstallations and IScanJobs
+        // validateConfiguration with correct IHubScanInstallations and IScanJobs
 
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("No credentials could be found to connect to the Hub.");
 
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId("");
         hubServerInfo.setServerUrl(VALID_SERVERURL);
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
-        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
-        when(mockpbScan.getDescriptor()).thenReturn(descriptor);
-        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
-
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
-        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
-        iScanInstallations[0] = iScanInstall;
+        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
 
         ScanJobs oneScan = new ScanJobs(basePath);
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        mockpbScan.validateConfiguration(iScanInstallations, scans);
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
+
+        postBuildScan.validateConfiguration(hubScanInstall, scans);
     }
 
     @Test
     public void testValidateConfigurationNullCredential() throws Exception {
-        // validateConfiguration with correct IScanInstallations and IScanJobs
+        // validateConfiguration with correct IHubScanInstallations and IScanJobs
 
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("No credentials could be found to connect to the Hub.");
 
-        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
         HubServerInfo hubServerInfo = new HubServerInfo();
         hubServerInfo.setCredentialsId(null);
         hubServerInfo.setServerUrl(VALID_SERVERURL);
-        descriptor.setHubServerInfo(hubServerInfo);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
-        PostBuildHubScan mockpbScan = mock(PostBuildHubScan.class);
-        when(mockpbScan.getDescriptor()).thenReturn(descriptor);
-        when(mockpbScan.validateConfiguration(Mockito.any(ScanInstallation[].class), Mockito.any(ScanJobs[].class))).thenCallRealMethod();
-
-        ScanInstallation iScanInstall = new ScanInstallation("default", iScanInstallPath, null);
-        ScanInstallation[] iScanInstallations = new ScanInstallation[1];
-        iScanInstallations[0] = iScanInstall;
+        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
 
         ScanJobs oneScan = new ScanJobs(basePath);
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        mockpbScan.validateConfiguration(iScanInstallations, scans);
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
+
+        postBuildScan.validateConfiguration(hubScanInstall, scans);
     }
 
     @Test
@@ -464,14 +394,14 @@ public class PostBuildHubScanUnitTest {
         exception
                 .expectMessage("Variable was not properly replaced. Value : ${JOB_NAME}, Result : ${JOB_NAME}. Make sure the variable has been properly defined.");
 
-        PostBuildHubScan postScan = new PostBuildHubScan(null, null, false, null, null, null, null, null);
+        PostBuildHubScan postScan = new PostBuildHubScan(null, false, null, null, null, null, null);
         Map<String, String> emptyVariables = new HashMap<String, String>();
         postScan.handleVariableReplacement(emptyVariables, "${JOB_NAME}");
     }
 
     @Test
     public void testHandleVariableReplacementVariable() throws Exception {
-        PostBuildHubScan postScan = new PostBuildHubScan(null, null, false, null, null, null, null, null);
+        PostBuildHubScan postScan = new PostBuildHubScan(null, false, null, null, null, null, null);
         Map<String, String> emptyVariables = new HashMap<String, String>();
         emptyVariables.put("JOB_NAME", "Test Job");
         assertEquals("Test Job", postScan.handleVariableReplacement(emptyVariables, "${JOB_NAME}"));
@@ -479,8 +409,7 @@ public class PostBuildHubScanUnitTest {
 
     @Test
     public void testHandleVariableReplacementVariableNull() throws Exception {
-        PostBuildHubScan postScan = new PostBuildHubScan(null, null, false, null, null, null, null, null);
-        Map<String, String> emptyVariables = new HashMap<String, String>();
+        PostBuildHubScan postScan = new PostBuildHubScan(null, false, null, null, null, null, null);
         assertNull(postScan.handleVariableReplacement(null, null));
     }
 }
