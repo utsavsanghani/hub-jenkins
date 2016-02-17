@@ -367,6 +367,32 @@ public class PostBuildHubScan extends Recorder {
     private void generateHubReport(AbstractBuild<?, ?> build, IntLogger logger, HubIntRestService service, String projectId, String versionId) {
         HubReportAction reportAction = new HubReportAction(build);
 
+        // generate new report on the hub POST /api/versions/{versionId}/reports
+        // request Body { "reportFormat": "JSON" }
+
+        // Response headers to the Post include "location":
+        // "http://integration-hub/api/versions/99743689-711e-440d-ba95-29f5646f6104/reports/81814a03-25d3-4ba9-8b28-323085f15981"
+
+        // GET to
+        // "http://integration-hub/api/versions/99743689-711e-440d-ba95-29f5646f6104/reports/81814a03-25d3-4ba9-8b28-323085f15981"
+        // gets the links to use to download or to get the contents
+
+        // GET on the content Url gets the Json format of the report
+
+        // Reading the content too early results in
+        // {
+        // "errorMessage": "Unable to read report contents because it has not finished the report building process.",
+        // "arguments": {},
+        // "errors": [
+        // {
+        // "errorMessage": "Unable to read report contents because it has not finished the report building process.",
+        // "arguments": {},
+        // "errorCode": "{report.main.read.unfinished.report.contents}"
+        // }
+        // ],
+        // "errorCode": "{report.main.read.unfinished.report.contents}"
+        // }
+
         build.addAction(reportAction);
     }
 
