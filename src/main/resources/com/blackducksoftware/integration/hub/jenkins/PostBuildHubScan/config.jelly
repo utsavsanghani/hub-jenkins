@@ -43,6 +43,13 @@
     </div>
     <div> </div>
 </f:entry>
+
+<f:advanced>
+	<f:entry field="generateHubReport">
+		<f:checkbox default="false" />
+		<label>${%GenerateHubReportTitle}</label>
+	</f:entry>
+</f:advanced>
        
          
 <!-- <f:entry field="scanName" title="${%ScanInstallationsTitle}">
@@ -62,4 +69,6 @@
       	<f:repeatableDeleteButton value="${%DeleteScan}"/>
 	</f:repeatable>
 </f:block>
+
+
 </j:jelly>

@@ -153,7 +153,7 @@ public class ScanIntegrationTest {
 
         HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false);
         pbScan.setverbose(false);
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
@@ -204,7 +204,7 @@ public class ScanIntegrationTest {
 
             PostBuildScanDescriptor.checkHubScanTool(serverInfo.getServerUrl());
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false);
             pbScan.setverbose(false);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -271,7 +271,7 @@ public class ScanIntegrationTest {
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
-                    null, "4096");
+                    null, "4096", false);
             pbScan.setverbose(false);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -333,7 +333,7 @@ public class ScanIntegrationTest {
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, "${JOB_NAME}", testProperties.getProperty("TEST_VERSION"),
                     PhaseEnum.DEVELOPMENT.name(),
-                    DistributionEnum.EXTERNAL.name(), "4096");
+                    DistributionEnum.EXTERNAL.name(), "4096", false);
             pbScan.setverbose(false);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, projectName);
             project.setCustomWorkspace(testWorkspace);
@@ -404,7 +404,7 @@ public class ScanIntegrationTest {
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
-                    null, "4096");
+                    null, "4096", false);
             pbScan.setverbose(false);
             jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
                     Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH")));
@@ -527,7 +527,7 @@ public class ScanIntegrationTest {
     // Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
     /*
      * Only to be asserted if run against hub <2.3.1
-     *
+     * 
      * // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
      * // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
      * // Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
@@ -669,7 +669,7 @@ public class ScanIntegrationTest {
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
-                    null, "4096");
+                    null, "4096", false);
             pbScan.setverbose(false);
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
 
@@ -749,7 +749,7 @@ public class ScanIntegrationTest {
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING,
                     PhaseEnum.DEVELOPMENT.name(),
-                    DistributionEnum.EXTERNAL.name(), "4096");
+                    DistributionEnum.EXTERNAL.name(), "4096", false);
             pbScan.setverbose(false);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -813,7 +813,7 @@ public class ScanIntegrationTest {
                     PROJECT_RELEASE_NOT_EXISTING,
                     PhaseEnum.DEVELOPMENT.name(),
                     DistributionEnum.EXTERNAL.name(),
-                    "4096");
+                    "4096", false);
             pbScan.setverbose(false);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -885,7 +885,7 @@ public class ScanIntegrationTest {
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"),
                     PhaseEnum.DEVELOPMENT.name(), DistributionEnum.EXTERNAL.name(),
-                    "4096");
+                    "4096", false);
             pbScan.setverbose(false);
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
@@ -965,7 +965,7 @@ public class ScanIntegrationTest {
 
         HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false);
         pbScan.setverbose(false);
         project.getPublishersList().add(pbScan);
 
@@ -999,7 +999,7 @@ public class ScanIntegrationTest {
 
         HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false);
         pbScan.setverbose(false);
         project.getPublishersList().add(pbScan);
 

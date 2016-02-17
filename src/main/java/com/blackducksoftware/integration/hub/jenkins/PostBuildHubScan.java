@@ -36,6 +36,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
+import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
 import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
@@ -74,6 +75,8 @@ public class PostBuildHubScan extends Recorder {
 
     private Integer scanMemory;
 
+    protected final boolean generateHubReport;
+
     private transient FilePath workingDirectory;
 
     private transient JDK java;
@@ -85,7 +88,7 @@ public class PostBuildHubScan extends Recorder {
     @DataBoundConstructor
     public PostBuildHubScan(ScanJobs[] scans, boolean sameAsBuildWrapper, String hubProjectName, String hubProjectVersion,
             String hubVersionPhase, String hubVersionDist,
-            String scanMemory) {
+            String scanMemory, boolean generateHubReport) {
         this.scans = scans;
         this.sameAsBuildWrapper = sameAsBuildWrapper;
         if (StringUtils.isNotBlank(hubProjectName)) {
@@ -112,6 +115,7 @@ public class PostBuildHubScan extends Recorder {
         } else {
             this.scanMemory = memory;
         }
+        this.generateHubReport = generateHubReport;
 
     }
 
@@ -210,7 +214,7 @@ public class PostBuildHubScan extends Recorder {
      * @throws InterruptedException
      */
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher,
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
             BuildListener listener) throws InterruptedException, IOException {
         HubJenkinsLogger logger = new HubJenkinsLogger(listener);
         logger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
@@ -323,6 +327,9 @@ public class PostBuildHubScan extends Recorder {
 
                         doScanMapping(service, localHostName, logger, versionId, scanTargets);
                     }
+                    if (generateHubReport) {
+                        generateHubReport(build, logger, service, projectId, versionId);
+                    }
                 }
             } catch (BDJenkinsHubPluginException e) {
                 logger.error(e.getMessage(), e);
@@ -355,6 +362,12 @@ public class PostBuildHubScan extends Recorder {
         logger.info("Finished running Black Duck Scans.");
         build.setResult(getResult());
         return true;
+    }
+
+    private void generateHubReport(AbstractBuild<?, ?> build, IntLogger logger, HubIntRestService service, String projectId, String versionId) {
+        HubReportAction reportAction = new HubReportAction(build);
+
+        build.addAction(reportAction);
     }
 
     private String ensureProjectExists(HubIntRestService service, IntLogger logger, String projectName, String projectVersion) throws IOException,
@@ -461,7 +474,7 @@ public class PostBuildHubScan extends Recorder {
         }
     }
 
-    public void printConfiguration(AbstractBuild build, IntLogger logger, String projectName, String projectVersion, List<String> scanTargets)
+    public void printConfiguration(AbstractBuild<?, ?> build, IntLogger logger, String projectName, String projectVersion, List<String> scanTargets)
             throws IOException,
             InterruptedException {
         logger.info("Initializing - Hub Jenkins Plugin - "
@@ -518,7 +531,7 @@ public class PostBuildHubScan extends Recorder {
      * @throws URISyntaxException
      * @throws HubIntegrationException
      */
-    private Boolean runScan(HubIntRestService service, AbstractBuild build, Launcher launcher, HubJenkinsLogger logger, FilePath scanExec,
+    private Boolean runScan(HubIntRestService service, AbstractBuild<?, ?> build, Launcher launcher, HubJenkinsLogger logger, FilePath scanExec,
             List<String> scanTargets,
             String projectName, String versionName)
             throws IOException, HubConfigurationException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException
@@ -666,7 +679,7 @@ public class PostBuildHubScan extends Recorder {
      * @throws InterruptedException
      * @throws HubConfigurationException
      */
-    private void setJava(HubJenkinsLogger logger, AbstractBuild build) throws IOException, InterruptedException,
+    private void setJava(HubJenkinsLogger logger, AbstractBuild<?, ?> build) throws IOException, InterruptedException,
             HubConfigurationException {
         EnvVars envVars = build.getEnvironment(logger.getJenkinsListener());
         JDK javaHomeTemp = null;
