@@ -49,6 +49,8 @@ import com.blackducksoftware.integration.hub.jenkins.remote.GetSeparator;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
+import com.blackducksoftware.integration.hub.response.ReportFormatEnum;
+import com.blackducksoftware.integration.hub.response.ReportMetaInformationItem.ReportMetaLinkItem;
 import com.blackducksoftware.integration.hub.response.VersionComparison;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
@@ -364,14 +366,27 @@ public class PostBuildHubScan extends Recorder {
         return true;
     }
 
-    private void generateHubReport(AbstractBuild<?, ?> build, IntLogger logger, HubIntRestService service, String projectId, String versionId) {
+    private void generateHubReport(AbstractBuild<?, ?> build, IntLogger logger, HubIntRestService service, String projectId, String versionId)
+            throws IOException, BDRestException, URISyntaxException {
         HubReportAction reportAction = new HubReportAction(build);
 
-        // generate new report on the hub POST /api/versions/{versionId}/reports
-        // request Body { "reportFormat": "JSON" }
+        String reportUrl = service.generateHubReport(versionId, ReportFormatEnum.JSON);
 
-        // Response headers to the Post include "location":
-        // "http://integration-hub/api/versions/99743689-711e-440d-ba95-29f5646f6104/reports/81814a03-25d3-4ba9-8b28-323085f15981"
+        List<ReportMetaLinkItem> links = service.getReportLinks(reportUrl);
+
+        ReportMetaLinkItem contentLink = null;
+        for (ReportMetaLinkItem link : links) {
+            if (link.getRel().equalsIgnoreCase("content")) {
+                contentLink = link;
+                break;
+            }
+        }
+        if (contentLink == null) {
+            // FIXME exception type
+            throw new BDRestException("Could not find content link for the report at : " + reportUrl);
+        }
+
+        // FIXME
 
         // GET to
         // "http://integration-hub/api/versions/99743689-711e-440d-ba95-29f5646f6104/reports/81814a03-25d3-4ba9-8b28-323085f15981"
