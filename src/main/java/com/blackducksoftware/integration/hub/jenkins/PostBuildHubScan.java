@@ -50,6 +50,7 @@ import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.blackducksoftware.integration.hub.response.ReportFormatEnum;
+import com.blackducksoftware.integration.hub.response.ReportMetaInformationItem;
 import com.blackducksoftware.integration.hub.response.ReportMetaInformationItem.ReportMetaLinkItem;
 import com.blackducksoftware.integration.hub.response.VersionComparison;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
@@ -372,7 +373,9 @@ public class PostBuildHubScan extends Recorder {
 
         String reportUrl = service.generateHubReport(versionId, ReportFormatEnum.JSON);
 
-        List<ReportMetaLinkItem> links = service.getReportLinks(reportUrl);
+        ReportMetaInformationItem reportInfo = service.getReportLinks(reportUrl);
+
+        List<ReportMetaLinkItem> links = reportInfo.get_meta().getLinks();
 
         ReportMetaLinkItem contentLink = null;
         for (ReportMetaLinkItem link : links) {
