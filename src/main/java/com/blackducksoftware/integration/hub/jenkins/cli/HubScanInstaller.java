@@ -2,22 +2,17 @@ package com.blackducksoftware.integration.hub.jenkins.cli;
 
 import static hudson.FilePath.TarCompression.GZIP;
 import hudson.FilePath;
-import hudson.Functions;
 import hudson.ProxyConfiguration;
 import hudson.model.TaskListener;
 import hudson.model.Node;
-import hudson.remoting.VirtualChannel;
 import hudson.tools.ToolInstaller;
 import hudson.tools.ToolInstallation;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-
-import jenkins.MasterToSlaveFileCallable;
 
 import org.apache.commons.io.input.CountingInputStream;
 
@@ -40,9 +35,8 @@ public class HubScanInstaller extends ToolInstaller {
     @Override
     public FilePath performInstallation(ToolInstallation tool, Node node, TaskListener log) throws IOException, InterruptedException {
         FilePath dir = preferredLocation(tool, node);
-        if (customInstall(dir, new URL(url), log, "Unpacking " + url + " to " + dir + " on " + node.getDisplayName())) {
-            dir.act(new SetRemotePermissions());
-        }
+        customInstall(dir, new URL(url), log, "Unpacking " + url + " to " + dir + " on " + node.getDisplayName());
+
         return dir;
     }
 
@@ -117,34 +111,6 @@ public class HubScanInstaller extends ToolInstaller {
             return true;
         } catch (IOException e) {
             throw new IOException("Failed to install " + archive + " to " + directory.getRemote(), e);
-        }
-    }
-
-    /**
-     * Sets execute permission on all files, since unzip etc. might not do this.
-     */
-    private class SetRemotePermissions extends MasterToSlaveFileCallable<Void> {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public Void invoke(File d, VirtualChannel channel) throws IOException {
-            if (!Functions.isWindows()) {
-                process(d);
-            }
-            return null;
-        }
-
-        private void process(File f) {
-            if (f.isFile()) {
-                f.setExecutable(true, false);
-            } else {
-                File[] files = f.listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        process(file);
-                    }
-                }
-            }
         }
     }
 }
