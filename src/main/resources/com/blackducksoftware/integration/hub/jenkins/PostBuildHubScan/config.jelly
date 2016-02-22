@@ -45,7 +45,7 @@
 </f:entry>
 
 <f:advanced>
-	<f:entry field="generateHubReport">
+	<f:entry field="shouldGenerateHubReport">
 		<f:checkbox default="false" />
 		<label>${%GenerateHubReportTitle}</label>
 	</f:entry>

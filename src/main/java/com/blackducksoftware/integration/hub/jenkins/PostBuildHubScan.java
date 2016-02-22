@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 import jenkins.model.Jenkins;
 
 import org.codehaus.plexus.util.StringUtils;
+import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.restlet.data.Status;
 
@@ -48,6 +49,7 @@ import com.blackducksoftware.integration.hub.jenkins.remote.GetHostNameFromNetwo
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSeparator;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
+import com.blackducksoftware.integration.hub.report.api.VersionReport;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.blackducksoftware.integration.hub.response.ReportFormatEnum;
 import com.blackducksoftware.integration.hub.response.ReportMetaInformationItem;
@@ -78,7 +80,7 @@ public class PostBuildHubScan extends Recorder {
 
     private Integer scanMemory;
 
-    protected final boolean generateHubReport;
+    protected final boolean shouldGenerateHubReport;
 
     private transient FilePath workingDirectory;
 
@@ -91,7 +93,7 @@ public class PostBuildHubScan extends Recorder {
     @DataBoundConstructor
     public PostBuildHubScan(ScanJobs[] scans, boolean sameAsBuildWrapper, String hubProjectName, String hubProjectVersion,
             String hubVersionPhase, String hubVersionDist,
-            String scanMemory, boolean generateHubReport) {
+            String scanMemory, boolean shouldGenerateHubReport) {
         this.scans = scans;
         this.sameAsBuildWrapper = sameAsBuildWrapper;
         if (StringUtils.isNotBlank(hubProjectName)) {
@@ -118,7 +120,7 @@ public class PostBuildHubScan extends Recorder {
         } else {
             this.scanMemory = memory;
         }
-        this.generateHubReport = generateHubReport;
+        this.shouldGenerateHubReport = shouldGenerateHubReport;
 
     }
 
@@ -131,6 +133,10 @@ public class PostBuildHubScan extends Recorder {
             verbose = true;
         }
         return verbose;
+    }
+
+    public boolean getShouldGenerateHubReport() {
+        return shouldGenerateHubReport;
     }
 
     public Result getResult() {
@@ -330,7 +336,8 @@ public class PostBuildHubScan extends Recorder {
 
                         doScanMapping(service, localHostName, logger, versionId, scanTargets);
                     }
-                    if (generateHubReport) {
+
+                    if (getShouldGenerateHubReport()) {
                         generateHubReport(build, logger, service, projectId, versionId);
                     }
                 }
@@ -368,12 +375,22 @@ public class PostBuildHubScan extends Recorder {
     }
 
     private void generateHubReport(AbstractBuild<?, ?> build, IntLogger logger, HubIntRestService service, String projectId, String versionId)
-            throws IOException, BDRestException, URISyntaxException {
+            throws IOException, BDRestException, URISyntaxException, InterruptedException, BDJenkinsHubPluginException {
         HubReportAction reportAction = new HubReportAction(build);
 
         String reportUrl = service.generateHubReport(versionId, ReportFormatEnum.JSON);
 
-        ReportMetaInformationItem reportInfo = service.getReportLinks(reportUrl);
+        DateTime timeFinished = null;
+        ReportMetaInformationItem reportInfo = null;
+
+        while (timeFinished == null) {
+            // Wait until the report is doen being generated
+            // Retry every 5 seconds
+            Thread.sleep(5000);
+            reportInfo = service.getReportLinks(reportUrl);
+
+            timeFinished = reportInfo.getTimeFinishedAt();
+        }
 
         List<ReportMetaLinkItem> links = reportInfo.get_meta().getLinks();
 
@@ -385,31 +402,11 @@ public class PostBuildHubScan extends Recorder {
             }
         }
         if (contentLink == null) {
-            // FIXME exception type
-            throw new BDRestException("Could not find content link for the report at : " + reportUrl);
+            throw new BDJenkinsHubPluginException("Could not find content link for the report at : " + reportUrl);
         }
 
-        // FIXME
-
-        // GET to
-        // "http://integration-hub/api/versions/99743689-711e-440d-ba95-29f5646f6104/reports/81814a03-25d3-4ba9-8b28-323085f15981"
-        // gets the links to use to download or to get the contents
-
-        // GET on the content Url gets the Json format of the report
-
-        // Reading the content too early results in
-        // {
-        // "errorMessage": "Unable to read report contents because it has not finished the report building process.",
-        // "arguments": {},
-        // "errors": [
-        // {
-        // "errorMessage": "Unable to read report contents because it has not finished the report building process.",
-        // "arguments": {},
-        // "errorCode": "{report.main.read.unfinished.report.contents}"
-        // }
-        // ],
-        // "errorCode": "{report.main.read.unfinished.report.contents}"
-        // }
+        VersionReport report = service.getReportContent(contentLink.getHref());
+        reportAction.setReport(report);
 
         build.addAction(reportAction);
     }
