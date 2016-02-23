@@ -158,7 +158,7 @@ public class PostBuildHubScanUnitTest {
 
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false);
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, 0);
 
         TestLogger logger = new TestLogger(listener);
         FilePath script = pbScan.getScanCLI(hubScanInstall, logger, slave);
@@ -183,7 +183,7 @@ public class PostBuildHubScanUnitTest {
         when(mockIScanInstall.getCLI(Mockito.any(VirtualChannel.class))).thenCallRealMethod();
         when(mockIScanInstall.getExists(Mockito.any(VirtualChannel.class), Mockito.any(IntLogger.class))).thenCallRealMethod();
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false);
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, 0);
 
         TestLogger logger = new TestLogger(listener);
         FilePath script = pbScan.getScanCLI(mockIScanInstall, logger, slave);
@@ -201,7 +201,7 @@ public class PostBuildHubScanUnitTest {
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("You need to select which BlackDuck Scan installation to use.");
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false);
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, 0);
 
         TestLogger logger = new TestLogger(listener);
         FilePath script = pbScan.getScanCLI(null, logger, null);
@@ -223,7 +223,7 @@ public class PostBuildHubScanUnitTest {
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME,
                 hubScanInstallPath + "/FAKE/PATH/scan.cli.jar", null);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false);
+        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, 0);
 
         TestLogger logger = new TestLogger(listener);
         pbScan.getScanCLI(hubScanInstall, logger, slave);
@@ -243,7 +243,7 @@ public class PostBuildHubScanUnitTest {
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false);
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, 0);
 
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
 
@@ -261,7 +261,7 @@ public class PostBuildHubScanUnitTest {
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false);
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, 0);
 
         Assert.assertTrue(postBuildScan.validateConfiguration(null, scans));
     }
@@ -275,7 +275,7 @@ public class PostBuildHubScanUnitTest {
 
         ScanJobs[] scans = new ScanJobs[0];
 
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false);
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, 0);
 
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
 
@@ -289,7 +289,7 @@ public class PostBuildHubScanUnitTest {
         exception.expect(HubConfigurationException.class);
         exception.expectMessage("Could not find any targets to scan.");
 
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false);
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, 0);
 
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
 
@@ -314,7 +314,7 @@ public class PostBuildHubScanUnitTest {
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false);
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, 0);
 
         Assert.assertTrue(postBuildScan.validateConfiguration(hubScanInstall, scans));
     }
@@ -337,7 +337,7 @@ public class PostBuildHubScanUnitTest {
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false);
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, 0);
 
         Assert.assertTrue(postBuildScan.validateConfiguration(hubScanInstall, scans));
     }
@@ -360,7 +360,7 @@ public class PostBuildHubScanUnitTest {
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false);
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, 0);
 
         postBuildScan.validateConfiguration(hubScanInstall, scans);
     }
@@ -383,7 +383,7 @@ public class PostBuildHubScanUnitTest {
         ScanJobs[] scans = new ScanJobs[1];
         scans[0] = oneScan;
 
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false);
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, 0);
 
         postBuildScan.validateConfiguration(hubScanInstall, scans);
     }
@@ -394,14 +394,14 @@ public class PostBuildHubScanUnitTest {
         exception
                 .expectMessage("Variable was not properly replaced. Value : ${JOB_NAME}, Result : ${JOB_NAME}. Make sure the variable has been properly defined.");
 
-        PostBuildHubScan postScan = new PostBuildHubScan(null, false, null, null, null, null, null, false);
+        PostBuildHubScan postScan = new PostBuildHubScan(null, false, null, null, null, null, null, false, 0);
         Map<String, String> emptyVariables = new HashMap<String, String>();
         postScan.handleVariableReplacement(emptyVariables, "${JOB_NAME}");
     }
 
     @Test
     public void testHandleVariableReplacementVariable() throws Exception {
-        PostBuildHubScan postScan = new PostBuildHubScan(null, false, null, null, null, null, null, false);
+        PostBuildHubScan postScan = new PostBuildHubScan(null, false, null, null, null, null, null, false, 0);
         Map<String, String> emptyVariables = new HashMap<String, String>();
         emptyVariables.put("JOB_NAME", "Test Job");
         assertEquals("Test Job", postScan.handleVariableReplacement(emptyVariables, "${JOB_NAME}"));
@@ -409,7 +409,7 @@ public class PostBuildHubScanUnitTest {
 
     @Test
     public void testHandleVariableReplacementVariableNull() throws Exception {
-        PostBuildHubScan postScan = new PostBuildHubScan(null, false, null, null, null, null, null, false);
+        PostBuildHubScan postScan = new PostBuildHubScan(null, false, null, null, null, null, null, false, 0);
         assertNull(postScan.handleVariableReplacement(null, null));
     }
 }

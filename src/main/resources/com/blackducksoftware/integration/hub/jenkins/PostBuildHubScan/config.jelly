@@ -49,12 +49,12 @@
 		<f:checkbox default="false" />
 		<label>${%GenerateHubReportTitle}</label>
 	</f:entry>
+	<f:entry field="reportMaxiumWaitTime" title="${%MaximumReportUpdateTime}">
+		<f:textbox default="5" />
+	</f:entry>
 </f:advanced>
        
          
-<!-- <f:entry field="scanName" title="${%ScanInstallationsTitle}">
-	<f:select />
-</f:entry> -->
 <f:entry field="scanMemory" title="${%MemoryAllocation}">
 	<f:textbox value="${it.scanMemory}" default="4096" />
 </f:entry>

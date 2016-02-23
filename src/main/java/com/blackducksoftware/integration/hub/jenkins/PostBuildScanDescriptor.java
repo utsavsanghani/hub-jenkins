@@ -367,21 +367,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         return scanInstallation;
     }
 
-    // <com.blackducksoftware.integration.hub.jenkins.ScanInstallation>
-    // <name>Auto Install</name>
-    // <home></home>
-    // <properties>
-    // <hudson.tools.InstallSourceProperty>
-    // <installers>
-    // <hudson.tools.ZipExtractionInstaller>
-    // <url>http://integration-hub.blackducksoftware.com/download/scan.cli.zip</url>
-    // <subdir>scan.cli-2.3.3</subdir>
-    // </hudson.tools.ZipExtractionInstaller>
-    // </installers>
-    // </hudson.tools.InstallSourceProperty>
-    // </properties>
-    // </com.blackducksoftware.integration.hub.jenkins.ScanInstallation>
-
     public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") String scanMemory)
             throws IOException, ServletException {
         if (scanMemory.length() == 0) {
@@ -397,6 +382,34 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         } catch (NumberFormatException e) {
             return FormValidation.error(e, Messages
                     .HubBuildScan_getInvalidMemoryString());
+        }
+
+        return FormValidation.ok();
+    }
+
+    public FormValidation doCheckReportMaxiumWaitTime(@QueryParameter("shouldGenerateHubReport") boolean shouldGenerateHubReport,
+            @QueryParameter("reportMaxiumWaitTime") String reportMaxiumWaitTime)
+            throws IOException, ServletException {
+        if (!shouldGenerateHubReport) {
+            // Not going to generate the report so this field doesnt matter.
+            return FormValidation.ok();
+        }
+        if (reportMaxiumWaitTime == null || reportMaxiumWaitTime.length() == 0) {
+            return FormValidation.error(Messages
+                    .HubBuildScan_getReportWaitTimeEmpty());
+        }
+
+        try {
+            Integer scanMem = Integer.valueOf(reportMaxiumWaitTime);
+            if (scanMem == 0) {
+                return FormValidation.error(Messages.HubBuildScan_getReportWaitTimeGreaterThanZero());
+            }
+            if (scanMem < 2) {
+                return FormValidation.warning(Messages.HubBuildScan_getReportWaitTimeShort());
+            }
+        } catch (NumberFormatException e) {
+            return FormValidation.error(e, Messages
+                    .HubBuildScan_getReportWaitTimeInvalid());
         }
 
         return FormValidation.ok();

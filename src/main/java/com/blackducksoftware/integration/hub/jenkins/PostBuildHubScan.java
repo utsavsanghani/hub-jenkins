@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import jenkins.model.Jenkins;
 
@@ -62,6 +63,9 @@ public class PostBuildHubScan extends Recorder {
 
     public static final int DEFAULT_MEMORY = 4096;
 
+    // Default wait 5 minutes for the report
+    public static final long DEFAULT_REPORT_WAIT_TIME = 1000 * 60 * 5;
+
     private final ScanJobs[] scans;
 
     protected final boolean sameAsBuildWrapper;
@@ -82,6 +86,8 @@ public class PostBuildHubScan extends Recorder {
 
     protected final boolean shouldGenerateHubReport;
 
+    protected final long reportMaxiumWaitTime;
+
     private transient FilePath workingDirectory;
 
     private transient JDK java;
@@ -93,7 +99,7 @@ public class PostBuildHubScan extends Recorder {
     @DataBoundConstructor
     public PostBuildHubScan(ScanJobs[] scans, boolean sameAsBuildWrapper, String hubProjectName, String hubProjectVersion,
             String hubVersionPhase, String hubVersionDist,
-            String scanMemory, boolean shouldGenerateHubReport) {
+            String scanMemory, boolean shouldGenerateHubReport, long maxiumWaitTimeForBomUpdate) {
         this.scans = scans;
         this.sameAsBuildWrapper = sameAsBuildWrapper;
         if (StringUtils.isNotBlank(hubProjectName)) {
@@ -120,7 +126,25 @@ public class PostBuildHubScan extends Recorder {
         } else {
             this.scanMemory = memory;
         }
-        this.shouldGenerateHubReport = shouldGenerateHubReport;
+
+        if (StringUtils.isBlank(hubProjectName) || StringUtils.isBlank(hubProjectVersion)) {
+            // Dont want to generate the report if they have not provided a Project name or version
+            this.shouldGenerateHubReport = false;
+        } else {
+            this.shouldGenerateHubReport = shouldGenerateHubReport;
+        }
+
+        if (shouldGenerateHubReport) {
+            if (maxiumWaitTimeForBomUpdate == 0) {
+                reportMaxiumWaitTime = DEFAULT_REPORT_WAIT_TIME;
+            } else {
+                // User specifies the time in minutes, this converts that time to milliseconds
+                reportMaxiumWaitTime = maxiumWaitTimeForBomUpdate * 1000 * 60;
+            }
+        } else {
+            // Report will not be generated so we just set the wait time to the default
+            reportMaxiumWaitTime = DEFAULT_REPORT_WAIT_TIME;
+        }
 
     }
 
@@ -156,6 +180,10 @@ public class PostBuildHubScan extends Recorder {
             scanMemory = DEFAULT_MEMORY;
         }
         return String.valueOf(scanMemory);
+    }
+
+    public long getReportMaxiumWaitTime() {
+        return reportMaxiumWaitTime;
     }
 
     public String getHubProjectVersion() {
@@ -300,7 +328,7 @@ public class PostBuildHubScan extends Recorder {
                         projectVersion = handleVariableReplacement(variables, getHubProjectVersion());
 
                     }
-                    printConfiguration(build, logger, projectName, projectVersion, scanTargets);
+                    printConfiguration(build, logger, projectName, projectVersion, scanTargets, getShouldGenerateHubReport(), getReportMaxiumWaitTime());
 
                     FilePath scanExec = getScanCLI(hubScanInstallation, logger, build.getBuiltOn());
 
@@ -325,7 +353,10 @@ public class PostBuildHubScan extends Recorder {
                         }
                         logger.debug("Version Id: '" + versionId + "'");
                     }
+
+                    DateTime beforeScanTime = new DateTime();
                     Boolean mappingDone = runScan(service, build, launcher, logger, scanExec, scanTargets, projectName, projectVersion);
+                    DateTime afterScanTime = new DateTime();
 
                     // Only map the scans to a Project Version if the Project name and Project Version have been
                     // configured
@@ -337,8 +368,21 @@ public class PostBuildHubScan extends Recorder {
                         doScanMapping(service, localHostName, logger, versionId, scanTargets);
                     }
 
-                    if (getShouldGenerateHubReport()) {
-                        generateHubReport(build, logger, service, projectId, versionId);
+                    if (getResult().equals(Result.SUCCESS) && getShouldGenerateHubReport()) {
+
+                        HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
+                        reportGenInfo.setService(service);
+                        reportGenInfo.setHostname(localHostName);
+                        reportGenInfo.setProjectId(projectId);
+                        reportGenInfo.setVersionId(versionId);
+                        reportGenInfo.setScanTargets(scanTargets);
+
+                        reportGenInfo.setMaximumWaitTime(getReportMaxiumWaitTime());
+
+                        reportGenInfo.setBeforeScanTime(beforeScanTime);
+                        reportGenInfo.setAfterScanTime(afterScanTime);
+
+                        generateHubReport(build, logger, reportGenInfo);
                     }
                 }
             } catch (BDJenkinsHubPluginException e) {
@@ -374,41 +418,59 @@ public class PostBuildHubScan extends Recorder {
         return true;
     }
 
-    private void generateHubReport(AbstractBuild<?, ?> build, IntLogger logger, HubIntRestService service, String projectId, String versionId)
-            throws IOException, BDRestException, URISyntaxException, InterruptedException, BDJenkinsHubPluginException {
+    private void generateHubReport(AbstractBuild<?, ?> build, IntLogger logger, HubReportGenerationInfo reportGenInfo)
+            throws IOException, BDRestException, URISyntaxException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException {
         HubReportAction reportAction = new HubReportAction(build);
 
-        String reportUrl = service.generateHubReport(versionId, ReportFormatEnum.JSON);
+        logger.debug("Time before scan : " + reportGenInfo.getBeforeScanTime().toString());
+        logger.debug("Time after scan : " + reportGenInfo.getAfterScanTime().toString());
 
-        DateTime timeFinished = null;
-        ReportMetaInformationItem reportInfo = null;
+        if (reportGenInfo.getService().isBomUpToDate(reportGenInfo.getBeforeScanTime(), reportGenInfo.getAfterScanTime(),
+                reportGenInfo.getHostname(), reportGenInfo.getScanTargets(), reportGenInfo.getMaximumWaitTime())) {
+            logger.debug("The bom has been updated, generating the report.");
+            String reportUrl = reportGenInfo.getService().generateHubReport(reportGenInfo.getVersionId(), ReportFormatEnum.JSON);
 
-        while (timeFinished == null) {
-            // Wait until the report is doen being generated
-            // Retry every 5 seconds
-            Thread.sleep(5000);
-            reportInfo = service.getReportLinks(reportUrl);
+            DateTime timeFinished = null;
+            ReportMetaInformationItem reportInfo = null;
 
-            timeFinished = reportInfo.getTimeFinishedAt();
-        }
+            long startTime = System.currentTimeMillis();
+            long elapsedTime = 0;
 
-        List<ReportMetaLinkItem> links = reportInfo.get_meta().getLinks();
+            while (timeFinished == null) {
+                // Wait until the report is done being generated
+                // Retry every 5 seconds
+                Thread.sleep(5000);
+                reportInfo = reportGenInfo.getService().getReportLinks(reportUrl);
 
-        ReportMetaLinkItem contentLink = null;
-        for (ReportMetaLinkItem link : links) {
-            if (link.getRel().equalsIgnoreCase("content")) {
-                contentLink = link;
-                break;
+                timeFinished = reportInfo.getTimeFinishedAt();
+
+                elapsedTime = System.currentTimeMillis() - startTime;
+                if (elapsedTime >= reportGenInfo.getMaximumWaitTime()) {
+                    String formattedTime = String.format("%d minutes", TimeUnit.MILLISECONDS.toMinutes(reportGenInfo.getMaximumWaitTime()));
+                    throw new BDJenkinsHubPluginException("The Report has not finished generating within the specified wait time : " + formattedTime);
+                }
             }
-        }
-        if (contentLink == null) {
-            throw new BDJenkinsHubPluginException("Could not find content link for the report at : " + reportUrl);
-        }
 
-        VersionReport report = service.getReportContent(contentLink.getHref());
-        reportAction.setReport(report);
+            List<ReportMetaLinkItem> links = reportInfo.get_meta().getLinks();
 
-        build.addAction(reportAction);
+            ReportMetaLinkItem contentLink = null;
+            for (ReportMetaLinkItem link : links) {
+                if (link.getRel().equalsIgnoreCase("content")) {
+                    contentLink = link;
+                    break;
+                }
+            }
+            if (contentLink == null) {
+                throw new BDJenkinsHubPluginException("Could not find content link for the report at : " + reportUrl);
+            }
+
+            VersionReport report = reportGenInfo.getService().getReportContent(contentLink.getHref());
+            reportAction.setReport(report);
+            logger.debug("Finished retrieving the report.");
+            build.addAction(reportAction);
+        } else {
+            // if the bom is not up to date then an exception will be thrown
+        }
     }
 
     private String ensureProjectExists(HubIntRestService service, IntLogger logger, String projectName, String projectVersion) throws IOException,
@@ -515,7 +577,8 @@ public class PostBuildHubScan extends Recorder {
         }
     }
 
-    public void printConfiguration(AbstractBuild<?, ?> build, IntLogger logger, String projectName, String projectVersion, List<String> scanTargets)
+    public void printConfiguration(AbstractBuild<?, ?> build, IntLogger logger, String projectName, String projectVersion,
+            List<String> scanTargets, boolean shouldGenerateReport, long reportMaxiumWaitTime)
             throws IOException,
             InterruptedException {
         logger.info("Initializing - Hub Jenkins Plugin - "
@@ -545,6 +608,14 @@ public class PostBuildHubScan extends Recorder {
         for (String target : scanTargets) {
             logger.info(
                     "-> " + target);
+        }
+
+        logger.info(
+                "-> Generate Hub report : " + shouldGenerateReport);
+        if (shouldGenerateReport) {
+            String formattedTime = String.format("%d minutes", TimeUnit.MILLISECONDS.toMinutes(reportMaxiumWaitTime));
+            logger.info(
+                    "-> Maximum wait time for the report : " + formattedTime);
         }
     }
 
