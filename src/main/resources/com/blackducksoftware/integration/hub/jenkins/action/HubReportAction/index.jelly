@@ -28,41 +28,120 @@
 				<table>
 					<tbody>
 						<tr>
-							<td class="summaryLabel" style="font-weight: bold;">${%Project_Name}</td>
+							<td class="summaryLabel" style="font-weight: bold;">${%Project_Name}:</td>
 							<td class="summaryValue">${it.getReleaseSummary().getProjectName()}</td>
 							
-							<td class="summaryLabel" style="font-weight: bold;">${%Version_Phase}</td>
+							<td class="summaryLabel" style="font-weight: bold;">${%Version_Phase}:</td>
 							<td class="summaryValue">${it.getReleaseSummary().getPhase()}</td>
 						</tr>
 						<tr>
-							<td class="summaryLabel" style="font-weight: bold;">${%Version_Name}</td>
+							<td class="summaryLabel" style="font-weight: bold;">${%Version_Name}:</td>
 							<td class="summaryValue">${it.getReleaseSummary().getVersion()}</td>
 							
-							<td class="summaryLabel" style="font-weight: bold;">${%Version_Distribution}</td>
+							<td class="summaryLabel" style="font-weight: bold;">${%Version_Distribution}:</td>
 							<td class="summaryValue">${it.getReleaseSummary().getDistribution()}</td>
 						</tr>
 					</tbody>
 				</table>
 				
 				
+				<div class="vulnSummaryContainer horizontal rounded">
+					<div class="h2">${%Vulnerability_Risk_Title}</div>
+
+					<div class="progress-bar horizontal">
+						<div id="highVulnLabel" class="clickable vulnSummaryLabel"
+							onclick="filterTableByRisk(this)">
+							${%Vulnerability_High}
+						</div>
+						<div class="vulnSummaryCount">
+							${it.getVulnerabilityRiskHighCount()}
+						</div>
+						<div class="progress-track">
+							<div id="highVulnerabilityRiskBar" class="progress-fill-high">
+								<span>${it.getPercentage(it.getVulnerabilityRiskHighCount())}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="progress-bar horizontal">
+						<div id="mediumVulnLabel" class="clickable vulnSummaryLabel"
+							onclick="filterTableByRisk(this)">
+							${%Vulnerability_Medium}
+						</div>
+						<div class="vulnSummaryCount">
+							${it.getVulnerabilityRiskMediumCount()}
+						</div>
+						<div class="progress-track">
+							<div id="mediumVulnerabilityRiskBar" class="progress-fill-medium">
+								<span>${it.getPercentage(it.getVulnerabilityRiskMediumCount())}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="progress-bar horizontal">
+						<div id="lowVulnLabel" class="clickable vulnSummaryLabel"
+							onclick="filterTableByRisk(this)">
+							${%Vulnerability_Low}
+						</div>
+						<div class="vulnSummaryCount">
+							${it.getVulnerabilityRiskLowCount()}
+						</div>
+						<div class="progress-track">
+							<div id="lowVulnerabilityRiskBar" class="progress-fill-low">
+								<span>${it.getPercentage(it.getVulnerabilityRiskLowCount())}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="progress-bar horizontal">
+						<div id="noneVulnLabel" class="clickable vulnSummaryLabel"
+							onclick="filterTableByRisk(this)">
+							${%Vulnerability_None}
+						</div>
+						<div class="vulnSummaryCount">
+							${it.getVulnerabilityRiskNoneCount()}
+						</div>
+						<div class="progress-track">
+							<div id="noVulnerabilityRiskBar" class="progress-fill-none">
+								<span id="bypassme">${it.getPercentage(it.getVulnerabilityRiskNoneCount())}%</span>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				
+				<table class="table-summary horizontal" >
+					<tbody>
+						<tr>
+							<td class="summaryLabel" style="font-weight: bold;">${%Bom_Entries} : </td>
+							<td class="summaryValue" >${it.getBomEntries().size()}</td>
+						</tr>
+					</tbody>
+				</table>
 				<table id="hubBomReport" class="table sortable">
 					<thead>
 						<tr>
 							<th class="componentColumn columnLabel">${%Bom_Entry_Name}</th>
 							<th class="columnLabel">${%Bom_Entry_Version}</th>
 							<th class="columnLabel">${%Bom_Entry_License}</th>
+							<th class="vulnerabilityColumnLabel">${%Bom_Entry_Vulnerability_High_Short}</th>
+							<th class="vulnerabilityColumnLabel">${%Bom_Entry_Vulnerability_Medium_Short}</th>
+							<th class="vulnerabilityColumnLabel">${%Bom_Entry_Vulnerability_Low_Short}</th>
 						</tr>
 					</thead>
 					<tbody>
-						<j:forEach var="req" items="${it.getBomEntries()}">
+						<j:forEach var="entry" items="${it.getBomEntries()}">
 							<tr>
-								<td class="column" title="${req.getProducerProject().getId()}">
-									${req.getProducerProject().getName()}
+								<td class="column" title="${entry.getProducerProject().getId()}">
+									${entry.getProducerProject().getName()}
 								</td>
-								<td class="column" title="${req.getProducerReleasesId()}">
-									${req.getProducerReleasesDisplay()}
+								<td class="column" title="${entry.getProducerReleasesId()}">
+									${entry.getProducerReleasesDisplay()}
 								</td>
-								<td class="licenseColumn" >${req.getLicensesDisplay()}</td>
+								<td class="licenseColumn" >${entry.getLicensesDisplay()}</td>
+								<td class="vulnerabilityColumn vuln-count">${entry.getVulnerabilityRisk().getHIGH()}</td>
+								<td class="vulnerabilityColumn vuln-count">${entry.getVulnerabilityRisk().getMEDIUM()}</td>
+								<td class="vulnerabilityColumn vuln-count">${entry.getVulnerabilityRisk().getLOW()}</td>
 							</tr>
 						</j:forEach>
 					</tbody>

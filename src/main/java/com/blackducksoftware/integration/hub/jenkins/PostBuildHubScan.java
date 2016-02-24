@@ -435,7 +435,7 @@ public class PostBuildHubScan extends Recorder {
 
         // logger.debug("Time before scan : " + reportGenInfo.getBeforeScanTime().toString());
         // logger.debug("Time after scan : " + reportGenInfo.getAfterScanTime().toString());
-
+        logger.debug("Waiting for the bom to be updated with the scan results.");
         if (reportGenInfo.getService().isBomUpToDate(reportGenInfo.getBeforeScanTime(), reportGenInfo.getAfterScanTime(),
                 reportGenInfo.getHostname(), reportGenInfo.getScanTargets(), reportGenInfo.getMaximumWaitTime())) {
             logger.debug("The bom has been updated, generating the report.");

@@ -13,7 +13,7 @@ function adjustTableOnStartup() {
 	var odd = true;
 	for (var i = 0; i < governanceReportTable.rows.length; i++) {
 		adjustTableRow(governanceReportTable.rows[i], odd);
-	//	adjustVulnerabilities(governanceReportTable.rows[i]);
+		adjustVulnerabilities(governanceReportTable.rows[i]);
 		odd = !odd;
 	}
 }
@@ -43,36 +43,22 @@ function adjustTableRow(row, odd) {
 }
 
 function adjustVulnerabilities(row) {
-	if (row.cells[7].innerHTML.length == 0 || row.cells[7].firstChild.innerHTML == "Unknown") {
-		row.cells[6].innerHTML = '-';
-		if (row.cells[6].className.indexOf("vuln-unknown-count") == -1) {
-			row.cells[6].className += " vuln-unknown-count";
-		}
-		row.cells[7].innerHTML = '-';
-		if (row.cells[7].className.indexOf("vuln-unknown-count") == -1) {
-			row.cells[7].className += " vuln-unknown-count";
-		}
-		row.cells[8].innerHTML = '-';
-		if (row.cells[8].className.indexOf("vuln-unknown-count") == -1) {
-			row.cells[8].className += " vuln-unknown-count";
-		}
-	} else {
-		if (row.cells[6].innerHTML > 0) {
-			if (row.cells[6].className.indexOf("vuln-high-count") == -1) {
-				row.cells[6].className += " vuln-high-count";
+
+		if (row.cells[3].innerHTML > 0) {
+			if (row.cells[3].className.indexOf("vuln-high-count") == -1) {
+				row.cells[3].className += " vuln-high-count";
 			}
 		}
-		if (row.cells[7].innerHTML > 0) {
-			if (row.cells[7].className.indexOf("vuln-med-count") == -1) {
-				row.cells[7].className += " vuln-med-count";
+		if (row.cells[4].innerHTML > 0) {
+			if (row.cells[4].className.indexOf("vuln-med-count") == -1) {
+				row.cells[4].className += " vuln-med-count";
 			}
 		}
-		if (row.cells[8].innerHTML > 0) {
-			if (row.cells[8].className.indexOf("vuln-low-count") == -1) {
-				row.cells[8].className += " vuln-low-count";
+		if (row.cells[5].innerHTML > 0) {
+			if (row.cells[5].className.indexOf("vuln-low-count") == -1) {
+				row.cells[5].className += " vuln-low-count";
 			}
 		}
-	}
 
 }
 
@@ -90,13 +76,13 @@ function filterTableByRisk(risk) {
 		return;
 	}
 	risk.className += " filterSelected";
-	filterTable(document.getElementById('governanceReport').tBodies[0], risk, false);
+	filterTable(document.getElementById('hubBomReport').tBodies[0], risk, false);
 }
 
 function removeFilter(id, currRisk) {
 	var vulnLabel = document.getElementById(id);
 	if (vulnLabel.className.indexOf("filterSelected") != -1) {
-		filterTable(document.getElementById('governanceReport').tBodies[0], null, true);
+		filterTable(document.getElementById('hubBomReport').tBodies[0], null, true);
 		document.getElementById(id).className = document.getElementById(id).className
 		.replace('filterSelected', '');
 		if(id == currRisk.id){
@@ -209,7 +195,7 @@ function exportReportAsPDF(title, subject, pdfName) {
 }
 
 function exportReportAsCSV(csvName) {
-	var governanceReportTable = $("#governanceReport")[0];
+	var governanceReportTable = $("#hubBomReport")[0];
 	if (governanceReportTable.tHead == null){
 		governanceReportTable.tHead = governanceReportTable.getElementsByTagName('thead')[0];
 	}

@@ -42,6 +42,59 @@ public class HubReportAction implements Action {
         return report.getAggregateBomViewEntries();
     }
 
+    public int getVulnerabilityRiskHighCount() {
+        int count = 0;
+        for (AggregateBomViewEntry bomEntry : getBomEntries()) {
+            if (bomEntry.getProducerProject().getName().equalsIgnoreCase("Apache Commons Collections")) {
+                System.out.println("Expected vulnerable entry : " + bomEntry.getVulnerabilityRisk().getHIGH());
+
+            }
+            if (bomEntry.getVulnerabilityRisk().getHIGH() > 0) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    public int getVulnerabilityRiskMediumCount() {
+        int count = 0;
+        for (AggregateBomViewEntry bomEntry : getBomEntries()) {
+            if (bomEntry.getVulnerabilityRisk().getMEDIUM() > 0) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    public int getVulnerabilityRiskLowCount() {
+        int count = 0;
+        for (AggregateBomViewEntry bomEntry : getBomEntries()) {
+            if (bomEntry.getVulnerabilityRisk().getLOW() > 0) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    public int getVulnerabilityRiskNoneCount() {
+        int vulnerableEntries = 0;
+        vulnerableEntries += getVulnerabilityRiskHighCount();
+        vulnerableEntries += getVulnerabilityRiskMediumCount();
+        vulnerableEntries += getVulnerabilityRiskLowCount();
+        int totalCount = getBomEntries().size();
+
+        return totalCount - vulnerableEntries;
+    }
+
+    public double getPercentage(double count) {
+        double totalCount = getBomEntries().size();
+        double percentage = 0;
+        if (totalCount > 0 && count > 0) {
+            percentage = (count / totalCount) * 100;
+        }
+        return percentage;
+    }
+
     public void setReport(VersionReport report) {
         this.report = report;
     }

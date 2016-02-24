@@ -4,8 +4,8 @@ if(pageBody){
 	pageBody.className += " pageBody";
 }
 
-//adjustWidth(document.getElementById("highVulnerabilitybar"));
-//adjustWidth(document.getElementById("mediumVulnerabilitybar"));
-//adjustWidth(document.getElementById("lowVulnerabilitybar"));
-//adjustWidth(document.getElementById("noVulnerabilitybar"));
+adjustWidth(document.getElementById("highVulnerabilityRiskBar"));
+adjustWidth(document.getElementById("mediumVulnerabilityRiskBar"));
+adjustWidth(document.getElementById("lowVulnerabilityRiskBar"));
+adjustWidth(document.getElementById("noVulnerabilityRiskBar"));
 adjustTableOnStartup();
