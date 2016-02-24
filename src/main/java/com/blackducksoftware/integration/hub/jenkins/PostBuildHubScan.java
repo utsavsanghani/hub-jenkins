@@ -64,7 +64,7 @@ public class PostBuildHubScan extends Recorder {
     public static final int DEFAULT_MEMORY = 4096;
 
     // Default wait 5 minutes for the report
-    public static final long DEFAULT_REPORT_WAIT_TIME = 1000 * 60 * 5;
+    public static final long DEFAULT_REPORT_WAIT_TIME = 5;
 
     private final ScanJobs[] scans;
 
@@ -82,7 +82,7 @@ public class PostBuildHubScan extends Recorder {
     // need to keep this around for now for migration purposes
     private String hubProjectRelease;
 
-    private Integer scanMemory;
+    private final Integer scanMemory;
 
     protected final boolean shouldGenerateHubReport;
 
@@ -99,7 +99,7 @@ public class PostBuildHubScan extends Recorder {
     @DataBoundConstructor
     public PostBuildHubScan(ScanJobs[] scans, boolean sameAsBuildWrapper, String hubProjectName, String hubProjectVersion,
             String hubVersionPhase, String hubVersionDist,
-            String scanMemory, boolean shouldGenerateHubReport, long maxiumWaitTimeForBomUpdate) {
+            String scanMemory, boolean shouldGenerateHubReport, String reportMaxiumWaitTime) {
         this.scans = scans;
         this.sameAsBuildWrapper = sameAsBuildWrapper;
         if (StringUtils.isNotBlank(hubProjectName)) {
@@ -114,18 +114,17 @@ public class PostBuildHubScan extends Recorder {
         }
         this.hubVersionPhase = hubVersionPhase;
         this.hubVersionDist = hubVersionDist;
-        Integer memory = 0;
+        Integer memory;
         try {
             memory = Integer.valueOf(scanMemory);
+            if (memory == 0) {
+                memory = DEFAULT_MEMORY;
+            }
         } catch (NumberFormatException e) {
-
+            memory = DEFAULT_MEMORY;
         }
 
-        if (memory == 0) {
-            this.scanMemory = DEFAULT_MEMORY;
-        } else {
-            this.scanMemory = memory;
-        }
+        this.scanMemory = memory;
 
         if (StringUtils.isBlank(hubProjectName) || StringUtils.isBlank(hubProjectVersion)) {
             // Dont want to generate the report if they have not provided a Project name or version
@@ -134,17 +133,20 @@ public class PostBuildHubScan extends Recorder {
             this.shouldGenerateHubReport = shouldGenerateHubReport;
         }
 
-        if (shouldGenerateHubReport) {
-            if (maxiumWaitTimeForBomUpdate == 0) {
-                reportMaxiumWaitTime = DEFAULT_REPORT_WAIT_TIME;
-            } else {
-                // User specifies the time in minutes, this converts that time to milliseconds
-                reportMaxiumWaitTime = maxiumWaitTimeForBomUpdate * 1000 * 60;
+        Long longValueWaitTime;
+
+        try {
+            // maxiumWaitTimeForBomUpdate needs to be a String because the UI stores a string on save
+            longValueWaitTime = Long.valueOf(reportMaxiumWaitTime);
+            if (longValueWaitTime == 0) {
+                longValueWaitTime = DEFAULT_REPORT_WAIT_TIME;
             }
-        } else {
-            // Report will not be generated so we just set the wait time to the default
-            reportMaxiumWaitTime = DEFAULT_REPORT_WAIT_TIME;
+        } catch (NumberFormatException e) {
+            // Ignore the exception here, use the default value instead;
+            longValueWaitTime = DEFAULT_REPORT_WAIT_TIME;
         }
+
+        this.reportMaxiumWaitTime = longValueWaitTime;
 
     }
 
@@ -171,19 +173,27 @@ public class PostBuildHubScan extends Recorder {
         this.result = result;
     }
 
-    public String geDefaultMemory() {
+    public String getDefaultMemory() {
         return String.valueOf(DEFAULT_MEMORY);
     }
 
     public String getScanMemory() {
-        if (scanMemory == 0) {
-            scanMemory = DEFAULT_MEMORY;
-        }
         return String.valueOf(scanMemory);
     }
 
-    public long getReportMaxiumWaitTime() {
-        return reportMaxiumWaitTime;
+    public String getReportMaxiumWaitTime() {
+        // need to return a String for the Ui to display correctly
+
+        return String.valueOf(reportMaxiumWaitTime);
+    }
+
+    public String getDefaultReportWaitTime() {
+        return String.valueOf(DEFAULT_REPORT_WAIT_TIME);
+    }
+
+    public long getConvertedReportMaxiumWaitTime() {
+        // Converts the minutes that the User set to milliseconds
+        return reportMaxiumWaitTime * 1000 * 60;
     }
 
     public String getHubProjectVersion() {
@@ -328,7 +338,8 @@ public class PostBuildHubScan extends Recorder {
                         projectVersion = handleVariableReplacement(variables, getHubProjectVersion());
 
                     }
-                    printConfiguration(build, logger, projectName, projectVersion, scanTargets, getShouldGenerateHubReport(), getReportMaxiumWaitTime());
+                    printConfiguration(build, logger, projectName, projectVersion, scanTargets, getShouldGenerateHubReport(),
+                            getConvertedReportMaxiumWaitTime());
 
                     FilePath scanExec = getScanCLI(hubScanInstallation, logger, build.getBuiltOn());
 
@@ -377,7 +388,7 @@ public class PostBuildHubScan extends Recorder {
                         reportGenInfo.setVersionId(versionId);
                         reportGenInfo.setScanTargets(scanTargets);
 
-                        reportGenInfo.setMaximumWaitTime(getReportMaxiumWaitTime());
+                        reportGenInfo.setMaximumWaitTime(getConvertedReportMaxiumWaitTime());
 
                         reportGenInfo.setBeforeScanTime(beforeScanTime);
                         reportGenInfo.setAfterScanTime(afterScanTime);
@@ -422,8 +433,8 @@ public class PostBuildHubScan extends Recorder {
             throws IOException, BDRestException, URISyntaxException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException {
         HubReportAction reportAction = new HubReportAction(build);
 
-        logger.debug("Time before scan : " + reportGenInfo.getBeforeScanTime().toString());
-        logger.debug("Time after scan : " + reportGenInfo.getAfterScanTime().toString());
+        // logger.debug("Time before scan : " + reportGenInfo.getBeforeScanTime().toString());
+        // logger.debug("Time after scan : " + reportGenInfo.getAfterScanTime().toString());
 
         if (reportGenInfo.getService().isBomUpToDate(reportGenInfo.getBeforeScanTime(), reportGenInfo.getAfterScanTime(),
                 reportGenInfo.getHostname(), reportGenInfo.getScanTargets(), reportGenInfo.getMaximumWaitTime())) {

@@ -7,7 +7,71 @@
        <st:include it="${it.build}" page="sidepanel.jelly"/>
                     
         <l:main-panel>
-
+	        <div class="governanceReportBackgroundColor">
+	        	<link href="${rootURL}/plugin/hub-jenkins/css/HubBomReport.css"  rel="stylesheet" type="text/css"  />
+				<script type="text/javascript"
+						src="${rootURL}/plugin/hub-jenkins/js/Sortable.js" />
+				<script type="text/javascript"
+						src="${rootURL}/plugin/hub-jenkins/js/HubBomReportFunctions.js" />
+				
+				<div class="governanceReportBackgroundColor" style="float: right;">
+					<div>
+						<a href="https://www.blackducksoftware.com/" target="_blank">
+							<img style="width: 320px;margin: 2px;padding-bottom: 10px;"
+								src="${rootURL}/plugin/codecenter-jenkins/images/Black_Duck_Logo.png" />
+						</a>
+					</div>
+				</div>
+				
+				<h1>${%Title}</h1>
+				
+				<table>
+					<tbody>
+						<tr>
+							<td class="summaryLabel" style="font-weight: bold;">${%Project_Name}</td>
+							<td class="summaryValue">${it.getReleaseSummary().getProjectName()}</td>
+							
+							<td class="summaryLabel" style="font-weight: bold;">${%Version_Phase}</td>
+							<td class="summaryValue">${it.getReleaseSummary().getPhase()}</td>
+						</tr>
+						<tr>
+							<td class="summaryLabel" style="font-weight: bold;">${%Version_Name}</td>
+							<td class="summaryValue">${it.getReleaseSummary().getVersion()}</td>
+							
+							<td class="summaryLabel" style="font-weight: bold;">${%Version_Distribution}</td>
+							<td class="summaryValue">${it.getReleaseSummary().getDistribution()}</td>
+						</tr>
+					</tbody>
+				</table>
+				
+				
+				<table id="hubBomReport" class="table sortable">
+					<thead>
+						<tr>
+							<th class="componentColumn columnLabel">${%Bom_Entry_Name}</th>
+							<th class="columnLabel">${%Bom_Entry_Version}</th>
+							<th class="columnLabel">${%Bom_Entry_License}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<j:forEach var="req" items="${it.getBomEntries()}">
+							<tr>
+								<td class="column" title="${req.getProducerProject().getId()}">
+									${req.getProducerProject().getName()}
+								</td>
+								<td class="column" title="${req.getProducerReleasesId()}">
+									${req.getProducerReleasesDisplay()}
+								</td>
+								<td class="licenseColumn" >${req.getLicensesDisplay()}</td>
+							</tr>
+						</j:forEach>
+					</tbody>
+				</table>
+				<!-- load this script after the tables otherwise the tables wont exist 
+						yet when this script runs -->
+				<script type="text/javascript"
+					src="${rootURL}/plugin/hub-jenkins/js/HubReportStartup.js" />
+			</div>
         </l:main-panel>
     </l:layout>
 </j:jelly>
