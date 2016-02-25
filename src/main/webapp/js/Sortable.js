@@ -14,7 +14,7 @@
   Licenced as X11: http://www.kryogenix.org/code/browser/licence.html
   This basically means: do what you want with it.
  */
-
+var tableId = "hubBomReport";
 var stIsIE = /* @cc_on!@ */false;
 
 sorttable = {
@@ -121,7 +121,7 @@ sorttable = {
 										: '&nbsp;&#x25B4;';
 								this.appendChild(sortrevind);
 								
-								var governanceReportTable = document.getElementById('governanceReport').tBodies[0];
+								var governanceReportTable = document.getElementById(tableId).tBodies[0];
 								var odd = true;
 								for (var i = 0; i < governanceReportTable.rows.length; i++) {
 									adjustTableRow(governanceReportTable.rows[i], odd);
@@ -147,7 +147,7 @@ sorttable = {
 										: '&nbsp;&#x25BE;';
 								this.appendChild(sortfwdind);
 
-								var governanceReportTable = document.getElementById('governanceReport').tBodies[0];
+								var governanceReportTable = document.getElementById(tableId).tBodies[0];
 								var odd = true;
 								for (var i = 0; i < governanceReportTable.rows.length; i++) {
 									adjustTableRow(governanceReportTable.rows[i], odd);
@@ -217,7 +217,7 @@ sorttable = {
 							for (var j = 0; j < row_array.length; j++) {
 								tb.appendChild(row_array[j][1]);
 							}
-							var governanceReportTable = document.getElementById('governanceReport').tBodies[0];
+							var governanceReportTable = document.getElementById(tableId).tBodies[0];
 							var odd = true;
 							for (var i = 0; i < governanceReportTable.rows.length; i++) {
 								adjustTableRow(governanceReportTable.rows[i], odd);

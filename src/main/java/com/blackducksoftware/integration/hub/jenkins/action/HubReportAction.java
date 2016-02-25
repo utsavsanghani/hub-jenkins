@@ -45,10 +45,6 @@ public class HubReportAction implements Action {
     public int getVulnerabilityRiskHighCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
-            if (bomEntry.getProducerProject().getName().equalsIgnoreCase("Apache Commons Collections")) {
-                System.out.println("Expected vulnerable entry : " + bomEntry.getVulnerabilityRisk().getHIGH());
-
-            }
             if (bomEntry.getVulnerabilityRisk().getHIGH() > 0) {
                 count += 1;
             }
@@ -81,6 +77,86 @@ public class HubReportAction implements Action {
         vulnerableEntries += getVulnerabilityRiskHighCount();
         vulnerableEntries += getVulnerabilityRiskMediumCount();
         vulnerableEntries += getVulnerabilityRiskLowCount();
+        int totalCount = getBomEntries().size();
+
+        return totalCount - vulnerableEntries;
+    }
+
+    public int getLicenseRiskHighCount() {
+        int count = 0;
+        for (AggregateBomViewEntry bomEntry : getBomEntries()) {
+            if (bomEntry.getLicenseRisk().getHIGH() > 0) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    public int getLicenseRiskMediumCount() {
+        int count = 0;
+        for (AggregateBomViewEntry bomEntry : getBomEntries()) {
+            if (bomEntry.getLicenseRisk().getMEDIUM() > 0) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    public int getLicenseRiskLowCount() {
+        int count = 0;
+        for (AggregateBomViewEntry bomEntry : getBomEntries()) {
+            if (bomEntry.getLicenseRisk().getLOW() > 0) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    public int getLicenseRiskNoneCount() {
+        int vulnerableEntries = 0;
+        vulnerableEntries += getLicenseRiskHighCount();
+        vulnerableEntries += getLicenseRiskMediumCount();
+        vulnerableEntries += getLicenseRiskLowCount();
+        int totalCount = getBomEntries().size();
+
+        return totalCount - vulnerableEntries;
+    }
+
+    public int getOperationalRiskHighCount() {
+        int count = 0;
+        for (AggregateBomViewEntry bomEntry : getBomEntries()) {
+            if (bomEntry.getOperationalRisk().getHIGH() > 0) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    public int getOperationalRiskMediumCount() {
+        int count = 0;
+        for (AggregateBomViewEntry bomEntry : getBomEntries()) {
+            if (bomEntry.getOperationalRisk().getMEDIUM() > 0) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    public int getOperationalRiskLowCount() {
+        int count = 0;
+        for (AggregateBomViewEntry bomEntry : getBomEntries()) {
+            if (bomEntry.getOperationalRisk().getLOW() > 0) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    public int getOperationalRiskNoneCount() {
+        int vulnerableEntries = 0;
+        vulnerableEntries += getOperationalRiskHighCount();
+        vulnerableEntries += getOperationalRiskMediumCount();
+        vulnerableEntries += getOperationalRiskLowCount();
         int totalCount = getBomEntries().size();
 
         return totalCount - vulnerableEntries;

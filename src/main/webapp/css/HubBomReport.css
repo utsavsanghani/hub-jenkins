@@ -2,10 +2,10 @@
 	background-color: rgb(255,255,255);
 }
 
-.governanceReportText, .linkText, .h1, .h2, .vulnSummaryLabel, .vulnSummaryCount, .vuln-count, .table-summary, .summaryLabel, .summaryValue, .columnLabel, .vulnerabilityColumnLabel, .licenseColumnLabel, .licenseColumn, .vulnerabilityColumn, .componentColumn, .column {
+.governanceReportText, .linkText, .h1, .h2, .riskSummaryLabel, .riskSummaryCount, .risk-count, .table-summary, .summaryLabel, .summaryValue, .columnLabel, .riskColumnLabel, .licenseColumnLabel, .licenseColumn, .riskColumn, .componentColumn, .column {
 	text-align: left;
 	font-family: 'Open Sans', sans-serif;
-	font-size: 16px;
+	font-size: 14px;
 	color: #333;
 }
 
@@ -29,13 +29,13 @@
 .vulnSummaryContainer {
 	width: 450px;
 	height: 160px;
-	margin-left: 10%;
 	background: #fff;
 	padding: 5px;
 	overflow: hidden;
+	display: table-cell;
 }
 
-.vulnSummaryLabel, .vulnSummaryCount {
+.riskSummaryLabel, .riskSummaryCount {
 	vertical-align: top;
 	min-width: 70px;
 	width: 70px;
@@ -55,11 +55,11 @@
 	border: 1px solid #FFB900;
 }
 
-.rowFiltered {
+.rowFilteredSecurity, .rowFilteredLicense, .rowFilteredOperational {
 	display: none;
 }
 
-.vulnSummaryCount {
+.riskSummaryCount {
 	width: 35px;
 	min-width: 35px;
 	text-align: center;
@@ -81,15 +81,15 @@
 	width: 0%;
 }
 
-.progress-fill-high, .vuln-high-count  {
+.progress-fill-high, .security-risk-high-count  {
 	background-color: #b52b24;
 }
 
-.progress-fill-medium, .vuln-med-count {
+.progress-fill-medium, .security-risk-med-count {
 	background-color: #eca4a0;
 }
 
-.progress-fill-low, .vuln-low-count {
+.progress-fill-low, .security-risk-low-count {
 	background-color: #999;
 }
 
@@ -97,7 +97,7 @@
 	 background-color: #ddd;
 }
 
-.vuln-unknown-count {
+.risk-unknown-count {
 	/* background: linear-gradient(45deg, #eca4a0 0%, #eca4a0 25%, #b52b24 25%, #b52b24 50%, #eca4a0 50%, #eca4a0 75%, #b52b24 75%, #b52b24); */
 	background-color: rgb(239, 174, 74);
 }
@@ -107,27 +107,27 @@
 	box-shadow: inset 0 0 5px rgba(0, 0, 0, .2);
 }
 
-.vuln-count {
+.risk-count {
 	text-align: center;
 	white-space: nowrap;
 }
 
-.vuln-unknown-count {
+.risk-unknown-count {
 	font-weight: bold;
 	color: white;
 }
 
-.vuln-low-count {
+.security-risk-low-count {
 	font-weight: bold;
 	color: white;
 }
 
-.vuln-med-count {
+.security-risk-med-count {
 	font-weight: bold;
 	color: white;
 }
 
-.vuln-high-count {
+.security-risk-high-count {
 	font-weight: bold;
 	color: white;
 }
@@ -145,15 +145,15 @@
 	margin-top: 6px;
 }
 
-.column, .columnLabel, .licenseColumnLabel, .vulnerabilityColumnLabel, .componentColumn, .vulnerabilityColumn, .licenseColumn {
-	padding-left: 2px;
-	padding-right: 2px;
-	padding-top: 5px;
-	padding-bottom: 5px;
+.column, .columnLabel, .licenseColumnLabel, .riskColumnLabel, .componentColumn, .riskColumn, .licenseColumn {
+	padding-left: 10px;
+	padding-right: 10px;
+	padding-top: 10px;
+	padding-bottom: 10px;
 }
 
 
-.columnLabel, .licenseColumnLabel, .vulnerabilityColumnLabel {
+.columnLabel, .licenseColumnLabel, .riskColumnLabel {
 	margin-left: 20px;
 	margin-right: 10px;
 	color: #444 !important;
@@ -173,25 +173,29 @@
 	padding-bottom: 1px;
 }
 
-.vulnerabilityColumnLabel {
+.riskColumnLabel {
 	text-align: center;
+	white-space: nowrap;
 }
 
-.column, .componentColumn, .vulnerabilityColumn, .licenseColumn  {
+.column, .componentColumn, .riskColumn, .licenseColumn  {
 	border: none !important;
 	border-collapse: collapse !important;
 	border-spacing: 0px !important;
 	min-width: 50px;
 	white-space: normal;
 	word-wrap: break-word;
+	max-width: 300px;
 }
 
 .componentColumn {
 	padding-left: 10px;
 }
 
-.vulnerabilityColumn {
+.riskColumn {
 	min-width: 25px;
+	text-align: center;
+	vertical-align: middle;
 }
 
 .licenseColumn {
@@ -200,7 +204,6 @@
 	text-overflow: ellipsis;
 	overflow: hidden;
   	white-space: nowrap;
-	max-width: 400px;
 }
 
 .oddRow {

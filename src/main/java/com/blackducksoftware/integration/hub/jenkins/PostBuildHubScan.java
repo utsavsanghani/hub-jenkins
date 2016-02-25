@@ -478,6 +478,9 @@ public class PostBuildHubScan extends Recorder {
             VersionReport report = reportGenInfo.getService().getReportContent(contentLink.getHref());
             reportAction.setReport(report);
             logger.debug("Finished retrieving the report.");
+
+            reportGenInfo.getService().deleteHubReport(reportGenInfo.getVersionId(), reportGenInfo.getService().getReportIdFromReportUrl(reportUrl));
+
             build.addAction(reportAction);
         } else {
             // if the bom is not up to date then an exception will be thrown
