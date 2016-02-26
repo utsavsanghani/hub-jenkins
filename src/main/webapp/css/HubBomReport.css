@@ -2,7 +2,7 @@
 	background-color: rgb(255,255,255);
 }
 
-.governanceReportText, .linkText, .h1, .h2, .riskSummaryLabel, .riskSummaryCount, .risk-count, .table-summary, .summaryLabel, .summaryValue, .columnLabel, .riskColumnLabel, .licenseColumnLabel, .licenseColumn, .riskColumn, .componentColumn, .column {
+.governanceReportText, .linkText, .h1, .h2, .riskSummaryLabel, .riskSummaryCount, .risk-count, .table-summary, .summaryLabel, .summaryValue, .columnLabel, .riskColumnLabel, .licenseColumnLabel, .licenseColumn, .riskColumn, .componentColumn, .clickableColumn {
 	text-align: left;
 	font-family: 'Open Sans', sans-serif;
 	font-size: 14px;
@@ -43,7 +43,7 @@
 	background-color: #fff;
 }
 
-.clickable {
+.clickable, .clickableColumn:hover {
 	cursor: pointer;
 	text-decoration: underline;
 }
@@ -145,7 +145,7 @@
 	margin-top: 6px;
 }
 
-.column, .columnLabel, .licenseColumnLabel, .riskColumnLabel, .componentColumn, .riskColumn, .licenseColumn {
+.clickableColumn, .columnLabel, .licenseColumnLabel, .riskColumnLabel, .componentColumn, .riskColumn, .licenseColumn {
 	padding-left: 10px;
 	padding-right: 10px;
 	padding-top: 10px;
@@ -178,7 +178,7 @@
 	white-space: nowrap;
 }
 
-.column, .componentColumn, .riskColumn, .licenseColumn  {
+.clickableColumn, .componentColumn, .riskColumn, .licenseColumn  {
 	border: none !important;
 	border-collapse: collapse !important;
 	border-spacing: 0px !important;

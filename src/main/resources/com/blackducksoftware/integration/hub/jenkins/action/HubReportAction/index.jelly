@@ -273,10 +273,10 @@
 					<tbody>
 						<j:forEach var="entry" items="${it.getBomEntries()}">
 							<tr>
-								<td class="column" title="${it.getReport().getComponentUrl(entry)}">
+								<td class="clickableColumn" onclick="window.open('${it.getReport().getComponentUrl(entry)}', '_blank');">
 									${entry.getProducerProject().getName()}
 								</td>
-								<td class="column" title="${it.getReport().getVersionUrl(entry)}">
+								<td class="clickableColumn" onclick="window.open('${it.getReport().getVersionUrl(entry)}', '_blank');">
 									${entry.getProducerReleasesDisplay()}
 								</td>
 								<td class="licenseColumn" title="${entry.getLicensesDisplay()}">${entry.getLicensesDisplay()}</td>
