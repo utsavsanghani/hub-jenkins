@@ -21,11 +21,16 @@
 								src="${rootURL}/plugin/codecenter-jenkins/images/Black_Duck_Logo.png" />
 						</a>
 					</div>
+					<div class="governanceReportText">
+						<a href="${it.getReport().getReportVersionUrl()}" target="_blank">
+							${%HubReportLink}
+						</a>
+					</div>
 				</div>
 				
 				<h1>${%Title}</h1>
 				
-				<table>
+				<table style="height: 60px;">
 					<tbody>
 						<tr>
 							<td class="summaryLabel" style="font-weight: bold;">${%Project_Name}:</td>
@@ -262,7 +267,7 @@
 							<th class="riskColumnLabel">${%Bom_Entry_Vulnerability_Medium_Short}</th>
 							<th class="riskColumnLabel">${%Bom_Entry_Vulnerability_Low_Short}</th>
 							<th class="riskColumnLabel" title="${%License_Risk_Title}">${%License_Risk_Title_Short}</th>
-							<th class="riskColumnLabel" title="${%License_Risk_Title}">${%Operational_Risk_Title_Short}</th>
+							<th class="riskColumnLabel" title="${%Operational_Risk_Title}">${%Operational_Risk_Title_Short}</th>
 						</tr>
 					</thead>
 					<tbody>
