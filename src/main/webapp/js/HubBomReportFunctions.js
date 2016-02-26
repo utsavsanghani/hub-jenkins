@@ -168,8 +168,8 @@ function filterTable(governanceReportTable, riskToFilter, shouldRemoveFilter, fi
 
 function filterRowBySecurity(row, riskToFilter,filterClassName) {
 	if (riskToFilter.id.indexOf("none") != -1) {
-		if (row.cells[highSecurityColumnNum].innerHTML != 0 || row.cells[mediumSecurityColumnNum].innerHTML != 0
-				|| row.cells[lowSecurityColumnNum].innerHTML != 0) {
+		if (row.cells[highSecurityColumnNum].children[0].innerHTML != 0 || row.cells[mediumSecurityColumnNum].children[0].innerHTML != 0
+				|| row.cells[lowSecurityColumnNum].children[0].innerHTML != 0) {
 			if (row.className.indexOf(filterClassName) == -1) {
 				row.className += filterClassName;
 			}
