@@ -37,14 +37,14 @@
 							<td class="summaryValue">${it.getReleaseSummary().getProjectName()}</td>
 							
 							<td class="summaryLabel" style="font-weight: bold;">${%Version_Phase}:</td>
-							<td class="summaryValue">${it.getReleaseSummary().getPhase()}</td>
+							<td class="summaryValue">${it.getReleaseSummary().getPhaseDisplayValue()}</td>
 						</tr>
 						<tr>
 							<td class="summaryLabel" style="font-weight: bold;">${%Version_Name}:</td>
 							<td class="summaryValue">${it.getReleaseSummary().getVersion()}</td>
 							
 							<td class="summaryLabel" style="font-weight: bold;">${%Version_Distribution}:</td>
-							<td class="summaryValue">${it.getReleaseSummary().getDistribution()}</td>
+							<td class="summaryValue">${it.getReleaseSummary().getDistributionDisplayValue()}</td>
 						</tr>
 					</tbody>
 				</table>
