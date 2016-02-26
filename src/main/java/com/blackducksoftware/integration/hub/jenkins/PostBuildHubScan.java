@@ -444,9 +444,6 @@ public class PostBuildHubScan extends Recorder {
             DateTime timeFinished = null;
             ReportMetaInformationItem reportInfo = null;
 
-            long startTime = System.currentTimeMillis();
-            long elapsedTime = 0;
-
             while (timeFinished == null) {
                 // Wait until the report is done being generated
                 // Retry every 5 seconds
@@ -454,12 +451,6 @@ public class PostBuildHubScan extends Recorder {
                 reportInfo = reportGenInfo.getService().getReportLinks(reportUrl);
 
                 timeFinished = reportInfo.getTimeFinishedAt();
-
-                elapsedTime = System.currentTimeMillis() - startTime;
-                if (elapsedTime >= reportGenInfo.getMaximumWaitTime()) {
-                    String formattedTime = String.format("%d minutes", TimeUnit.MILLISECONDS.toMinutes(reportGenInfo.getMaximumWaitTime()));
-                    throw new BDJenkinsHubPluginException("The Report has not finished generating within the specified wait time : " + formattedTime);
-                }
             }
 
             List<ReportMetaLinkItem> links = reportInfo.get_meta().getLinks();
