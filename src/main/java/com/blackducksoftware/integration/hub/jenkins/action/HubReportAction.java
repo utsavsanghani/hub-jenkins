@@ -16,6 +16,30 @@ public class HubReportAction implements Action {
 
     private VersionReport report;
 
+    private int vulnerabilityRiskHighCount = 0;
+
+    private int vulnerabilityRiskMediumCount = 0;
+
+    private int vulnerabilityRiskLowCount = 0;
+
+    private int vulnerabilityRiskNoneCount = 0;
+
+    private int licenseRiskHighCount = 0;
+
+    private int licenseRiskMediumCount = 0;
+
+    private int licenseRiskLowCount = 0;
+
+    private int licenseRiskNoneCount = 0;
+
+    private int operationalRiskHighCount = 0;
+
+    private int operationalRiskMediumCount = 0;
+
+    private int operationalRiskLowCount = 0;
+
+    private int operationalRiskNoneCount = 0;
+
     public HubReportAction(AbstractBuild<?, ?> build) {
         this.build = build;
     }
@@ -42,124 +66,174 @@ public class HubReportAction implements Action {
         return report.getAggregateBomViewEntries();
     }
 
-    public int getVulnerabilityRiskHighCount() {
+    public void setVulnerabilityRiskHighCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getVulnerabilityRisk().getHIGH() > 0) {
                 count += 1;
             }
         }
-        return count;
+        vulnerabilityRiskHighCount = count;
     }
 
-    public int getVulnerabilityRiskMediumCount() {
+    public void setVulnerabilityRiskMediumCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getVulnerabilityRisk().getMEDIUM() > 0) {
                 count += 1;
             }
         }
-        return count;
+        vulnerabilityRiskMediumCount = count;
     }
 
-    public int getVulnerabilityRiskLowCount() {
+    public void setVulnerabilityRiskLowCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getVulnerabilityRisk().getLOW() > 0) {
                 count += 1;
             }
         }
-        return count;
+        vulnerabilityRiskLowCount = count;
     }
 
-    public int getVulnerabilityRiskNoneCount() {
+    public void setVulnerabilityRiskNoneCount() {
         int vulnerableEntries = 0;
         vulnerableEntries += getVulnerabilityRiskHighCount();
         vulnerableEntries += getVulnerabilityRiskMediumCount();
         vulnerableEntries += getVulnerabilityRiskLowCount();
         int totalCount = getBomEntries().size();
 
-        return totalCount - vulnerableEntries;
+        vulnerabilityRiskNoneCount = totalCount - vulnerableEntries;
     }
 
-    public int getLicenseRiskHighCount() {
+    public void setLicenseRiskHighCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getLicenseRisk().getHIGH() > 0) {
                 count += 1;
             }
         }
-        return count;
+        licenseRiskHighCount = count;
     }
 
-    public int getLicenseRiskMediumCount() {
+    public void setLicenseRiskMediumCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getLicenseRisk().getMEDIUM() > 0) {
                 count += 1;
             }
         }
-        return count;
+        licenseRiskMediumCount = count;
     }
 
-    public int getLicenseRiskLowCount() {
+    public void setLicenseRiskLowCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getLicenseRisk().getLOW() > 0) {
                 count += 1;
             }
         }
-        return count;
+        licenseRiskLowCount = count;
     }
 
-    public int getLicenseRiskNoneCount() {
+    public void setLicenseRiskNoneCount() {
         int vulnerableEntries = 0;
         vulnerableEntries += getLicenseRiskHighCount();
         vulnerableEntries += getLicenseRiskMediumCount();
         vulnerableEntries += getLicenseRiskLowCount();
         int totalCount = getBomEntries().size();
 
-        return totalCount - vulnerableEntries;
+        licenseRiskNoneCount = totalCount - vulnerableEntries;
     }
 
-    public int getOperationalRiskHighCount() {
+    public void setOperationalRiskHighCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getOperationalRisk().getHIGH() > 0) {
                 count += 1;
             }
         }
-        return count;
+        operationalRiskHighCount = count;
     }
 
-    public int getOperationalRiskMediumCount() {
+    public void setOperationalRiskMediumCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getOperationalRisk().getMEDIUM() > 0) {
                 count += 1;
             }
         }
-        return count;
+        operationalRiskMediumCount = count;
     }
 
-    public int getOperationalRiskLowCount() {
+    public void setOperationalRiskLowCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getOperationalRisk().getLOW() > 0) {
                 count += 1;
             }
         }
-        return count;
+        operationalRiskLowCount = count;
     }
 
-    public int getOperationalRiskNoneCount() {
+    public void setOperationalRiskNoneCount() {
         int vulnerableEntries = 0;
         vulnerableEntries += getOperationalRiskHighCount();
         vulnerableEntries += getOperationalRiskMediumCount();
         vulnerableEntries += getOperationalRiskLowCount();
         int totalCount = getBomEntries().size();
 
-        return totalCount - vulnerableEntries;
+        operationalRiskNoneCount = totalCount - vulnerableEntries;
+    }
+
+    // /////////////////////////////////////////////////
+
+    public int getVulnerabilityRiskHighCount() {
+        return vulnerabilityRiskHighCount;
+    }
+
+    public int getVulnerabilityRiskMediumCount() {
+        return vulnerabilityRiskMediumCount;
+    }
+
+    public int getVulnerabilityRiskLowCount() {
+        return vulnerabilityRiskLowCount;
+    }
+
+    public int getVulnerabilityRiskNoneCount() {
+        return vulnerabilityRiskNoneCount;
+    }
+
+    public int getLicenseRiskHighCount() {
+        return licenseRiskHighCount;
+    }
+
+    public int getLicenseRiskMediumCount() {
+        return licenseRiskMediumCount;
+    }
+
+    public int getLicenseRiskLowCount() {
+        return licenseRiskLowCount;
+    }
+
+    public int getLicenseRiskNoneCount() {
+        return licenseRiskNoneCount;
+    }
+
+    public int getOperationalRiskHighCount() {
+        return operationalRiskHighCount;
+    }
+
+    public int getOperationalRiskMediumCount() {
+        return operationalRiskMediumCount;
+    }
+
+    public int getOperationalRiskLowCount() {
+        return operationalRiskLowCount;
+    }
+
+    public int getOperationalRiskNoneCount() {
+        return operationalRiskNoneCount;
     }
 
     public double getPercentage(double count) {
@@ -173,6 +247,18 @@ public class HubReportAction implements Action {
 
     public void setReport(VersionReport report) {
         this.report = report;
+        setVulnerabilityRiskHighCount();
+        setVulnerabilityRiskMediumCount();
+        setVulnerabilityRiskLowCount();
+        setVulnerabilityRiskNoneCount();
+        setLicenseRiskHighCount();
+        setLicenseRiskMediumCount();
+        setLicenseRiskLowCount();
+        setLicenseRiskNoneCount();
+        setOperationalRiskHighCount();
+        setOperationalRiskMediumCount();
+        setOperationalRiskLowCount();
+        setOperationalRiskNoneCount();
     }
 
     @Override
