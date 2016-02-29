@@ -1,0 +1,299 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+    xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+        
+    <l:layout title="${%Title}">
+        
+        <!-- include the side panel with the Jenkins links -->
+       <st:include it="${it.build}" page="sidepanel.jelly"/>
+                    
+        <l:main-panel>
+	        <div class="governanceReportBackgroundColor">
+	        	<link href="${rootURL}/plugin/hub-jenkins/css/HubBomReport.css"  rel="stylesheet" type="text/css"  />
+				<script type="text/javascript"
+						src="${rootURL}/plugin/hub-jenkins/js/Sortable.js" />
+				<script type="text/javascript"
+						src="${rootURL}/plugin/hub-jenkins/js/HubBomReportFunctions.js" />
+				
+				<div class="governanceReportBackgroundColor" style="float: right;">
+					<div>
+						<a href="https://www.blackducksoftware.com/" target="_blank">
+							<img style="width: 320px;margin: 2px;padding-bottom: 10px;"
+								src="${rootURL}/plugin/codecenter-jenkins/images/Black_Duck_Logo.png" />
+						</a>
+					</div>
+					<div class="governanceReportText">
+						<a href="${it.getReport().getReportVersionUrl()}" target="_blank">
+							${%HubReportLink}
+						</a>
+					</div>
+				</div>
+				
+				<h1>${%Title}</h1>
+				
+				<table style="height: 60px;">
+					<tbody>
+						<tr>
+							<td class="summaryLabel" style="font-weight: bold;">${%Project_Name}:</td>
+							<td class="summaryValue">${it.getReleaseSummary().getProjectName()}</td>
+							
+							<td class="summaryLabel" style="font-weight: bold;">${%Version_Phase}:</td>
+							<td class="summaryValue">${it.getReleaseSummary().getPhaseDisplayValue()}</td>
+						</tr>
+						<tr>
+							<td class="summaryLabel" style="font-weight: bold;">${%Version_Name}:</td>
+							<td class="summaryValue">${it.getReleaseSummary().getVersion()}</td>
+							
+							<td class="summaryLabel" style="font-weight: bold;">${%Version_Distribution}:</td>
+							<td class="summaryValue">${it.getReleaseSummary().getDistributionDisplayValue()}</td>
+						</tr>
+					</tbody>
+				</table>
+				
+				<!-- SECURITY RISK SUMMARY -->
+				<div class="vulnSummaryContainer horizontal rounded">
+					<div class="h2">${%Vulnerability_Risk_Title}</div>
+
+					<div class="progress-bar horizontal">
+						<div id="highSecurityRiskLabel" class="clickable riskSummaryLabel"
+							onclick="filterTableByVulnerabilityRisk(this)">
+							${%Vulnerability_High}
+						</div>
+						<div class="riskSummaryCount">
+							${it.getVulnerabilityRiskHighCount()}
+						</div>
+						<div class="progress-track">
+							<div id="highVulnerabilityRiskBar" class="progress-fill-high">
+								<span>${it.getPercentage(it.getVulnerabilityRiskHighCount())}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="progress-bar horizontal">
+						<div id="mediumSecurityRiskLabel" class="clickable riskSummaryLabel"
+							onclick="filterTableByVulnerabilityRisk(this)">
+							${%Vulnerability_Medium}
+						</div>
+						<div class="riskSummaryCount">
+							${it.getVulnerabilityRiskMediumCount()}
+						</div>
+						<div class="progress-track">
+							<div id="mediumVulnerabilityRiskBar" class="progress-fill-medium">
+								<span>${it.getPercentage(it.getVulnerabilityRiskMediumCount())}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="progress-bar horizontal">
+						<div id="lowSecurityRiskLabel" class="clickable riskSummaryLabel"
+							onclick="filterTableByVulnerabilityRisk(this)">
+							${%Vulnerability_Low}
+						</div>
+						<div class="riskSummaryCount">
+							${it.getVulnerabilityRiskLowCount()}
+						</div>
+						<div class="progress-track">
+							<div id="lowVulnerabilityRiskBar" class="progress-fill-low">
+								<span>${it.getPercentage(it.getVulnerabilityRiskLowCount())}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="progress-bar horizontal">
+						<div id="noneSecurityRiskLabel" class="clickable riskSummaryLabel"
+							onclick="filterTableByVulnerabilityRisk(this)">
+							${%Vulnerability_None}
+						</div>
+						<div class="riskSummaryCount">
+							${it.getVulnerabilityRiskNoneCount()}
+						</div>
+						<div class="progress-track">
+							<div id="noVulnerabilityRiskBar" class="progress-fill-none">
+								<span>${it.getPercentage(it.getVulnerabilityRiskNoneCount())}%</span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- SECURITY RISK SUMMARY END -->
+				
+				<!-- LICENSE  RISK SUMMARY -->
+				<div class="vulnSummaryContainer horizontal rounded">
+					<div class="h2">${%License_Risk_Title}</div>
+
+					<div class="progress-bar horizontal">
+						<div id="highLicenseRiskLabel" class="clickable riskSummaryLabel"
+							onclick="filterTableByLicenseRisk(this)">
+							${%License_High}
+						</div>
+						<div class="riskSummaryCount">
+							${it.getLicenseRiskHighCount()}
+						</div>
+						<div class="progress-track">
+							<div id="highLicenseRiskBar" class="progress-fill-high">
+								<span>${it.getPercentage(it.getLicenseRiskHighCount())}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="progress-bar horizontal">
+						<div id="mediumLicenseRiskLabel" class="clickable riskSummaryLabel"
+							onclick="filterTableByLicenseRisk(this)">
+							${%License_Medium}
+						</div>
+						<div class="riskSummaryCount">
+							${it.getLicenseRiskMediumCount()}
+						</div>
+						<div class="progress-track">
+							<div id="mediumLicenseRiskBar" class="progress-fill-medium">
+								<span>${it.getPercentage(it.getLicenseRiskMediumCount())}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="progress-bar horizontal">
+						<div id="lowLicenseRiskLabel" class="clickable riskSummaryLabel"
+							onclick="filterTableByLicenseRisk(this)">
+							${%License_Low}
+						</div>
+						<div class="riskSummaryCount">
+							${it.getLicenseRiskLowCount()}
+						</div>
+						<div class="progress-track">
+							<div id="lowLicenseRiskBar" class="progress-fill-low">
+								<span>${it.getPercentage(it.getLicenseRiskLowCount())}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="progress-bar horizontal">
+						<div id="noneLicenseRiskLabel" class="clickable riskSummaryLabel"
+							onclick="filterTableByLicenseRisk(this)">
+							${%License_None}
+						</div>
+						<div class="riskSummaryCount">
+							${it.getLicenseRiskNoneCount()}
+						</div>
+						<div class="progress-track">
+							<div id="noLicenseRiskBar" class="progress-fill-none">
+								<!-- id="bypassme" -->
+								<span>${it.getPercentage(it.getLicenseRiskNoneCount())}%</span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- LICENSE RISK SUMMARY END -->
+				
+				<!-- OPERATIONAL RISK SUMMARY -->
+				<div class="vulnSummaryContainer horizontal rounded">
+					<div class="h2">${%Operational_Risk_Title}</div>
+
+					<div class="progress-bar horizontal">
+						<div id="highOperationalRiskLabel" class="clickable riskSummaryLabel"
+							onclick="filterTableByOperationalRisk(this)">
+							${%Operational_High}
+						</div>
+						<div class="riskSummaryCount">
+							${it.getOperationalRiskHighCount()}
+						</div>
+						<div class="progress-track">
+							<div id="highOperationalRiskBar" class="progress-fill-high">
+								<span>${it.getPercentage(it.getOperationalRiskHighCount())}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="progress-bar horizontal">
+						<div id="mediumOperationalRiskLabel" class="clickable riskSummaryLabel"
+							onclick="filterTableByOperationalRisk(this)">
+							${%Operational_Medium}
+						</div>
+						<div class="riskSummaryCount">
+							${it.getOperationalRiskMediumCount()}
+						</div>
+						<div class="progress-track">
+							<div id="mediumOperationalRiskBar" class="progress-fill-medium">
+								<span>${it.getPercentage(it.getOperationalRiskMediumCount())}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="progress-bar horizontal">
+						<div id="lowOperationalRiskLabel" class="clickable riskSummaryLabel"
+							onclick="filterTableByOperationalRisk(this)">
+							${%Operational_Low}
+						</div>
+						<div class="riskSummaryCount">
+							${it.getOperationalRiskLowCount()}
+						</div>
+						<div class="progress-track">
+							<div id="lowOperationalRiskBar" class="progress-fill-low">
+								<span>${it.getPercentage(it.getOperationalRiskLowCount())}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="progress-bar horizontal">
+						<div id="noneOperationalRiskLabel" class="clickable riskSummaryLabel"
+							onclick="filterTableByOperationalRisk(this)">
+							${%Operational_None}
+						</div>
+						<div class="riskSummaryCount">
+							${it.getOperationalRiskNoneCount()}
+						</div>
+						<div class="progress-track">
+							<div id="noOperationalRiskBar" class="progress-fill-none">
+								<span>${it.getPercentage(it.getOperationalRiskNoneCount())}%</span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- OPERATIONAL RISK SUMMARY END -->
+				
+				
+				<table class="table-summary horizontal" >
+					<tbody>
+						<tr>
+							<td class="summaryLabel" style="font-weight: bold;">${%Bom_Entries} : </td>
+							<td class="summaryValue" >${it.getBomEntries().size()}</td>
+						</tr>
+					</tbody>
+				</table>
+				<table id="hubBomReport" class="table sortable">
+					<thead>
+						<tr>
+							<th class="componentColumn columnLabel">${%Bom_Entry_Name}</th>
+							<th class="columnLabel">${%Bom_Entry_Version}</th>
+							<th class="columnLabel">${%Bom_Entry_License}</th>
+							<th class="riskColumnLabel">${%Bom_Entry_Vulnerability_High_Short}</th>
+							<th class="riskColumnLabel">${%Bom_Entry_Vulnerability_Medium_Short}</th>
+							<th class="riskColumnLabel">${%Bom_Entry_Vulnerability_Low_Short}</th>
+							<th class="riskColumnLabel" title="${%License_Risk_Title}">${%License_Risk_Title_Short}</th>
+							<th class="riskColumnLabel" title="${%Operational_Risk_Title}">${%Operational_Risk_Title_Short}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<j:forEach var="entry" items="${it.getBomEntries()}">
+							<tr>
+								<td class="clickableColumn" onclick="window.open('${it.getReport().getComponentUrl(entry)}', '_blank');">
+									${entry.getProducerProject().getName()}
+								</td>
+								<td class="clickableColumn" onclick="window.open('${it.getReport().getVersionUrl(entry)}', '_blank');">
+									${entry.getProducerReleasesDisplay()}
+								</td>
+								<td class="licenseColumn" title="${entry.getLicensesDisplay()}">${entry.getLicensesDisplay()}</td>
+								<td class="riskColumn"><span class="riskColumn risk-count">${entry.getVulnerabilityRisk().getHIGH()}</span></td>
+								<td class="riskColumn"><span class="riskColumn risk-count">${entry.getVulnerabilityRisk().getMEDIUM()}</span></td>
+								<td class="riskColumn"><span class="riskColumn risk-count">${entry.getVulnerabilityRisk().getLOW()}</span></td>
+								<td class="riskColumn"><span class="riskColumn risk-count">${entry.getLicenseRiskString()}</span></td>
+								<td class="riskColumn"><span class="riskColumn risk-count">${entry.getOperationalRiskString()}</span></td>
+							</tr>
+						</j:forEach>
+					</tbody>
+				</table>
+				<!-- load this script after the tables otherwise the tables wont exist 
+						yet when this script runs -->
+				<script type="text/javascript"
+					src="${rootURL}/plugin/hub-jenkins/js/HubReportStartup.js" />
+			</div>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

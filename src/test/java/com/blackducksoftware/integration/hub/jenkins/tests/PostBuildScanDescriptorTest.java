@@ -487,4 +487,38 @@ public class PostBuildScanDescriptorTest {
 
     }
 
+    @Test
+    public void testDoCheckReportMaxiumWaitTime() throws Exception {
+        PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+        FormValidation form = descriptor.doCheckReportMaxiumWaitTime(false, "This is not an Integer");
+        Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+
+        form = descriptor.doCheckReportMaxiumWaitTime(false, null);
+        Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+
+        form = descriptor.doCheckReportMaxiumWaitTime(true, null);
+        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getReportWaitTimeEmpty());
+
+        form = descriptor.doCheckReportMaxiumWaitTime(true, "");
+        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getReportWaitTimeEmpty());
+
+        form = descriptor.doCheckReportMaxiumWaitTime(true, "This is not an Integer");
+        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+        Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getReportWaitTimeInvalid()));
+
+        form = descriptor.doCheckReportMaxiumWaitTime(true, "0");
+        Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getReportWaitTimeGreaterThanZero());
+
+        form = descriptor.doCheckReportMaxiumWaitTime(true, "1");
+        Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
+        Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getReportWaitTimeShort());
+
+        form = descriptor.doCheckReportMaxiumWaitTime(true, "5");
+        Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+    }
+
 }

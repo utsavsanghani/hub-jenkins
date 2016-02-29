@@ -1,6 +1,7 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import hudson.ProxyConfiguration;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -32,6 +33,7 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
 import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
 import com.blackducksoftware.integration.hub.response.DistributionEnum;
@@ -153,8 +155,8 @@ public class ScanIntegrationTest {
 
         HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
-        pbScan.setverbose(false);
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
+
         FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
         project.setCustomWorkspace(testWorkspace);
 
@@ -164,20 +166,20 @@ public class ScanIntegrationTest {
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
 
-        Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-        Assert.assertTrue(buildOutput, buildOutput.contains("Running on : master"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan directory:"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("directories in the BlackDuck Scan directory"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib directory:"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib file:"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("Using this BlackDuck Scan CLI at : "));
-        Assert.assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
+        assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+        assertTrue(buildOutput, buildOutput.contains("Running on : master"));
+        assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan directory:"));
+        assertTrue(buildOutput, buildOutput.contains("directories in the BlackDuck Scan directory"));
+        assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib directory:"));
+        assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib file:"));
+        assertTrue(buildOutput, buildOutput.contains("Using this BlackDuck Scan CLI at : "));
+        assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
         URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("Using this Hub hostname : '" + url.getHost()));
-        Assert.assertTrue(buildOutput, buildOutput.contains("Using this java installation : "));
-        Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-        Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+        assertTrue(buildOutput, buildOutput.contains("Using this Hub hostname : '" + url.getHost()));
+        assertTrue(buildOutput, buildOutput.contains("Using this java installation : "));
+        assertTrue(buildOutput, buildOutput.contains("Finished in"));
+        assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+        assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
     }
 
     @Test
@@ -204,8 +206,8 @@ public class ScanIntegrationTest {
 
             PostBuildScanDescriptor.checkHubScanTool(serverInfo.getServerUrl());
 
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
-            pbScan.setverbose(false);
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
+
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
 
@@ -215,20 +217,20 @@ public class ScanIntegrationTest {
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
 
-            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Running on : master"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan directory:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("directories in the BlackDuck Scan directory"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib directory:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib file:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Using this BlackDuck Scan CLI at : "));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
+            assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            assertTrue(buildOutput, buildOutput.contains("Running on : master"));
+            assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan directory:"));
+            assertTrue(buildOutput, buildOutput.contains("directories in the BlackDuck Scan directory"));
+            assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib directory:"));
+            assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib file:"));
+            assertTrue(buildOutput, buildOutput.contains("Using this BlackDuck Scan CLI at : "));
+            assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Using this Hub hostname : '" + url.getHost()));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Using this java installation : "));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+            assertTrue(buildOutput, buildOutput.contains("Using this Hub hostname : '" + url.getHost()));
+            assertTrue(buildOutput, buildOutput.contains("Using this java installation : "));
+            assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             HubServerInfoSingleton.getInstance().setHubScanInstallation(orgHubInstall);
         }
@@ -271,8 +273,8 @@ public class ScanIntegrationTest {
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
-                    null, "4096");
-            pbScan.setverbose(false);
+                    null, "4096", false, "0");
+
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
 
@@ -282,28 +284,120 @@ public class ScanIntegrationTest {
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
 
-            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput, buildOutput.contains(
+            assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains(
                     "You can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            assertTrue(buildOutput, buildOutput.contains("Version Id:"));
             if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
 
-                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-                Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+                assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+                assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+                assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
             }
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
         }
+    }
+
+    @Test
+    public void completeRunthroughAndScanWithMappingAndGenerateReport() throws Exception {
+        // TODO
+        Jenkins jenkins = j.jenkins;
+
+        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+        UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
+                testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+        store.addCredentials(Domain.global(), credential);
+
+        HubServerInfo serverInfo = new HubServerInfo();
+        serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+        serverInfo.setCredentialsId(credential.getId());
+        serverInfo.setTimeout(200);
+
+        ScanJobs oneScan = new ScanJobs("");
+        ScanJobs twoScan = new ScanJobs("ch-simple-web/simple-webapp/target");
+        ScanJobs threeScan = new ScanJobs("ch-simple-web/simple-webapp/target/simple-webapp.war");
+        ScanJobs fourScan = new ScanJobs("ch-simple-web");
+        ScanJobs fiveScan = new ScanJobs("ch-simple-web/simple-webapp");
+        ScanJobs[] scans = new ScanJobs[5];
+        scans[0] = oneScan;
+        scans[1] = twoScan;
+        scans[2] = threeScan;
+        scans[3] = fourScan;
+        scans[4] = fiveScan;
+
+        HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
+        String projectId = null;
+        try {
+            projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
+            Assert.assertNotNull(projectId);
+            // Give server time to recognize the Project
+            Thread.sleep(2000);
+            String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId, PhaseEnum.DEVELOPMENT.name(),
+                    DistributionEnum.EXTERNAL.name());
+            assertNotNull(versionId);
+            // Give server time to recognize the Version
+            Thread.sleep(2000);
+
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
+                    testProperties.getProperty("TEST_VERSION"), null,
+                    null, "4096", true, "5");
+
+            FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+            project.setCustomWorkspace(testWorkspace);
+
+            project.getPublishersList().add(pbScan);
+
+            FreeStyleBuild build = project.scheduleBuild2(0).get();
+            String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+            System.out.println(buildOutput);
+
+            assertTrue(buildOutput, buildOutput.contains("-> Generate Hub report : true"));
+            assertTrue(buildOutput, buildOutput.contains("-> Maximum wait time for the report : 5 minutes"));
+            assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains(
+                    "You can view the BlackDuck Scan CLI logs at :"));
+            assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            assertTrue(buildOutput, buildOutput.contains("The bom has been updated, generating the report."));
+            assertTrue(buildOutput, buildOutput.contains("Finished retrieving the report."));
+
+            HubReportAction hubReportAction = build.getAction(HubReportAction.class);
+
+            assertNotNull(hubReportAction);
+            assertNotNull(hubReportAction.getReport());
+            assertNotNull(hubReportAction.getReport().getAggregateBomViewEntries());
+            assertTrue(!hubReportAction.getReport().getAggregateBomViewEntries().isEmpty());
+            assertNotNull(hubReportAction.getReport().getAggregateBomViewEntries().get(0).getVulnerabilityRisk());
+            assertNotNull(hubReportAction.getReleaseSummary());
+
+            if (isHubOlderThanThisVersion("2.3.2")) {
+                // Only to be asserted if run against hub <2.3.2, because the plugin does the
+                // project/version/codelocation
+
+                assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+                assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+                assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+            }
+            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+        } finally {
+            restHelper.deleteHubProject(projectId);
+        }
+
     }
 
     @Test
@@ -333,8 +427,8 @@ public class ScanIntegrationTest {
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, "${JOB_NAME}", testProperties.getProperty("TEST_VERSION"),
                     PhaseEnum.DEVELOPMENT.name(),
-                    DistributionEnum.EXTERNAL.name(), "4096");
-            pbScan.setverbose(false);
+                    DistributionEnum.EXTERNAL.name(), "4096", false, "0");
+
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, projectName);
             project.setCustomWorkspace(testWorkspace);
 
@@ -344,24 +438,24 @@ public class ScanIntegrationTest {
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
 
-            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput, buildOutput.contains(
+            assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains(
                     "You can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id:"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            assertTrue(buildOutput, buildOutput.contains("Project Id:"));
+            assertTrue(buildOutput, buildOutput.contains("Version Id:"));
             if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
-                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-                Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+                assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+                assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+                assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
             }
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(restHelper.getProjectByName(projectName).getId());
         }
@@ -404,8 +498,8 @@ public class ScanIntegrationTest {
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
-                    null, "4096");
-            pbScan.setverbose(false);
+                    null, "4096", false, "0");
+
             jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
                     Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH")));
 
@@ -422,29 +516,29 @@ public class ScanIntegrationTest {
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
 
-            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyHost="));
-            Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPort="));
+            assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyHost="));
+            assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPort="));
 
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput, buildOutput.contains(
+            assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains(
                     "You can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH") + "' at Port: '"
+            assertTrue(buildOutput, buildOutput.contains("Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH") + "' at Port: '"
                     + testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH") + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            assertTrue(buildOutput, buildOutput.contains("Version Id:"));
             if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
-                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-                Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+                assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+                assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+                assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
             }
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
         } finally {
             restHelper.deleteHubProject(projectId);
@@ -510,32 +604,32 @@ public class ScanIntegrationTest {
     // String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
     // System.out.println(buildOutput);
     //
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyHost="));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPort="));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyUser="));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPassword="));
+    // assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+    // assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyHost="));
+    // assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPort="));
+    // assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyUser="));
+    // assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPassword="));
     //
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains(
+    // assertTrue(buildOutput, buildOutput.contains("Finished in"));
+    // assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+    // assertTrue(buildOutput, buildOutput.contains(
     // "You can view the BlackDuck Scan CLI logs at :"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Using proxy: '" +
+    // assertTrue(buildOutput, buildOutput.contains("Using proxy: '" +
     // testProperties.getProperty("TEST_PROXY_HOST_BASIC") + "' at Port: '"
     // + testProperties.getProperty("TEST_PROXY_PORT_BASIC") + "'"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+    // assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+    // assertTrue(buildOutput, buildOutput.contains("Version Id:"));
     /*
      * Only to be asserted if run against hub <2.3.1
-     *
-     * // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-     * // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-     * // Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-     * // Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-     * // Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-     * // Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+     * 
+     * // assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+     * // assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+     * // assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+     * // assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+     * // assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+     * // assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
      */
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+    // assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
     //
     // } finally {
     // restHelper.deleteHubProject(projectId);
@@ -587,7 +681,7 @@ public class ScanIntegrationTest {
     // PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
     // testProperties.getProperty("TEST_VERSION"), null,
     // null, "4096");
-    // pbScan.setverbose(false);
+    //
     // jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_DIGEST"),
     // Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_DIGEST")),
     // testProperties.getProperty("TEST_PROXY_USER_DIGEST"),
@@ -602,31 +696,31 @@ public class ScanIntegrationTest {
     // String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
     // System.out.println(buildOutput);
     //
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyHost="));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPort="));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyUser="));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPassword="));
+    // assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+    // assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyHost="));
+    // assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPort="));
+    // assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyUser="));
+    // assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPassword="));
     //
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains(
+    // assertTrue(buildOutput, buildOutput.contains("Finished in"));
+    // assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+    // assertTrue(buildOutput, buildOutput.contains(
     // "You can view the BlackDuck Scan CLI logs at :"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Using proxy: '" +
+    // assertTrue(buildOutput, buildOutput.contains("Using proxy: '" +
     // testProperties.getProperty("TEST_PROXY_HOST_DIGEST") + "' at Port: '"
     // + testProperties.getProperty("TEST_PROXY_PORT_DIGEST") + "'"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+    // assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+    // assertTrue(buildOutput, buildOutput.contains("Version Id:"));
     // if (isHubOlderThanThisVersion("2.3.2")) {
     // Only to be asserted if run against hub <2.3.2, because the plugin does the project/version/codelocation
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+    // assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+    // assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+    // assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+    // assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+    // assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+    // assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
     // }
-    // Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+    // assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
     //
     // } finally {
     // restHelper.deleteHubProject(projectId);
@@ -669,8 +763,8 @@ public class ScanIntegrationTest {
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"), null,
-                    null, "4096");
-            pbScan.setverbose(false);
+                    null, "4096", false, "0");
+
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
 
             jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
@@ -685,26 +779,26 @@ public class ScanIntegrationTest {
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
 
-            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput, buildOutput.contains(
+            assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains(
                     "You can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, !buildOutput.contains("Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
+            assertTrue(buildOutput, !buildOutput.contains("Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            assertTrue(buildOutput, buildOutput.contains("Version Id:"));
             if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
-                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-                Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+                assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+                assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+                assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
             }
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
         } finally {
             restHelper.deleteHubProject(projectId);
@@ -749,8 +843,8 @@ public class ScanIntegrationTest {
 
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, PROJECT_NAME_NOT_EXISTING, PROJECT_RELEASE_NOT_EXISTING,
                     PhaseEnum.DEVELOPMENT.name(),
-                    DistributionEnum.EXTERNAL.name(), "4096");
-            pbScan.setverbose(false);
+                    DistributionEnum.EXTERNAL.name(), "4096", false, "0");
+
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
 
@@ -760,24 +854,24 @@ public class ScanIntegrationTest {
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
 
-            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
+            assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
 
             // URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
 
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput, buildOutput.contains(
+            assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains(
                     "You can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
+            assertTrue(buildOutput, buildOutput.contains("Project Id: '"));
+            assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
             if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
-                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan"));
+                assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan"));
             }
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+            assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
         } finally {
             restHelper.deleteHubProject(restHelper.getProjectByName(PROJECT_NAME_NOT_EXISTING).getId());
         }
@@ -813,8 +907,8 @@ public class ScanIntegrationTest {
                     PROJECT_RELEASE_NOT_EXISTING,
                     PhaseEnum.DEVELOPMENT.name(),
                     DistributionEnum.EXTERNAL.name(),
-                    "4096");
-            pbScan.setverbose(false);
+                    "4096", false, "0");
+
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
 
@@ -824,24 +918,24 @@ public class ScanIntegrationTest {
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
 
-            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
+            assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
 
             // URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
 
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput, buildOutput.contains(
+            assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains(
                     "You can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
+            assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
             if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
-                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan"));
+                assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan"));
             }
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+            assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
         } finally {
             restHelper.deleteHubProject(projectId);
         }
@@ -885,8 +979,8 @@ public class ScanIntegrationTest {
             PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
                     testProperties.getProperty("TEST_VERSION"),
                     PhaseEnum.DEVELOPMENT.name(), DistributionEnum.EXTERNAL.name(),
-                    "4096");
-            pbScan.setverbose(false);
+                    "4096", false, "0");
+
             FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
             project.setCustomWorkspace(testWorkspace);
 
@@ -897,47 +991,47 @@ public class ScanIntegrationTest {
             String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
 
-            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput, buildOutput.contains(
+            assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains(
                     "You can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            assertTrue(buildOutput, buildOutput.contains("Version Id:"));
             if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
-                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-                Assert.assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+                assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+                assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
+                assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
             }
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
             // Second run, scans should already be mapped
             build = project.scheduleBuild2(0).get();
             buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
             System.out.println(buildOutput);
 
-            Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished in"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            Assert.assertTrue(buildOutput, buildOutput.contains(
+            assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains(
                     "You can view the BlackDuck Scan CLI logs at :"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-            Assert.assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            assertTrue(buildOutput, buildOutput.contains("Version Id:"));
             if (isHubOlderThanThisVersion("2.3.2")) {
                 // Only to be asserted if run against hub <2.3.2, because the plugin does the
                 // project/version/codelocation
-                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-                Assert.assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
+                assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                assertTrue(buildOutput, buildOutput.contains("The scan target :"));
+                assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
+                assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
+                assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
             }
-            Assert.assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
             restHelper.deleteHubProject(projectId);
         }
@@ -965,16 +1059,16 @@ public class ScanIntegrationTest {
 
         HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
-        pbScan.setverbose(false);
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
+
         project.getPublishersList().add(pbScan);
 
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
 
-        Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-        Assert.assertTrue(buildOutput, buildOutput.contains("Unauthorized (401)"));
+        assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+        assertTrue(buildOutput, buildOutput.contains("Unauthorized (401)"));
     }
 
     @Test
@@ -999,16 +1093,16 @@ public class ScanIntegrationTest {
 
         HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096");
-        pbScan.setverbose(false);
+        PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
+
         project.getPublishersList().add(pbScan);
 
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
         System.out.println(buildOutput);
 
-        Assert.assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-        Assert.assertTrue(buildOutput, buildOutput.contains("Unauthorized (401)"));
+        assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+        assertTrue(buildOutput, buildOutput.contains("Unauthorized (401)"));
     }
 
 }

@@ -42,6 +42,7 @@ public class BuildHelper {
             HubIntegrationException, URISyntaxException,
             MalformedURLException, BDRestException {
         HubIntRestService service = new HubIntRestService(serverUrl);
+        service.setLogger(logger);
         service.setTimeout(hubTimeout);
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
