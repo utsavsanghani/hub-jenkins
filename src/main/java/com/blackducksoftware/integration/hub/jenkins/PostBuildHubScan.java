@@ -235,7 +235,7 @@ public class PostBuildHubScan extends Recorder {
     // http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.BUILD;
+        return BuildStepMonitor.NONE;
     }
 
     @Override
