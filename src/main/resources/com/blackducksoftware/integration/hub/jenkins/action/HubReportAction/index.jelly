@@ -18,7 +18,7 @@
 					<div>
 						<a href="https://www.blackducksoftware.com/" target="_blank">
 							<img style="width: 320px;margin: 2px;padding-bottom: 10px;"
-								src="${rootURL}/plugin/codecenter-jenkins/images/Black_Duck_Logo.png" />
+								src="${rootURL}/plugin/hub-jenkins/images/Black_Duck_Logo.png" />
 						</a>
 					</div>
 					<div class="governanceReportText">
