@@ -287,9 +287,7 @@ public class PostBuildHubScan extends Recorder {
                 }
                 logger.info("Hub Plugin running on machine : " + localHostName);
 
-                HubScanInstallation hubScanInstallation = HubServerInfoSingleton.getInstance().getHubScanInstallation();
-
-                if (validateConfiguration(hubScanInstallation, getScans())) {
+                if (validateConfiguration(getScans())) {
                     // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any
                     // file even outside of the Jenkins directories
                     File workspace = null;
@@ -342,7 +340,7 @@ public class PostBuildHubScan extends Recorder {
                     printConfiguration(build, logger, projectName, projectVersion, scanTargets, getShouldGenerateHubReport(),
                             getConvertedReportMaxiumWaitTime());
 
-                    FilePath scanExec = getScanCLI(hubScanInstallation, logger, build.getBuiltOn());
+                    FilePath scanExec = getScanCLI(HubServerInfoSingleton.getInstance().getHubScanInstallation(), logger, build.getBuiltOn());
 
                     HubIntRestService service = BuildHelper.getRestService(logger, getHubServerInfo().getServerUrl(),
                             getHubServerInfo().getUsername(),
@@ -909,11 +907,15 @@ public class PostBuildHubScan extends Recorder {
      * @throws HubScanToolMissingException
      * @throws HubConfigurationException
      */
-    public boolean validateConfiguration(HubScanInstallation hubScanInstallation, ScanJobs[] scans) throws HubScanToolMissingException, HubConfigurationException {
+    public boolean validateConfiguration(ScanJobs[] scans) throws HubScanToolMissingException,
+            HubConfigurationException {
         if (scans == null || scans.length == 0) {
             throw new HubConfigurationException("Could not find any targets to scan.");
         }
 
+        if (getHubServerInfo() == null) {
+            throw new HubConfigurationException("Could not find the Hub global configuration.");
+        }
         if (!getHubServerInfo().isPluginConfigured()) {
             // If plugin is not Configured, we try to find out what is missing.
             if (StringUtils.isEmpty(getHubServerInfo().getServerUrl())) {
@@ -923,7 +925,7 @@ public class PostBuildHubScan extends Recorder {
                 throw new HubConfigurationException("No credentials could be found to connect to the Hub.");
             }
         }
-        if (hubScanInstallation == null) {
+        if (HubServerInfoSingleton.getInstance().getHubScanInstallation() == null) {
             try {
                 PostBuildScanDescriptor.checkHubScanTool(getHubServerInfo().getServerUrl());
             } catch (Exception e) {

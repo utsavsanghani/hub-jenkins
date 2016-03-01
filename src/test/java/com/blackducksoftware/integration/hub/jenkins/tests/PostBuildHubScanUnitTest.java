@@ -289,16 +289,19 @@ public class PostBuildHubScanUnitTest {
         PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
 
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
+        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
-        Assert.assertTrue(postBuildScan.validateConfiguration(hubScanInstall, scans));
+        Assert.assertTrue(postBuildScan.validateConfiguration(scans));
     }
 
     @Test
     public void testValidateConfigurationNullHubScanInstallations() throws Exception {
         // validateConfiguration with null IHubScanInstallations and correct IScanJobs
 
-        exception.expect(HubScanToolMissingException.class);
-        exception.expectMessage("Could not find an Black Duck Scan Installation to use.");
+        HubServerInfo hubServerInfo = new HubServerInfo();
+        hubServerInfo.setCredentialsId(VALID_CREDENTIAL);
+        hubServerInfo.setServerUrl(VALID_SERVERURL);
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         ScanJobs oneScan = new ScanJobs(basePath);
         ScanJobs[] scans = new ScanJobs[1];
@@ -306,7 +309,7 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
 
-        Assert.assertTrue(postBuildScan.validateConfiguration(null, scans));
+        Assert.assertTrue(postBuildScan.validateConfiguration(scans));
     }
 
     @Test
@@ -321,8 +324,9 @@ public class PostBuildHubScanUnitTest {
         PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
 
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
+        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
-        Assert.assertTrue(postBuildScan.validateConfiguration(hubScanInstall, scans));
+        Assert.assertTrue(postBuildScan.validateConfiguration(scans));
     }
 
     @Test
@@ -335,8 +339,9 @@ public class PostBuildHubScanUnitTest {
         PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
+        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
-        Assert.assertTrue(postBuildScan.validateConfiguration(hubScanInstall, null));
+        Assert.assertTrue(postBuildScan.validateConfiguration(null));
     }
 
     @Test
@@ -352,6 +357,7 @@ public class PostBuildHubScanUnitTest {
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
+        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
         ScanJobs oneScan = new ScanJobs(basePath);
         ScanJobs[] scans = new ScanJobs[1];
@@ -359,7 +365,7 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
 
-        Assert.assertTrue(postBuildScan.validateConfiguration(hubScanInstall, scans));
+        Assert.assertTrue(postBuildScan.validateConfiguration(scans));
     }
 
     @Test
@@ -375,6 +381,7 @@ public class PostBuildHubScanUnitTest {
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
+        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
         ScanJobs oneScan = new ScanJobs(basePath);
         ScanJobs[] scans = new ScanJobs[1];
@@ -382,7 +389,7 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
 
-        Assert.assertTrue(postBuildScan.validateConfiguration(hubScanInstall, scans));
+        Assert.assertTrue(postBuildScan.validateConfiguration(scans));
     }
 
     @Test
@@ -398,6 +405,7 @@ public class PostBuildHubScanUnitTest {
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
+        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
         ScanJobs oneScan = new ScanJobs(basePath);
         ScanJobs[] scans = new ScanJobs[1];
@@ -405,7 +413,7 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
 
-        postBuildScan.validateConfiguration(hubScanInstall, scans);
+        postBuildScan.validateConfiguration(scans);
     }
 
     @Test
@@ -421,6 +429,7 @@ public class PostBuildHubScanUnitTest {
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
+        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
         ScanJobs oneScan = new ScanJobs(basePath);
         ScanJobs[] scans = new ScanJobs[1];
@@ -428,7 +437,7 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
 
-        postBuildScan.validateConfiguration(hubScanInstall, scans);
+        postBuildScan.validateConfiguration(scans);
     }
 
     @Test
