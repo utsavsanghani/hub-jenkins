@@ -263,7 +263,7 @@ public class HubReportAction implements Action {
 
     @Override
     public String getIconFileName() {
-        return "/plugin/protex-jenkins/images/blackduck.png";
+        return "/plugin/hub-jenkins/images/blackduck.png";
     }
 
     @Override
