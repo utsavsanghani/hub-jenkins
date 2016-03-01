@@ -43,7 +43,7 @@ import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
 import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
-import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
+import com.blackducksoftware.integration.hub.jenkins.exceptions.HubScanToolMissingException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostName;
@@ -708,7 +708,6 @@ public class PostBuildHubScan extends Recorder {
         if (mappingComparison != null && mappingComparison.getNumericResult() <= 0 &&
                 StringUtils.isNotBlank(projectName)
                 && StringUtils.isNotBlank(versionName)) {
-            // FIXME Which version was this fixed in?
 
             // The project and release options werent working until Hub version 2.2.?
             // So if the result is that 2.2.0 is less than or equal to the actual version, we know that it supports
@@ -867,13 +866,13 @@ public class PostBuildHubScan extends Recorder {
      *            Node
      *
      * @return File the scan.cli.sh
-     * @throws IScanToolMissingException
+     * @throws HubScanToolMissingException
      * @throws IOException
      * @throws InterruptedException
      * @throws HubConfigurationException
      */
     public FilePath getScanCLI(HubScanInstallation hubScanInstallation, HubJenkinsLogger logger, Node node)
-            throws IScanToolMissingException, IOException,
+            throws HubScanToolMissingException, IOException,
             InterruptedException, HubConfigurationException {
         FilePath scanExecutable = null;
 
@@ -891,7 +890,7 @@ public class PostBuildHubScan extends Recorder {
             logger.debug("Using this BlackDuck Scan CLI at : " + scanExecutable.getRemote());
         } else {
             logger.error("Could not find the CLI file in : " + hubScanInstallation.getHome());
-            throw new IScanToolMissingException("Could not find the CLI file to execute at : '" + hubScanInstallation.getHome() + "'");
+            throw new HubScanToolMissingException("Could not find the CLI file to execute at : '" + hubScanInstallation.getHome() + "'");
         }
         return scanExecutable;
     }
@@ -907,15 +906,10 @@ public class PostBuildHubScan extends Recorder {
      *
      * @return True if everything is configured correctly
      *
-     * @throws IScanToolMissingException
+     * @throws HubScanToolMissingException
      * @throws HubConfigurationException
      */
-    public boolean validateConfiguration(HubScanInstallation hubScanInstallation, ScanJobs[] scans) throws IScanToolMissingException, HubConfigurationException {
-        // if (iScanTools == null || iScanTools.length == 0 || iScanTools[0] == null) {
-        if (hubScanInstallation == null) {
-            // FIXME lets add the installation if the URL is configured
-            throw new IScanToolMissingException("Could not find an Black Duck Scan Installation to use.");
-        }
+    public boolean validateConfiguration(HubScanInstallation hubScanInstallation, ScanJobs[] scans) throws HubScanToolMissingException, HubConfigurationException {
         if (scans == null || scans.length == 0) {
             throw new HubConfigurationException("Could not find any targets to scan.");
         }
@@ -927,6 +921,13 @@ public class PostBuildHubScan extends Recorder {
             }
             if (StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
                 throw new HubConfigurationException("No credentials could be found to connect to the Hub.");
+            }
+        }
+        if (hubScanInstallation == null) {
+            try {
+                PostBuildScanDescriptor.checkHubScanTool(getHubServerInfo().getServerUrl());
+            } catch (Exception e) {
+                throw new HubScanToolMissingException("Could not find an Black Duck Scan Installation to use.", e);
             }
         }
         // No exceptions were thrown so return true

@@ -39,7 +39,7 @@ import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
-import com.blackducksoftware.integration.hub.jenkins.exceptions.IScanToolMissingException;
+import com.blackducksoftware.integration.hub.jenkins.exceptions.HubScanToolMissingException;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.TestLogger;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 import com.google.common.base.Charsets;
@@ -257,7 +257,7 @@ public class PostBuildHubScanUnitTest {
         // getIscanScript with empty nodeName (indicates master), with valid iScan installation configured and selected,
         // and with the script not existing
 
-        exception.expect(IScanToolMissingException.class);
+        exception.expect(HubScanToolMissingException.class);
         exception.expectMessage("Could not find the CLI file to execute at : '");
 
         DumbSlave slave = j.createSlave();
@@ -297,7 +297,7 @@ public class PostBuildHubScanUnitTest {
     public void testValidateConfigurationNullHubScanInstallations() throws Exception {
         // validateConfiguration with null IHubScanInstallations and correct IScanJobs
 
-        exception.expect(IScanToolMissingException.class);
+        exception.expect(HubScanToolMissingException.class);
         exception.expectMessage("Could not find an Black Duck Scan Installation to use.");
 
         ScanJobs oneScan = new ScanJobs(basePath);
