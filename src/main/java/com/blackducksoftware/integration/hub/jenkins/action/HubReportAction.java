@@ -66,7 +66,7 @@ public class HubReportAction implements Action {
         return report.getAggregateBomViewEntries();
     }
 
-    public void setVulnerabilityRiskHighCount() {
+    private void setVulnerabilityRiskHighCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getVulnerabilityRisk().getHIGH() > 0) {
@@ -76,27 +76,28 @@ public class HubReportAction implements Action {
         vulnerabilityRiskHighCount = count;
     }
 
-    public void setVulnerabilityRiskMediumCount() {
+    private void setVulnerabilityRiskMediumCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
-            if (bomEntry.getVulnerabilityRisk().getMEDIUM() > 0) {
+            if (bomEntry.getVulnerabilityRisk().getHIGH() == 0 && bomEntry.getVulnerabilityRisk().getMEDIUM() > 0) {
                 count += 1;
             }
         }
         vulnerabilityRiskMediumCount = count;
     }
 
-    public void setVulnerabilityRiskLowCount() {
+    private void setVulnerabilityRiskLowCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
-            if (bomEntry.getVulnerabilityRisk().getLOW() > 0) {
+            if (bomEntry.getVulnerabilityRisk().getHIGH() == 0 && bomEntry.getVulnerabilityRisk().getMEDIUM() == 0
+                    && bomEntry.getVulnerabilityRisk().getLOW() > 0) {
                 count += 1;
             }
         }
         vulnerabilityRiskLowCount = count;
     }
 
-    public void setVulnerabilityRiskNoneCount() {
+    private void setVulnerabilityRiskNoneCount() {
         int vulnerableEntries = 0;
         vulnerableEntries += getVulnerabilityRiskHighCount();
         vulnerableEntries += getVulnerabilityRiskMediumCount();
@@ -106,7 +107,7 @@ public class HubReportAction implements Action {
         vulnerabilityRiskNoneCount = totalCount - vulnerableEntries;
     }
 
-    public void setLicenseRiskHighCount() {
+    private void setLicenseRiskHighCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getLicenseRisk().getHIGH() > 0) {
@@ -116,7 +117,7 @@ public class HubReportAction implements Action {
         licenseRiskHighCount = count;
     }
 
-    public void setLicenseRiskMediumCount() {
+    private void setLicenseRiskMediumCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getLicenseRisk().getMEDIUM() > 0) {
@@ -126,7 +127,7 @@ public class HubReportAction implements Action {
         licenseRiskMediumCount = count;
     }
 
-    public void setLicenseRiskLowCount() {
+    private void setLicenseRiskLowCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getLicenseRisk().getLOW() > 0) {
@@ -136,7 +137,7 @@ public class HubReportAction implements Action {
         licenseRiskLowCount = count;
     }
 
-    public void setLicenseRiskNoneCount() {
+    private void setLicenseRiskNoneCount() {
         int vulnerableEntries = 0;
         vulnerableEntries += getLicenseRiskHighCount();
         vulnerableEntries += getLicenseRiskMediumCount();
@@ -146,7 +147,7 @@ public class HubReportAction implements Action {
         licenseRiskNoneCount = totalCount - vulnerableEntries;
     }
 
-    public void setOperationalRiskHighCount() {
+    private void setOperationalRiskHighCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getOperationalRisk().getHIGH() > 0) {
@@ -156,7 +157,7 @@ public class HubReportAction implements Action {
         operationalRiskHighCount = count;
     }
 
-    public void setOperationalRiskMediumCount() {
+    private void setOperationalRiskMediumCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getOperationalRisk().getMEDIUM() > 0) {
@@ -166,7 +167,7 @@ public class HubReportAction implements Action {
         operationalRiskMediumCount = count;
     }
 
-    public void setOperationalRiskLowCount() {
+    private void setOperationalRiskLowCount() {
         int count = 0;
         for (AggregateBomViewEntry bomEntry : getBomEntries()) {
             if (bomEntry.getOperationalRisk().getLOW() > 0) {
@@ -176,7 +177,7 @@ public class HubReportAction implements Action {
         operationalRiskLowCount = count;
     }
 
-    public void setOperationalRiskNoneCount() {
+    private void setOperationalRiskNoneCount() {
         int vulnerableEntries = 0;
         vulnerableEntries += getOperationalRiskHighCount();
         vulnerableEntries += getOperationalRiskMediumCount();
@@ -273,7 +274,6 @@ public class HubReportAction implements Action {
 
     @Override
     public String getUrlName() {
-        // FIXME suggestions for better Url?
         return "hub_governance_report";
     }
 
