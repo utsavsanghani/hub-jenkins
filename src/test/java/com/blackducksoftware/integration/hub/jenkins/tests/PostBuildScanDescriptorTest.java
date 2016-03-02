@@ -476,7 +476,7 @@ public class PostBuildScanDescriptorTest {
                     "DEVELOPMENT", "EXTERNAL");
 
             // Need to sleep 1 second, otherwise the project not be available when we try the auto complete
-            Thread.sleep(1000l);
+            Thread.sleep(2000l);
 
             AutoCompletionCandidates matches = descriptor.doAutoCompleteHubProjectName(projectAutoCompleteName);
             assertTrue(matches.getValues().size() > 0);
