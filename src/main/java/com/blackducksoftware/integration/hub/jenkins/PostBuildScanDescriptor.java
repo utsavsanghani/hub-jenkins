@@ -792,6 +792,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
                 } catch (ProjectDoesNotExistException e) {
                     // This error will already show up for the name field
                     return FormValidation.ok();
+                } catch (BDRestException e) {
+                    // This error will already show up for the name field
+                    return FormValidation.ok();
                 }
                 List<ReleaseItem> releases = service.getVersionsForProject(project.getId());
 
