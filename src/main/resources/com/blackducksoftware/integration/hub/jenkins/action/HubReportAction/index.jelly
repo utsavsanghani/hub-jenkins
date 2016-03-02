@@ -16,7 +16,8 @@
 				
 				<div class="governanceReportBackgroundColor" style="float: right;">
 					<div>
-						<a href="https://www.blackducksoftware.com/" target="_blank">
+						<a>
+					<!--	<a href="${it.getReport().getReportVersionUrl()}" target="_blank"> -->
 							<img style="width: 320px;margin: 2px;padding-bottom: 10px;"
 								src="${rootURL}/plugin/hub-jenkins/images/Black_Duck_Logo.png" />
 						</a>
