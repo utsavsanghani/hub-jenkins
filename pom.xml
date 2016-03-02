@@ -11,7 +11,7 @@
 
 	<groupId>com.blackducksoftware.integration</groupId>
 	<artifactId>hub-jenkins</artifactId>
-	<version>1.3.8-SNAPSHOT</version>
+	<version>1.4.0-SNAPSHOT</version>
 	<!-- !!! Also update the url below on release !!! -->
 	<packaging>hpi</packaging>
 	<name>Black Duck Hub Plug-In for Jenkins</name>
@@ -20,7 +20,7 @@
 
 	<url>https://blackducksoftware.atlassian.net/wiki/display/BDOS/Black+Duck+Hub+Plugin</url>
 	<scm>
-		<url>http://stash.blackducksoftware.com/scm/int-hub/int-hub-jenkins.git</url>
+		<url>http://bitbucket.dc1.lan/scm/int-hub/int-hub-jenkins.git</url>
 	</scm>
 	<issueManagement>
 		<url>https://jira.blackducksoftware.com/browse/IJH/?selectedTab=com.atlassian.jira.jira-projects-plugin:issues-panel</url>
