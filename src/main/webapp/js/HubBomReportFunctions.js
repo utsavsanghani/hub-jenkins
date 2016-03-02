@@ -180,12 +180,12 @@ function filterRowBySecurity(row, riskToFilter,filterClassName) {
 		}
 	}else if (riskToFilter.id.indexOf("medium") > -1) {
 		// only show the rows that have medium security risks without high risks
-		if (row.cells[highSecurityColumnNum].children[0].innerHTML == 0 && row.cells[mediumSecurityColumnNum].children[0].innerHTML == 0) {
+		if (row.cells[highSecurityColumnNum].children[0].innerHTML != 0 && row.cells[mediumSecurityColumnNum].children[0].innerHTML == 0) {
 			filterRowByRisk(row, filterClassName);
 		}
 	} else if (riskToFilter.id.indexOf("low") > -1) {
 		// only show the rows that have low security risks without high or medium risks
-		if (row.cells[highSecurityColumnNum].children[0].innerHTML == 0 && row.cells[mediumSecurityColumnNum].children[0].innerHTML == 0
+		if (row.cells[highSecurityColumnNum].children[0].innerHTML != 0 && row.cells[mediumSecurityColumnNum].children[0].innerHTML != 0
 				&& row.cells[lowSecurityColumnNum].children[0].innerHTML == 0) {
 			filterRowByRisk(row, filterClassName);
 		}
