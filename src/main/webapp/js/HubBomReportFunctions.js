@@ -168,27 +168,34 @@ function filterTable(governanceReportTable, riskToFilter, shouldRemoveFilter, fi
 
 function filterRowBySecurity(row, riskToFilter,filterClassName) {
 	if (riskToFilter.id.indexOf("none") != -1) {
+		// only show the rows that have no security risks
 		if (row.cells[highSecurityColumnNum].children[0].innerHTML != 0 || row.cells[mediumSecurityColumnNum].children[0].innerHTML != 0
 				|| row.cells[lowSecurityColumnNum].children[0].innerHTML != 0) {
-			if (row.className.indexOf(filterClassName) == -1) {
-				row.className += filterClassName;
-			}
+			filterRowByRisk(row, filterClassName);
 		}
 	} else if (riskToFilter.id.indexOf("high") > -1) {
-		filterRowByRisk(row, highSecurityColumnNum, filterClassName);
+		// only show the rows that have high security risks
+		if (row.cells[highSecurityColumnNum].children[0].innerHTML == 0) {
+			filterRowByRisk(row, filterClassName);
+		}
 	}else if (riskToFilter.id.indexOf("medium") > -1) {
-		filterRowByRisk(row, mediumSecurityColumnNum, filterClassName);
+		// only show the rows that have medium security risks without high risks
+		if (row.cells[highSecurityColumnNum].children[0].innerHTML == 0 && row.cells[mediumSecurityColumnNum].children[0].innerHTML == 0) {
+			filterRowByRisk(row, filterClassName);
+		}
 	} else if (riskToFilter.id.indexOf("low") > -1) {
-		filterRowByRisk(row, lowSecurityColumnNum, filterClassName);
+		// only show the rows that have low security risks without high or medium risks
+		if (row.cells[highSecurityColumnNum].children[0].innerHTML == 0 && row.cells[mediumSecurityColumnNum].children[0].innerHTML == 0
+				&& row.cells[lowSecurityColumnNum].children[0].innerHTML == 0) {
+			filterRowByRisk(row, filterClassName);
+		}
 	}
 }
 
-function filterRowByRisk(row, cellNumber, filterClassName){
-	if (row.cells[cellNumber].children[0].innerHTML <= 0) {
+function filterRowByRisk(row, filterClassName){
 		if (row.className.indexOf(filterClassName) == -1) {
 			row.className += filterClassName;
 		}
-	}
 }
 
 function filterRowByOtherRisk(row, riskToFilter,filterClassName, riskColumnNum) {
