@@ -18,6 +18,6 @@ public class GetHostName implements Callable<String, IOException> {
 
     @Override
     public void checkRoles(RoleChecker checker) throws SecurityException {
-        checker.check(this, new Role(GetPathSeparator.class));
+        checker.check(this, new Role(GetHostName.class));
     }
 }

@@ -334,18 +334,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         if (hubUrl == null) {
             return null;
         }
-        // Clean up the url string
-        hubUrl = hubUrl.trim();
-        if (hubUrl.endsWith("/")) {
-            hubUrl.substring(0, hubUrl.length() - 1);
-        }
-        StringBuilder urlBuilder = new StringBuilder();
-        urlBuilder.append(hubUrl);
-        urlBuilder.append("/download/scan.cli.zip");
-
         ArrayList<ToolInstaller> installers = new ArrayList<ToolInstaller>();
 
-        HubScanInstaller autoInstaller = new HubScanInstaller(null, urlBuilder.toString());
+        HubScanInstaller autoInstaller = new HubScanInstaller("Hub Cli Installer");
 
         installers.add(autoInstaller);
 

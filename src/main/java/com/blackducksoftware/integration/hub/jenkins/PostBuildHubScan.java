@@ -32,10 +32,10 @@ import jenkins.model.Jenkins;
 import org.codehaus.plexus.util.StringUtils;
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.restlet.data.Status;
-import org.restlet.resource.ResourceException;
 
+import com.blackducksoftware.integration.hub.HubEventPolling;
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
@@ -56,7 +56,6 @@ import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.blackducksoftware.integration.hub.response.ReportFormatEnum;
 import com.blackducksoftware.integration.hub.response.ReportMetaInformationItem;
 import com.blackducksoftware.integration.hub.response.ReportMetaInformationItem.ReportMetaLinkItem;
-import com.blackducksoftware.integration.hub.response.VersionComparison;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
 
@@ -435,7 +434,9 @@ public class PostBuildHubScan extends Recorder {
         // logger.debug("Time before scan : " + reportGenInfo.getBeforeScanTime().toString());
         // logger.debug("Time after scan : " + reportGenInfo.getAfterScanTime().toString());
         logger.debug("Waiting for the bom to be updated with the scan results.");
-        if (reportGenInfo.getService().isBomUpToDate(reportGenInfo.getBeforeScanTime(), reportGenInfo.getAfterScanTime(),
+        HubEventPolling hubPoller = new HubEventPolling(reportGenInfo.getService());
+
+        if (hubPoller.isBomUpToDate(reportGenInfo.getBeforeScanTime(), reportGenInfo.getAfterScanTime(),
                 reportGenInfo.getHostname(), reportGenInfo.getScanTargets(), reportGenInfo.getMaximumWaitTime())) {
             logger.debug("The bom has been updated, generating the report.");
             String reportUrl = reportGenInfo.getService().generateHubReport(reportGenInfo.getVersionId(), ReportFormatEnum.JSON);
@@ -653,28 +654,11 @@ public class PostBuildHubScan extends Recorder {
             throws IOException, HubConfigurationException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException
     {
         validateScanTargets(logger, scanTargets, build.getBuiltOn().getChannel());
-        VersionComparison logOptionComparison = null;
-        VersionComparison mappingComparison = null;
-        VersionComparison parseStatusComparison = null;
         Boolean mappingDone = false;
-        try {
-            // FIXME not very efficient, if it is 2.3.0 or older then we know the answers for the others
-            // we dont need to make all three connections
-            parseStatusComparison = service.compareWithHubVersion("2.3.0");
 
-            mappingComparison = service.compareWithHubVersion("2.2.0");
+        HubSupportHelper hubSupport = new HubSupportHelper();
+        hubSupport.checkHubSupport(service, logger);
 
-            // The logDir option wasnt added until Hub version 2.0.1
-            logOptionComparison = service.compareWithHubVersion("2.0.1");
-
-        } catch (BDRestException e) {
-            ResourceException resEx = (ResourceException) e.getCause();
-            if (resEx.getStatus().equals(Status.CLIENT_ERROR_NOT_FOUND)) {
-                // The Hub server is version 2.0.0 and the version endpoint does not exist
-            } else {
-                logger.error(resEx.getMessage());
-            }
-        }
         FilePath oneJarPath = null;
 
         oneJarPath = new FilePath(scanExec.getParent(), "cache");
@@ -685,32 +669,18 @@ public class PostBuildHubScan extends Recorder {
         scan.setLogger(logger);
         addProxySettingsToScanner(logger, scan);
 
-        if (logOptionComparison != null && logOptionComparison.getNumericResult() < 0) {
-            // The logDir option wasnt added until Hub version 2.0.1
-            // So if the result is that 2.0.1 is less than the actual version, we know that it supports the log option
-            scan.setHubSupportLogOption(true);
-        } else {
-            scan.setHubSupportLogOption(false);
-        }
+        scan.setHubSupportLogOption(hubSupport.isLogOptionSupport());
         scan.setScanMemory(scanMemory);
         scan.setWorkingDirectory(getWorkingDirectory().getRemote());
 
-        if (parseStatusComparison != null && parseStatusComparison.getNumericResult() <= 0) {
-            // Should check the exit status code instead
-            scan.setShouldParseStatus(false);
-        } else {
-            scan.setShouldParseStatus(true);
-        }
+        scan.setShouldParseStatus(hubSupport.isCliStatusReturnSupport());
 
         scan.setVerboseRun(isVerbose());
-        if (mappingComparison != null && mappingComparison.getNumericResult() <= 0 &&
+        if (hubSupport.isCliMappingSupport() &&
                 StringUtils.isNotBlank(projectName)
                 && StringUtils.isNotBlank(versionName)) {
 
-            // The project and release options werent working until Hub version 2.2.?
-            // So if the result is that 2.2.0 is less than or equal to the actual version, we know that it supports
-            // these options
-            scan.setCliSupportsMapping(true);
+            scan.setCliSupportsMapping(hubSupport.isCliMappingSupport());
             scan.setProject(projectName);
             scan.setVersion(versionName);
             mappingDone = true;
