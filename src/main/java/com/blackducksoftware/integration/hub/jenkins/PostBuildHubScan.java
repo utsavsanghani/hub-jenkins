@@ -39,6 +39,7 @@ import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
+import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
 import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
@@ -418,6 +419,9 @@ public class PostBuildHubScan extends Recorder {
                 }
                 logger.error(message, e);
                 setResult(Result.UNSTABLE);
+            } finally {
+                // Add this action to the Build so we know if the scan ran before the Failure Conditions
+                build.addAction(new HubScanFinishedAction());
             }
         } else {
             logger.info("Build was not successful. Will not run Black Duck Scans.");

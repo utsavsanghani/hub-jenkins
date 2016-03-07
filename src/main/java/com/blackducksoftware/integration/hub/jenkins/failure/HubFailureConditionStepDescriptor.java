@@ -7,7 +7,12 @@ import hudson.tasks.Publisher;
 
 import java.io.Serializable;
 
+import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.HubSupportHelper;
+import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
+import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
+import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 
 @Extension
 public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publisher> implements Serializable {
@@ -20,7 +25,26 @@ public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publi
     public boolean isApplicable(Class<? extends AbstractProject> jobType) {
         // Indicates that this builder can be used with all kinds of project
         // types
-        return true;
+
+        HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
+        HubSupportHelper hubSupport = new HubSupportHelper();
+        HubIntRestService service;
+        try {
+            service = BuildHelper.getRestService(null, serverInfo.getServerUrl(),
+                    serverInfo.getUsername(),
+                    serverInfo.getPassword(),
+                    serverInfo.getTimeout());
+
+            hubSupport.checkHubSupport(service, null);
+
+        } catch (Exception e) {
+            return false;
+        }
+        if (hubSupport.isPolicyApiSupport()) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override

@@ -23,6 +23,7 @@ import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatus;
@@ -62,6 +63,10 @@ public class HubFailureConditionStep extends Recorder {
         HubJenkinsLogger logger = new HubJenkinsLogger(listener);
         logger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
 
+        if (build.getResult() != Result.SUCCESS) {
+            logger.error("The Build did not run sucessfully, will not check the Hub Failure Conditions.");
+            return true;
+        }
         PostBuildHubScan hubScanStep = null;
         List<Publisher> publishers = build.getProject().getPublishersList();
         // TODO add support for Build wrappers when we start using them
@@ -82,6 +87,12 @@ public class HubFailureConditionStep extends Recorder {
             logger.error("Could not find the Hub Scan step for this Build.");
             build.setResult(Result.UNSTABLE);
             return true;
+        } else {
+            if (build.getAction(HubScanFinishedAction.class) == null) {
+                logger.error("The scan must be configured to run before the Failure Conditions.");
+                build.setResult(Result.UNSTABLE);
+                return true;
+            }
         }
 
         if (!getFailBuildForPolicyViolations()) {
