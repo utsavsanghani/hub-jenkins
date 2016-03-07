@@ -140,7 +140,7 @@ public class HubFailureConditionStep extends Recorder {
             hubSupport.checkHubSupport(service, logger);
 
             if (!hubSupport.isPolicyApiSupport()) {
-                logger.error("This version of the Hub does not support the Policy Api's.");
+                logger.error("This version of the Hub does not have support for Policies.");
                 build.setResult(Result.UNSTABLE);
                 return true;
             } else if (getFailBuildForPolicyViolations()) {

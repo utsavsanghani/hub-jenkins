@@ -4,8 +4,14 @@ import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
+import hudson.util.FormValidation;
 
+import java.io.IOException;
 import java.io.Serializable;
+
+import javax.servlet.ServletException;
+
+import org.kohsuke.stapler.QueryParameter;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
@@ -50,6 +56,35 @@ public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publi
     @Override
     public String getDisplayName() {
         return Messages.HubFailureCondition_getDisplayName();
+    }
+
+    public FormValidation doCheckFailBuildForPolicyViolations(@QueryParameter("failBuildForPolicyViolations") boolean failBuildForPolicyViolations)
+            throws IOException, ServletException {
+        if (failBuildForPolicyViolations) {
+
+            HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
+            HubSupportHelper hubSupport = new HubSupportHelper();
+            HubIntRestService service;
+            try {
+                service = BuildHelper.getRestService(null, serverInfo.getServerUrl(),
+                        serverInfo.getUsername(),
+                        serverInfo.getPassword(),
+                        serverInfo.getTimeout());
+
+                hubSupport.checkHubSupport(service, null);
+
+            } catch (Exception e) {
+                // Something was not configured correctly. The error will appear in the Hub Scan configuration of the
+                // Job or in the Build's Console Output
+                return FormValidation.ok();
+            }
+
+            if (!hubSupport.isPolicyApiSupport()) {
+                return FormValidation.error(Messages.HubFailureCondition_getPoliciesNotSupported());
+            }
+        }
+
+        return FormValidation.ok();
     }
 
 }
