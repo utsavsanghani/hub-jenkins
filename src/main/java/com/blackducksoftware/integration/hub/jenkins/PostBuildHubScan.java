@@ -850,9 +850,8 @@ public class PostBuildHubScan extends Recorder {
             throw new HubConfigurationException("You need to select which BlackDuck Scan installation to use.");
         }
 
-        hubScanInstallation = hubScanInstallation.forNode(node, logger.getJenkinsListener()); // Need to get the Slave
-        // CLI
-
+        // Need to get the CLI for this Node, triggers the auto install
+        hubScanInstallation = hubScanInstallation.forNode(node, logger.getJenkinsListener());
         if (hubScanInstallation.getExists(node.getChannel(), logger)) {
             scanExecutable = hubScanInstallation.getCLI(node.getChannel());
             logger.debug("Using this BlackDuck Scan CLI at : " + scanExecutable.getRemote());

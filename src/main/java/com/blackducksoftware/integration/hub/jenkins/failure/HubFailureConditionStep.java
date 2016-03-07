@@ -15,6 +15,7 @@ import java.util.List;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
@@ -118,8 +119,21 @@ public class HubFailureConditionStep extends Recorder {
                 return true;
             }
 
-            // We use this conditional in case there are other failure conditions in the future
-            if (getFailBuildForPolicyViolations()) {
+            HubSupportHelper hubSupport = new HubSupportHelper();
+            HubIntRestService service;
+            service = BuildHelper.getRestService(logger, serverInfo.getServerUrl(),
+                    serverInfo.getUsername(),
+                    serverInfo.getPassword(),
+                    serverInfo.getTimeout());
+
+            hubSupport.checkHubSupport(service, logger);
+
+            if (!hubSupport.isPolicyApiSupport()) {
+                logger.error("This version of the Hub does not support the Policy Api's.");
+                build.setResult(Result.UNSTABLE);
+                return true;
+            } else if (getFailBuildForPolicyViolations()) {
+                // We use this conditional in case there are other failure conditions in the future
                 PolicyStatus policyStatus = restService.getPolicyStatus(project.getId(), versionId);
                 if (policyStatus.getOverallStatusEnum() == PolicyStatusEnum.IN_VIOLATION) {
                     build.setResult(Result.FAILURE);

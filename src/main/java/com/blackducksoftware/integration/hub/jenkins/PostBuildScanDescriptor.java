@@ -336,14 +336,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         }
         ArrayList<ToolInstaller> installers = new ArrayList<ToolInstaller>();
 
-        HubScanInstaller autoInstaller = new HubScanInstaller("Hub Cli Installer");
+        HubScanInstaller autoInstaller = new HubScanInstaller();
 
         installers.add(autoInstaller);
 
         ArrayList<ToolProperty<?>> properties = new ArrayList<ToolProperty<?>>();
 
         InstallSourceProperty sourceProperty = null;
-        ;
         try {
             sourceProperty = new InstallSourceProperty(installers);
         } catch (IOException e) {

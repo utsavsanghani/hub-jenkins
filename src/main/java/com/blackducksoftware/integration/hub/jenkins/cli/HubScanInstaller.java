@@ -39,8 +39,11 @@ public class HubScanInstaller extends ToolInstaller {
      * URL of a ZIP file which should be downloaded in case the tool is missing.
      */
 
-    public HubScanInstaller(String label) {
-        super(label);
+    public HubScanInstaller() {
+        // Labels restrict which node the installer applies to, we do not want any restrictions for the auto install so
+        // we pass null to super
+
+        super(null);
     }
 
     @Override
