@@ -150,8 +150,8 @@ public class HubFailureConditionStep extends Recorder {
                     build.setResult(Result.FAILURE);
                 }
                 logger.info("Found " + policyStatus.getStatusCounts().getIN_VIOLATION() + " bom entries to be In Violation of a defined Policy.");
-                logger.info("Found " + policyStatus.getStatusCounts().getIN_VIOLATION_OVERRIDEN()
-                        + " bom entries to be In Violation of a defined Policy, but they have been manually overriden.");
+                logger.info("Found " + policyStatus.getStatusCounts().getIN_VIOLATION_OVERRIDDEN()
+                        + " bom entries to be In Violation of a defined Policy, but they have been manually overridden.");
                 logger.info("Found " + policyStatus.getStatusCounts().getNOT_IN_VIOLATION() + " bom entries to be Not In Violation of a defined Policy.");
 
             }
