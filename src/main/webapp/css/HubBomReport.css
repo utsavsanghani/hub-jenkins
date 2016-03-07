@@ -1,12 +1,12 @@
-.governanceReportBackgroundColor {
+.riskReportBackgroundColor {
 	background-color: rgb(255,255,255);
 }
 
-.governanceReportText, .linkText, .h1, .h2, .riskSummaryLabel, .riskSummaryCount, .risk-count, .table-summary, .summaryLabel, .summaryValue, .columnLabel, .riskColumnLabel, .licenseColumnLabel, .licenseColumn, .riskColumn, .componentColumn, .clickableColumn {
+.riskReportText, .linkText, .h1, .h2, .riskSummaryLabel, .riskSummaryCount, .risk-count, .table-summary, .summaryLabel, .summaryValue, .columnLabel, .riskColumnLabel, .licenseColumnLabel, .licenseColumn, .riskColumn, .componentColumn, .clickable {
 	text-align: left;
-	font-family: 'Open Sans', sans-serif;
+	font-family: inherit;
 	font-size: 14px;
-	color: #333;
+	color: #000;
 }
 
 .linkText {
@@ -37,21 +37,21 @@
 
 .riskSummaryLabel, .riskSummaryCount {
 	vertical-align: top;
-	min-width: 70px;
-	width: 70px;
+	min-width: 72px;
+	width: 72px;
 	display: inline-block;
 	background-color: #fff;
 }
 
-.clickable, .clickableColumn:hover {
+.clickable:hover {
 	cursor: pointer;
 	text-decoration: underline;
 }
 
 .filterSelected {
 	color: darkRed;
-	backgroundColor: rgba(255, 238, 0, .4);
-	borderRadius: 3px;
+	background-color: rgba(255, 238, 0, .4);
+	border-radius: 3px;
 	border: 1px solid #FFB900;
 }
 
@@ -66,7 +66,7 @@
 }
 
 .horizontal .progress-bar {
-	height: 23px;
+	height: 25px;
 	width: 100%;
 }
 
@@ -112,6 +112,10 @@
 	white-space: nowrap;
 }
 
+.risk-span {
+	width: 100%;
+}
+
 .risk-unknown-count {
 	font-weight: bold;
 	color: white;
@@ -145,11 +149,11 @@
 	margin-top: 6px;
 }
 
-.clickableColumn, .columnLabel, .licenseColumnLabel, .riskColumnLabel, .componentColumn, .riskColumn, .licenseColumn {
-	padding-left: 10px;
-	padding-right: 10px;
-	padding-top: 10px;
-	padding-bottom: 10px;
+.clickable, .columnLabel, .licenseColumnLabel, .riskColumnLabel, .componentColumn, .riskColumn, .licenseColumn {
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
 
 
@@ -178,14 +182,15 @@
 	white-space: nowrap;
 }
 
-.clickableColumn, .componentColumn, .riskColumn, .licenseColumn  {
-	border: none !important;
+.clickable, .componentColumn, .riskColumn, .licenseColumn  {
 	border-collapse: collapse !important;
 	border-spacing: 0px !important;
 	min-width: 50px;
 	white-space: normal;
 	word-wrap: break-word;
 	max-width: 300px;
+	height: 25px;
+	text-decoration: none;
 }
 
 .componentColumn {

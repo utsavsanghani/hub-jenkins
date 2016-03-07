@@ -121,10 +121,10 @@ sorttable = {
 										: '&nbsp;&#x25B4;';
 								this.appendChild(sortrevind);
 								
-								var governanceReportTable = document.getElementById(tableId).tBodies[0];
+								var riskReportTable = document.getElementById(tableId).tBodies[0];
 								var odd = true;
-								for (var i = 0; i < governanceReportTable.rows.length; i++) {
-									adjustTableRow(governanceReportTable.rows[i], odd);
+								for (var i = 0; i < riskReportTable.rows.length; i++) {
+									adjustTableRow(riskReportTable.rows[i], odd);
 									odd = !odd;
 								}
 								return;
@@ -147,10 +147,10 @@ sorttable = {
 										: '&nbsp;&#x25BE;';
 								this.appendChild(sortfwdind);
 
-								var governanceReportTable = document.getElementById(tableId).tBodies[0];
+								var riskReportTable = document.getElementById(tableId).tBodies[0];
 								var odd = true;
-								for (var i = 0; i < governanceReportTable.rows.length; i++) {
-									adjustTableRow(governanceReportTable.rows[i], odd);
+								for (var i = 0; i < riskReportTable.rows.length; i++) {
+									adjustTableRow(riskReportTable.rows[i], odd);
 									odd = !odd;
 								}
 								
@@ -217,10 +217,10 @@ sorttable = {
 							for (var j = 0; j < row_array.length; j++) {
 								tb.appendChild(row_array[j][1]);
 							}
-							var governanceReportTable = document.getElementById(tableId).tBodies[0];
+							var riskReportTable = document.getElementById(tableId).tBodies[0];
 							var odd = true;
-							for (var i = 0; i < governanceReportTable.rows.length; i++) {
-								adjustTableRow(governanceReportTable.rows[i], odd);
+							for (var i = 0; i < riskReportTable.rows.length; i++) {
+								adjustTableRow(riskReportTable.rows[i], odd);
 								odd = !odd;
 							}
 							
