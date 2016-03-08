@@ -34,7 +34,7 @@ import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
 
 public class HubFailureConditionStep extends Recorder {
 
-    // TODO test this class and its descriptor
+    // TODO test this class
 
     private final Boolean failBuildForPolicyViolations;
 
@@ -130,14 +130,7 @@ public class HubFailureConditionStep extends Recorder {
                 return true;
             }
 
-            HubSupportHelper hubSupport = new HubSupportHelper();
-            HubIntRestService service;
-            service = BuildHelper.getRestService(logger, serverInfo.getServerUrl(),
-                    serverInfo.getUsername(),
-                    serverInfo.getPassword(),
-                    serverInfo.getTimeout());
-
-            hubSupport.checkHubSupport(service, logger);
+            HubSupportHelper hubSupport = getDescriptor().getCheckedHubSupportHelper();
 
             if (!hubSupport.isPolicyApiSupport()) {
                 logger.error("This version of the Hub does not have support for Policies.");

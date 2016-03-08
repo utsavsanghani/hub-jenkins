@@ -287,7 +287,7 @@ public class PostBuildHubScan extends Recorder {
                 }
                 logger.info("Hub Plugin running on machine : " + localHostName);
 
-                if (validateConfiguration(getScans())) {
+                if (validateConfiguration()) {
                     // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any
                     // file even outside of the Jenkins directories
                     File workspace = null;
@@ -309,6 +309,16 @@ public class PostBuildHubScan extends Recorder {
                     setJava(logger, build);
                     EnvVars variables = build.getEnvironment(listener);
                     List<String> scanTargets = new ArrayList<String>();
+
+                    ScanJobs[] scans = getScans();
+                    if (scans == null) {
+                        scans = new ScanJobs[1];
+                    }
+                    if (scans.length == 0) {
+                        ScanJobs scan = new ScanJobs("");
+                        scans[0] = scan;
+                    }
+
                     for (ScanJobs scanJob : getScans()) {
                         if (StringUtils.isEmpty(scanJob.getScanTarget())) {
 
@@ -880,11 +890,8 @@ public class PostBuildHubScan extends Recorder {
      * @throws HubScanToolMissingException
      * @throws HubConfigurationException
      */
-    public boolean validateConfiguration(ScanJobs[] scans) throws HubScanToolMissingException,
+    public boolean validateConfiguration() throws HubScanToolMissingException,
             HubConfigurationException {
-        if (scans == null || scans.length == 0) {
-            throw new HubConfigurationException("Could not find any targets to scan.");
-        }
 
         if (getHubServerInfo() == null) {
             throw new HubConfigurationException("Could not find the Hub global configuration.");
