@@ -27,26 +27,28 @@ public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publi
         super(HubFailureConditionStep.class);
     }
 
+    public HubSupportHelper getCheckedHubSupportHelper() {
+        HubSupportHelper hubSupport = new HubSupportHelper();
+        HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
+        try {
+            HubIntRestService service = BuildHelper.getRestService(null, serverInfo.getServerUrl(),
+                    serverInfo.getUsername(),
+                    serverInfo.getPassword(),
+                    serverInfo.getTimeout());
+            hubSupport.checkHubSupport(service, null);
+        } catch (Exception e) {
+            return null;
+        }
+        return hubSupport;
+    }
+
     @Override
     public boolean isApplicable(Class<? extends AbstractProject> jobType) {
         // Indicates that this builder can be used with all kinds of project
         // types
 
-        HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
-        HubSupportHelper hubSupport = new HubSupportHelper();
-        HubIntRestService service;
-        try {
-            service = BuildHelper.getRestService(null, serverInfo.getServerUrl(),
-                    serverInfo.getUsername(),
-                    serverInfo.getPassword(),
-                    serverInfo.getTimeout());
-
-            hubSupport.checkHubSupport(service, null);
-
-        } catch (Exception e) {
-            return false;
-        }
-        if (hubSupport.isPolicyApiSupport()) {
+        HubSupportHelper hubSupport = getCheckedHubSupportHelper();
+        if (hubSupport != null && hubSupport.isPolicyApiSupport()) {
             return true;
         }
 
@@ -62,24 +64,9 @@ public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publi
             throws IOException, ServletException {
         if (failBuildForPolicyViolations) {
 
-            HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
-            HubSupportHelper hubSupport = new HubSupportHelper();
-            HubIntRestService service;
-            try {
-                service = BuildHelper.getRestService(null, serverInfo.getServerUrl(),
-                        serverInfo.getUsername(),
-                        serverInfo.getPassword(),
-                        serverInfo.getTimeout());
+            HubSupportHelper hubSupport = getCheckedHubSupportHelper();
 
-                hubSupport.checkHubSupport(service, null);
-
-            } catch (Exception e) {
-                // Something was not configured correctly. The error will appear in the Hub Scan configuration of the
-                // Job or in the Build's Console Output
-                return FormValidation.ok();
-            }
-
-            if (!hubSupport.isPolicyApiSupport()) {
+            if (hubSupport != null && !hubSupport.isPolicyApiSupport()) {
                 return FormValidation.error(Messages.HubFailureCondition_getPoliciesNotSupported());
             }
         }
