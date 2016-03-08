@@ -30,7 +30,6 @@ public class HubServerInfo implements Serializable {
     }
 
     public HubServerInfo(String serverUrl, String hubCredentialsId, int timeout) {
-        super();
         this.serverUrl = serverUrl;
         this.hubCredentialsId = hubCredentialsId;
         this.timeout = timeout;

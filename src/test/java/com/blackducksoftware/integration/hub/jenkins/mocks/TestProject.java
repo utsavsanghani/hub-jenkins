@@ -34,7 +34,13 @@ public class TestProject extends AbstractProject<TestProject, TestBuild> impleme
 
     @Override
     public DescribableList<Publisher, Descriptor<Publisher>> getPublishersList() {
-        return (DescribableList<Publisher, Descriptor<Publisher>>) publishers;
+        if (publishers == null) {
+            return null;
+        }
+
+        DescribableList<Publisher, Descriptor<Publisher>> temp = new DescribableList<Publisher, Descriptor<Publisher>>(null, publishers);
+
+        return temp;
     }
 
     @Override

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
@@ -97,36 +98,22 @@ public class HubFailureConditionStep extends Recorder {
 
         if (!getFailBuildForPolicyViolations()) {
             logger.error("The Hub failure condition step has not been configured to do anything.");
+            build.setResult(Result.UNSTABLE);
             return true;
         }
 
         HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
         try {
-            HubIntRestService restService = BuildHelper.getRestService(logger, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(),
-                    serverInfo.getTimeout());
+            HubIntRestService restService = getHubIntRestService(logger, serverInfo);
 
-            ProjectItem project;
-            try {
-                project = restService.getProjectByName(hubScanStep.getHubProjectName());
-                if (project == null) {
-                    logger.error("Could not find the specified Hub Project.");
-                    return true;
-                }
-            } catch (ProjectDoesNotExistException e) {
-                logger.error(e.getMessage(), e);
+            String projectId = getProjectId(logger, restService, hubScanStep.getHubProjectName());
+            if (StringUtils.isBlank(projectId)) {
+                build.setResult(Result.UNSTABLE);
                 return true;
             }
-
-            String versionId = null;
-
-            List<ReleaseItem> projectVersions = restService.getVersionsForProject(project.getId());
-            for (ReleaseItem release : projectVersions) {
-                if (hubScanStep.getHubProjectVersion().equals(release.getVersion())) {
-                    versionId = release.getId();
-                }
-            }
-            if (versionId == null) {
-                logger.error("Could not find the specified Version for this Hub Project.");
+            String versionId = getVersionId(logger, restService, projectId, hubScanStep.getHubProjectVersion());
+            if (StringUtils.isBlank(versionId)) {
+                build.setResult(Result.UNSTABLE);
                 return true;
             }
 
@@ -138,7 +125,7 @@ public class HubFailureConditionStep extends Recorder {
                 return true;
             } else if (getFailBuildForPolicyViolations()) {
                 // We use this conditional in case there are other failure conditions in the future
-                PolicyStatus policyStatus = restService.getPolicyStatus(project.getId(), versionId);
+                PolicyStatus policyStatus = restService.getPolicyStatus(projectId, versionId);
                 if (policyStatus.getOverallStatusEnum() == PolicyStatusEnum.IN_VIOLATION) {
                     build.setResult(Result.FAILURE);
                 }
@@ -159,4 +146,52 @@ public class HubFailureConditionStep extends Recorder {
         }
         return true;
     }
+
+    public String getProjectId(HubJenkinsLogger logger, HubIntRestService restService, String projectName) throws IOException, BDRestException,
+            URISyntaxException {
+        String projectId = null;
+        ProjectItem project = null;
+        try {
+            project = restService.getProjectByName(projectName);
+            if (project == null) {
+                logger.error("Could not find the specified Hub Project.");
+                return null;
+            }
+            projectId = project.getId();
+            if (StringUtils.isBlank(projectId)) {
+                logger.error("Could not find the specified Hub Project.");
+                return null;
+            }
+        } catch (ProjectDoesNotExistException e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
+        return projectId;
+    }
+
+    public String getVersionId(HubJenkinsLogger logger, HubIntRestService restService, String projectId, String versionName) throws IOException,
+            BDRestException, URISyntaxException {
+        String versionId = null;
+
+        List<ReleaseItem> projectVersions = restService.getVersionsForProject(projectId);
+        if (projectVersions != null) {
+            for (ReleaseItem release : projectVersions) {
+                if (versionName.equals(release.getVersion())) {
+                    versionId = release.getId();
+                }
+            }
+        }
+        if (StringUtils.isBlank(versionId)) {
+            logger.error("Could not find the specified Version for this Hub Project.");
+            return null;
+        }
+        return versionId;
+    }
+
+    public HubIntRestService getHubIntRestService(HubJenkinsLogger logger, HubServerInfo serverInfo) throws IOException,
+            BDRestException, URISyntaxException, BDJenkinsHubPluginException, HubIntegrationException {
+        return BuildHelper.getRestService(logger, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(),
+                serverInfo.getTimeout());
+    }
+
 }
