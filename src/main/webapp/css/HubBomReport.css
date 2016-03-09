@@ -64,7 +64,8 @@
 }
 
 .riskSummaryFooter {
-	color: grey;
+	color: #BBB;
+	font-size: 12px;
 }
 
 .riskSummaryLabel, .riskSummaryCount {

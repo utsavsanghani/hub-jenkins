@@ -114,7 +114,7 @@
 						</div>
 					</div>
 					<div class="riskSummaryFooter">
-						//TExt
+						${%Vulnerability_Risk_Footer}
 					</div>
 				</div>
 				<!-- SECURITY RISK SUMMARY END -->
@@ -183,6 +183,9 @@
 							</div>
 						</div>
 					</div>
+					<div class="riskSummaryFooter">
+						${%License_Risk_Footer}
+					</div>
 				</div>
 				<!-- LICENSE RISK SUMMARY END -->
 				
@@ -248,6 +251,9 @@
 								<span>${it.getPercentage(it.getOperationalRiskNoneCount())}%</span>
 							</div>
 						</div>
+					</div>
+					<div class="riskSummaryFooter">
+						${%Operational_Risk_Footer}
 					</div>
 				</div>
 				<!-- OPERATIONAL RISK SUMMARY END -->
