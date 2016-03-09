@@ -137,12 +137,16 @@ public class HubFailureConditionStep extends Recorder {
             }
         } catch (BDJenkinsHubPluginException e) {
             logger.error(e.getMessage(), e);
+            build.setResult(Result.UNSTABLE);
         } catch (HubIntegrationException e) {
             logger.error(e.getMessage(), e);
+            build.setResult(Result.UNSTABLE);
         } catch (URISyntaxException e) {
             logger.error(e.getMessage(), e);
+            build.setResult(Result.UNSTABLE);
         } catch (BDRestException e) {
             logger.error(e.getMessage(), e);
+            build.setResult(Result.UNSTABLE);
         }
         return true;
     }
