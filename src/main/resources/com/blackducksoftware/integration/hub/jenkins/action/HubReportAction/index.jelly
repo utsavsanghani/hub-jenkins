@@ -18,7 +18,7 @@
 					<div>
 						<a>
 					<!--	<a href="${it.getReport().getReportVersionUrl()}" target="_blank"> -->
-							<img style="width: 140px;margin: 2px;padding-bottom: 10px;"
+							<img style="width: 120px;margin: 2px;padding-bottom: 10px;"
 								src="${rootURL}/plugin/hub-jenkins/images/Black_Duck_Logo.png" />
 						</a>
 					</div>
@@ -28,12 +28,12 @@
 				
 				<div class="versionSummaryTable">
 					<div>
-						<div class="versionSummaryLargeLabel clickable linkText" onclick="window.open('${it.getReport().getReportProjectUrl()}', '_blank');">
+						<div class="clickable linkText versionSummaryLargeLabel" onclick="window.open('${it.getReport().getReportProjectUrl()}', '_blank');">
 								${it.getReleaseSummary().getProjectName()}
 						</div>
 						<div class="versionSummaryLargeLabel"> > </div>
 						
-						<div class="versionSummaryLargeLabel clickable linkText" onclick="window.open('${it.getReport().getReportVersionUrl()}', '_blank');">
+						<div class="clickable linkText versionSummaryLargeLabel" onclick="window.open('${it.getReport().getReportVersionUrl()}', '_blank');">
 								${it.getReleaseSummary().getVersion()}
 						</div>
 						
@@ -112,6 +112,9 @@
 								<span>${it.getPercentage(it.getVulnerabilityRiskNoneCount())}%</span>
 							</div>
 						</div>
+					</div>
+					<div class="riskSummaryFooter">
+						//TExt
 					</div>
 				</div>
 				<!-- SECURITY RISK SUMMARY END -->
