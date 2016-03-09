@@ -56,7 +56,7 @@ public class HubFailureConditionStepUnitTest {
 
         assertEquals(failBuildForPolicyViolations, failureStep.getFailBuildForPolicyViolations());
 
-        failBuildForPolicyViolations = false;
+        failBuildForPolicyViolations = true;
         failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
 
         assertEquals(failBuildForPolicyViolations, failureStep.getFailBuildForPolicyViolations());
