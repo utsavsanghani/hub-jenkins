@@ -18,44 +18,41 @@
 					<div>
 						<a>
 					<!--	<a href="${it.getReport().getReportVersionUrl()}" target="_blank"> -->
-							<img style="width: 320px;margin: 2px;padding-bottom: 10px;"
+							<img style="width: 140px;margin: 2px;padding-bottom: 10px;"
 								src="${rootURL}/plugin/hub-jenkins/images/Black_Duck_Logo.png" />
-						</a>
-					</div>
-					<div>
-						<a class="riskReportText" href="${it.getReport().getReportVersionUrl()}" target="_blank">
-							${%HubReportLink}
 						</a>
 					</div>
 				</div>
 				
-				<h1>${%Title}</h1>
+				<div class="h1">${%Title}</div>
 				
-				<table style="height: 60px;">
-					<tbody>
-						<tr>
-							<td class="summaryLabel" style="font-weight: bold;">${%Project_Name}:</td>
-							<td class="clickable summaryValue" onclick="window.open('${it.getReport().getReportProjectUrl()}', '_blank');">
-									${it.getReleaseSummary().getProjectName()}
-							</td>
-							<td class="summaryLabel" style="font-weight: bold;">${%Version_Phase}:</td>
-							<td class="summaryLabel">${it.getReleaseSummary().getPhaseDisplayValue()}</td>
-						</tr>
-						<tr>
-							<td class="summaryLabel" style="font-weight: bold;">${%Version_Name}:</td>
-							
-							<td class="clickable summaryValue" onclick="window.open('${it.getReport().getReportVersionUrl()}', '_blank');">
-									${it.getReleaseSummary().getVersion()}
-							</td>
-							<td class="summaryLabel" style="font-weight: bold;">${%Version_Distribution}:</td>
-							<td class="summaryValue">${it.getReleaseSummary().getDistributionDisplayValue()}</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="versionSummaryTable">
+					<div>
+						<div class="versionSummaryLargeLabel clickable linkText" onclick="window.open('${it.getReport().getReportProjectUrl()}', '_blank');">
+								${it.getReleaseSummary().getProjectName()}
+						</div>
+						<div class="versionSummaryLargeLabel"> > </div>
+						
+						<div class="versionSummaryLargeLabel clickable linkText" onclick="window.open('${it.getReport().getReportVersionUrl()}', '_blank');">
+								${it.getReleaseSummary().getVersion()}
+						</div>
+						
+						<div style="float: right;" class="linkText riskReportText clickable" href="window.open('${it.getReport().getReportVersionUrl()}', '_blank')">
+							${%HubReportLink}
+						</div>
+					</div>
+					<div>
+						<div class="versionSummaryLabel">${%Version_Phase}:</div>
+						<div class="versionSummaryLabel">${it.getReleaseSummary().getPhaseDisplayValue()}</div>
+						<div class="versionSummaryLabel"> | </div>
+						<div class="versionSummaryLabel">${%Version_Distribution}:</div>
+						<div class="versionSummaryLabel">${it.getReleaseSummary().getDistributionDisplayValue()}</div>
+					</div>
+				</div>
 				
 				<!-- SECURITY RISK SUMMARY -->
-				<div class="vulnSummaryContainer horizontal rounded">
-					<div class="h2">${%Vulnerability_Risk_Title}</div>
+				<div class="riskSummaryContainer horizontal rounded">
+					<div class="riskSummaryContainerLabel">${%Vulnerability_Risk_Title}</div>
 
 					<div class="progress-bar horizontal">
 						<div id="highSecurityRiskLabel" class="clickable riskSummaryLabel"
@@ -120,8 +117,8 @@
 				<!-- SECURITY RISK SUMMARY END -->
 				
 				<!-- LICENSE  RISK SUMMARY -->
-				<div class="vulnSummaryContainer horizontal rounded">
-					<div class="h2">${%License_Risk_Title}</div>
+				<div class="riskSummaryContainer horizontal rounded">
+					<div class="riskSummaryContainerLabel">${%License_Risk_Title}</div>
 
 					<div class="progress-bar horizontal">
 						<div id="highLicenseRiskLabel" class="clickable riskSummaryLabel"
@@ -187,8 +184,8 @@
 				<!-- LICENSE RISK SUMMARY END -->
 				
 				<!-- OPERATIONAL RISK SUMMARY -->
-				<div class="vulnSummaryContainer horizontal rounded">
-					<div class="h2">${%Operational_Risk_Title}</div>
+				<div class="riskSummaryContainer horizontal rounded">
+					<div class="riskSummaryContainerLabel">${%Operational_Risk_Title}</div>
 
 					<div class="progress-bar horizontal">
 						<div id="highOperationalRiskLabel" class="clickable riskSummaryLabel"

@@ -2,37 +2,60 @@
 	background-color: rgb(255,255,255);
 }
 
-.riskReportText, .linkText, .h1, .h2, .riskSummaryLabel, .riskSummaryCount, .risk-count, .table-summary, .summaryLabel, .summaryValue, .columnLabel, .riskColumnLabel, .licenseColumnLabel, .licenseColumn, .riskColumn, .componentColumn, .clickable {
+.riskReportText, .linkText, .h1, .riskSummaryContainerLabel, .riskSummaryLabel, .riskSummaryCount, .risk-count, .table-summary,.versionSummaryLabel, .summaryLabel,.versionSummaryLargeLabel, .summaryValue, .columnLabel, .riskColumnLabel, .licenseColumnLabel, .licenseColumn, .riskColumn, .componentColumn, .clickable {
 	text-align: left;
-	font-family: inherit;
+	font-family: 'Open Sans', sans-serif;
 	font-size: 14px;
 	color: #000;
 }
 
-.linkText {
-	font-size: auto;
+.versionSummaryTable{
+	background-color: #FAFAFA; 
+	height: 60px;
+}
+
+.versionSummaryLargeLabel{
+	font-size: 22px;
+}
+
+.versionSummaryLabel, .versionSummaryLargeLabel{
+	display: inline-block;
+	padding-left: 0px;
+	padding-right: 5px;
+	padding-top: 2px;
+	padding-bottom: 1px;
+}
+
+.linkText{
+	color: #46759E;
 }
 
 
-.h1, .h2 {
-	vertical-align: bottom;
-	font-size: 2em;
+.h1 {
+	font-size: 26px;
 	font-weight: bold;
+}
+
+.h1, .riskSummaryContainerLabel {
+	vertical-align: bottom;
 	padding: 5px;
 }
 
-.h2 {
-	text-align: center;
-	font-size: 1.5em;
+.riskSummaryContainerLabel {
+	text-align: left;
+	font-size: 16px;
 }
 
-.vulnSummaryContainer {
+.riskSummaryContainer {
 	width: 450px;
 	height: 160px;
 	background: #fff;
-	padding: 5px;
 	overflow: hidden;
 	display: table-cell;
+	padding-left: 0px;
+	padding-right: 10px;
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
 
 .riskSummaryLabel, .riskSummaryCount {
@@ -164,7 +187,7 @@
 }
 
 .summaryLabel{
-	padding-left: 10px;
+	padding-left: 0px;
 	padding-right: 10px;
 	padding-top: 2px;
 	padding-bottom: 1px;
