@@ -37,7 +37,7 @@
 								${it.getReleaseSummary().getVersion()}
 						</div>
 						
-						<div style="float: right;" class="linkText riskReportText clickable" href="window.open('${it.getReport().getReportVersionUrl()}', '_blank')">
+						<div style="float: right;" class="linkText riskReportText clickable" onclick="window.open('${it.getReport().getReportVersionUrl()}', '_blank');">
 							${%HubReportLink}
 						</div>
 					</div>
