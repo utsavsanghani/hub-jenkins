@@ -274,7 +274,7 @@ public class HubReportAction implements Action {
 
     @Override
     public String getUrlName() {
-        return "hub_governance_report";
+        return "hub_risk_report";
     }
 
 }

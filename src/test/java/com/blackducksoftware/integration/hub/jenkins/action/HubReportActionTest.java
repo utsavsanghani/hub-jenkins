@@ -222,6 +222,6 @@ public class HubReportActionTest {
     @Test
     public void testGetUrlName() {
         HubReportAction action = new HubReportAction(null);
-        assertEquals("hub_governance_report", action.getUrlName());
+        assertEquals("hub_risk_report", action.getUrlName());
     }
 }

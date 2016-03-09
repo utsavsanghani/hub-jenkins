@@ -43,6 +43,6 @@ public class GetHostNameFromNetworkInterfaces implements Callable<String, IOExce
 
     @Override
     public void checkRoles(RoleChecker checker) throws SecurityException {
-        checker.check(this, new Role(GetPathSeparator.class));
+        checker.check(this, new Role(GetHostNameFromNetworkInterfaces.class));
     }
 }

@@ -20,22 +20,22 @@ function adjustWidth(object) {
 }
 
 function adjustTable() {
-	var governanceReportTable = document.getElementById(tableId).tBodies[0];
+	var riskReportTable = document.getElementById(tableId).tBodies[0];
 	var odd = true;
-	for (var i = 0; i < governanceReportTable.rows.length; i++) {
-		if (governanceReportTable.rows[i].className.indexOf(filteredSecurityClassName) != -1) {
+	for (var i = 0; i < riskReportTable.rows.length; i++) {
+		if (riskReportTable.rows[i].className.indexOf(filteredSecurityClassName) != -1) {
 			continue;
 		}
-		if (governanceReportTable.rows[i].className.indexOf(filteredLicenseClassName) != -1) {
+		if (riskReportTable.rows[i].className.indexOf(filteredLicenseClassName) != -1) {
 			continue;
 		}
-		if (governanceReportTable.rows[i].className.indexOf(filteredOperationalClassName) != -1) {
+		if (riskReportTable.rows[i].className.indexOf(filteredOperationalClassName) != -1) {
 			continue;
 		}
-		adjustTableRow(governanceReportTable.rows[i], odd);
-		adjustSecurityRisks(governanceReportTable.rows[i]);
-		adjustOtherRisks(governanceReportTable.rows[i],licenseRiskColumnNum);
-		adjustOtherRisks(governanceReportTable.rows[i],operationRiskColumnNum);
+		adjustTableRow(riskReportTable.rows[i], odd);
+		adjustSecurityRisks(riskReportTable.rows[i]);
+		adjustOtherRisks(riskReportTable.rows[i],licenseRiskColumnNum);
+		adjustOtherRisks(riskReportTable.rows[i],operationRiskColumnNum);
 		odd = !odd;
 	}
 }
@@ -134,10 +134,10 @@ function filterTableByRisk(risk, highRiskId, mediumRiskId, lowRiskId, noneRiskId
 
 function removeFilter(id, currRisk, filterClassName) {
 	var riskLabel = document.getElementById(id);
-	if (riskLabel.className.indexOf("filterSelected") != -1) {
+	if (riskLabel.className.indexOf(" filterSelected") != -1) {
 		filterTable(document.getElementById(tableId).tBodies[0], null, true, filterClassName);
 		document.getElementById(id).className = document.getElementById(id).className
-		.replace('filterSelected', '');
+		.replace(' filterSelected', '');
 		
 		adjustTable();
 		if(id == currRisk.id){
@@ -147,21 +147,21 @@ function removeFilter(id, currRisk, filterClassName) {
 	
 }
 
-function filterTable(governanceReportTable, riskToFilter, shouldRemoveFilter, filterClassName) {
+function filterTable(riskReportTable, riskToFilter, shouldRemoveFilter, filterClassName) {
 	var odd = true;
-	for (var i = 0; i < governanceReportTable.rows.length; i++) {
+	for (var i = 0; i < riskReportTable.rows.length; i++) {
 		if (shouldRemoveFilter) {
-			removeFilterFromRow(governanceReportTable.rows[i], filterClassName);
+			removeFilterFromRow(riskReportTable.rows[i], filterClassName);
 		} else {
 			if(filterClassName == filteredSecurityClassName){
-				filterRowBySecurity(governanceReportTable.rows[i], riskToFilter, filterClassName);
+				filterRowBySecurity(riskReportTable.rows[i], riskToFilter, filterClassName);
 			} else if(filterClassName == filteredLicenseClassName){
-				filterRowByOtherRisk(governanceReportTable.rows[i], riskToFilter, filterClassName, licenseRiskColumnNum);
+				filterRowByOtherRisk(riskReportTable.rows[i], riskToFilter, filterClassName, licenseRiskColumnNum);
 			} else if(filterClassName == filteredOperationalClassName){
-				filterRowByOtherRisk(governanceReportTable.rows[i], riskToFilter, filterClassName, operationRiskColumnNum);
+				filterRowByOtherRisk(riskReportTable.rows[i], riskToFilter, filterClassName, operationRiskColumnNum);
 			}
 		}
-		adjustTableRow(governanceReportTable.rows[i], odd);
+		adjustTableRow(riskReportTable.rows[i], odd);
 		odd = !odd;
 	}
 }

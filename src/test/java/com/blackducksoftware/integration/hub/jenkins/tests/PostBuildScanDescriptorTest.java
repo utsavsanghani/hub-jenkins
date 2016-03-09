@@ -43,8 +43,6 @@ public class PostBuildScanDescriptorTest {
 
     private static JenkinsHubIntTestHelper restHelper;
 
-    private static PostBuildScanDescriptor descriptor;
-
     @Rule
     public ExpectedException exception = ExpectedException.none();
 

@@ -3,7 +3,7 @@ package com.blackducksoftware.integration.hub.jenkins.scan;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
-import hudson.model.BuildListener;
+import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 
 import java.io.File;
@@ -26,10 +26,10 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
     private final Launcher launcher;
 
-    private final BuildListener listener;
+    private final TaskListener listener;
 
     public JenkinsScanExecutor(HubServerInfo serverInfo, List<String> scanTargets, Integer buildNumber, AbstractBuild build,
-            Launcher launcher, BuildListener listener) {
+            Launcher launcher, TaskListener listener) {
         super(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), scanTargets, buildNumber);
         this.build = build;
         this.launcher = launcher;

@@ -282,16 +282,12 @@ public class PostBuildHubScanUnitTest {
         hubServerInfo.setServerUrl(VALID_SERVERURL);
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
-        ScanJobs oneScan = new ScanJobs(basePath);
-        ScanJobs[] scans = new ScanJobs[1];
-        scans[0] = oneScan;
-
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
         HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
-        Assert.assertTrue(postBuildScan.validateConfiguration(scans));
+        Assert.assertTrue(postBuildScan.validateConfiguration());
     }
 
     @Test
@@ -303,45 +299,9 @@ public class PostBuildHubScanUnitTest {
         hubServerInfo.setServerUrl(VALID_SERVERURL);
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
-        ScanJobs oneScan = new ScanJobs(basePath);
-        ScanJobs[] scans = new ScanJobs[1];
-        scans[0] = oneScan;
-
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
-
-        Assert.assertTrue(postBuildScan.validateConfiguration(scans));
-    }
-
-    @Test
-    public void testValidateConfigurationNoScanJobs() throws Exception {
-        // validateConfiguration with correct IHubScanInstallations and no IScanJobs
-
-        exception.expect(HubConfigurationException.class);
-        exception.expectMessage("Could not find any targets to scan.");
-
-        ScanJobs[] scans = new ScanJobs[0];
-
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
-
-        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
-        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
-
-        Assert.assertTrue(postBuildScan.validateConfiguration(scans));
-    }
-
-    @Test
-    public void testValidateConfigurationNullScanJobs() throws Exception {
-        // validateConfiguration with correct IHubScanInstallations and null IScanJobs
-
-        exception.expect(HubConfigurationException.class);
-        exception.expectMessage("Could not find any targets to scan.");
-
         PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
-        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
-        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
-
-        Assert.assertTrue(postBuildScan.validateConfiguration(null));
+        Assert.assertTrue(postBuildScan.validateConfiguration());
     }
 
     @Test
@@ -359,13 +319,9 @@ public class PostBuildHubScanUnitTest {
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
         HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
-        ScanJobs oneScan = new ScanJobs(basePath);
-        ScanJobs[] scans = new ScanJobs[1];
-        scans[0] = oneScan;
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
-
-        Assert.assertTrue(postBuildScan.validateConfiguration(scans));
+        Assert.assertTrue(postBuildScan.validateConfiguration());
     }
 
     @Test
@@ -383,13 +339,9 @@ public class PostBuildHubScanUnitTest {
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
         HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
-        ScanJobs oneScan = new ScanJobs(basePath);
-        ScanJobs[] scans = new ScanJobs[1];
-        scans[0] = oneScan;
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
-
-        Assert.assertTrue(postBuildScan.validateConfiguration(scans));
+        Assert.assertTrue(postBuildScan.validateConfiguration());
     }
 
     @Test
@@ -407,13 +359,9 @@ public class PostBuildHubScanUnitTest {
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
         HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
-        ScanJobs oneScan = new ScanJobs(basePath);
-        ScanJobs[] scans = new ScanJobs[1];
-        scans[0] = oneScan;
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
-
-        postBuildScan.validateConfiguration(scans);
+        postBuildScan.validateConfiguration();
     }
 
     @Test
@@ -431,13 +379,9 @@ public class PostBuildHubScanUnitTest {
         HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
         HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
-        ScanJobs oneScan = new ScanJobs(basePath);
-        ScanJobs[] scans = new ScanJobs[1];
-        scans[0] = oneScan;
+        PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
-
-        postBuildScan.validateConfiguration(scans);
+        postBuildScan.validateConfiguration();
     }
 
     @Test

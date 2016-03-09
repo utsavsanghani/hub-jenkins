@@ -7,14 +7,14 @@
        <st:include it="${it.build}" page="sidepanel.jelly"/>
                     
         <l:main-panel>
-	        <div class="governanceReportBackgroundColor">
+	        <div class="riskReportBackgroundColor">
 	        	<link href="${rootURL}/plugin/hub-jenkins/css/HubBomReport.css"  rel="stylesheet" type="text/css"  />
 				<script type="text/javascript"
 						src="${rootURL}/plugin/hub-jenkins/js/Sortable.js" />
 				<script type="text/javascript"
 						src="${rootURL}/plugin/hub-jenkins/js/HubBomReportFunctions.js" />
 				
-				<div class="governanceReportBackgroundColor" style="float: right;">
+				<div class="riskReportBackgroundColor" style="float: right;">
 					<div>
 						<a>
 					<!--	<a href="${it.getReport().getReportVersionUrl()}" target="_blank"> -->
@@ -22,8 +22,8 @@
 								src="${rootURL}/plugin/hub-jenkins/images/Black_Duck_Logo.png" />
 						</a>
 					</div>
-					<div class="governanceReportText">
-						<a href="${it.getReport().getReportVersionUrl()}" target="_blank">
+					<div>
+						<a class="riskReportText" href="${it.getReport().getReportVersionUrl()}" target="_blank">
 							${%HubReportLink}
 						</a>
 					</div>
@@ -35,15 +35,18 @@
 					<tbody>
 						<tr>
 							<td class="summaryLabel" style="font-weight: bold;">${%Project_Name}:</td>
-							<td class="summaryValue">${it.getReleaseSummary().getProjectName()}</td>
-							
+							<td class="clickable summaryValue" onclick="window.open('${it.getReport().getReportProjectUrl()}', '_blank');">
+									${it.getReleaseSummary().getProjectName()}
+							</td>
 							<td class="summaryLabel" style="font-weight: bold;">${%Version_Phase}:</td>
-							<td class="summaryValue">${it.getReleaseSummary().getPhaseDisplayValue()}</td>
+							<td class="summaryLabel">${it.getReleaseSummary().getPhaseDisplayValue()}</td>
 						</tr>
 						<tr>
 							<td class="summaryLabel" style="font-weight: bold;">${%Version_Name}:</td>
-							<td class="summaryValue">${it.getReleaseSummary().getVersion()}</td>
 							
+							<td class="clickable summaryValue" onclick="window.open('${it.getReport().getReportVersionUrl()}', '_blank');">
+									${it.getReleaseSummary().getVersion()}
+							</td>
 							<td class="summaryLabel" style="font-weight: bold;">${%Version_Distribution}:</td>
 							<td class="summaryValue">${it.getReleaseSummary().getDistributionDisplayValue()}</td>
 						</tr>
@@ -261,31 +264,31 @@
 				<table id="hubBomReport" class="table sortable">
 					<thead>
 						<tr>
-							<th class="componentColumn columnLabel">${%Bom_Entry_Name}</th>
-							<th class="columnLabel">${%Bom_Entry_Version}</th>
-							<th class="columnLabel">${%Bom_Entry_License}</th>
-							<th class="riskColumnLabel">${%Bom_Entry_Vulnerability_High_Short}</th>
-							<th class="riskColumnLabel">${%Bom_Entry_Vulnerability_Medium_Short}</th>
-							<th class="riskColumnLabel">${%Bom_Entry_Vulnerability_Low_Short}</th>
-							<th class="riskColumnLabel" title="${%License_Risk_Title}">${%License_Risk_Title_Short}</th>
-							<th class="riskColumnLabel" title="${%Operational_Risk_Title}">${%Operational_Risk_Title_Short}</th>
+							<th class="clickable componentColumn columnLabel">${%Bom_Entry_Name}</th>
+							<th class="clickable columnLabel">${%Bom_Entry_Version}</th>
+							<th class="clickable columnLabel">${%Bom_Entry_License}</th>
+							<th class="clickable riskColumnLabel">${%Bom_Entry_Vulnerability_High_Short}</th>
+							<th class="clickable riskColumnLabel">${%Bom_Entry_Vulnerability_Medium_Short}</th>
+							<th class="clickable riskColumnLabel">${%Bom_Entry_Vulnerability_Low_Short}</th>
+							<th class="clickable riskColumnLabel" title="${%License_Risk_Title}">${%License_Risk_Title_Short}</th>
+							<th class="clickable riskColumnLabel" title="${%Operational_Risk_Title}">${%Operational_Risk_Title_Short}</th>
 						</tr>
 					</thead>
 					<tbody>
 						<j:forEach var="entry" items="${it.getBomEntries()}">
 							<tr>
-								<td class="clickableColumn" onclick="window.open('${it.getReport().getComponentUrl(entry)}', '_blank');">
+								<td class="clickable" onclick="window.open('${it.getReport().getComponentUrl(entry)}', '_blank');">
 									${entry.getProducerProject().getName()}
 								</td>
-								<td class="clickableColumn" onclick="window.open('${it.getReport().getVersionUrl(entry)}', '_blank');">
+								<td class="clickable" onclick="window.open('${it.getReport().getVersionUrl(entry)}', '_blank');">
 									${entry.getProducerReleasesDisplay()}
 								</td>
 								<td class="licenseColumn" title="${entry.getLicensesDisplay()}">${entry.getLicensesDisplay()}</td>
-								<td class="riskColumn"><span class="riskColumn risk-count">${entry.getVulnerabilityRisk().getHIGH()}</span></td>
-								<td class="riskColumn"><span class="riskColumn risk-count">${entry.getVulnerabilityRisk().getMEDIUM()}</span></td>
-								<td class="riskColumn"><span class="riskColumn risk-count">${entry.getVulnerabilityRisk().getLOW()}</span></td>
-								<td class="riskColumn"><span class="riskColumn risk-count">${entry.getLicenseRiskString()}</span></td>
-								<td class="riskColumn"><span class="riskColumn risk-count">${entry.getOperationalRiskString()}</span></td>
+								<td class="riskColumn"><div class="risk-span riskColumn risk-count">${entry.getVulnerabilityRisk().getHIGH()}</div></td>
+								<td class="riskColumn"><div class="risk-span riskColumn risk-count">${entry.getVulnerabilityRisk().getMEDIUM()}</div></td>
+								<td class="riskColumn"><div class="risk-span riskColumn risk-count">${entry.getVulnerabilityRisk().getLOW()}</div></td>
+								<td class="riskColumn"><div class="risk-span riskColumn risk-count">${entry.getLicenseRiskString()}</div></td>
+								<td class="riskColumn"><div class="risk-span riskColumn risk-count">${entry.getOperationalRiskString()}</div></td>
 							</tr>
 						</j:forEach>
 					</tbody>
