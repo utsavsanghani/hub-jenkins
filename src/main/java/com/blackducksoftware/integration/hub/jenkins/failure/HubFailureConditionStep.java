@@ -35,8 +35,6 @@ import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
 
 public class HubFailureConditionStep extends Recorder {
 
-    // TODO test this class
-
     private final Boolean failBuildForPolicyViolations;
 
     @DataBoundConstructor
@@ -139,10 +137,10 @@ public class HubFailureConditionStep extends Recorder {
                 } else {
                     logger.info("Found " + policyStatus.getCountInViolation().getValue() + " bom entries to be In Violation of a defined Policy.");
                 }
-                if (policyStatus.getCountInViolationOveridden() == null) {
+                if (policyStatus.getCountInViolationOverridden() == null) {
                     logger.error("Could not find the number of bom entries In Violation Overridden of a Policy.");
                 } else {
-                    logger.info("Found " + policyStatus.getCountInViolationOveridden().getValue()
+                    logger.info("Found " + policyStatus.getCountInViolationOverridden().getValue()
                             + " bom entries to be In Violation of a defined Policy, but they have been overridden.");
                 }
                 if (policyStatus.getCountNotInViolation() == null) {

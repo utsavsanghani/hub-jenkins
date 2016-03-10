@@ -510,7 +510,7 @@ public class HubFailureConditionStepUnitTest {
         HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
         failureStep = Mockito.spy(failureStep);
         ComponentVersionStatusCount countsInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION.name(), 0);
-        ComponentVersionStatusCount countsNotInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION_OVERRIDEN.name(), 12);
+        ComponentVersionStatusCount countsNotInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION_OVERRIDDEN.name(), 12);
         ComponentVersionStatusCount countsInViolationOverridden = new ComponentVersionStatusCount(PolicyStatusEnum.NOT_IN_VIOLATION.name(), 45);
         List<ComponentVersionStatusCount> counts = new ArrayList<ComponentVersionStatusCount>();
         counts.add(countsInViolationOverridden);
@@ -559,7 +559,7 @@ public class HubFailureConditionStepUnitTest {
         String output = baos.toString();
         assertTrue(output,
                 output.contains("Found " + policyStatus.getCountInViolation().getValue() + " bom entries to be In Violation of a defined Policy."));
-        assertTrue(output, output.contains("Found " + policyStatus.getCountInViolationOveridden().getValue()
+        assertTrue(output, output.contains("Found " + policyStatus.getCountInViolationOverridden().getValue()
                 + " bom entries to be In Violation of a defined Policy, but they have been overridden."));
         assertTrue(output,
                 output.contains("Found " + policyStatus.getCountNotInViolation().getValue() + " bom entries to be Not In Violation of a defined Policy."));
@@ -574,7 +574,7 @@ public class HubFailureConditionStepUnitTest {
         failureStep = Mockito.spy(failureStep);
 
         ComponentVersionStatusCount countsInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION.name(), 3);
-        ComponentVersionStatusCount countsNotInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION_OVERRIDEN.name(), 12);
+        ComponentVersionStatusCount countsNotInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION_OVERRIDDEN.name(), 12);
         ComponentVersionStatusCount countsInViolationOverridden = new ComponentVersionStatusCount(PolicyStatusEnum.NOT_IN_VIOLATION.name(), 45);
         List<ComponentVersionStatusCount> counts = new ArrayList<ComponentVersionStatusCount>();
         counts.add(countsInViolationOverridden);
@@ -623,7 +623,7 @@ public class HubFailureConditionStepUnitTest {
         String output = baos.toString();
         assertTrue(output,
                 output.contains("Found " + policyStatus.getCountInViolation().getValue() + " bom entries to be In Violation of a defined Policy."));
-        assertTrue(output, output.contains("Found " + policyStatus.getCountInViolationOveridden().getValue()
+        assertTrue(output, output.contains("Found " + policyStatus.getCountInViolationOverridden().getValue()
                 + " bom entries to be In Violation of a defined Policy, but they have been overridden."));
         assertTrue(output,
                 output.contains("Found " + policyStatus.getCountNotInViolation().getValue() + " bom entries to be Not In Violation of a defined Policy."));
