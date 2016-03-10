@@ -96,6 +96,7 @@
 .horizontal .progress-bar {
 	height: 25px;
 	width: 100%;
+	display: table;
 }
 
 .horizontal .progress-track {
