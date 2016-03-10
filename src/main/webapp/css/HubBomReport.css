@@ -178,7 +178,7 @@
 	margin-top: 6px;
 }
 
-.clickable, .columnLabel, .licenseColumnLabel, .riskColumnLabel, .componentColumn, .riskColumn, .licenseColumn {
+.columnLabel, .licenseColumnLabel, .riskColumnLabel, .componentColumn, .riskColumn, .licenseColumn, .linkText {
 	padding-left: 5px;
 	padding-right: 5px;
 	padding-top: 5px;
