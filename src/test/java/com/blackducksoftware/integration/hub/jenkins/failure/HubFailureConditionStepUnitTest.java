@@ -29,8 +29,8 @@ import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedActio
 import com.blackducksoftware.integration.hub.jenkins.mocks.TestBuild;
 import com.blackducksoftware.integration.hub.jenkins.mocks.TestProject;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.TestBuildListener;
+import com.blackducksoftware.integration.hub.policy.api.ComponentVersionStatusCount;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatus;
-import com.blackducksoftware.integration.hub.policy.api.PolicyStatusCounts;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatusEnum;
 import com.blackducksoftware.integration.hub.response.ProjectItem;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
@@ -446,12 +446,15 @@ public class HubFailureConditionStepUnitTest {
     }
 
     @Test
-    public void testPerformValidNoViolation() throws Exception {
+    public void testPerformValidUnknownCounts() throws Exception {
         Boolean failBuildForPolicyViolations = true;
         HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
         HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
         failureStep = Mockito.spy(failureStep);
-        PolicyStatusCounts counts = new PolicyStatusCounts("0", "12", "45");
+        ComponentVersionStatusCount countsUnknown = new ComponentVersionStatusCount(PolicyStatusEnum.UNKNOWN.name(), 0);
+        List<ComponentVersionStatusCount> counts = new ArrayList<ComponentVersionStatusCount>();
+        counts.add(countsUnknown);
+
         PolicyStatus policyStatus = new PolicyStatus(PolicyStatusEnum.NOT_IN_VIOLATION.name(), null, counts, null);
         HubIntRestService service = getMockedService("3.0.0", policyStatus);
         ProjectItem projectItem = new ProjectItem();
@@ -493,11 +496,73 @@ public class HubFailureConditionStepUnitTest {
 
         String output = baos.toString();
         assertTrue(output,
-                output.contains("Found " + policyStatus.getStatusCounts().getIN_VIOLATION() + " bom entries to be In Violation of a defined Policy."));
-        assertTrue(output, output.contains("Found " + policyStatus.getStatusCounts().getIN_VIOLATION_OVERRIDDEN()
-                + " bom entries to be In Violation of a defined Policy, but they have been manually overridden."));
+                output.contains("Could not find the number of bom entries In Violation of a Policy."));
+        assertTrue(output, output.contains("Could not find the number of bom entries In Violation Overridden of a Policy."));
         assertTrue(output,
-                output.contains("Found " + policyStatus.getStatusCounts().getNOT_IN_VIOLATION() + " bom entries to be Not In Violation of a defined Policy."));
+                output.contains("Could not find the number of bom entries Not In Violation of a Policy."));
+        assertEquals(Result.SUCCESS, build.getResult());
+    }
+
+    @Test
+    public void testPerformValidNoViolation() throws Exception {
+        Boolean failBuildForPolicyViolations = true;
+        HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
+        HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
+        failureStep = Mockito.spy(failureStep);
+        ComponentVersionStatusCount countsInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION.name(), 0);
+        ComponentVersionStatusCount countsNotInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION_OVERRIDDEN.name(), 12);
+        ComponentVersionStatusCount countsInViolationOverridden = new ComponentVersionStatusCount(PolicyStatusEnum.NOT_IN_VIOLATION.name(), 45);
+        List<ComponentVersionStatusCount> counts = new ArrayList<ComponentVersionStatusCount>();
+        counts.add(countsInViolationOverridden);
+        counts.add(countsInViolation);
+        counts.add(countsNotInViolation);
+
+        PolicyStatus policyStatus = new PolicyStatus(PolicyStatusEnum.NOT_IN_VIOLATION.name(), null, counts, null);
+        HubIntRestService service = getMockedService("3.0.0", policyStatus);
+        ProjectItem projectItem = new ProjectItem();
+        projectItem.setId("ProjectId");
+        Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
+        List<ReleaseItem> projectVersions = new ArrayList<ReleaseItem>();
+        ReleaseItem releaseItem = new ReleaseItem();
+        releaseItem.setId("VersionId");
+        releaseItem.setVersion("VerisonName");
+        projectVersions.add(releaseItem);
+        Mockito.doReturn(projectVersions).when(service).getVersionsForProject(Mockito.anyString());
+        HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
+        HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
+
+        descriptor = Mockito.spy(descriptor);
+
+        HubSupportHelper hubSupport = new HubSupportHelper();
+        hubSupport.checkHubSupport(service, null);
+
+        Mockito.doReturn(hubSupport).when(descriptor).getCheckedHubSupportHelper();
+        Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
+        Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
+
+        TestProject project = new TestProject(j.getInstance(), "Test Project");
+        TestBuild build = new TestBuild(project);
+        build.setResult(Result.SUCCESS);
+        List<Publisher> publishers = new ArrayList<Publisher>();
+        PostBuildHubScan hubScanStep = new PostBuildHubScan(null, false, null, "VerisonName", null, null, null,
+                false, null);
+        publishers.add(hubScanStep);
+        project.setPublishersList(publishers);
+        build.setAction(new HubScanFinishedAction());
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream stream = new PrintStream(baos);
+        TestBuildListener listener = new TestBuildListener(stream);
+
+        failureStep.perform(build, null, listener);
+
+        String output = baos.toString();
+        assertTrue(output,
+                output.contains("Found " + policyStatus.getCountInViolation().getValue() + " bom entries to be In Violation of a defined Policy."));
+        assertTrue(output, output.contains("Found " + policyStatus.getCountInViolationOverridden().getValue()
+                + " bom entries to be In Violation of a defined Policy, but they have been overridden."));
+        assertTrue(output,
+                output.contains("Found " + policyStatus.getCountNotInViolation().getValue() + " bom entries to be Not In Violation of a defined Policy."));
         assertEquals(Result.SUCCESS, build.getResult());
     }
 
@@ -507,7 +572,14 @@ public class HubFailureConditionStepUnitTest {
         HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
         HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
         failureStep = Mockito.spy(failureStep);
-        PolicyStatusCounts counts = new PolicyStatusCounts("3", "12", "45");
+
+        ComponentVersionStatusCount countsInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION.name(), 3);
+        ComponentVersionStatusCount countsNotInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION_OVERRIDDEN.name(), 12);
+        ComponentVersionStatusCount countsInViolationOverridden = new ComponentVersionStatusCount(PolicyStatusEnum.NOT_IN_VIOLATION.name(), 45);
+        List<ComponentVersionStatusCount> counts = new ArrayList<ComponentVersionStatusCount>();
+        counts.add(countsInViolationOverridden);
+        counts.add(countsInViolation);
+        counts.add(countsNotInViolation);
         PolicyStatus policyStatus = new PolicyStatus(PolicyStatusEnum.IN_VIOLATION.name(), null, counts, null);
         HubIntRestService service = getMockedService("3.0.0", policyStatus);
         ProjectItem projectItem = new ProjectItem();
@@ -550,11 +622,11 @@ public class HubFailureConditionStepUnitTest {
 
         String output = baos.toString();
         assertTrue(output,
-                output.contains("Found " + policyStatus.getStatusCounts().getIN_VIOLATION() + " bom entries to be In Violation of a defined Policy."));
-        assertTrue(output, output.contains("Found " + policyStatus.getStatusCounts().getIN_VIOLATION_OVERRIDDEN()
-                + " bom entries to be In Violation of a defined Policy, but they have been manually overridden."));
+                output.contains("Found " + policyStatus.getCountInViolation().getValue() + " bom entries to be In Violation of a defined Policy."));
+        assertTrue(output, output.contains("Found " + policyStatus.getCountInViolationOverridden().getValue()
+                + " bom entries to be In Violation of a defined Policy, but they have been overridden."));
         assertTrue(output,
-                output.contains("Found " + policyStatus.getStatusCounts().getNOT_IN_VIOLATION() + " bom entries to be Not In Violation of a defined Policy."));
+                output.contains("Found " + policyStatus.getCountNotInViolation().getValue() + " bom entries to be Not In Violation of a defined Policy."));
         assertEquals(Result.FAILURE, build.getResult());
     }
 }

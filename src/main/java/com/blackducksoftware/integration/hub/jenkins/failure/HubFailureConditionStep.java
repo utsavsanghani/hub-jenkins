@@ -35,8 +35,6 @@ import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
 
 public class HubFailureConditionStep extends Recorder {
 
-    // TODO test this class
-
     private final Boolean failBuildForPolicyViolations;
 
     @DataBoundConstructor
@@ -126,14 +124,30 @@ public class HubFailureConditionStep extends Recorder {
             } else if (getFailBuildForPolicyViolations()) {
                 // We use this conditional in case there are other failure conditions in the future
                 PolicyStatus policyStatus = restService.getPolicyStatus(projectId, versionId);
+                if (policyStatus == null) {
+                    logger.error("Could not find any information about the Policy status of the bom.");
+                    build.setResult(Result.UNSTABLE);
+                }
                 if (policyStatus.getOverallStatusEnum() == PolicyStatusEnum.IN_VIOLATION) {
                     build.setResult(Result.FAILURE);
                 }
-                logger.info("Found " + policyStatus.getStatusCounts().getIN_VIOLATION() + " bom entries to be In Violation of a defined Policy.");
-                logger.info("Found " + policyStatus.getStatusCounts().getIN_VIOLATION_OVERRIDDEN()
-                        + " bom entries to be In Violation of a defined Policy, but they have been manually overridden.");
-                logger.info("Found " + policyStatus.getStatusCounts().getNOT_IN_VIOLATION() + " bom entries to be Not In Violation of a defined Policy.");
 
+                if (policyStatus.getCountInViolation() == null) {
+                    logger.error("Could not find the number of bom entries In Violation of a Policy.");
+                } else {
+                    logger.info("Found " + policyStatus.getCountInViolation().getValue() + " bom entries to be In Violation of a defined Policy.");
+                }
+                if (policyStatus.getCountInViolationOverridden() == null) {
+                    logger.error("Could not find the number of bom entries In Violation Overridden of a Policy.");
+                } else {
+                    logger.info("Found " + policyStatus.getCountInViolationOverridden().getValue()
+                            + " bom entries to be In Violation of a defined Policy, but they have been overridden.");
+                }
+                if (policyStatus.getCountNotInViolation() == null) {
+                    logger.error("Could not find the number of bom entries Not In Violation of a Policy.");
+                } else {
+                    logger.info("Found " + policyStatus.getCountNotInViolation().getValue() + " bom entries to be Not In Violation of a defined Policy.");
+                }
             }
         } catch (BDJenkinsHubPluginException e) {
             logger.error(e.getMessage(), e);
