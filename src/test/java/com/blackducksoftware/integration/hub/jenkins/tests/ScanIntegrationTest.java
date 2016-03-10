@@ -1,6 +1,7 @@
 package com.blackducksoftware.integration.hub.jenkins.tests;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import hudson.ProxyConfiguration;
 import hudson.model.FreeStyleBuild;
@@ -33,8 +34,10 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
 import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
+import com.blackducksoftware.integration.hub.jenkins.failure.HubFailureConditionStep;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
 import com.blackducksoftware.integration.hub.response.DistributionEnum;
 import com.blackducksoftware.integration.hub.response.PhaseEnum;
@@ -310,7 +313,6 @@ public class ScanIntegrationTest {
 
     @Test
     public void completeRunthroughAndScanWithMappingAndGenerateReport() throws Exception {
-        // TODO
         Jenkins jenkins = j.jenkins;
 
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
@@ -392,6 +394,89 @@ public class ScanIntegrationTest {
                 assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
                 assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
                 assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
+            }
+            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+        } finally {
+            restHelper.deleteHubProject(projectId);
+        }
+
+    }
+
+    @Test
+    public void completeRunthroughAndScanWithMappingAndFailureCondition() throws Exception {
+        Jenkins jenkins = j.jenkins;
+
+        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+        UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
+                testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+        store.addCredentials(Domain.global(), credential);
+
+        HubServerInfo serverInfo = new HubServerInfo();
+        serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+        serverInfo.setCredentialsId(credential.getId());
+        serverInfo.setTimeout(200);
+
+        ScanJobs oneScan = new ScanJobs("");
+        ScanJobs twoScan = new ScanJobs("ch-simple-web/simple-webapp/target");
+        ScanJobs threeScan = new ScanJobs("ch-simple-web/simple-webapp/target/simple-webapp.war");
+        ScanJobs fourScan = new ScanJobs("ch-simple-web");
+        ScanJobs fiveScan = new ScanJobs("ch-simple-web/simple-webapp");
+        ScanJobs[] scans = new ScanJobs[5];
+        scans[0] = oneScan;
+        scans[1] = twoScan;
+        scans[2] = threeScan;
+        scans[3] = fourScan;
+        scans[4] = fiveScan;
+
+        HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
+        String projectId = null;
+        try {
+            projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
+            Assert.assertNotNull(projectId);
+            // Give server time to recognize the Project
+            Thread.sleep(2000);
+            String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId, PhaseEnum.DEVELOPMENT.name(),
+                    DistributionEnum.EXTERNAL.name());
+            assertNotNull(versionId);
+            // Give server time to recognize the Version
+            Thread.sleep(2000);
+
+            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
+                    testProperties.getProperty("TEST_VERSION"), null,
+                    null, "4096", false, "5");
+            HubFailureConditionStep failureCond = new HubFailureConditionStep(true);
+
+            FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+            project.setCustomWorkspace(testWorkspace);
+
+            project.getPublishersList().add(pbScan);
+            project.getPublishersList().add(failureCond);
+
+            FreeStyleBuild build = project.scheduleBuild2(0).get();
+            String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+            System.out.println(buildOutput);
+
+            assertTrue(buildOutput, !buildOutput.contains("-> Generate Hub report : true"));
+            assertTrue(buildOutput, !buildOutput.contains("-> Maximum wait time for the report : 5 minutes"));
+            assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+            assertTrue(buildOutput, buildOutput.contains("Finished in"));
+            assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+            assertTrue(buildOutput, buildOutput.contains(
+                    "You can view the BlackDuck Scan CLI logs at :"));
+            assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
+            assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+
+            assertNull(build.getAction(HubReportAction.class));
+            assertNotNull(build.getAction(HubScanFinishedAction.class));
+
+            if (isHubOlderThanThisVersion("3.0.0")) {
+                // server does not support policies
+                assertTrue(buildOutput, buildOutput.contains("This version of the Hub does not have support for Policies."));
+            } else {
+                assertTrue(buildOutput, buildOutput.contains("bom entries to be In Violation of a defined Policy."));
+                assertTrue(buildOutput, buildOutput.contains("bom entries to be In Violation of a defined Policy, but they have been overridden."));
+                assertTrue(buildOutput, buildOutput.contains("bom entries to be Not In Violation of a defined Policy."));
             }
             assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
         } finally {
