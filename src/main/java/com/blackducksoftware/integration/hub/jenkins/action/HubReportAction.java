@@ -5,6 +5,9 @@ import hudson.model.AbstractBuild;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
+
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.report.api.AggregateBomViewEntry;
 import com.blackducksoftware.integration.hub.report.api.DetailedReleaseSummary;
@@ -244,6 +247,13 @@ public class HubReportAction implements Action {
             percentage = (count / totalCount) * 100;
         }
         return percentage;
+    }
+
+    public String htmlEscape(String valueToEscape) {
+        if (StringUtils.isBlank(valueToEscape)) {
+            return null;
+        }
+        return StringEscapeUtils.escapeHtml4(valueToEscape);
     }
 
     public void setReport(VersionReport report) {

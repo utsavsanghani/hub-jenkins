@@ -29,12 +29,12 @@
 				<div class="versionSummaryTable">
 					<div>
 						<div class="clickable linkText versionSummaryLargeLabel" onclick="window.open('${it.getReport().getReportProjectUrl()}', '_blank');">
-								${it.getReleaseSummary().getProjectName()}
+								${it.htmlEscape(it.getReleaseSummary().getProjectName())}
 						</div>
 						<div class="versionSummaryLargeLabel"> > </div>
 						
 						<div class="clickable linkText versionSummaryLargeLabel" onclick="window.open('${it.getReport().getReportVersionUrl()}', '_blank');">
-								${it.getReleaseSummary().getVersion()}
+								${it.htmlEscape(it.getReleaseSummary().getVersion())}
 						</div>
 						
 						<div style="float: right;" class="linkText riskReportText clickable" onclick="window.open('${it.getReport().getReportVersionUrl()}', '_blank');">
@@ -284,10 +284,10 @@
 						<j:forEach var="entry" items="${it.getBomEntries()}">
 							<tr>
 								<td class="clickable componentColumn" onclick="window.open('${it.getReport().getComponentUrl(entry)}', '_blank');">
-									${entry.getProducerProject().getName()}
+									${it.htmlEscape(entry.getProducerProject().getName())}
 								</td>
 								<td class="clickable componentColumn" onclick="window.open('${it.getReport().getVersionUrl(entry)}', '_blank');">
-									${entry.getProducerReleasesDisplay()}
+									${it.htmlEscape(entry.getProducerReleasesDisplay())}
 								</td>
 								<td class="licenseColumn" title="${entry.getLicensesDisplay()}">${entry.getLicensesDisplay()}</td>
 								<td class="riskColumn"><div class="risk-span riskColumn risk-count">${entry.getVulnerabilityRisk().getHIGH()}</div></td>
