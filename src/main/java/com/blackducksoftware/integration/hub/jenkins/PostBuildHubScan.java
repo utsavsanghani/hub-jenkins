@@ -184,7 +184,9 @@ public class PostBuildHubScan extends Recorder {
 
     public String getReportMaxiumWaitTime() {
         // need to return a String for the Ui to display correctly
-
+        if (reportMaxiumWaitTime == 0) {
+            return getDefaultReportWaitTime();
+        }
         return String.valueOf(reportMaxiumWaitTime);
     }
 
