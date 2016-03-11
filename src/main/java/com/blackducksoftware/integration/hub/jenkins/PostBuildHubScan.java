@@ -49,7 +49,7 @@ import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostName;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostNameFromNetworkInterfaces;
-import com.blackducksoftware.integration.hub.jenkins.remote.GetSeparator;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
 import com.blackducksoftware.integration.hub.report.api.VersionReport;
@@ -349,9 +349,12 @@ public class PostBuildHubScan extends Recorder {
                     printConfiguration(build, logger, projectName, projectVersion, scanTargets, getShouldGenerateHubReport(),
                             getConvertedReportMaxiumWaitTime());
 
-                    FilePath scanExec = getScanCLI(HubServerInfoSingleton.getInstance().getHubScanInstallation(), logger, build.getBuiltOn());
+                    HubScanInstallation scanInstallation = HubServerInfoSingleton.getInstance().getHubScanInstallation();
+                    // Need to get the CLI for this Node, triggers the auto install
+                    scanInstallation = scanInstallation.forNode(build.getBuiltOn(), logger.getJenkinsListener());
 
-                    setJava(HubServerInfoSingleton.getInstance().getHubScanInstallation(), logger, build);
+                    FilePath scanExec = getScanCLI(scanInstallation, logger, build.getBuiltOn());
+                    setJava(scanInstallation, logger, build);
 
                     HubIntRestService service = BuildHelper.getRestService(logger, getHubServerInfo().getServerUrl(),
                             getHubServerInfo().getUsername(),
@@ -703,20 +706,12 @@ public class PostBuildHubScan extends Recorder {
             scan.setCliSupportsMapping(false);
         }
 
-        String separator = null;
-        try {
-            separator = build.getBuiltOn().getChannel().call(new GetSeparator());
-        } catch (IOException e) {
-            logger.error("Problem getting the file separator on this node. Error : " + e.getMessage(), e);
-            separator = File.separator;
-        }
-
         FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), getJava().getHome());
         javaExec = new FilePath(javaExec, "bin");
-        if (separator.equals("/")) {
-            javaExec = new FilePath(javaExec, "java");
-        } else {
+        if (build.getBuiltOn().getChannel().call(new GetIsOsWindows())) {
             javaExec = new FilePath(javaExec, "java.exe");
+        } else {
+            javaExec = new FilePath(javaExec, "java");
         }
 
         com.blackducksoftware.integration.hub.ScanExecutor.Result result = scan.setupAndRunScan(scanExec.getRemote(),
@@ -871,9 +866,6 @@ public class PostBuildHubScan extends Recorder {
             // But we check this just in case
             throw new HubConfigurationException("You need to select which BlackDuck scan installation to use.");
         }
-
-        // Need to get the CLI for this Node, triggers the auto install
-        hubScanInstallation = hubScanInstallation.forNode(node, logger.getJenkinsListener());
         if (hubScanInstallation.getExists(node.getChannel(), logger)) {
             scanExecutable = hubScanInstallation.getCLI(node.getChannel());
             logger.debug("Using this BlackDuck scan CLI at : " + scanExecutable.getRemote());

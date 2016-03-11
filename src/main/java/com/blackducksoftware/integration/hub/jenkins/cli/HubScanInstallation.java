@@ -25,6 +25,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 
 public class HubScanInstallation extends ToolInstallation implements NodeSpecific<HubScanInstallation>, EnvironmentSpecific<HubScanInstallation> {
@@ -148,7 +149,17 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
                     break;
                 }
             }
-            return jreFolder;
+            if (jreFolder != null) {
+                FilePath javaExec = new FilePath(jreFolder, "bin");
+                if (channel.call(new GetIsOsWindows())) {
+                    javaExec = new FilePath(javaExec, "java.exe");
+                } else {
+                    javaExec = new FilePath(javaExec, "java");
+                }
+                if (javaExec.exists()) {
+                    return jreFolder;
+                }
+            }
         }
         return null;
     }
