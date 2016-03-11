@@ -9,6 +9,7 @@
         <l:main-panel>
 	        <div class="riskReportBackgroundColor">
 	        	<link href="${rootURL}/plugin/hub-jenkins/css/HubBomReport.css"  rel="stylesheet" type="text/css"  />
+	        	<link href="${rootURL}/plugin/hub-jenkins/font-awesome-4.5.0/css/font-awesome.min.css"  rel="stylesheet" type="text/css"  />
 				<script type="text/javascript"
 						src="${rootURL}/plugin/hub-jenkins/js/Sortable.js" />
 				<script type="text/javascript"
@@ -31,7 +32,7 @@
 						<div class="clickable linkText versionSummaryLargeLabel" onclick="window.open('${it.getReport().getReportProjectUrl()}', '_blank');">
 								${it.htmlEscape(it.getReleaseSummary().getProjectName())}
 						</div>
-						<div class="versionSummaryLargeLabel"> > </div>
+						<div class="versionSummaryLargeLabel"><i class="fa fa-caret-right"></i></div>
 						
 						<div class="clickable linkText versionSummaryLargeLabel" onclick="window.open('${it.getReport().getReportVersionUrl()}', '_blank');">
 								${it.htmlEscape(it.getReleaseSummary().getVersion())}
@@ -52,7 +53,8 @@
 				
 				<!-- SECURITY RISK SUMMARY -->
 				<div class="riskSummaryContainer horizontal rounded">
-					<div class="riskSummaryContainerLabel">${%Vulnerability_Risk_Title}</div>
+					<div class="riskSummaryContainerLabel">${%Vulnerability_Risk_Title} <i class="fa fa-question-circle infoIcon" title="${%Vulnerability_Risk_Footer}"></i>
+					</div>
 
 					<div class="progress-bar horizontal">
 						<div id="highSecurityRiskLabel" class="clickable riskSummaryLabel"
@@ -113,15 +115,13 @@
 							</div>
 						</div>
 					</div>
-					<div class="riskSummaryFooter">
-						${%Vulnerability_Risk_Footer}
-					</div>
 				</div>
 				<!-- SECURITY RISK SUMMARY END -->
 				
 				<!-- LICENSE  RISK SUMMARY -->
 				<div class="riskSummaryContainer horizontal rounded">
-					<div class="riskSummaryContainerLabel">${%License_Risk_Title}</div>
+					<div class="riskSummaryContainerLabel">${%License_Risk_Title} <i class="fa fa-question-circle infoIcon" title="${%License_Risk_Footer}"></i>
+					</div>
 
 					<div class="progress-bar horizontal">
 						<div id="highLicenseRiskLabel" class="clickable riskSummaryLabel"
@@ -183,15 +183,13 @@
 							</div>
 						</div>
 					</div>
-					<div class="riskSummaryFooter">
-						${%License_Risk_Footer}
-					</div>
 				</div>
 				<!-- LICENSE RISK SUMMARY END -->
 				
 				<!-- OPERATIONAL RISK SUMMARY -->
 				<div class="riskSummaryContainer horizontal rounded">
-					<div class="riskSummaryContainerLabel">${%Operational_Risk_Title}</div>
+					<div class="riskSummaryContainerLabel">${%Operational_Risk_Title} <i class="fa fa-question-circle infoIcon" title="${%Operational_Risk_Footer}"></i>
+					</div>
 
 					<div class="progress-bar horizontal">
 						<div id="highOperationalRiskLabel" class="clickable riskSummaryLabel"
@@ -251,9 +249,6 @@
 								<span>${it.getPercentage(it.getOperationalRiskNoneCount())}%</span>
 							</div>
 						</div>
-					</div>
-					<div class="riskSummaryFooter">
-						${%Operational_Risk_Footer}
 					</div>
 				</div>
 				<!-- OPERATIONAL RISK SUMMARY END -->

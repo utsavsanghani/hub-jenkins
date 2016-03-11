@@ -2,11 +2,14 @@
 	background-color: rgb(255,255,255);
 }
 
-.riskReportText, .linkText, .h1, .riskSummaryContainerLabel,.riskSummaryFooter, .riskSummaryLabel, .riskSummaryCount, .risk-count, .table-summary,.versionSummaryLabel, .summaryLabel,.versionSummaryLargeLabel, .summaryValue, .columnLabel, .riskColumnLabel, .licenseColumnLabel, .licenseColumn, .riskColumn, .componentColumn, .clickable {
+.riskReportText, .linkText, .h1, .riskSummaryContainerLabel, .riskSummaryLabel, .riskSummaryCount, .risk-count, .table-summary,.versionSummaryLabel, .summaryLabel,.versionSummaryLargeLabel, .summaryValue, .columnLabel, .riskColumnLabel, .licenseColumnLabel, .licenseColumn, .riskColumn, .componentColumn, .clickable {
 	text-align: left;
 	font-family: 'Open Sans', sans-serif;
 	font-size: 14px;
 	color: #000;
+}
+.infoIcon{
+	padding-left: 10px;
 }
 
 .versionSummaryTable{
@@ -65,11 +68,6 @@
 	padding-right: 10px;
 	padding-top: 5px;
 	padding-bottom: 5px;
-}
-
-.riskSummaryFooter {
-	color: #BBB;
-	font-size: 12px;
 }
 
 .riskSummaryLabel, .riskSummaryCount {
