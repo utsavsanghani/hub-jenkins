@@ -2,7 +2,7 @@
 	background-color: rgb(255,255,255);
 }
 
-.riskReportText, .linkText, .h1, .riskSummaryContainerLabel, .riskSummaryLabel, .riskSummaryCount, .risk-count, .table-summary,.versionSummaryLabel, .summaryLabel,.versionSummaryLargeLabel, .summaryValue, .columnLabel, .riskColumnLabel, .licenseColumnLabel, .licenseColumn, .riskColumn, .componentColumn, .clickable {
+.riskReportText, .linkText, .h1, .riskSummaryContainerLabel, .riskSummaryLabel, .riskSummaryCount, .risk-count, .table-summary,.versionSummaryLabel, .summaryLabel,.versionSummaryLargeLabel, .summaryValue, .columnLabel, .riskColumnLabel, .licenseColumn, .riskColumn, .componentColumn, .clickable {
 	text-align: left;
 	font-family: 'Open Sans', sans-serif;
 	font-size: 14px;
@@ -85,7 +85,7 @@
 	border: 1px solid #FFB900;
 }
 
-.rowFilteredSecurity, .rowFilteredLicense, .rowFilteredOperational {
+.rowFilteredSecurity, .rowFilteredLicense, .rowFilteredOperational, .hidden {
 	display: none;
 }
 
@@ -180,15 +180,12 @@
 	margin-top: 6px;
 }
 
-.columnLabel, .licenseColumnLabel, .riskColumnLabel, .componentColumn, .riskColumn, .licenseColumn, .linkText {
-	padding-left: 5px;
-	padding-right: 5px;
-	padding-top: 5px;
-	padding-bottom: 5px;
+.evenPadding {
+	padding: 5px;
 }
 
 
-.columnLabel, .licenseColumnLabel, .riskColumnLabel {
+.columnLabel, .riskColumnLabel {
 	margin-left: 20px;
 	margin-right: 10px;
 	color: #444 !important;
