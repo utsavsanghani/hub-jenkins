@@ -379,9 +379,14 @@ public class PostBuildHubScan extends Recorder {
                         }
                         logger.debug("Version Id: '" + versionId + "'");
                     }
+                    HubSupportHelper hubSupport = new HubSupportHelper();
+                    hubSupport.checkHubSupport(service, logger);
+
+                    JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(), scanTargets, build.getNumber(), build, launcher,
+                            logger.getJenkinsListener());
 
                     DateTime beforeScanTime = new DateTime();
-                    Boolean mappingDone = runScan(service, build, launcher, logger, scanExec, scanTargets, projectName, projectVersion);
+                    Boolean mappingDone = runScan(service, build, scan, logger, scanExec, scanTargets, projectName, projectVersion, hubSupport);
                     DateTime afterScanTime = new DateTime();
 
                     // Only map the scans to a Project Version if the Project name and Project Version have been
@@ -408,7 +413,7 @@ public class PostBuildHubScan extends Recorder {
                         reportGenInfo.setBeforeScanTime(beforeScanTime);
                         reportGenInfo.setAfterScanTime(afterScanTime);
 
-                        generateHubReport(build, logger, reportGenInfo);
+                        generateHubReport(build, logger, reportGenInfo, hubSupport, scan.getScanStatusDirectoryPath());
                     }
                 }
             } catch (BDJenkinsHubPluginException e) {
@@ -447,7 +452,8 @@ public class PostBuildHubScan extends Recorder {
         return true;
     }
 
-    private void generateHubReport(AbstractBuild<?, ?> build, IntLogger logger, HubReportGenerationInfo reportGenInfo)
+    private void generateHubReport(AbstractBuild<?, ?> build, IntLogger logger, HubReportGenerationInfo reportGenInfo, HubSupportHelper hubSupport,
+            String scanStatusDirectory)
             throws IOException, BDRestException, URISyntaxException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException {
         HubReportAction reportAction = new HubReportAction(build);
 
@@ -456,8 +462,20 @@ public class PostBuildHubScan extends Recorder {
         logger.debug("Waiting for the bom to be updated with the scan results.");
         HubEventPolling hubPoller = new HubEventPolling(reportGenInfo.getService());
 
-        if (hubPoller.isBomUpToDate(reportGenInfo.getBeforeScanTime(), reportGenInfo.getAfterScanTime(),
-                reportGenInfo.getHostname(), reportGenInfo.getScanTargets(), reportGenInfo.getMaximumWaitTime())) {
+        boolean isBomUpToDate = false;
+
+        if (hubSupport.isCliStatusDirOptionSupport()) {
+            if (hubPoller.isBomUpToDate(scanStatusDirectory, reportGenInfo.getMaximumWaitTime())) {
+                isBomUpToDate = true;
+            }
+        } else {
+            if (hubPoller.isBomUpToDate(reportGenInfo.getBeforeScanTime(), reportGenInfo.getAfterScanTime(),
+                    reportGenInfo.getHostname(), reportGenInfo.getScanTargets(), reportGenInfo.getMaximumWaitTime())) {
+                isBomUpToDate = true;
+            }
+        }
+
+        if (isBomUpToDate) {
             logger.debug("The bom has been updated, generating the report.");
             String reportUrl = reportGenInfo.getService().generateHubReport(reportGenInfo.getVersionId(), ReportFormatEnum.JSON);
 
@@ -668,16 +686,13 @@ public class PostBuildHubScan extends Recorder {
      * @throws URISyntaxException
      * @throws HubIntegrationException
      */
-    private Boolean runScan(HubIntRestService service, AbstractBuild<?, ?> build, Launcher launcher, HubJenkinsLogger logger, FilePath scanExec,
+    private Boolean runScan(HubIntRestService service, AbstractBuild<?, ?> build, JenkinsScanExecutor scan, HubJenkinsLogger logger, FilePath scanExec,
             List<String> scanTargets,
-            String projectName, String versionName)
+            String projectName, String versionName, HubSupportHelper hubSupport)
             throws IOException, HubConfigurationException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException
     {
         validateScanTargets(logger, scanTargets, build.getBuiltOn().getChannel());
         Boolean mappingDone = false;
-
-        HubSupportHelper hubSupport = new HubSupportHelper();
-        hubSupport.checkHubSupport(service, logger);
 
         FilePath oneJarPath = null;
 
@@ -685,7 +700,6 @@ public class PostBuildHubScan extends Recorder {
 
         oneJarPath = new FilePath(oneJarPath, "scan.cli.impl-standalone.jar");
 
-        JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(), scanTargets, build.getNumber(), build, launcher, logger.getJenkinsListener());
         scan.setLogger(logger);
         addProxySettingsToScanner(logger, scan);
 
@@ -707,6 +721,8 @@ public class PostBuildHubScan extends Recorder {
         } else {
             scan.setCliSupportsMapping(false);
         }
+
+        scan.setCliSupportStatusOption(hubSupport.isCliStatusDirOptionSupport());
 
         FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), getJava().getHome());
         javaExec = new FilePath(javaExec, "bin");
