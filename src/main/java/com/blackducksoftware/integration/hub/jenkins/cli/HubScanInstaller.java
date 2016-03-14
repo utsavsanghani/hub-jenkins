@@ -5,7 +5,6 @@ import hudson.FilePath;
 import hudson.ProxyConfiguration;
 import hudson.model.TaskListener;
 import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.tools.ToolInstaller;
 import hudson.tools.ToolInstallation;
@@ -19,9 +18,7 @@ import java.net.URLConnection;
 
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
-import org.jenkinsci.remoting.Role;
-import org.jenkinsci.remoting.RoleChecker;
+import org.joda.time.DateTime;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
@@ -32,8 +29,11 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsMac;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
 
 public class HubScanInstaller extends ToolInstaller {
+    private static final String versionFileName = "hubVersion.txt";
 
     /**
      * URL of a ZIP file which should be downloaded in case the tool is missing.
@@ -92,25 +92,40 @@ public class HubScanInstaller extends ToolInstaller {
         return null;
     }
 
-    /**
-     *
-     *
-     * @param archive
-     * @param listener
-     * @param message
-     * @return
-     * @throws IOException
-     * @throws InterruptedException
-     */
     public boolean customInstall(FilePath directory, URL archive, TaskListener listener, String message) throws IOException, InterruptedException {
         try {
-            FilePath timestamp = directory.child(".timestamp");
+            boolean cliMismatch = true;
+            HubJenkinsLogger logger = new HubJenkinsLogger(listener);
+            HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
+            String hubVersion = "";
+            try {
+                HubIntRestService service = BuildHelper.getRestService(logger, serverInfo.getServerUrl(),
+                        serverInfo.getUsername(),
+                        serverInfo.getPassword(),
+                        serverInfo.getTimeout());
+                hubVersion = service.getHubVersion();
+            } catch (Exception e) {
+                logger.error("Problem retrieving the Hub version.", e);
+            }
+            // For some reason the Hub returns the Version inside ""'s
+            hubVersion = hubVersion.replace("\"", "");
+            FilePath hubVersionFile = directory.sibling(versionFileName);
+            if (hubVersionFile.exists()) {
+                String storedHubVersion = hubVersionFile.readToString();
+                if (hubVersion.equals(storedHubVersion)) {
+                    cliMismatch = false;
+                } else {
+                    hubVersionFile.delete();
+                }
+            }
+            if (cliMismatch) {
+                hubVersionFile.touch((new DateTime()).getMillis());
+                hubVersionFile.write(hubVersion, "UTF-8");
+            }
+
             URLConnection con;
             try {
                 con = ProxyConfiguration.open(archive);
-                if (timestamp.exists()) {
-                    con.setIfModifiedSince(timestamp.lastModified());
-                }
                 con.connect();
             } catch (IOException x) {
                 if (directory.exists()) {
@@ -129,10 +144,8 @@ public class HubScanInstaller extends ToolInstaller {
                 return false;
             }
 
-            long sourceTimestamp = con.getLastModified();
-
             if (directory.exists()) {
-                if (timestamp.exists() && sourceTimestamp == timestamp.lastModified())
+                if (!cliMismatch)
                 {
                     return false; // already up to date
                 }
@@ -159,44 +172,9 @@ public class HubScanInstaller extends ToolInstaller {
                 throw new IOException(String.format("Failed to unpack %s (%d bytes read of total %d)",
                         archive, cis.getByteCount(), con.getContentLength()), e);
             }
-            timestamp.touch(sourceTimestamp);
             return true;
         } catch (IOException e) {
             throw new IOException("Failed to install " + archive + " to " + directory.getRemote(), e);
-        }
-    }
-
-    class GetIsOsMac implements Callable<Boolean, IOException> {
-        private static final long serialVersionUID = 3459269768733083577L;
-
-        public GetIsOsMac() {
-        }
-
-        @Override
-        public Boolean call() throws IOException {
-            return SystemUtils.IS_OS_MAC_OSX;
-        }
-
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            checker.check(this, new Role(GetIsOsMac.class));
-        }
-    }
-
-    class GetIsOsWindows implements Callable<Boolean, IOException> {
-        private static final long serialVersionUID = 3459269768733083577L;
-
-        public GetIsOsWindows() {
-        }
-
-        @Override
-        public Boolean call() throws IOException {
-            return SystemUtils.IS_OS_WINDOWS;
-        }
-
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            checker.check(this, new Role(GetIsOsWindows.class));
         }
     }
 

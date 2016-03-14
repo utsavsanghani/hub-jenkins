@@ -25,6 +25,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 
 public class HubScanInstallation extends ToolInstallation implements NodeSpecific<HubScanInstallation>, EnvironmentSpecific<HubScanInstallation> {
@@ -77,46 +78,34 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
      * @throws InterruptedException
      */
     public boolean getExists(VirtualChannel channel, IntLogger logger) throws IOException, InterruptedException {
-        FilePath autoInstallHomeFilePath = new FilePath(channel, getHome());
-        if (!autoInstallHomeFilePath.exists() || autoInstallHomeFilePath.list().isEmpty()) {
+        FilePath cliHomeFilePath = getCliHome(channel);
+        if (cliHomeFilePath == null) {
             return false;
         }
-        FilePath cliHomeFilePath = null;
-        for (FilePath autoInstalledFile : autoInstallHomeFilePath.list()) {
-            if (autoInstalledFile.getName().toLowerCase().contains("scan.cli")) {
-                cliHomeFilePath = autoInstalledFile;
-                break;
-            }
-        }
-        if (cliHomeFilePath == null) {
-            // This was not an auto-installed CLI, this is most likely a test
-            cliHomeFilePath = autoInstallHomeFilePath;
-        }
-
         // find the lib folder in the iScan directory
-        logger.debug("BlackDuck Scan directory: " + cliHomeFilePath.getRemote());
+        logger.debug("BlackDuck scan directory: " + cliHomeFilePath.getRemote());
         List<FilePath> files = cliHomeFilePath.listDirectories();
         if (files != null) {
-            logger.debug("directories in the BlackDuck Scan directory: " + files.size());
+            logger.debug("directories in the BlackDuck scan directory: " + files.size());
             if (!files.isEmpty()) {
                 FilePath libFolder = null;
-                for (FilePath iScanDirectory : files) {
-                    if ("lib".equalsIgnoreCase(iScanDirectory.getName())) {
-                        libFolder = iScanDirectory;
+                for (FilePath directory : files) {
+                    if ("lib".equalsIgnoreCase(directory.getName())) {
+                        libFolder = directory;
                         break;
                     }
                 }
                 if (libFolder == null) {
                     return false;
                 }
-                logger.debug("BlackDuck Scan lib directory: " + libFolder.getRemote());
+                logger.debug("BlackDuck scan lib directory: " + libFolder.getRemote());
                 FilePath[] cliFiles = libFolder.list("scan.cli*.jar");
                 FilePath hubScanJar = null;
                 if (cliFiles == null) {
                     return false;
                 } else {
                     for (FilePath file : cliFiles) {
-                        logger.debug("BlackDuck Scan lib file: " + file.getRemote());
+                        logger.debug("BlackDuck scan lib file: " + file.getRemote());
                         if (file.getName().contains("scan.cli")) {
                             hubScanJar = file;
                             break;
@@ -146,7 +135,81 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
      * @throws IOException
      * @throws InterruptedException
      */
+    public FilePath getProvidedJavaHome(VirtualChannel channel) throws IOException, InterruptedException {
+        FilePath cliHomeFilePath = getCliHome(channel);
+        if (cliHomeFilePath == null) {
+            return null;
+        }
+        List<FilePath> files = cliHomeFilePath.listDirectories();
+        if (files != null && !files.isEmpty()) {
+            FilePath jreFolder = null;
+            for (FilePath directory : files) {
+                if ("jre".equalsIgnoreCase(directory.getName())) {
+                    jreFolder = directory;
+                    break;
+                }
+            }
+            if (jreFolder != null) {
+                FilePath javaExec = new FilePath(jreFolder, "bin");
+                if (channel.call(new GetIsOsWindows())) {
+                    javaExec = new FilePath(javaExec, "java.exe");
+                } else {
+                    javaExec = new FilePath(javaExec, "java");
+                }
+                if (javaExec.exists()) {
+                    return jreFolder;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the executable file of the installation
+     *
+     * @param channel
+     *            VirtualChannel to find the executable on master or slave
+     *
+     * @return FilePath
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public FilePath getCLI(VirtualChannel channel) throws IOException, InterruptedException {
+        FilePath cliHomeFilePath = getCliHome(channel);
+        if (cliHomeFilePath == null) {
+            return null;
+        }
+        List<FilePath> files = cliHomeFilePath.listDirectories();
+        if (files != null && !files.isEmpty()) {
+            FilePath libFolder = null;
+            for (FilePath directory : files) {
+                if ("lib".equalsIgnoreCase(directory.getName())) {
+                    libFolder = directory;
+                    break;
+                }
+            }
+            if (libFolder == null) {
+                return null;
+            }
+            FilePath[] cliFiles = libFolder.list("scan.cli*.jar");
+            FilePath cliFile = null;
+            if (cliFiles == null) {
+                return null;
+            } else {
+                for (FilePath file : cliFiles) {
+                    if (file.getName().contains("scan.cli")) {
+                        cliFile = file;
+                        break;
+                    }
+                }
+            }
+            return cliFile;
+        } else {
+            return null;
+        }
+    }
+
+    private FilePath getCliHome(VirtualChannel channel) throws IOException, InterruptedException {
         FilePath autoInstallHomeFilePath = new FilePath(channel, getHome());
         if (!autoInstallHomeFilePath.exists() || autoInstallHomeFilePath.list().isEmpty()) {
             return null;
@@ -159,40 +222,11 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
             }
         }
         if (cliHomeFilePath == null) {
-            // This was not an auto-installed CLI, this is most likely a test
+            // This was not an auto-installed CLI, this is most likely a test,
+            // or the user overrided the Tool in a node configuration
             cliHomeFilePath = autoInstallHomeFilePath;
         }
-
-        List<FilePath> files = cliHomeFilePath.listDirectories();
-        if (files != null) {
-            if (!files.isEmpty()) {
-                FilePath libFolder = null;
-                for (FilePath iScanDirectory : files) {
-                    if ("lib".equalsIgnoreCase(iScanDirectory.getName())) {
-                        libFolder = iScanDirectory;
-                    }
-                }
-                if (libFolder == null) {
-                    return null;
-                }
-                FilePath[] cliFiles = libFolder.list("scan.cli*.jar");
-                FilePath iScanScript = null;
-                if (cliFiles == null) {
-                    return null;
-                } else {
-                    for (FilePath file : cliFiles) {
-                        if (file.getName().contains("scan.cli")) {
-                            iScanScript = file;
-                        }
-                    }
-                }
-                return iScanScript;
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
+        return cliHomeFilePath;
     }
 
     @Extension
