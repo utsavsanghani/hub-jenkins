@@ -46,7 +46,7 @@ import com.google.common.base.Charsets;
 
 public class PostBuildHubScanUnitTest {
 
-    private static final String CLI_VERSION = "2.1.2";
+    private static final String CLI_VERSION = "2.3.3";
 
     private static final String TEST_CLI_PATH = "/lib/scan.cli-" + CLI_VERSION + "-standalone.jar";
 

@@ -51,7 +51,7 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
 public class ScanIntegrationTest {
 
-    private static final String CLI_VERSION = "2.1.2";
+    private static final String CLI_VERSION = "2.3.3";
 
     private static final String PASSWORD_WRONG = "Assert.failurePassword";
 
@@ -706,7 +706,7 @@ public class ScanIntegrationTest {
     // assertTrue(buildOutput, buildOutput.contains("Version Id:"));
     /*
      * Only to be asserted if run against hub <2.3.1
-     *
+     * 
      * // assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
      * // assertTrue(buildOutput, buildOutput.contains("The scan target :"));
      * // assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
