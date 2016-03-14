@@ -192,17 +192,18 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
                 return null;
             }
             FilePath[] cliFiles = libFolder.list("scan.cli*.jar");
-            FilePath iScanScript = null;
+            FilePath cliFile = null;
             if (cliFiles == null) {
                 return null;
             } else {
                 for (FilePath file : cliFiles) {
                     if (file.getName().contains("scan.cli")) {
-                        iScanScript = file;
+                        cliFile = file;
+                        break;
                     }
                 }
             }
-            return iScanScript;
+            return cliFile;
         } else {
             return null;
         }
