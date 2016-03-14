@@ -15,17 +15,14 @@
 				<script type="text/javascript"
 						src="${rootURL}/plugin/hub-jenkins/js/HubBomReportFunctions.js" />
 				
-				<div class="riskReportBackgroundColor" style="float: right;">
-					<div>
-						<a>
-					<!--	<a href="${it.getReport().getReportVersionUrl()}" target="_blank"> -->
-							<img style="width: 120px;margin: 2px;padding-bottom: 10px;"
-								src="${rootURL}/plugin/hub-jenkins/images/Black_Duck_Logo.png" />
-						</a>
+				<div class="reportHeader">
+					<div class="h1 reportHeaderTitle">${%Title}</div>
+					
+					<div style="float: right;">
+						<img class="reportHeaderIcon"
+							src="${rootURL}/plugin/hub-jenkins/images/Hub_BD_logo.png" />
 					</div>
 				</div>
-				
-				<div class="h1">${%Title}</div>
 				
 				<div class="versionSummaryTable">
 					<div>
@@ -53,10 +50,7 @@
 				
 				<!-- SECURITY RISK SUMMARY -->
 				<div class="riskSummaryContainer horizontal rounded">
-					<div class="riskSummaryContainerLabel">${%Vulnerability_Risk_Title} <i id="securityDescriptionIcon" class="fa fa-question-circle infoIcon linkText" onclick="toggleHidden('securityDescription')" ></i>
-					</div>
-					<div id="securityDescription"  class="hidden">
-						${%Vulnerability_Risk_Description}
+					<div class="riskSummaryContainerLabel">${%Vulnerability_Risk_Title} <i id="securityDescriptionIcon" class="fa fa-info-circle infoIcon" title="${%Vulnerability_Risk_Description}" ></i>
 					</div>
 
 					<div class="progress-bar horizontal">
@@ -123,10 +117,7 @@
 				
 				<!-- LICENSE  RISK SUMMARY -->
 				<div class="riskSummaryContainer horizontal rounded">
-					<div class="riskSummaryContainerLabel">${%License_Risk_Title} <i id="licenseDescriptionIcon" class="fa fa-question-circle infoIcon linkText" onclick="toggleHidden('licenseDescription')" ></i>
-					</div>
-					<div id="licenseDescription"  class="hidden">
-						${%License_Risk_Description}
+					<div class="riskSummaryContainerLabel">${%License_Risk_Title} <i id="licenseDescriptionIcon" class="fa fa-info-circle infoIcon" title="${%License_Risk_Description}" ></i>
 					</div>
 
 					<div class="progress-bar horizontal">
@@ -194,10 +185,7 @@
 				
 				<!-- OPERATIONAL RISK SUMMARY -->
 				<div class="riskSummaryContainer horizontal rounded">
-					<div class="riskSummaryContainerLabel">${%Operational_Risk_Title} <i id="operationalDescriptionIcon" class="fa fa-question-circle infoIcon linkText" onclick="toggleHidden('operationalDescription')" ></i>
-					</div>
-					<div id="operationalDescription"  class="hidden">
-						${%Operational_Risk_Description}
+					<div class="riskSummaryContainerLabel">${%Operational_Risk_Title} <i id="operationalDescriptionIcon" class="fa fa-info-circle infoIcon" title="${%Operational_Risk_Description}" ></i>
 					</div>
 
 					<div class="progress-bar horizontal">
@@ -275,7 +263,7 @@
 					<thead>
 						<tr>
 							<th class="clickable componentColumn columnLabel evenPadding">${%Bom_Entry_Name}</th>
-							<th class="clickable columnLabel evenPadding">${%Bom_Entry_Version}</th>
+							<th class="clickable componentColumn columnLabel evenPadding">${%Bom_Entry_Version}</th>
 							<th class="clickable columnLabel evenPadding">${%Bom_Entry_License}</th>
 							<th class="clickable riskColumnLabel evenPadding">${%Bom_Entry_Vulnerability_High_Short}</th>
 							<th class="clickable riskColumnLabel evenPadding">${%Bom_Entry_Vulnerability_Medium_Short}</th>

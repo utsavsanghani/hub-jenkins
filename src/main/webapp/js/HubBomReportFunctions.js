@@ -10,20 +10,6 @@ var lowSecurityColumnNum = 5;
 var licenseRiskColumnNum = 6;
 var operationRiskColumnNum = 7;
 
-
-function toggleHidden(id){
-	var hideableElement = document.getElementById(id);
-	
-	
-	if (!hideableElement.className || hideableElement.className.length == 0) {
-		hideableElement.className += "hidden";
-	} else {
-		if (hideableElement.className.indexOf("hidden") != -1) {
-			hideableElement.className = hideableElement.className.replace("hidden", "");
-		}
-	}
-}
-
 function adjustWidth(object) {
 	var percentageSpan = object.getElementsByTagName("SPAN")[0];
 	var percent = percentageSpan.innerHTML;

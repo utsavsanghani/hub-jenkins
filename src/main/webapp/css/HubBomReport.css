@@ -8,12 +8,32 @@
 	font-size: 14px;
 	color: #000;
 }
+
 .infoIcon{
+	color: #CCCCCC;
 	padding-left: 10px;
 }
 
+.reportHeader{
+	height: 60px;
+	padding-top: 5px;
+	background-color: #2D343E;
+}
+
+.reportHeaderTitle{
+	display: inline-block;
+	padding-left: 10px;
+	padding-top : 5px;
+	padding-right : 5px;
+	padding-bottom : 5px;
+}
+
+.reportHeaderIcon{
+	width: 140px;
+	padding: 5px;
+}
+
 .versionSummaryTable{
-	background-color: #FAFAFA; 
 	height: 60px;
 	padding-top: 5px;
 }
@@ -24,8 +44,8 @@
 
 .versionSummaryLabel, .versionSummaryLargeLabel{
 	display: inline-block;
-	padding-left: 5px;
-	padding-right: 10px;
+	padding-left: 10px;
+	padding-right: 5px;
 	padding-top: 2px;
 	padding-bottom: 1px;
 }
@@ -42,7 +62,7 @@
 .h1 {
 	font-size: 26px;
 	font-weight: bold;
-	padding: 5px;
+	color: white;
 }
 
 .h1, .riskSummaryContainerLabel {
@@ -52,7 +72,7 @@
 .riskSummaryContainerLabel {
 	text-align: left;
 	font-size: 16px;
-	padding-left: 0px;
+	padding-left: 10px;
 	padding-right: 5px;
 	padding-top: 5px;
 	padding-bottom: 5px;
@@ -76,6 +96,7 @@
 	width: 72px;
 	display: inline-block;
 	background-color: #fff;
+	padding-left: 10px;
 }
 
 .filterSelected {
@@ -85,7 +106,7 @@
 	border: 1px solid #FFB900;
 }
 
-.rowFilteredSecurity, .rowFilteredLicense, .rowFilteredOperational, .hidden {
+.rowFilteredSecurity, .rowFilteredLicense, .rowFilteredOperational {
 	display: none;
 }
 
@@ -192,8 +213,8 @@
 }
 
 .summaryLabel{
-	padding-left: 0px;
-	padding-right: 10px;
+	padding-left: 10px;
+	padding-right: 5px;
 	padding-top: 2px;
 	padding-bottom: 1px;
 }
