@@ -15,17 +15,14 @@
 				<script type="text/javascript"
 						src="${rootURL}/plugin/hub-jenkins/js/HubBomReportFunctions.js" />
 				
-				<div class="riskReportBackgroundColor" style="float: right;">
-					<div>
-						<a>
-					<!--	<a href="${it.getReport().getReportVersionUrl()}" target="_blank"> -->
-							<img style="width: 120px;margin: 2px;padding-bottom: 10px;"
-								src="${rootURL}/plugin/hub-jenkins/images/Black_Duck_Logo.png" />
-						</a>
+				<div class="reportHeader">
+					<div class="h1 reportHeaderTitle">${%Title}</div>
+					
+					<div style="float: right;">
+						<img class="reportHeaderIcon"
+							src="${rootURL}/plugin/hub-jenkins/images/Hub_BD_logo.png" />
 					</div>
 				</div>
-				
-				<div class="h1">${%Title}</div>
 				
 				<div class="versionSummaryTable">
 					<div>
@@ -38,7 +35,7 @@
 								${it.htmlEscape(it.getReleaseSummary().getVersion())}
 						</div>
 						
-						<div style="float: right;" class="linkText riskReportText clickable" onclick="window.open('${it.getReport().getReportVersionUrl()}', '_blank');">
+						<div style="float: right;" class="linkText riskReportText clickable evenPadding" onclick="window.open('${it.getReport().getReportVersionUrl()}', '_blank');">
 							${%HubReportLink}
 						</div>
 					</div>
@@ -53,7 +50,7 @@
 				
 				<!-- SECURITY RISK SUMMARY -->
 				<div class="riskSummaryContainer horizontal rounded">
-					<div class="riskSummaryContainerLabel">${%Vulnerability_Risk_Title} <i class="fa fa-question-circle infoIcon" title="${%Vulnerability_Risk_Footer}"></i>
+					<div class="riskSummaryContainerLabel">${%Vulnerability_Risk_Title} <i id="securityDescriptionIcon" class="fa fa-info-circle infoIcon" title="${%Vulnerability_Risk_Description}" ></i>
 					</div>
 
 					<div class="progress-bar horizontal">
@@ -120,7 +117,7 @@
 				
 				<!-- LICENSE  RISK SUMMARY -->
 				<div class="riskSummaryContainer horizontal rounded">
-					<div class="riskSummaryContainerLabel">${%License_Risk_Title} <i class="fa fa-question-circle infoIcon" title="${%License_Risk_Footer}"></i>
+					<div class="riskSummaryContainerLabel">${%License_Risk_Title} <i id="licenseDescriptionIcon" class="fa fa-info-circle infoIcon" title="${%License_Risk_Description}" ></i>
 					</div>
 
 					<div class="progress-bar horizontal">
@@ -188,7 +185,7 @@
 				
 				<!-- OPERATIONAL RISK SUMMARY -->
 				<div class="riskSummaryContainer horizontal rounded">
-					<div class="riskSummaryContainerLabel">${%Operational_Risk_Title} <i class="fa fa-question-circle infoIcon" title="${%Operational_Risk_Footer}"></i>
+					<div class="riskSummaryContainerLabel">${%Operational_Risk_Title} <i id="operationalDescriptionIcon" class="fa fa-info-circle infoIcon" title="${%Operational_Risk_Description}" ></i>
 					</div>
 
 					<div class="progress-bar horizontal">
@@ -265,31 +262,31 @@
 				<table id="hubBomReport" class="table sortable">
 					<thead>
 						<tr>
-							<th class="clickable componentColumn columnLabel">${%Bom_Entry_Name}</th>
-							<th class="clickable columnLabel">${%Bom_Entry_Version}</th>
-							<th class="clickable columnLabel">${%Bom_Entry_License}</th>
-							<th class="clickable riskColumnLabel">${%Bom_Entry_Vulnerability_High_Short}</th>
-							<th class="clickable riskColumnLabel">${%Bom_Entry_Vulnerability_Medium_Short}</th>
-							<th class="clickable riskColumnLabel">${%Bom_Entry_Vulnerability_Low_Short}</th>
-							<th class="clickable riskColumnLabel" title="${%License_Risk_Title}">${%License_Risk_Title_Short}</th>
-							<th class="clickable riskColumnLabel" title="${%Operational_Risk_Title}">${%Operational_Risk_Title_Short}</th>
+							<th class="clickable componentColumn columnLabel evenPadding">${%Bom_Entry_Name}</th>
+							<th class="clickable componentColumn columnLabel evenPadding">${%Bom_Entry_Version}</th>
+							<th class="clickable columnLabel evenPadding">${%Bom_Entry_License}</th>
+							<th class="clickable riskColumnLabel evenPadding">${%Bom_Entry_Vulnerability_High_Short}</th>
+							<th class="clickable riskColumnLabel evenPadding">${%Bom_Entry_Vulnerability_Medium_Short}</th>
+							<th class="clickable riskColumnLabel evenPadding">${%Bom_Entry_Vulnerability_Low_Short}</th>
+							<th class="clickable riskColumnLabel evenPadding" title="${%License_Risk_Title}">${%License_Risk_Title_Short}</th>
+							<th class="clickable riskColumnLabel evenPadding" title="${%Operational_Risk_Title}">${%Operational_Risk_Title_Short}</th>
 						</tr>
 					</thead>
 					<tbody>
 						<j:forEach var="entry" items="${it.getBomEntries()}">
 							<tr>
-								<td class="clickable componentColumn" onclick="window.open('${it.getReport().getComponentUrl(entry)}', '_blank');">
+								<td class="clickable componentColumn evenPadding" onclick="window.open('${it.getReport().getComponentUrl(entry)}', '_blank');">
 									${it.htmlEscape(entry.getProducerProject().getName())}
 								</td>
-								<td class="clickable componentColumn" onclick="window.open('${it.getReport().getVersionUrl(entry)}', '_blank');">
+								<td class="clickable componentColumn evenPadding" onclick="window.open('${it.getReport().getVersionUrl(entry)}', '_blank');">
 									${it.htmlEscape(entry.getProducerReleasesDisplay())}
 								</td>
-								<td class="licenseColumn" title="${entry.getLicensesDisplay()}">${entry.getLicensesDisplay()}</td>
-								<td class="riskColumn"><div class="risk-span riskColumn risk-count">${entry.getVulnerabilityRisk().getHIGH()}</div></td>
-								<td class="riskColumn"><div class="risk-span riskColumn risk-count">${entry.getVulnerabilityRisk().getMEDIUM()}</div></td>
-								<td class="riskColumn"><div class="risk-span riskColumn risk-count">${entry.getVulnerabilityRisk().getLOW()}</div></td>
-								<td class="riskColumn"><div class="risk-span riskColumn risk-count">${entry.getLicenseRiskString()}</div></td>
-								<td class="riskColumn"><div class="risk-span riskColumn risk-count">${entry.getOperationalRiskString()}</div></td>
+								<td class="licenseColumn evenPadding" title="${entry.getLicensesDisplay()}">${entry.getLicensesDisplay()}</td>
+								<td class="riskColumn"><div class="risk-span riskColumn risk-count evenPadding">${entry.getVulnerabilityRisk().getHIGH()}</div></td>
+								<td class="riskColumn"><div class="risk-span riskColumn risk-count evenPadding">${entry.getVulnerabilityRisk().getMEDIUM()}</div></td>
+								<td class="riskColumn"><div class="risk-span riskColumn risk-count evenPadding">${entry.getVulnerabilityRisk().getLOW()}</div></td>
+								<td class="riskColumn"><div class="risk-span riskColumn risk-count evenPadding">${entry.getLicenseRiskString()}</div></td>
+								<td class="riskColumn"><div class="risk-span riskColumn risk-count evenPadding">${entry.getOperationalRiskString()}</div></td>
 							</tr>
 						</j:forEach>
 					</tbody>

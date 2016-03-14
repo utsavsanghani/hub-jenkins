@@ -10,7 +10,6 @@ var lowSecurityColumnNum = 5;
 var licenseRiskColumnNum = 6;
 var operationRiskColumnNum = 7;
 
-
 function adjustWidth(object) {
 	var percentageSpan = object.getElementsByTagName("SPAN")[0];
 	var percent = percentageSpan.innerHTML;
