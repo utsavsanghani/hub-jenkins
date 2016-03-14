@@ -3,7 +3,7 @@
 		for a general discussion about jelly script. -->
 		
 	<f:entry field="failBuildForPolicyViolations">
-		<f:checkbox default="false" />
+		<f:checkbox default="true" />
 		<label>${%FailTheBuildPolicyViolations}</label>
 	</f:entry>
 
