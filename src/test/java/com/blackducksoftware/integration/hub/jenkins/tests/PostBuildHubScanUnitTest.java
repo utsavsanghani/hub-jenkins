@@ -208,7 +208,7 @@ public class PostBuildHubScanUnitTest {
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(hubScanInstallPath + TEST_CLI_PATH));
         String output = logger.getOutputString();
-        Assert.assertTrue(output, output.contains("Using this BlackDuck Scan CLI at : "));
+        Assert.assertTrue(output, output.contains("Using this BlackDuck scan CLI at : "));
     }
 
     @Test
@@ -233,7 +233,7 @@ public class PostBuildHubScanUnitTest {
         Assert.assertTrue(script.exists());
         Assert.assertTrue(script.getRemote().equals(hubScanInstallPath + TEST_CLI_PATH));
         String output = logger.getOutputString();
-        Assert.assertTrue(output, output.contains("Using this BlackDuck Scan CLI at : "));
+        Assert.assertTrue(output, output.contains("Using this BlackDuck scan CLI at : "));
     }
 
     @Test
@@ -242,7 +242,7 @@ public class PostBuildHubScanUnitTest {
         // selected, and with the script existing
 
         exception.expect(HubConfigurationException.class);
-        exception.expectMessage("You need to select which BlackDuck Scan installation to use.");
+        exception.expectMessage("You need to select which BlackDuck scan installation to use.");
 
         PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 

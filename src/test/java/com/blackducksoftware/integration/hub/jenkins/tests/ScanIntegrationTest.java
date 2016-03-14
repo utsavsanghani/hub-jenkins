@@ -171,11 +171,11 @@ public class ScanIntegrationTest {
 
         assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
         assertTrue(buildOutput, buildOutput.contains("Running on : master"));
-        assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan directory:"));
-        assertTrue(buildOutput, buildOutput.contains("directories in the BlackDuck Scan directory"));
-        assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib directory:"));
-        assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib file:"));
-        assertTrue(buildOutput, buildOutput.contains("Using this BlackDuck Scan CLI at : "));
+        assertTrue(buildOutput, buildOutput.contains("BlackDuck scan directory:"));
+        assertTrue(buildOutput, buildOutput.contains("directories in the BlackDuck scan directory"));
+        assertTrue(buildOutput, buildOutput.contains("BlackDuck scan lib directory:"));
+        assertTrue(buildOutput, buildOutput.contains("BlackDuck scan lib file:"));
+        assertTrue(buildOutput, buildOutput.contains("Using this BlackDuck scan CLI at : "));
         assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
         URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         assertTrue(buildOutput, buildOutput.contains("Using this Hub hostname : '" + url.getHost()));
@@ -222,11 +222,11 @@ public class ScanIntegrationTest {
 
             assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
             assertTrue(buildOutput, buildOutput.contains("Running on : master"));
-            assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan directory:"));
-            assertTrue(buildOutput, buildOutput.contains("directories in the BlackDuck Scan directory"));
-            assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib directory:"));
-            assertTrue(buildOutput, buildOutput.contains("BlackDuck Scan lib file:"));
-            assertTrue(buildOutput, buildOutput.contains("Using this BlackDuck Scan CLI at : "));
+            assertTrue(buildOutput, buildOutput.contains("BlackDuck scan directory:"));
+            assertTrue(buildOutput, buildOutput.contains("directories in the BlackDuck scan directory"));
+            assertTrue(buildOutput, buildOutput.contains("BlackDuck scan lib directory:"));
+            assertTrue(buildOutput, buildOutput.contains("BlackDuck scan lib file:"));
+            assertTrue(buildOutput, buildOutput.contains("Using this BlackDuck scan CLI at : "));
             assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
             URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
             assertTrue(buildOutput, buildOutput.contains("Using this Hub hostname : '" + url.getHost()));
@@ -291,7 +291,7 @@ public class ScanIntegrationTest {
             assertTrue(buildOutput, buildOutput.contains("Finished in"));
             assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             assertTrue(buildOutput, buildOutput.contains(
-                    "You can view the BlackDuck Scan CLI logs at :"));
+                    "You can view the BlackDuck scan CLI logs at :"));
             assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             assertTrue(buildOutput, buildOutput.contains("Version Id:"));
             if (isHubOlderThanThisVersion("2.3.2")) {
@@ -369,7 +369,7 @@ public class ScanIntegrationTest {
             assertTrue(buildOutput, buildOutput.contains("Finished in"));
             assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             assertTrue(buildOutput, buildOutput.contains(
-                    "You can view the BlackDuck Scan CLI logs at :"));
+                    "You can view the BlackDuck scan CLI logs at :"));
             assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             assertTrue(buildOutput, buildOutput.contains("Version Id:"));
             assertTrue(buildOutput, buildOutput.contains("The bom has been updated, generating the report."));
@@ -462,7 +462,7 @@ public class ScanIntegrationTest {
             assertTrue(buildOutput, buildOutput.contains("Finished in"));
             assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             assertTrue(buildOutput, buildOutput.contains(
-                    "You can view the BlackDuck Scan CLI logs at :"));
+                    "You can view the BlackDuck scan CLI logs at :"));
             assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             assertTrue(buildOutput, buildOutput.contains("Version Id:"));
             assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
@@ -527,7 +527,7 @@ public class ScanIntegrationTest {
             assertTrue(buildOutput, buildOutput.contains("Finished in"));
             assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             assertTrue(buildOutput, buildOutput.contains(
-                    "You can view the BlackDuck Scan CLI logs at :"));
+                    "You can view the BlackDuck scan CLI logs at :"));
             assertTrue(buildOutput, buildOutput.contains("Project Id:"));
             assertTrue(buildOutput, buildOutput.contains("Version Id:"));
             if (isHubOlderThanThisVersion("2.3.2")) {
@@ -608,7 +608,7 @@ public class ScanIntegrationTest {
             assertTrue(buildOutput, buildOutput.contains("Finished in"));
             assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             assertTrue(buildOutput, buildOutput.contains(
-                    "You can view the BlackDuck Scan CLI logs at :"));
+                    "You can view the BlackDuck scan CLI logs at :"));
             assertTrue(buildOutput, buildOutput.contains("Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH") + "' at Port: '"
                     + testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH") + "'"));
             assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
@@ -698,7 +698,7 @@ public class ScanIntegrationTest {
     // assertTrue(buildOutput, buildOutput.contains("Finished in"));
     // assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
     // assertTrue(buildOutput, buildOutput.contains(
-    // "You can view the BlackDuck Scan CLI logs at :"));
+    // "You can view the BlackDuck scan CLI logs at :"));
     // assertTrue(buildOutput, buildOutput.contains("Using proxy: '" +
     // testProperties.getProperty("TEST_PROXY_HOST_BASIC") + "' at Port: '"
     // + testProperties.getProperty("TEST_PROXY_PORT_BASIC") + "'"));
@@ -706,7 +706,7 @@ public class ScanIntegrationTest {
     // assertTrue(buildOutput, buildOutput.contains("Version Id:"));
     /*
      * Only to be asserted if run against hub <2.3.1
-     * 
+     *
      * // assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
      * // assertTrue(buildOutput, buildOutput.contains("The scan target :"));
      * // assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
@@ -790,7 +790,7 @@ public class ScanIntegrationTest {
     // assertTrue(buildOutput, buildOutput.contains("Finished in"));
     // assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
     // assertTrue(buildOutput, buildOutput.contains(
-    // "You can view the BlackDuck Scan CLI logs at :"));
+    // "You can view the BlackDuck scan CLI logs at :"));
     // assertTrue(buildOutput, buildOutput.contains("Using proxy: '" +
     // testProperties.getProperty("TEST_PROXY_HOST_DIGEST") + "' at Port: '"
     // + testProperties.getProperty("TEST_PROXY_PORT_DIGEST") + "'"));
@@ -868,7 +868,7 @@ public class ScanIntegrationTest {
             assertTrue(buildOutput, buildOutput.contains("Finished in"));
             assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             assertTrue(buildOutput, buildOutput.contains(
-                    "You can view the BlackDuck Scan CLI logs at :"));
+                    "You can view the BlackDuck scan CLI logs at :"));
             assertTrue(buildOutput, !buildOutput.contains("Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
                     + testProperties.getProperty("TEST_PROXY_PORT") + "'"));
             assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
@@ -947,7 +947,7 @@ public class ScanIntegrationTest {
             assertTrue(buildOutput, buildOutput.contains("Finished in"));
             assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             assertTrue(buildOutput, buildOutput.contains(
-                    "You can view the BlackDuck Scan CLI logs at :"));
+                    "You can view the BlackDuck scan CLI logs at :"));
             assertTrue(buildOutput, buildOutput.contains("Project Id: '"));
             assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
             if (isHubOlderThanThisVersion("2.3.2")) {
@@ -1011,7 +1011,7 @@ public class ScanIntegrationTest {
             assertTrue(buildOutput, buildOutput.contains("Finished in"));
             assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             assertTrue(buildOutput, buildOutput.contains(
-                    "You can view the BlackDuck Scan CLI logs at :"));
+                    "You can view the BlackDuck scan CLI logs at :"));
             assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
             if (isHubOlderThanThisVersion("2.3.2")) {
@@ -1080,7 +1080,7 @@ public class ScanIntegrationTest {
             assertTrue(buildOutput, buildOutput.contains("Finished in"));
             assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             assertTrue(buildOutput, buildOutput.contains(
-                    "You can view the BlackDuck Scan CLI logs at :"));
+                    "You can view the BlackDuck scan CLI logs at :"));
             assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             assertTrue(buildOutput, buildOutput.contains("Version Id:"));
             if (isHubOlderThanThisVersion("2.3.2")) {
@@ -1104,7 +1104,7 @@ public class ScanIntegrationTest {
             assertTrue(buildOutput, buildOutput.contains("Finished in"));
             assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
             assertTrue(buildOutput, buildOutput.contains(
-                    "You can view the BlackDuck Scan CLI logs at :"));
+                    "You can view the BlackDuck scan CLI logs at :"));
             assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
             assertTrue(buildOutput, buildOutput.contains("Version Id:"));
             if (isHubOlderThanThisVersion("2.3.2")) {

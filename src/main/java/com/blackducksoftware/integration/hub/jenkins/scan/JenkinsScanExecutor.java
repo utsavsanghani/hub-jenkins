@@ -200,7 +200,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     if (logDirectory.exists() && doesHubSupportLogOption()) {
 
                         getLogger().info(
-                                "You can view the BlackDuck Scan CLI logs at : '" + logDirectory.getRemote()
+                                "You can view the BlackDuck scan CLI logs at : '" + logDirectory.getRemote()
                                         + "'");
                         getLogger().info("");
                     }

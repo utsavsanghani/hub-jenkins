@@ -94,6 +94,10 @@ public class HubScanInstaller extends ToolInstaller {
 
     public boolean customInstall(FilePath directory, URL archive, TaskListener listener, String message) throws IOException, InterruptedException {
         try {
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
             boolean cliMismatch = true;
             HubJenkinsLogger logger = new HubJenkinsLogger(listener);
             HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
@@ -128,15 +132,11 @@ public class HubScanInstaller extends ToolInstaller {
                 con = ProxyConfiguration.open(archive);
                 con.connect();
             } catch (IOException x) {
-                if (directory.exists()) {
-                    // Cannot connect now, so assume whatever was last unpacked is still OK.
-                    if (listener != null) {
-                        listener.getLogger().println("Skipping installation of " + archive + " to " + directory.getRemote() + ": " + x);
-                    }
-                    return false;
-                } else {
-                    throw x;
+                // Cannot connect now, so assume whatever was last unpacked is still OK.
+                if (listener != null) {
+                    listener.getLogger().println("Skipping installation of " + archive + " to " + directory.getRemote() + ": " + x);
                 }
+                return false;
             }
 
             if (con instanceof HttpURLConnection
@@ -144,15 +144,11 @@ public class HubScanInstaller extends ToolInstaller {
                 return false;
             }
 
-            if (directory.exists()) {
-                if (!cliMismatch)
-                {
-                    return false; // already up to date
-                }
-                directory.deleteContents();
-            } else {
-                directory.mkdirs();
+            if (!cliMismatch)
+            {
+                return false; // already up to date
             }
+            directory.deleteContents();
 
             if (listener != null) {
                 listener.getLogger().println(message);
