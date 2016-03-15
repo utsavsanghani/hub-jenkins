@@ -465,7 +465,7 @@ public class PostBuildHubScan extends Recorder {
         boolean isBomUpToDate = false;
 
         if (hubSupport.isCliStatusDirOptionSupport()) {
-            if (hubPoller.isBomUpToDate(scanStatusDirectory, reportGenInfo.getMaximumWaitTime())) {
+            if (hubPoller.isBomUpToDate(scanStatusDirectory, reportGenInfo.getMaximumWaitTime(), logger)) {
                 isBomUpToDate = true;
             }
         } else {
