@@ -19,6 +19,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
+import com.blackducksoftware.integration.hub.exception.MissingPolicyStatusException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
@@ -122,31 +123,35 @@ public class HubFailureConditionStep extends Recorder {
                 build.setResult(Result.UNSTABLE);
                 return true;
             } else if (getFailBuildForPolicyViolations()) {
-                // We use this conditional in case there are other failure conditions in the future
-                PolicyStatus policyStatus = restService.getPolicyStatus(projectId, versionId);
-                if (policyStatus == null) {
-                    logger.error("Could not find any information about the Policy status of the bom.");
-                    build.setResult(Result.UNSTABLE);
-                }
-                if (policyStatus.getOverallStatusEnum() == PolicyStatusEnum.IN_VIOLATION) {
-                    build.setResult(Result.FAILURE);
-                }
+                try {
+                    // We use this conditional in case there are other failure conditions in the future
+                    PolicyStatus policyStatus = restService.getPolicyStatus(projectId, versionId);
+                    if (policyStatus == null) {
+                        logger.error("Could not find any information about the Policy status of the bom.");
+                        build.setResult(Result.UNSTABLE);
+                    }
+                    if (policyStatus.getOverallStatusEnum() == PolicyStatusEnum.IN_VIOLATION) {
+                        build.setResult(Result.FAILURE);
+                    }
 
-                if (policyStatus.getCountInViolation() == null) {
-                    logger.error("Could not find the number of bom entries In Violation of a Policy.");
-                } else {
-                    logger.info("Found " + policyStatus.getCountInViolation().getValue() + " bom entries to be In Violation of a defined Policy.");
-                }
-                if (policyStatus.getCountInViolationOverridden() == null) {
-                    logger.error("Could not find the number of bom entries In Violation Overridden of a Policy.");
-                } else {
-                    logger.info("Found " + policyStatus.getCountInViolationOverridden().getValue()
-                            + " bom entries to be In Violation of a defined Policy, but they have been overridden.");
-                }
-                if (policyStatus.getCountNotInViolation() == null) {
-                    logger.error("Could not find the number of bom entries Not In Violation of a Policy.");
-                } else {
-                    logger.info("Found " + policyStatus.getCountNotInViolation().getValue() + " bom entries to be Not In Violation of a defined Policy.");
+                    if (policyStatus.getCountInViolation() == null) {
+                        logger.error("Could not find the number of bom entries In Violation of a Policy.");
+                    } else {
+                        logger.info("Found " + policyStatus.getCountInViolation().getValue() + " bom entries to be In Violation of a defined Policy.");
+                    }
+                    if (policyStatus.getCountInViolationOverridden() == null) {
+                        logger.error("Could not find the number of bom entries In Violation Overridden of a Policy.");
+                    } else {
+                        logger.info("Found " + policyStatus.getCountInViolationOverridden().getValue()
+                                + " bom entries to be In Violation of a defined Policy, but they have been overridden.");
+                    }
+                    if (policyStatus.getCountNotInViolation() == null) {
+                        logger.error("Could not find the number of bom entries Not In Violation of a Policy.");
+                    } else {
+                        logger.info("Found " + policyStatus.getCountNotInViolation().getValue() + " bom entries to be Not In Violation of a defined Policy.");
+                    }
+                } catch (MissingPolicyStatusException e) {
+                    logger.error(e.getMessage());
                 }
             }
         } catch (BDJenkinsHubPluginException e) {
