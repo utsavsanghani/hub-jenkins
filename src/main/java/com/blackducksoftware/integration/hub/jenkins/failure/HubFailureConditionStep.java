@@ -151,7 +151,7 @@ public class HubFailureConditionStep extends Recorder {
                         logger.info("Found " + policyStatus.getCountNotInViolation().getValue() + " bom entries to be Not In Violation of a defined Policy.");
                     }
                 } catch (MissingPolicyStatusException e) {
-                    logger.error(e.getMessage());
+                    logger.warn(e.getMessage());
                 }
             }
         } catch (BDJenkinsHubPluginException e) {
