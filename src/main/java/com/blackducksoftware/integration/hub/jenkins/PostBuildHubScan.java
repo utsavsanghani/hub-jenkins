@@ -314,9 +314,7 @@ public class PostBuildHubScan extends Recorder {
                     ScanJobs[] scans = getScans();
                     if (scans == null) {
                         scans = new ScanJobs[1];
-                    }
-                    if (scans.length == 0) {
-                        ScanJobs scan = new ScanJobs("");
+                        ScanJobs scan = new ScanJobs(" ");
                         scans[0] = scan;
                     }
 
