@@ -313,6 +313,8 @@ public class PostBuildHubScan extends Recorder {
 
                     ScanJobs[] scans = getScans();
                     if (scans == null) {
+                        // They deleted all the scan targets in the Job config and then saved,
+                        // So the ScanJobs[] will be null
                         scans = new ScanJobs[1];
                         ScanJobs scan = new ScanJobs(" ");
                         scans[0] = scan;
