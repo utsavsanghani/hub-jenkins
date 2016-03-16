@@ -320,7 +320,7 @@ public class PostBuildHubScan extends Recorder {
                         scans[0] = scan;
                     }
 
-                    for (ScanJobs scanJob : getScans()) {
+                    for (ScanJobs scanJob : scans) {
                         if (StringUtils.isEmpty(scanJob.getScanTarget())) {
 
                             scanTargets.add(getWorkingDirectory().getRemote());
