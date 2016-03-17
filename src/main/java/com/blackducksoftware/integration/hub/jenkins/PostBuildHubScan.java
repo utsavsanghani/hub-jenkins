@@ -313,14 +313,14 @@ public class PostBuildHubScan extends Recorder {
 
                     ScanJobs[] scans = getScans();
                     if (scans == null) {
+                        // They deleted all the scan targets in the Job config and then saved,
+                        // So the ScanJobs[] will be null
                         scans = new ScanJobs[1];
-                    }
-                    if (scans.length == 0) {
-                        ScanJobs scan = new ScanJobs("");
+                        ScanJobs scan = new ScanJobs(" ");
                         scans[0] = scan;
                     }
 
-                    for (ScanJobs scanJob : getScans()) {
+                    for (ScanJobs scanJob : scans) {
                         if (StringUtils.isEmpty(scanJob.getScanTarget())) {
 
                             scanTargets.add(getWorkingDirectory().getRemote());
