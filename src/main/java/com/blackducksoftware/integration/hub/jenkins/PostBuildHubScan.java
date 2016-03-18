@@ -40,6 +40,8 @@ import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
+import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstallation;
+import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstaller;
 import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
@@ -272,6 +274,9 @@ public class PostBuildHubScan extends Recorder {
         if (BuildHelper.isSuccess(build)) {
             try {
                 logger.info("Starting BlackDuck Scans...");
+
+                DummyToolInstaller test = new DummyToolInstaller();
+                logger.info(test.getToolDir(new DummyToolInstallation(), build.getBuiltOn()).getRemote());
 
                 String localHostName = "";
                 try {
