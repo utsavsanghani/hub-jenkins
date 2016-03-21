@@ -49,6 +49,7 @@ import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostName;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostNameFromNetworkInterfaces;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsMac;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
@@ -709,7 +710,14 @@ public class PostBuildHubScan extends Recorder {
         }
 
         FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), getJava().getHome());
-        javaExec = new FilePath(javaExec, "bin");
+        if (build.getBuiltOn().getChannel().call(new GetIsOsMac())) {
+            javaExec = new FilePath(javaExec, "Contents");
+            javaExec = new FilePath(javaExec, "Home");
+            javaExec = new FilePath(javaExec, "bin");
+        } else {
+            javaExec = new FilePath(javaExec, "bin");
+        }
+
         if (build.getBuiltOn().getChannel().call(new GetIsOsWindows())) {
             javaExec = new FilePath(javaExec, "java.exe");
         } else {
