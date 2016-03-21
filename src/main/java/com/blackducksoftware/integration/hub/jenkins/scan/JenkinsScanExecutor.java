@@ -102,6 +102,19 @@ public class JenkinsScanExecutor extends ScanExecutor {
         return logDirectory.getRemote();
     }
 
+    /**
+     * Should determine the path to the scan status directory within the log directory.
+     * This should only be used outside of this class to get the path of the satus directory
+     *
+     * @throws IOException
+     */
+    @Override
+    public String getScanStatusDirectoryPath() throws IOException {
+        FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), getLogDirectoryPath());
+        FilePath scanStatusDirectory = new FilePath(logDirectory, "status");
+        return scanStatusDirectory.getRemote();
+    }
+
     @Override
     protected Result executeScan(List<String> cmd, String logDirectoryPath) throws HubIntegrationException, InterruptedException {
         try {

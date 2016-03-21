@@ -12,19 +12,19 @@ import com.blackducksoftware.integration.hub.cli.CLIInstaller;
 public class GetCLI implements Callable<String, Exception> {
     private static final long serialVersionUID = 3459269768733083577L;
 
-    private final File directoryToInstallTo;
+    private final String directoryToInstallTo;
 
-    public GetCLI(File directoryToInstallTo) {
+    public GetCLI(String directoryToInstallTo) {
         this.directoryToInstallTo = directoryToInstallTo;
     }
 
-    public File getDirectoryToInstallTo() {
+    public String getDirectoryToInstallTo() {
         return directoryToInstallTo;
     }
 
     @Override
     public String call() throws Exception {
-        CLIInstaller installer = new CLIInstaller(getDirectoryToInstallTo());
+        CLIInstaller installer = new CLIInstaller(new File(getDirectoryToInstallTo()));
         File file = installer.getCLI();
         if (file != null) {
             return file.getCanonicalPath();

@@ -9,11 +9,14 @@ import org.jenkinsci.remoting.RoleChecker;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.cli.CLIInstaller;
+import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 
-public class CLIRemoteIntall implements Callable<Void, Exception> {
+public class CLIRemoteInstall implements Callable<Void, Exception> {
     private static final long serialVersionUID = 3459269768733083577L;
 
-    private final File directoryToInstallTo;
+    private final HubJenkinsLogger logger;
+
+    private final String directoryToInstallTo;
 
     private final String localHost;
 
@@ -25,21 +28,19 @@ public class CLIRemoteIntall implements Callable<Void, Exception> {
 
     private String proxyHost;
 
-    private Integer proxyPort;
+    private int proxyPort;
 
     private String proxyUserName;
 
     private String proxyPassword;
 
-    private StoredLogger logger;
-
-    public CLIRemoteIntall(File directoryToInstallTo, String localHost, String hubUrl, String hubUser, String hubPassword) {
+    public CLIRemoteInstall(HubJenkinsLogger logger, String directoryToInstallTo, String localHost, String hubUrl, String hubUser, String hubPassword) {
         this.directoryToInstallTo = directoryToInstallTo;
         this.localHost = localHost;
         this.hubUrl = hubUrl;
         this.hubUser = hubUser;
         this.hubPassword = hubPassword;
-        logger = new StoredLogger();
+        this.logger = logger;
     }
 
     public String getProxyHost() {
@@ -50,11 +51,11 @@ public class CLIRemoteIntall implements Callable<Void, Exception> {
         this.proxyHost = proxyHost;
     }
 
-    public Integer getProxyPort() {
+    public int getProxyPort() {
         return proxyPort;
     }
 
-    public void setProxyPort(Integer proxyPort) {
+    public void setProxyPort(int proxyPort) {
         this.proxyPort = proxyPort;
     }
 
@@ -74,7 +75,7 @@ public class CLIRemoteIntall implements Callable<Void, Exception> {
         this.proxyPassword = proxyPassword;
     }
 
-    public File getDirectoryToInstallTo() {
+    public String getDirectoryToInstallTo() {
         return directoryToInstallTo;
     }
 
@@ -94,15 +95,12 @@ public class CLIRemoteIntall implements Callable<Void, Exception> {
         return hubPassword;
     }
 
-    public String getOutput() {
-        return logger.getOutputString();
-    }
-
     @Override
     public Void call() throws Exception {
-        CLIInstaller installer = new CLIInstaller(getDirectoryToInstallTo());
+        CLIInstaller installer = new CLIInstaller(new File(getDirectoryToInstallTo()));
 
         HubIntRestService service = new HubIntRestService(getHubUrl());
+        service.setLogger(logger);
         service.setProxyProperties(getProxyHost(), getProxyPort(), null, getProxyUserName(), getProxyPassword());
         service.setCookies(getHubUser(), getHubPassword());
 
@@ -113,7 +111,7 @@ public class CLIRemoteIntall implements Callable<Void, Exception> {
 
     @Override
     public void checkRoles(RoleChecker checker) throws SecurityException {
-        checker.check(this, new Role(CLIRemoteIntall.class));
+        checker.check(this, new Role(CLIRemoteInstall.class));
     }
 
 }

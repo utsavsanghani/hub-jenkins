@@ -42,15 +42,19 @@ import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedActio
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
 import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstallation;
 import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstaller;
-import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubScanToolMissingException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.jenkins.remote.CLIRemoteInstall;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetCLI;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetCLIExists;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetCLIProvidedJRE;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostName;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostNameFromNetworkInterfaces;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetOneJarFile;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
 import com.blackducksoftware.integration.hub.report.api.BomReportGenerator;
@@ -89,8 +93,6 @@ public class PostBuildHubScan extends Recorder {
     protected final long reportMaxiumWaitTime;
 
     private transient FilePath workingDirectory;
-
-    private transient JDK java;
 
     private transient Result result;
 
@@ -272,9 +274,6 @@ public class PostBuildHubScan extends Recorder {
             try {
                 logger.info("Starting BlackDuck Scans...");
 
-                DummyToolInstaller test = new DummyToolInstaller();
-                logger.info(test.getToolDir(new DummyToolInstallation(), build.getBuiltOn()).getRemote());
-
                 String localHostName = "";
                 try {
                     localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
@@ -353,12 +352,14 @@ public class PostBuildHubScan extends Recorder {
                     printConfiguration(build, logger, projectName, projectVersion, scanTargets, getShouldGenerateHubReport(),
                             getConvertedReportMaxiumWaitTime());
 
-                    HubScanInstallation scanInstallation = HubServerInfoSingleton.getInstance().getHubScanInstallation();
-                    // Need to get the CLI for this Node, triggers the auto install
-                    scanInstallation = scanInstallation.forNode(build.getBuiltOn(), logger.getJenkinsListener());
+                    DummyToolInstaller dummyInstaller = new DummyToolInstaller();
+                    String toolsDirectory = dummyInstaller.getToolDir(new DummyToolInstallation(), build.getBuiltOn()).getRemote();
 
-                    FilePath scanExec = getScanCLI(scanInstallation, logger, build.getBuiltOn());
-                    setJava(scanInstallation, logger, build);
+                    String scanExec = getScanCLI(logger, build.getBuiltOn(), toolsDirectory, localHostName);
+
+                    String jrePath = getJavaExec(logger, build, toolsDirectory);
+
+                    String oneJarPath = getOneJarFile(build.getBuiltOn(), toolsDirectory);
 
                     HubIntRestService service = BuildHelper.getRestService(logger, getHubServerInfo().getServerUrl(),
                             getHubServerInfo().getUsername(),
@@ -388,7 +389,8 @@ public class PostBuildHubScan extends Recorder {
                             logger.getJenkinsListener());
 
                     DateTime beforeScanTime = new DateTime();
-                    Boolean mappingDone = runScan(service, build, scan, logger, scanExec, scanTargets, projectName, projectVersion, hubSupport);
+                    Boolean mappingDone = runScan(service, build, scan, logger, scanExec, jrePath, oneJarPath, scanTargets, projectName, projectVersion,
+                            hubSupport);
                     DateTime afterScanTime = new DateTime();
 
                     // Only map the scans to a Project Version if the Project name and Project Version have been
@@ -459,6 +461,7 @@ public class PostBuildHubScan extends Recorder {
             throws IOException, BDRestException, URISyntaxException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException {
         HubReportAction reportAction = new HubReportAction(build);
 
+        // Need to remote the BomReportGenerator
         BomReportGenerator reportGenerator = new BomReportGenerator(reportGenInfo, hubSupport);
 
         reportAction.setReportData(reportGenerator.generateHubReport(logger));
@@ -636,19 +639,14 @@ public class PostBuildHubScan extends Recorder {
      * @throws URISyntaxException
      * @throws HubIntegrationException
      */
-    private Boolean runScan(HubIntRestService service, AbstractBuild<?, ?> build, JenkinsScanExecutor scan, HubJenkinsLogger logger, FilePath scanExec,
+    private Boolean runScan(HubIntRestService service, AbstractBuild<?, ?> build, JenkinsScanExecutor scan, HubJenkinsLogger logger,
+            String scanExec, String javaExec, String oneJarPath,
             List<String> scanTargets,
             String projectName, String versionName, HubSupportHelper hubSupport)
             throws IOException, HubConfigurationException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException
     {
         validateScanTargets(logger, scanTargets, build.getBuiltOn().getChannel());
         Boolean mappingDone = false;
-
-        FilePath oneJarPath = null;
-
-        oneJarPath = new FilePath(scanExec.getParent(), "cache");
-
-        oneJarPath = new FilePath(oneJarPath, "scan.cli.impl-standalone.jar");
 
         scan.setLogger(logger);
         addProxySettingsToScanner(logger, scan);
@@ -674,16 +672,8 @@ public class PostBuildHubScan extends Recorder {
 
         scan.setCliSupportStatusOption(hubSupport.isCliStatusDirOptionSupport());
 
-        FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), getJava().getHome());
-        javaExec = new FilePath(javaExec, "bin");
-        if (build.getBuiltOn().getChannel().call(new GetIsOsWindows())) {
-            javaExec = new FilePath(javaExec, "java.exe");
-        } else {
-            javaExec = new FilePath(javaExec, "java");
-        }
-
-        com.blackducksoftware.integration.hub.ScanExecutor.Result result = scan.setupAndRunScan(scanExec.getRemote(),
-                oneJarPath.getRemote(), javaExec.getRemote());
+        com.blackducksoftware.integration.hub.ScanExecutor.Result result = scan.setupAndRunScan(scanExec,
+                oneJarPath, javaExec);
         if (result == com.blackducksoftware.integration.hub.ScanExecutor.Result.SUCCESS) {
             setResult(Result.SUCCESS);
         } else {
@@ -706,7 +696,7 @@ public class PostBuildHubScan extends Recorder {
                 Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name, proxyConfig.port,
                         proxyConfig.noProxyHost);
 
-                if (proxy.address() != null) {
+                if (proxy != Proxy.NO_PROXY && proxy.address() != null) {
                     InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
                     if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
                         if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
@@ -728,8 +718,89 @@ public class PostBuildHubScan extends Recorder {
         }
     }
 
-    public JDK getJava() {
-        return java;
+    public void addProxySettingsToCLIInstaller(IntLogger logger, CLIRemoteInstall remoteCLIInstall) throws BDJenkinsHubPluginException,
+            HubIntegrationException,
+            URISyntaxException,
+            MalformedURLException {
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            ProxyConfiguration proxyConfig = jenkins.proxy;
+            if (proxyConfig != null) {
+
+                URL serverUrl = new URL(getHubServerInfo().getServerUrl());
+
+                Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name, proxyConfig.port,
+                        proxyConfig.noProxyHost);
+
+                if (proxy != Proxy.NO_PROXY && proxy.address() != null) {
+                    InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
+                    if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
+                        if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
+                            remoteCLIInstall.setProxyHost(proxyAddress.getHostName());
+                            remoteCLIInstall.setProxyPort(proxyAddress.getPort());
+                            remoteCLIInstall.setProxyUserName(jenkins.proxy.getUserName());
+                            remoteCLIInstall.setProxyPassword(jenkins.proxy.getPassword());
+
+                        } else {
+                            remoteCLIInstall.setProxyHost(proxyAddress.getHostName());
+                            remoteCLIInstall.setProxyPort(proxyAddress.getPort());
+                        }
+                        if (logger != null) {
+                            logger.debug("Using proxy: '" + proxyAddress.getHostName() + "' at Port: '" + proxyAddress.getPort() + "'");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public String getScanCLI(HubJenkinsLogger logger, Node node, String toolsDirectory, String localHostName) throws IOException,
+            InterruptedException, Exception {
+        if (getHubServerInfo() == null) {
+            logger.error("Could not find the Hub server information.");
+            return null;
+        }
+        CLIRemoteInstall remoteCLIInstall = new CLIRemoteInstall(logger, toolsDirectory, localHostName, getHubServerInfo().getServerUrl(),
+                getHubServerInfo().getUsername(), getHubServerInfo().getPassword());
+
+        addProxySettingsToCLIInstaller(logger, remoteCLIInstall);
+
+        node.getChannel().call(remoteCLIInstall);
+
+        GetCLIExists cliExists = new GetCLIExists(logger, toolsDirectory);
+        FilePath scanExec = null;
+        if (node.getChannel().call(cliExists)) {
+            GetCLI getCLi = new GetCLI(toolsDirectory);
+            scanExec = new FilePath(node.getChannel(), node.getChannel().call(getCLi));
+            logger.debug("Using this BlackDuck scan CLI at : " + scanExec.getRemote());
+        } else {
+            throw new HubScanToolMissingException("Could not find the CLI file to execute.");
+        }
+        return scanExec.getRemote();
+    }
+
+    public String getJavaExec(HubJenkinsLogger logger, AbstractBuild<?, ?> build, String toolsDirectory) throws IOException, InterruptedException, Exception {
+        GetCLIProvidedJRE getProvidedJre = new GetCLIProvidedJRE(toolsDirectory);
+        String jrePath = build.getBuiltOn().getChannel().call(getProvidedJre);
+
+        if (StringUtils.isBlank(jrePath)) {
+            JDK java = determineJava(logger, build);
+
+            FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), java.getHome());
+            javaExec = new FilePath(javaExec, "bin");
+            if (build.getBuiltOn().getChannel().call(new GetIsOsWindows())) {
+                javaExec = new FilePath(javaExec, "java.exe");
+            } else {
+                javaExec = new FilePath(javaExec, "java");
+            }
+            jrePath = javaExec.getRemote();
+        }
+        return jrePath;
+    }
+
+    public String getOneJarFile(Node node, String toolsDirectory) throws IOException, InterruptedException, Exception {
+        GetOneJarFile getOneJar = new GetOneJarFile(toolsDirectory);
+        return node.getChannel().call(getOneJar);
     }
 
     /**
@@ -743,53 +814,48 @@ public class PostBuildHubScan extends Recorder {
      * @throws InterruptedException
      * @throws HubConfigurationException
      */
-    private void setJava(HubScanInstallation hubScanInstallation, HubJenkinsLogger logger, AbstractBuild<?, ?> build) throws IOException, InterruptedException,
+    private JDK determineJava(HubJenkinsLogger logger, AbstractBuild<?, ?> build) throws IOException, InterruptedException,
             HubConfigurationException {
         JDK javaHomeTemp = null;
 
-        FilePath providedJavaHome = hubScanInstallation.getProvidedJavaHome(build.getBuiltOn().getChannel());
-        if (providedJavaHome != null) {
-            javaHomeTemp = new JDK("Java packaged with ClI.", providedJavaHome.getRemote());
-        } else {
-            EnvVars envVars = build.getEnvironment(logger.getJenkinsListener());
-            if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
-                logger.info("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
-                // Empty node name indicates master
+        EnvVars envVars = build.getEnvironment(logger.getJenkinsListener());
+        if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
+            logger.info("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
+            // Empty node name indicates master
 
-                String byteCodeVersion = System.getProperty("java.class.version");
-                Double majorVersion = Double.valueOf(byteCodeVersion);
-                if (majorVersion >= 51.0) {
-                    // Java 7 bytecode
-                    String javaHome = System.getProperty("java.home");
-                    javaHomeTemp = new JDK("Java running master agent", javaHome);
-                } else {
-                    javaHomeTemp = build.getProject().getJDK();
-                }
+            String byteCodeVersion = System.getProperty("java.class.version");
+            Double majorVersion = Double.valueOf(byteCodeVersion);
+            if (majorVersion >= 51.0) {
+                // Java 7 bytecode
+                String javaHome = System.getProperty("java.home");
+                javaHomeTemp = new JDK("Java running master agent", javaHome);
             } else {
-                logger.info("Getting Jdk on node  : " + build.getBuiltOn().getNodeName());
+                javaHomeTemp = build.getProject().getJDK();
+            }
+        } else {
+            logger.info("Getting Jdk on node  : " + build.getBuiltOn().getNodeName());
 
-                String byteCodeVersion = build.getBuiltOn().getChannel().call(new GetSystemProperty("java.class.version"));
-                Double majorVersion = Double.valueOf(byteCodeVersion);
-                if (majorVersion >= 51.0) {
-                    // Java 7 bytecode
-                    String javaHome = build.getBuiltOn().getChannel().call(new GetSystemProperty("java.home"));
-                    javaHomeTemp = new JDK("Java running slave agent", javaHome);
-                } else {
-                    javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), logger.getJenkinsListener());
-                }
+            String byteCodeVersion = build.getBuiltOn().getChannel().call(new GetSystemProperty("java.class.version"));
+            Double majorVersion = Double.valueOf(byteCodeVersion);
+            if (majorVersion >= 51.0) {
+                // Java 7 bytecode
+                String javaHome = build.getBuiltOn().getChannel().call(new GetSystemProperty("java.home"));
+                javaHomeTemp = new JDK("Java running slave agent", javaHome);
+            } else {
+                javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), logger.getJenkinsListener());
             }
-            if (javaHomeTemp != null && javaHomeTemp.getHome() != null) {
-                logger.info("JDK home : " + javaHomeTemp.getHome());
-            }
+        }
+        if (javaHomeTemp != null && javaHomeTemp.getHome() != null) {
+            logger.info("JDK home : " + javaHomeTemp.getHome());
+        }
 
-            if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
-                logger.info("Could not find the specified Java installation, checking the JAVA_HOME variable.");
-                if (envVars.get("JAVA_HOME") == null || envVars.get("JAVA_HOME") == "") {
-                    throw new HubConfigurationException("Need to define a JAVA_HOME or select an installed JDK.");
-                }
-                // In case the user did not select a java installation, set to the environment variable JAVA_HOME
-                javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
+        if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
+            logger.info("Could not find the specified Java installation, checking the JAVA_HOME variable.");
+            if (envVars.get("JAVA_HOME") == null || envVars.get("JAVA_HOME") == "") {
+                throw new HubConfigurationException("Need to define a JAVA_HOME or select an installed JDK.");
             }
+            // In case the user did not select a java installation, set to the environment variable JAVA_HOME
+            javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
         }
         FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), javaHomeTemp.getHome());
         if (!javaHome.exists()) {
@@ -797,51 +863,7 @@ public class PostBuildHubScan extends Recorder {
                     javaHome.getRemote());
         }
 
-        java = javaHomeTemp;
-    }
-
-    // private Integer getJavaMajorVersion(String versionString) {
-    // String[] versionSplit = versionString.split(".");
-    // Integer majorVersion = Integer.valueOf(versionSplit[0]);
-    // return majorVersion;
-    // }
-
-    /**
-     * Looks through the ScanInstallations to find the one that the User chose, then looks for the scan.cli.sh in the
-     * bin folder of the directory defined by the Installation.
-     * It then checks that the File exists.
-     *
-     * @param iScanTools
-     *            IScanInstallation[] User defined iScan installations
-     * @param listener
-     *            BuildListener
-     * @param node
-     *            Node
-     *
-     * @return File the scan.cli.sh
-     * @throws HubScanToolMissingException
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws HubConfigurationException
-     */
-    public FilePath getScanCLI(HubScanInstallation hubScanInstallation, HubJenkinsLogger logger, Node node)
-            throws HubScanToolMissingException, IOException,
-            InterruptedException, HubConfigurationException {
-        FilePath scanExecutable = null;
-
-        if (hubScanInstallation == null) {
-            // Should not get here unless we have not setup the auto-install CLI correctly
-            // But we check this just in case
-            throw new HubConfigurationException("You need to select which BlackDuck scan installation to use.");
-        }
-        if (hubScanInstallation.getExists(node.getChannel(), logger)) {
-            scanExecutable = hubScanInstallation.getCLI(node.getChannel());
-            logger.debug("Using this BlackDuck scan CLI at : " + scanExecutable.getRemote());
-        } else {
-            logger.error("Could not find the CLI file in : " + hubScanInstallation.getHome());
-            throw new HubScanToolMissingException("Could not find the CLI file to execute at : '" + hubScanInstallation.getHome() + "'");
-        }
-        return scanExecutable;
+        return javaHomeTemp;
     }
 
     /**
@@ -871,13 +893,6 @@ public class PostBuildHubScan extends Recorder {
             }
             if (StringUtils.isEmpty(getHubServerInfo().getCredentialsId())) {
                 throw new HubConfigurationException("No credentials could be found to connect to the Hub.");
-            }
-        }
-        if (HubServerInfoSingleton.getInstance().getHubScanInstallation() == null) {
-            try {
-                PostBuildScanDescriptor.checkHubScanTool(getHubServerInfo().getServerUrl());
-            } catch (Exception e) {
-                throw new HubScanToolMissingException("Could not find an Black Duck Scan Installation to use.", e);
             }
         }
         // No exceptions were thrown so return true

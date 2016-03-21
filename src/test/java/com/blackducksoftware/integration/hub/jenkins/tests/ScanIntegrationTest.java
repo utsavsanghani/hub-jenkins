@@ -31,12 +31,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
-import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.failure.HubFailureConditionStep;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
 import com.blackducksoftware.integration.hub.response.DistributionEnum;
@@ -51,8 +49,6 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
 public class ScanIntegrationTest {
 
-    private static final String CLI_VERSION = "2.3.3";
-
     private static final String PASSWORD_WRONG = "Assert.failurePassword";
 
     private static final String USERNAME_NON_EXISTING = "Assert.failureUser";
@@ -62,8 +58,6 @@ public class ScanIntegrationTest {
     private static final String PROJECT_RELEASE_NOT_EXISTING = "Assert Release Does Not Exist";
 
     private static String basePath;
-
-    private static String iScanInstallPath;
 
     private static String testWorkspace;
 
@@ -85,8 +79,6 @@ public class ScanIntegrationTest {
         basePath = ScanIntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf(File.separator + "target"));
         basePath = basePath + File.separator + "test-workspace";
-        iScanInstallPath = basePath + File.separator + "scan.cli-" + CLI_VERSION;
-        System.err.println("*************** " + iScanInstallPath);
         testWorkspace = basePath + File.separator + "workspace";
 
         testProperties = new Properties();
@@ -101,10 +93,6 @@ public class ScanIntegrationTest {
         System.out.println(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         System.out.println(testProperties.getProperty("TEST_USERNAME"));
         System.out.println(testProperties.getProperty("TEST_PASSWORD"));
-
-        HubScanInstallation iScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, iScanInstallPath, null);
-
-        HubServerInfoSingleton.getInstance().setHubScanInstallation(iScanInstall);
 
         restHelper = new JenkinsHubIntTestHelper(testProperties.getProperty("TEST_HUB_SERVER_URL"));
         restHelper.setTimeout(300);
@@ -174,7 +162,6 @@ public class ScanIntegrationTest {
         assertTrue(buildOutput, buildOutput.contains("BlackDuck scan directory:"));
         assertTrue(buildOutput, buildOutput.contains("directories in the BlackDuck scan directory"));
         assertTrue(buildOutput, buildOutput.contains("BlackDuck scan lib directory:"));
-        assertTrue(buildOutput, buildOutput.contains("BlackDuck scan lib file:"));
         assertTrue(buildOutput, buildOutput.contains("Using this BlackDuck scan CLI at : "));
         assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
         URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
@@ -183,60 +170,6 @@ public class ScanIntegrationTest {
         assertTrue(buildOutput, buildOutput.contains("Finished in"));
         assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
         assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
-    }
-
-    @Test
-    public void completeRunthroughAndScanWithCLIAutoInstall() throws IOException, InterruptedException, ExecutionException {
-        HubScanInstallation orgHubInstall = HubServerInfoSingleton.getInstance().getHubScanInstallation();
-        try {
-            Jenkins jenkins = j.jenkins;
-
-            CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
-            UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
-                    testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
-            store.addCredentials(Domain.global(), credential);
-
-            HubServerInfo serverInfo = new HubServerInfo();
-            serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-            serverInfo.setCredentialsId(credential.getId());
-            serverInfo.setTimeout(200);
-
-            ScanJobs oneScan = new ScanJobs("");
-            ScanJobs[] scans = new ScanJobs[1];
-            scans[0] = oneScan;
-
-            HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
-
-            PostBuildScanDescriptor.checkHubScanTool(serverInfo.getServerUrl());
-
-            PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
-
-            FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
-            project.setCustomWorkspace(testWorkspace);
-
-            project.getPublishersList().add(pbScan);
-
-            FreeStyleBuild build = project.scheduleBuild2(0).get();
-            String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-            System.out.println(buildOutput);
-
-            assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-            assertTrue(buildOutput, buildOutput.contains("Running on : master"));
-            assertTrue(buildOutput, buildOutput.contains("BlackDuck scan directory:"));
-            assertTrue(buildOutput, buildOutput.contains("directories in the BlackDuck scan directory"));
-            assertTrue(buildOutput, buildOutput.contains("BlackDuck scan lib directory:"));
-            assertTrue(buildOutput, buildOutput.contains("BlackDuck scan lib file:"));
-            assertTrue(buildOutput, buildOutput.contains("Using this BlackDuck scan CLI at : "));
-            assertTrue(buildOutput, buildOutput.contains("Scan target exists at :"));
-            URL url = new URL(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-            assertTrue(buildOutput, buildOutput.contains("Using this Hub hostname : '" + url.getHost()));
-            assertTrue(buildOutput, buildOutput.contains("Using this java installation : "));
-            assertTrue(buildOutput, buildOutput.contains("Finished in"));
-            assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-            assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
-        } finally {
-            HubServerInfoSingleton.getInstance().setHubScanInstallation(orgHubInstall);
-        }
     }
 
     @Test
@@ -706,7 +639,7 @@ public class ScanIntegrationTest {
     // assertTrue(buildOutput, buildOutput.contains("Version Id:"));
     /*
      * Only to be asserted if run against hub <2.3.1
-     * 
+     *
      * // assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
      * // assertTrue(buildOutput, buildOutput.contains("The scan target :"));
      * // assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));

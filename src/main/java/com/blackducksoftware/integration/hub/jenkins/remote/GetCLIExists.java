@@ -8,30 +8,27 @@ import org.jenkinsci.remoting.Role;
 import org.jenkinsci.remoting.RoleChecker;
 
 import com.blackducksoftware.integration.hub.cli.CLIInstaller;
+import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 
 public class GetCLIExists implements Callable<Boolean, Exception> {
     private static final long serialVersionUID = 3459269768733083577L;
 
-    private final File directoryToInstallTo;
+    private final HubJenkinsLogger logger;
 
-    private StoredLogger logger;
+    private final String directoryToInstallTo;
 
-    public GetCLIExists(File directoryToInstallTo) {
+    public GetCLIExists(HubJenkinsLogger logger, String directoryToInstallTo) {
+        this.logger = logger;
         this.directoryToInstallTo = directoryToInstallTo;
-        logger = new StoredLogger();
     }
 
-    public File getDirectoryToInstallTo() {
+    public String getDirectoryToInstallTo() {
         return directoryToInstallTo;
-    }
-
-    public String getOutput() {
-        return logger.getOutputString();
     }
 
     @Override
     public Boolean call() throws Exception {
-        CLIInstaller installer = new CLIInstaller(getDirectoryToInstallTo());
+        CLIInstaller installer = new CLIInstaller(new File(getDirectoryToInstallTo()));
         return installer.getCLIExists(logger);
     }
 

@@ -12,19 +12,19 @@ import com.blackducksoftware.integration.hub.cli.CLIInstaller;
 public class GetOneJarFile implements Callable<String, Exception> {
     private static final long serialVersionUID = 3459269768733083577L;
 
-    private final File directoryToInstallTo;
+    private final String directoryToInstallTo;
 
-    public GetOneJarFile(File directoryToInstallTo) {
+    public GetOneJarFile(String directoryToInstallTo) {
         this.directoryToInstallTo = directoryToInstallTo;
     }
 
-    public File getDirectoryToInstallTo() {
+    public String getDirectoryToInstallTo() {
         return directoryToInstallTo;
     }
 
     @Override
     public String call() throws Exception {
-        CLIInstaller installer = new CLIInstaller(getDirectoryToInstallTo());
+        CLIInstaller installer = new CLIInstaller(new File(getDirectoryToInstallTo()));
         File file = installer.getOneJarFile();
         if (file != null) {
             return file.getCanonicalPath();
