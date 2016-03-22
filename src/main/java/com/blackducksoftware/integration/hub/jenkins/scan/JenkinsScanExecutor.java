@@ -68,7 +68,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
             else {
                 FilePath javaExecRemote = new FilePath(build.getBuiltOn().getChannel(), javaExec);
                 if (!javaExecRemote.exists()) {
-                    getLogger().error("The Java home provided does not exist.");
+                    getLogger().error("The Java executable provided does not exist.");
                     return false;
                 }
             }

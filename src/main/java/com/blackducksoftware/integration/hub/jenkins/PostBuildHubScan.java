@@ -793,6 +793,7 @@ public class PostBuildHubScan extends Recorder {
             } else {
                 javaExec = new FilePath(javaExec, "java");
             }
+
             jrePath = javaExec.getRemote();
         }
         return jrePath;
