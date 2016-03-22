@@ -56,8 +56,8 @@ import com.blackducksoftware.integration.hub.jenkins.remote.GetHostNameFromNetwo
 import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetOneJarFile;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
+import com.blackducksoftware.integration.hub.jenkins.remote.RemoteBomGenerator;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
-import com.blackducksoftware.integration.hub.report.api.BomReportGenerator;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
@@ -417,7 +417,9 @@ public class PostBuildHubScan extends Recorder {
                         reportGenInfo.setBeforeScanTime(beforeScanTime);
                         reportGenInfo.setAfterScanTime(afterScanTime);
 
-                        generateHubReport(build, logger, reportGenInfo, hubSupport, scan.getScanStatusDirectoryPath());
+                        reportGenInfo.setScanStatusDirectory(scan.getScanStatusDirectoryPath());
+
+                        generateHubReport(build, logger, reportGenInfo, hubSupport);
                     }
                 }
             } catch (BDJenkinsHubPluginException e) {
@@ -456,15 +458,13 @@ public class PostBuildHubScan extends Recorder {
         return true;
     }
 
-    private void generateHubReport(AbstractBuild<?, ?> build, IntLogger logger, HubReportGenerationInfo reportGenInfo, HubSupportHelper hubSupport,
-            String scanStatusDirectory)
-            throws IOException, BDRestException, URISyntaxException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException {
+    private void generateHubReport(AbstractBuild<?, ?> build, HubJenkinsLogger logger, HubReportGenerationInfo reportGenInfo, HubSupportHelper hubSupport)
+            throws Exception {
         HubReportAction reportAction = new HubReportAction(build);
 
-        // Need to remote the BomReportGenerator
-        BomReportGenerator reportGenerator = new BomReportGenerator(reportGenInfo, hubSupport);
+        RemoteBomGenerator remoteBomGenerator = new RemoteBomGenerator(logger, reportGenInfo, hubSupport);
 
-        reportAction.setReportData(reportGenerator.generateHubReport(logger));
+        reportAction.setReportData(build.getBuiltOn().getChannel().call(remoteBomGenerator));
 
         build.addAction(reportAction);
     }

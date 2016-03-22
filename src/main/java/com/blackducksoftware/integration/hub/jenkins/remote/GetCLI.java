@@ -18,13 +18,9 @@ public class GetCLI implements Callable<String, Exception> {
         this.directoryToInstallTo = directoryToInstallTo;
     }
 
-    public String getDirectoryToInstallTo() {
-        return directoryToInstallTo;
-    }
-
     @Override
     public String call() throws Exception {
-        CLIInstaller installer = new CLIInstaller(new File(getDirectoryToInstallTo()));
+        CLIInstaller installer = new CLIInstaller(new File(directoryToInstallTo));
         File file = installer.getCLI();
         if (file != null) {
             return file.getCanonicalPath();

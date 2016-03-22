@@ -22,13 +22,9 @@ public class GetCLIExists implements Callable<Boolean, Exception> {
         this.directoryToInstallTo = directoryToInstallTo;
     }
 
-    public String getDirectoryToInstallTo() {
-        return directoryToInstallTo;
-    }
-
     @Override
     public Boolean call() throws Exception {
-        CLIInstaller installer = new CLIInstaller(new File(getDirectoryToInstallTo()));
+        CLIInstaller installer = new CLIInstaller(new File(directoryToInstallTo));
         return installer.getCLIExists(logger);
     }
 

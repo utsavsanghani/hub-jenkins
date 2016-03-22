@@ -43,68 +43,32 @@ public class CLIRemoteInstall implements Callable<Void, Exception> {
         this.logger = logger;
     }
 
-    public String getProxyHost() {
-        return proxyHost;
-    }
-
     public void setProxyHost(String proxyHost) {
         this.proxyHost = proxyHost;
-    }
-
-    public int getProxyPort() {
-        return proxyPort;
     }
 
     public void setProxyPort(int proxyPort) {
         this.proxyPort = proxyPort;
     }
 
-    public String getProxyUserName() {
-        return proxyUserName;
-    }
-
     public void setProxyUserName(String proxyUserName) {
         this.proxyUserName = proxyUserName;
-    }
-
-    public String getProxyPassword() {
-        return proxyPassword;
     }
 
     public void setProxyPassword(String proxyPassword) {
         this.proxyPassword = proxyPassword;
     }
 
-    public String getDirectoryToInstallTo() {
-        return directoryToInstallTo;
-    }
-
-    public String getLocalHost() {
-        return localHost;
-    }
-
-    public String getHubUrl() {
-        return hubUrl;
-    }
-
-    public String getHubUser() {
-        return hubUser;
-    }
-
-    public String getHubPassword() {
-        return hubPassword;
-    }
-
     @Override
     public Void call() throws Exception {
-        CLIInstaller installer = new CLIInstaller(new File(getDirectoryToInstallTo()));
+        CLIInstaller installer = new CLIInstaller(new File(directoryToInstallTo));
 
-        HubIntRestService service = new HubIntRestService(getHubUrl());
+        HubIntRestService service = new HubIntRestService(hubUrl);
         service.setLogger(logger);
-        service.setProxyProperties(getProxyHost(), getProxyPort(), null, getProxyUserName(), getProxyPassword());
-        service.setCookies(getHubUser(), getHubPassword());
+        service.setProxyProperties(proxyHost, proxyPort, null, proxyUserName, proxyPassword);
+        service.setCookies(hubUser, hubPassword);
 
-        installer.performInstallation(logger, service, getLocalHost());
+        installer.performInstallation(logger, service, localHost);
 
         return null;
     }
