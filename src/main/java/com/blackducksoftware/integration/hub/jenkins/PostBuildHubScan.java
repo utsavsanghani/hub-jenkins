@@ -823,7 +823,6 @@ public class PostBuildHubScan extends Recorder {
         if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
             logger.info("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
             // Empty node name indicates master
-
             String byteCodeVersion = System.getProperty("java.class.version");
             Double majorVersion = Double.valueOf(byteCodeVersion);
             if (majorVersion >= 51.0) {
