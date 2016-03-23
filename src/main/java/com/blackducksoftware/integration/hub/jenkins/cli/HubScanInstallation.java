@@ -215,10 +215,22 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
             return null;
         }
         FilePath cliHomeFilePath = null;
-        for (FilePath autoInstalledFile : autoInstallHomeFilePath.list()) {
-            if (autoInstalledFile.getName().toLowerCase().contains("scan.cli")) {
-                cliHomeFilePath = autoInstalledFile;
-                break;
+
+        List<FilePath> installedFiles = autoInstallHomeFilePath.list();
+
+        if (installedFiles != null) {
+            if (installedFiles.size() > 1) {
+                // The cli is currently packed with an extra directory "scan.cli-windows-X.X.X-SNAPSHOT"
+                for (FilePath currentFile : installedFiles) {
+                    if (currentFile.getName().toLowerCase().contains("scan.cli") && !currentFile.getName().contains("windows")) {
+                        cliHomeFilePath = currentFile;
+                    }
+                }
+                return null;
+            } else if (installedFiles.size() == 1) {
+                if (installedFiles.get(0).getName().toLowerCase().contains("scan.cli")) {
+                    cliHomeFilePath = installedFiles.get(0);
+                }
             }
         }
         if (cliHomeFilePath == null) {
