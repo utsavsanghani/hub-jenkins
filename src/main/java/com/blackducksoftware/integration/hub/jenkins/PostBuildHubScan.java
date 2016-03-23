@@ -710,13 +710,7 @@ public class PostBuildHubScan extends Recorder {
         }
 
         FilePath javaExec = new FilePath(build.getBuiltOn().getChannel(), getJava().getHome());
-        if (build.getBuiltOn().getChannel().call(new GetIsOsMac())) {
-            javaExec = new FilePath(javaExec, "Contents");
-            javaExec = new FilePath(javaExec, "Home");
-            javaExec = new FilePath(javaExec, "bin");
-        } else {
-            javaExec = new FilePath(javaExec, "bin");
-        }
+        javaExec = new FilePath(javaExec, "bin");
 
         if (build.getBuiltOn().getChannel().call(new GetIsOsWindows())) {
             javaExec = new FilePath(javaExec, "java.exe");
@@ -791,6 +785,11 @@ public class PostBuildHubScan extends Recorder {
 
         FilePath providedJavaHome = hubScanInstallation.getProvidedJavaHome(build.getBuiltOn().getChannel());
         if (providedJavaHome != null) {
+            if (build.getBuiltOn().getChannel().call(new GetIsOsMac())) {
+                providedJavaHome = new FilePath(providedJavaHome, "Contents");
+                providedJavaHome = new FilePath(providedJavaHome, "Home");
+            }
+
             javaHomeTemp = new JDK("Java packaged with ClI.", providedJavaHome.getRemote());
         } else {
             EnvVars envVars = build.getEnvironment(logger.getJenkinsListener());

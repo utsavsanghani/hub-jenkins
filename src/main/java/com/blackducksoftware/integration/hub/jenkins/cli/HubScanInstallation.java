@@ -226,7 +226,6 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
                         cliHomeFilePath = currentFile;
                     }
                 }
-                return null;
             } else if (installedFiles.size() == 1) {
                 if (installedFiles.get(0).getName().toLowerCase().contains("scan.cli")) {
                     cliHomeFilePath = installedFiles.get(0);
