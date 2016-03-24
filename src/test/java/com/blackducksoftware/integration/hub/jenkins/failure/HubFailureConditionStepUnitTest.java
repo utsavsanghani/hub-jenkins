@@ -32,8 +32,8 @@ import com.blackducksoftware.integration.hub.jenkins.tests.utils.TestBuildListen
 import com.blackducksoftware.integration.hub.policy.api.ComponentVersionStatusCount;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatus;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatusEnum;
-import com.blackducksoftware.integration.hub.response.ProjectItem;
-import com.blackducksoftware.integration.hub.response.ReleaseItem;
+import com.blackducksoftware.integration.hub.project.api.ProjectItem;
+import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 
 public class HubFailureConditionStepUnitTest {
 

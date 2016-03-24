@@ -24,7 +24,7 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
-import com.blackducksoftware.integration.hub.response.ProjectItem;
+import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider.UserFacingAction;
 import com.cloudbees.plugins.credentials.domains.Domain;

@@ -24,11 +24,11 @@ import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.maven.MavenBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.maven.Scope;
-import com.blackducksoftware.integration.hub.response.AutoCompleteItem;
-import com.blackducksoftware.integration.hub.response.DistributionEnum;
-import com.blackducksoftware.integration.hub.response.PhaseEnum;
-import com.blackducksoftware.integration.hub.response.ProjectItem;
-import com.blackducksoftware.integration.hub.response.ReleaseItem;
+import com.blackducksoftware.integration.hub.project.api.AutoCompleteItem;
+import com.blackducksoftware.integration.hub.project.api.ProjectItem;
+import com.blackducksoftware.integration.hub.version.api.DistributionEnum;
+import com.blackducksoftware.integration.hub.version.api.PhaseEnum;
+import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
 // This indicates to Jenkins that this is an implementation of an extension
