@@ -125,6 +125,10 @@ public class HubScanInstaller extends ToolInstaller {
             if (cliMismatch) {
                 hubVersionFile.touch((new DateTime()).getMillis());
                 hubVersionFile.write(hubVersion, "UTF-8");
+            } else {
+                if (directory.list() == null || directory.list().isEmpty()) {
+                    cliMismatch = true;
+                }
             }
 
             URLConnection con;
