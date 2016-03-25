@@ -21,11 +21,11 @@ import java.util.List;
 
 import net.sf.json.JSONObject;
 
-import org.apache.commons.lang3.SystemUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
+import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsMac;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 
@@ -153,7 +153,7 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
             if (jreFolder != null) {
                 logger.info("Checking CLI provided jre at : " + jreFolder.getRemote());
                 FilePath javaExec = null;
-                if (SystemUtils.IS_OS_MAC_OSX) {
+                if (channel.call(new GetIsOsMac())) {
                     jreFolder = new FilePath(jreFolder, "Contents");
                     jreFolder = new FilePath(jreFolder, "Home");
                     javaExec = new FilePath(jreFolder, "bin");
