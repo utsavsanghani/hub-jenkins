@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import jenkins.model.Jenkins;
 
-import org.codehaus.plexus.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 
