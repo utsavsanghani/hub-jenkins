@@ -136,7 +136,7 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
      * @throws IOException
      * @throws InterruptedException
      */
-    public FilePath getProvidedJavaHome(VirtualChannel channel) throws IOException, InterruptedException {
+    public FilePath getProvidedJavaHome(VirtualChannel channel, IntLogger logger) throws IOException, InterruptedException {
         FilePath cliHomeFilePath = getCliHome(channel);
         if (cliHomeFilePath == null) {
             return null;
@@ -151,11 +151,12 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
                 }
             }
             if (jreFolder != null) {
+                logger.info("Checking CLI provided jre at : " + jreFolder.getRemote());
                 FilePath javaExec = null;
                 if (SystemUtils.IS_OS_MAC_OSX) {
-                    javaExec = new FilePath(jreFolder, "Contents");
-                    javaExec = new FilePath(javaExec, "Home");
-                    javaExec = new FilePath(javaExec, "bin");
+                    jreFolder = new FilePath(jreFolder, "Contents");
+                    jreFolder = new FilePath(jreFolder, "Home");
+                    javaExec = new FilePath(jreFolder, "bin");
                 } else {
                     javaExec = new FilePath(jreFolder, "bin");
                 }
@@ -167,6 +168,8 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
                 }
                 if (javaExec.exists()) {
                     return jreFolder;
+                } else {
+                    logger.info("The provided jre could not be found at : " + javaExec.getRemote());
                 }
             }
         }

@@ -49,7 +49,6 @@ import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostName;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetHostNameFromNetworkInterfaces;
-import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsMac;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
@@ -783,13 +782,8 @@ public class PostBuildHubScan extends Recorder {
             HubConfigurationException {
         JDK javaHomeTemp = null;
 
-        FilePath providedJavaHome = hubScanInstallation.getProvidedJavaHome(build.getBuiltOn().getChannel());
+        FilePath providedJavaHome = hubScanInstallation.getProvidedJavaHome(build.getBuiltOn().getChannel(), logger);
         if (providedJavaHome != null) {
-            if (build.getBuiltOn().getChannel().call(new GetIsOsMac())) {
-                providedJavaHome = new FilePath(providedJavaHome, "Contents");
-                providedJavaHome = new FilePath(providedJavaHome, "Home");
-            }
-
             javaHomeTemp = new JDK("Java packaged with ClI.", providedJavaHome.getRemote());
         } else {
             EnvVars envVars = build.getEnvironment(logger.getJenkinsListener());
