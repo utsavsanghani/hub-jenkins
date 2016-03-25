@@ -21,6 +21,7 @@ import java.util.List;
 
 import net.sf.json.JSONObject;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -150,7 +151,15 @@ public class HubScanInstallation extends ToolInstallation implements NodeSpecifi
                 }
             }
             if (jreFolder != null) {
-                FilePath javaExec = new FilePath(jreFolder, "bin");
+                FilePath javaExec = null;
+                if (SystemUtils.IS_OS_MAC_OSX) {
+                    javaExec = new FilePath(jreFolder, "Contents");
+                    javaExec = new FilePath(javaExec, "Home");
+                    javaExec = new FilePath(javaExec, "bin");
+                } else {
+                    javaExec = new FilePath(jreFolder, "bin");
+                }
+
                 if (channel.call(new GetIsOsWindows())) {
                     javaExec = new FilePath(javaExec, "java.exe");
                 } else {
