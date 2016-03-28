@@ -138,7 +138,7 @@ public class HubMavenReporter extends MavenReporter {
             BuildListener listener) throws InterruptedException, IOException {
 
         HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
-        buildLogger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
+        buildLogger.setLogLevel(LogLevel.TRACE);
         buildLogger.info("Collecting dependencies info");
         dependencies = new HashSet<BuildDependency>();
         buildArtifact = createBuildArtifact(pom);
@@ -159,7 +159,7 @@ public class HubMavenReporter extends MavenReporter {
             throws InterruptedException, IOException {
 
         HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
-        buildLogger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
+        buildLogger.setLogLevel(LogLevel.TRACE);
         buildLogger.debug("postExecute()");
         recordMavenDependencies(pom.getArtifacts());
         build.registerAsProjectAction(this);
@@ -173,7 +173,7 @@ public class HubMavenReporter extends MavenReporter {
     public boolean postBuild(MavenBuildProxy build, MavenProject pom, BuildListener listener) throws InterruptedException,
             IOException {
         HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
-        buildLogger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
+        buildLogger.setLogLevel(LogLevel.TRACE);
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
         boolean changed = false;
@@ -204,7 +204,7 @@ public class HubMavenReporter extends MavenReporter {
     @Override
     public boolean end(MavenBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
-        buildLogger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
+        buildLogger.setLogLevel(LogLevel.TRACE);
         buildLogger.info("Hub Jenkins Plugin version : " + getDescriptor().getPluginVersion());
         if (build == null) {
             buildLogger.error("Build: null. The Hub Maven Reporter will not run.");

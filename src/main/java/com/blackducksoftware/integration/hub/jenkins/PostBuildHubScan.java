@@ -267,7 +267,7 @@ public class PostBuildHubScan extends Recorder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
             BuildListener listener) throws InterruptedException, IOException {
         HubJenkinsLogger logger = new HubJenkinsLogger(listener);
-        logger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
+        logger.setLogLevel(LogLevel.TRACE);
         setResult(build.getResult());
         if (BuildHelper.isSuccess(build)) {
             try {

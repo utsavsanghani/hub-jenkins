@@ -125,7 +125,7 @@ public class MavenBuildWrapper extends BDBuildWrapper {
             InterruptedException {
         // no failure to report yet
         HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
-        buildLogger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
+        buildLogger.setLogLevel(LogLevel.TRACE);
         Maven mavenBuilder = null;
         if (build.getProject() instanceof FreeStyleProject) {
             // Project should always be a FreeStyleProject, thats why we have the isApplicable() method

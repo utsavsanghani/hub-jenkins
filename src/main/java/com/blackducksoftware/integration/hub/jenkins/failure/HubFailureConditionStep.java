@@ -61,7 +61,7 @@ public class HubFailureConditionStep extends Recorder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
             BuildListener listener) throws InterruptedException, IOException {
         HubJenkinsLogger logger = new HubJenkinsLogger(listener);
-        logger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
+        logger.setLogLevel(LogLevel.TRACE);
 
         if (build.getResult() != Result.SUCCESS) {
             logger.error("The Build did not run sucessfully, will not check the Hub Failure Conditions.");

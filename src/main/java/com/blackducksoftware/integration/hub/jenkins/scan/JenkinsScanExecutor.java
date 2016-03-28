@@ -22,14 +22,14 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 public class JenkinsScanExecutor extends ScanExecutor {
     public static final Integer THREAD_SLEEP = 100;
 
-    private final AbstractBuild build;
+    private final AbstractBuild<?, ?> build;
 
     private final Launcher launcher;
 
     private final TaskListener listener;
 
-    public JenkinsScanExecutor(HubServerInfo serverInfo, List<String> scanTargets, Integer buildNumber, HubSupportHelper supportHelper, AbstractBuild build,
-            Launcher launcher, TaskListener listener) {
+    public JenkinsScanExecutor(HubServerInfo serverInfo, List<String> scanTargets, Integer buildNumber, HubSupportHelper supportHelper,
+            AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) {
         super(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), scanTargets, buildNumber, supportHelper);
         this.build = build;
         this.launcher = launcher;
@@ -145,17 +145,11 @@ public class JenkinsScanExecutor extends ScanExecutor {
                 // ///////////////////////
                 ps.envs(build.getEnvironment(listener));
 
-                String outputString = "";
-
                 ScannerSplitStream splitStream = new ScannerSplitStream(new HubJenkinsLogger(listener), standardOutFile.write());
 
                 exitCode = runScan(ps, cmd, splitStream);
                 splitStream.flush();
                 splitStream.close();
-
-                if (splitStream.hasOutput()) {
-                    outputString = splitStream.getOutput();
-                }
 
                 if (logDirectoryPath != null) {
                     FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), logDirectoryPath);

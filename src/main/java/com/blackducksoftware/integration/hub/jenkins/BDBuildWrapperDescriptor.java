@@ -68,7 +68,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
         boolean changed = false;
         ListBoxModel items = new ListBoxModel();
         try {
-            // FIXME should get this list from the Hub server, ticket HUB-1610
+            // should get this list from the Hub server, ticket HUB-1610
             for (PhaseEnum phase : PhaseEnum.values()) {
                 if (phase != PhaseEnum.UNKNOWNPHASE) {
                     items.add(phase.name(), phase.name());
@@ -97,7 +97,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
         boolean changed = false;
         ListBoxModel items = new ListBoxModel();
         try {
-            // FIXME should get this list from the Hub server, ticket HUB-1610
+            // should get this list from the Hub server, ticket HUB-1610
             for (DistributionEnum distribution : DistributionEnum.values()) {
                 if (distribution != DistributionEnum.UNKNOWNDISTRIBUTION) {
                     items.add(distribution.name(), distribution.name());
