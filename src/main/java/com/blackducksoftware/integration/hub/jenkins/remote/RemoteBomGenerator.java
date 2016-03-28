@@ -7,11 +7,11 @@ import org.jenkinsci.remoting.RoleChecker;
 
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
-import com.blackducksoftware.integration.hub.report.api.BomReportGenerator;
-import com.blackducksoftware.integration.hub.report.api.HubBomReportData;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
+import com.blackducksoftware.integration.hub.report.api.HubRiskReportData;
+import com.blackducksoftware.integration.hub.report.api.RiskReportGenerator;
 
-public class RemoteBomGenerator implements Callable<HubBomReportData, Exception> {
+public class RemoteBomGenerator implements Callable<HubRiskReportData, Exception> {
     private static final long serialVersionUID = 3459269768733083577L;
 
     private final HubJenkinsLogger logger;
@@ -28,8 +28,8 @@ public class RemoteBomGenerator implements Callable<HubBomReportData, Exception>
     }
 
     @Override
-    public HubBomReportData call() throws Exception {
-        BomReportGenerator reportGenerator = new BomReportGenerator(reportGenInfo, hubSupport);
+    public HubRiskReportData call() throws Exception {
+        RiskReportGenerator reportGenerator = new RiskReportGenerator(reportGenInfo, hubSupport);
 
         return reportGenerator.generateHubReport(logger);
     }

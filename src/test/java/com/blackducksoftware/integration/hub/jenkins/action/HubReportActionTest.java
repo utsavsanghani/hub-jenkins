@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.report.api.AggregateBomViewEntry;
-import com.blackducksoftware.integration.hub.report.api.HubBomReportData;
+import com.blackducksoftware.integration.hub.report.api.HubRiskReportData;
 import com.blackducksoftware.integration.hub.report.api.VersionReport;
 import com.blackducksoftware.integration.hub.report.risk.api.RiskCategories;
 import com.blackducksoftware.integration.hub.report.risk.api.RiskCounts;
@@ -27,7 +27,7 @@ public class HubReportActionTest {
         AggregateBomViewEntry bomEntry = new AggregateBomViewEntry(null, null, null, null, null, null, null, null, null, null, null, null, riskProfile);
         List<AggregateBomViewEntry> aggregateBomViewEntries = new ArrayList<AggregateBomViewEntry>();
         aggregateBomViewEntries.add(bomEntry);
-        HubBomReportData reportData = new HubBomReportData();
+        HubRiskReportData reportData = new HubRiskReportData();
         VersionReport report = new VersionReport(null, aggregateBomViewEntries);
         reportData.setReport(report);
         HubReportAction action = new HubReportAction(null);
@@ -57,7 +57,7 @@ public class HubReportActionTest {
         AggregateBomViewEntry bomEntry = new AggregateBomViewEntry(null, null, null, null, null, null, null, null, null, null, null, null, riskProfile);
         List<AggregateBomViewEntry> aggregateBomViewEntries = new ArrayList<AggregateBomViewEntry>();
         aggregateBomViewEntries.add(bomEntry);
-        HubBomReportData reportData = new HubBomReportData();
+        HubRiskReportData reportData = new HubRiskReportData();
         VersionReport report = new VersionReport(null, aggregateBomViewEntries);
         reportData.setReport(report);
         HubReportAction action = new HubReportAction(null);
@@ -77,7 +77,7 @@ public class HubReportActionTest {
         AggregateBomViewEntry bomEntry = new AggregateBomViewEntry(null, null, null, null, null, null, null, null, null, null, null, null, riskProfile);
         List<AggregateBomViewEntry> aggregateBomViewEntries = new ArrayList<AggregateBomViewEntry>();
         aggregateBomViewEntries.add(bomEntry);
-        HubBomReportData reportData = new HubBomReportData();
+        HubRiskReportData reportData = new HubRiskReportData();
         VersionReport report = new VersionReport(null, aggregateBomViewEntries);
         reportData.setReport(report);
         HubReportAction action = new HubReportAction(null);
@@ -97,7 +97,7 @@ public class HubReportActionTest {
         AggregateBomViewEntry bomEntry = new AggregateBomViewEntry(null, null, null, null, null, null, null, null, null, null, null, null, riskProfile);
         List<AggregateBomViewEntry> aggregateBomViewEntries = new ArrayList<AggregateBomViewEntry>();
         aggregateBomViewEntries.add(bomEntry);
-        HubBomReportData reportData = new HubBomReportData();
+        HubRiskReportData reportData = new HubRiskReportData();
         VersionReport report = new VersionReport(null, aggregateBomViewEntries);
         reportData.setReport(report);
         HubReportAction action = new HubReportAction(null);
@@ -127,7 +127,7 @@ public class HubReportActionTest {
         AggregateBomViewEntry bomEntry = new AggregateBomViewEntry(null, null, null, null, null, null, null, null, null, null, null, null, riskProfile);
         List<AggregateBomViewEntry> aggregateBomViewEntries = new ArrayList<AggregateBomViewEntry>();
         aggregateBomViewEntries.add(bomEntry);
-        HubBomReportData reportData = new HubBomReportData();
+        HubRiskReportData reportData = new HubRiskReportData();
         VersionReport report = new VersionReport(null, aggregateBomViewEntries);
         reportData.setReport(report);
         HubReportAction action = new HubReportAction(null);
@@ -157,7 +157,7 @@ public class HubReportActionTest {
         AggregateBomViewEntry bomEntry = new AggregateBomViewEntry(null, null, null, null, null, null, null, null, null, null, null, null, riskProfile);
         List<AggregateBomViewEntry> aggregateBomViewEntries = new ArrayList<AggregateBomViewEntry>();
         aggregateBomViewEntries.add(bomEntry);
-        HubBomReportData reportData = new HubBomReportData();
+        HubRiskReportData reportData = new HubRiskReportData();
         VersionReport report = new VersionReport(null, aggregateBomViewEntries);
         reportData.setReport(report);
         HubReportAction action = new HubReportAction(null);
@@ -187,7 +187,7 @@ public class HubReportActionTest {
         AggregateBomViewEntry bomEntry = new AggregateBomViewEntry(null, null, null, null, null, null, null, null, null, null, null, null, riskProfile);
         List<AggregateBomViewEntry> aggregateBomViewEntries = new ArrayList<AggregateBomViewEntry>();
         aggregateBomViewEntries.add(bomEntry);
-        HubBomReportData reportData = new HubBomReportData();
+        HubRiskReportData reportData = new HubRiskReportData();
         VersionReport report = new VersionReport(null, aggregateBomViewEntries);
         reportData.setReport(report);
         HubReportAction action = new HubReportAction(null);
@@ -209,7 +209,7 @@ public class HubReportActionTest {
         aggregateBomViewEntries.add(bomEntry);
         aggregateBomViewEntries.add(bomEntry);
         aggregateBomViewEntries.add(bomEntry);
-        HubBomReportData reportData = new HubBomReportData();
+        HubRiskReportData reportData = new HubRiskReportData();
         VersionReport report = new VersionReport(null, aggregateBomViewEntries);
         reportData.setReport(report);
         HubReportAction action = new HubReportAction(null);
