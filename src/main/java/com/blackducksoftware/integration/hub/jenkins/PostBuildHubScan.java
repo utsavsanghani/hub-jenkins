@@ -58,7 +58,6 @@ import com.blackducksoftware.integration.hub.jenkins.remote.GetOneJarFile;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.remote.RemoteBomGenerator;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
-import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.response.ReleaseItem;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;

@@ -1,494 +1,430 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.jenkins-ci.plugins</groupId>
-		<artifactId>plugin</artifactId>
-		<!-- which version of Jenkins is this plugin built against? -->
-		<version>1.580.3</version>
-		<relativePath></relativePath>
-	</parent>
-
-	<groupId>com.blackducksoftware.integration</groupId>
-	<artifactId>hub-jenkins</artifactId>
-	<version>1.4.0-SNAPSHOT</version>
-	<!-- !!! Also update the url below on release !!! -->
-	<packaging>hpi</packaging>
-	<name>Black Duck Hub Plug-In for Jenkins</name>
-	<description>Runs the Black Duck Hub scan in Jenkins build</description>
-	<inceptionYear>2014</inceptionYear>
-
-	<url>https://blackducksoftware.atlassian.net/wiki/display/BDOS/Black+Duck+Hub+Plugin</url>
-	<scm>
-		<url>http://bitbucket.dc1.lan/scm/int-hub/int-hub-jenkins.git</url>
-	</scm>
-	<issueManagement>
-		<url>https://jira.blackducksoftware.com/browse/IJH/?selectedTab=com.atlassian.jira.jira-projects-plugin:issues-panel</url>
-	</issueManagement>
-
-	<licenses>
-		<license>
-			<name>Black Duck Commercial License</name>
-			<url>http://www.blackducksoftware.com/</url>
-			<distribution>manual</distribution>
-			<comments>Use of this plugin is governed by the license under which you use Black Duck Software Code Center (TM)</comments>
-		</license>
-	</licenses>
-	<organization>
-		<name>Black Duck Software, Inc.</name>
-		<url>http://www.blackducksoftware.com/</url>
-	</organization>
-	<developers>
-		<developer>
-			<id>kkandler</id>
-			<name>Kaj Kandler</name>
-			<email>kkandler@blackducksoftware.com</email>
-			<url>https://www.ohloh.net/accounts/KajKandler</url>
-			<organization>Black Duck Software, Inc.</organization>
-			<organizationUrl>http://www.blackducksoftware.com/</organizationUrl>
-			<roles>
-				<role>architect</role>
-				<role>developer</role>
-			</roles>
-			<timezone>-5</timezone>
-		</developer>
-		<developer>
-			<id>jrichard</id>
-			<name>James Richard</name>
-			<email>jrichard@blackducksoftware.com</email>
-			<!-- url>https://www.ohloh.net/accounts/JamesRichard</url -->
-			<organization>Black Duck Software, Inc.</organization>
-			<organizationUrl>http://www.blackducksoftware.com/</organizationUrl>
-			<roles>
-				<role>developer</role>
-			</roles>
-			<timezone>-5</timezone>
-		</developer>
-	</developers>
-	<contributors>
-	</contributors>
-
-	<!-- get every artifact through repo.jenkins-ci.org, which proxies all the 
-		artifacts that we need -->
-	<repositories>
-		<repository>
-			<id>repo.jenkins-ci.org</id>
-			<name>jenkins</name>
-			<url>http://repo.jenkins-ci.org/public/</url>
-		</repository>
-		<!-- Need the integration repo before the other protex repos in order to 
-			pull Java 6 over Java 7 compiled versions (and to not get the CXF-bundle 
-			via blackduck-cxf-utilities) -->
-		<repository>
-			<id>integration.artifactory.blackducksoftware.com</id>
-			<name>integration-releases</name>
-			<url>http://artifactory.blackducksoftware.com:8081/artifactory/integration</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>integration-snapshots.artifactory.blackducksoftware.com</id>
-			<name>integration-snapshots</name>
-			<url>http://artifactory.blackducksoftware.com:8081/artifactory/integration-snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>bds-suite.artifactory.blackducksoftware.com</id>
-			<name>hub</name>
-			<url>http://artifactory.blackducksoftware.com:8081/artifactory/simple/bds-suite-repo</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>third party libs</id>
-			<name>bds-approved-thirdparty-libs</name>
-			<url>http://artifactory.blackducksoftware.com:8081/artifactory/simple/bds-approved-thirdparty-libs/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>bds local snapshots</id>
-			<name>bds-snapshot-local</name>
-			<url>http://artifactory.blackducksoftware.com:8081/artifactory/simple/bds-snapshot-local/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<!-- repository> <id>bd-staging</id> <name>blackduck-staging-repos</name> 
-			<url>http://artifactory.blackducksoftware.com:8081/artifactory/blackduck-staging-repos</url> --><!-- releases> <enabled>true</enabled> <updatePolicy>always</updatePolicy> 
-			</releases> <snapshots> <enabled>false</enabled> <updatePolicy>always</updatePolicy> 
-			</snapshots --> <!-- </repository -->
-		<!-- repository> --><!-- temporary repo to get to sdk client stuff until the corporate artifactory 
-			carries those --><!-- <id>proserv-temp</id> <url>http://proserv-nexus:8080/nexus/content/repositories/thirdparty</url> 
-			</repository -->
-	</repositories>
-
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>repo.jenkins-ci.org</id>
-			<url>http://repo.jenkins-ci.org/public/</url>
-		</pluginRepository>
-	</pluginRepositories>
-
-	<distributionManagement>
-		<repository>
-			<id>${repo-id}</id>
-			<url>${repo-url}</url>
-		</repository>
-		<snapshotRepository>
-			<id>artifactory.blackducksoftware.com</id>
-			<url>http://artifactory.blackducksoftware.com:8081/artifactory/bds-jenkins-hub-plugins-snapshot</url>
-		</snapshotRepository>
-	</distributionManagement>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-
-	<dependencies>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-jdk14</artifactId>
-			<version>1.7.5</version>
-		</dependency>
-
-		<dependency>
-			<groupId>joda-time</groupId>
-			<artifactId>joda-time</artifactId>
-			<version>2.3</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>2.4.1</version>
-		</dependency>
-		<dependency>
-			<groupId>com.blackducksoftware.integration</groupId>
-			<artifactId>int-hub-ci</artifactId>
-			<version>1.2.2-SNAPSHOT</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.thoughtworks.xstream</groupId>
-					<artifactId>xstream</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.blackducksoftware.integration.gradle</groupId>
-			<artifactId>build-info-gradle</artifactId>
-			<version>1.0.7</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.9.5</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.10</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.jenkins-ci.plugins</groupId>
-			<artifactId>gradle</artifactId>
-			<version>[1.24,)</version>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.jenkins-ci.main</groupId>
-			<artifactId>maven-plugin</artifactId>
-			<version>[2.5,)</version>
-			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<groupId>org.jenkins-ci</groupId>
-					<artifactId>SECURITY-144-compat</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.mortbay.jetty</groupId>
-			<artifactId>servlet-api-2.5</artifactId>
-			<version>6.1.11</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.jvnet.localizer</groupId>
-			<artifactId>localizer</artifactId>
-			<version>1.10</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jenkins-ci.main</groupId>
-			<artifactId>remoting</artifactId>
-			<version>2.47</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.jenkins-ci.plugins</groupId>
-			<artifactId>credentials</artifactId>
-			<version>[1.9.4,1.15]</version>
-		</dependency>
-		<dependency>
-			<groupId>org.kohsuke.stapler</groupId>
-			<artifactId>json-lib</artifactId>
-			<version>2.1-rev7</version>
-			<scope>provided</scope>
-		</dependency>
-	</dependencies>
-
-	<build>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
-
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>add-source</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>add-source</goal>
-						</goals>
-						<configuration>
-							<sources>
-								<!-- Add so Eclipse m2e can pick those up - if you see a error in 
-									eclipse about this click and select discover to install the m2e mapping for 
-									this maven plugin -->
-								<source>${project.build.directory}/generated-sources/localizer/</source>
-								<source>${project.build.directory}/generated-sources/annotations/</source>
-							</sources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<!-- put your configurations here -->
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.jenkins-ci.tools</groupId>
-				<artifactId>maven-hpi-plugin</artifactId>
-				<version>1.106</version>
-				<configuration>
-					<pluginFirstClassLoader>false</pluginFirstClassLoader>
-					<hpiName>${project.artifactId}-${project.version}</hpiName>
-				</configuration>
-				<dependencies>
-					<dependency> <!-- overwrite the xalan version for the plugin, otherwise SdkFaults result 
-							in a method not found exception on XPathContext.init() in the Eclipse hpi:run 
-							only, seems to work fine in regular Jenkins environments -->
-						<!-- FIXME - put this into a profile that can only be called in Eclipse 
-							run situations, also re-examine the above classloader config -->
-						<groupId>xalan</groupId>
-						<artifactId>xalan</artifactId>
-						<version>2.7.1</version>
-					</dependency>
-				</dependencies>
-			</plugin>
-		</plugins>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.1</version>
-					<configuration>
-						<!-- put your configurations here -->
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.jacoco</groupId>
-					<artifactId>jacoco-maven-plugin</artifactId>
-					<version>0.7.5.201505241946</version>
-					<executions>
-						<execution>
-							<id>pre-unit-test</id>
-							<goals>
-								<goal>prepare-agent</goal>
-							</goals>
-							<configuration>
-								<!-- Sets the path to the file which contains the execution data. -->
-								<destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
-								<!-- Sets the name of the property containing the settings for JaCoCo 
-									runtime agent. -->
-								<propertyName>surefireArgLine</propertyName>
-							</configuration>
-						</execution>
-						<!-- Ensures that the code coverage report for unit tests is created 
-							after unit tests have been run. -->
-						<execution>
-							<id>post-unit-test</id>
-							<phase>test</phase>
-							<goals>
-								<goal>report</goal>
-							</goals>
-							<configuration>
-								<!-- Sets the path to the file which contains the execution data. -->
-								<dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
-								<!-- Sets the output directory for the code coverage report. -->
-								<outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
-							</configuration>
-						</execution>
-					</executions>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-eclipse-plugin</artifactId>
-					<configuration>
-						<classpathContainers>
-							<classpathContainer>
+<?xml version="1.0" encoding="UTF-8"?><project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.jenkins-ci.plugins</groupId>
+    <artifactId>plugin</artifactId>
+    <version>1.580.3</version>
+    <relativePath/>
+  </parent>
+  <groupId>com.blackducksoftware.integration</groupId>
+  <artifactId>hub-jenkins</artifactId>
+  <version>1.4.1-SNAPSHOT</version>
+  <packaging>hpi</packaging>
+  <name>Black Duck Hub Plug-In for Jenkins</name>
+  <description>Runs the Black Duck Hub scan in Jenkins build</description>
+  <inceptionYear>2014</inceptionYear>
+  <url>https://blackducksoftware.atlassian.net/wiki/display/BDOS/Black+Duck+Hub+Plugin</url>
+  <scm>
+    <url>http://bitbucket.dc1.lan/scm/int-hub/int-hub-jenkins.git</url>
+  </scm>
+  <issueManagement>
+    <url>https://jira.blackducksoftware.com/browse/IJH/?selectedTab=com.atlassian.jira.jira-projects-plugin:issues-panel</url>
+  </issueManagement>
+  <licenses>
+    <license>
+      <name>Black Duck Commercial License</name>
+      <url>http://www.blackducksoftware.com/</url>
+      <distribution>manual</distribution>
+      <comments>Use of this plugin is governed by the license under which you use Black Duck Software Code Center (TM)</comments>
+    </license>
+  </licenses>
+  <organization>
+    <name>Black Duck Software, Inc.</name>
+    <url>http://www.blackducksoftware.com/</url>
+  </organization>
+  <developers>
+    <developer>
+      <id>kkandler</id>
+      <name>Kaj Kandler</name>
+      <email>kkandler@blackducksoftware.com</email>
+      <url>https://www.ohloh.net/accounts/KajKandler</url>
+      <organization>Black Duck Software, Inc.</organization>
+      <organizationUrl>http://www.blackducksoftware.com/</organizationUrl>
+      <roles>
+        <role>architect</role>
+        <role>developer</role>
+      </roles>
+      <timezone>-5</timezone>
+    </developer>
+    <developer>
+      <id>jrichard</id>
+      <name>James Richard</name>
+      <email>jrichard@blackducksoftware.com</email>
+      <organization>Black Duck Software, Inc.</organization>
+      <organizationUrl>http://www.blackducksoftware.com/</organizationUrl>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <timezone>-5</timezone>
+    </developer>
+  </developers>
+  <contributors/>
+  <repositories>
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <name>jenkins</name>
+      <url>http://repo.jenkins-ci.org/public/</url>
+    </repository>
+    <repository>
+      <id>integration.artifactory.blackducksoftware.com</id>
+      <name>integration-releases</name>
+      <url>http://artifactory.blackducksoftware.com:8081/artifactory/integration</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>integration-snapshots.artifactory.blackducksoftware.com</id>
+      <name>integration-snapshots</name>
+      <url>http://artifactory.blackducksoftware.com:8081/artifactory/integration-snapshot</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>bds-suite.artifactory.blackducksoftware.com</id>
+      <name>hub</name>
+      <url>http://artifactory.blackducksoftware.com:8081/artifactory/simple/bds-suite-repo</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>third party libs</id>
+      <name>bds-approved-thirdparty-libs</name>
+      <url>http://artifactory.blackducksoftware.com:8081/artifactory/simple/bds-approved-thirdparty-libs/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>bds local snapshots</id>
+      <name>bds-snapshot-local</name>
+      <url>http://artifactory.blackducksoftware.com:8081/artifactory/simple/bds-snapshot-local/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>repo.jenkins-ci.org</id>
+      <url>http://repo.jenkins-ci.org/public/</url>
+    </pluginRepository>
+  </pluginRepositories>
+  <distributionManagement>
+    <repository>
+      <id>${repo-id}</id>
+      <url>${repo-url}</url>
+    </repository>
+    <snapshotRepository>
+      <id>artifactory.blackducksoftware.com</id>
+      <url>http://artifactory.blackducksoftware.com:8081/artifactory/bds-jenkins-hub-plugins-snapshot</url>
+    </snapshotRepository>
+  </distributionManagement>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <version>1.7.5</version>
+    </dependency>
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>2.3</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.4.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.blackducksoftware.integration</groupId>
+      <artifactId>int-hub-ci</artifactId>
+      <version>1.3.0-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.thoughtworks.xstream</groupId>
+          <artifactId>xstream</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.blackducksoftware.integration.gradle</groupId>
+      <artifactId>build-info-gradle</artifactId>
+      <version>1.0.7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.9.5</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.10</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>gradle</artifactId>
+      <version>[1.24,)</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.main</groupId>
+      <artifactId>maven-plugin</artifactId>
+      <version>[2.5,)</version>
+      <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jenkins-ci</groupId>
+          <artifactId>SECURITY-144-compat</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.mortbay.jetty</groupId>
+      <artifactId>servlet-api-2.5</artifactId>
+      <version>6.1.11</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jvnet.localizer</groupId>
+      <artifactId>localizer</artifactId>
+      <version>1.10</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.main</groupId>
+      <artifactId>remoting</artifactId>
+      <version>2.47</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>credentials</artifactId>
+      <version>[1.9.4,1.15]</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kohsuke.stapler</groupId>
+      <artifactId>json-lib</artifactId>
+      <version>2.1-rev7</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/localizer/</source>
+                <source>${project.build.directory}/generated-sources/annotations/</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.jenkins-ci.tools</groupId>
+        <artifactId>maven-hpi-plugin</artifactId>
+        <version>1.106</version>
+        <configuration>
+          <pluginFirstClassLoader>false</pluginFirstClassLoader>
+          <hpiName>${project.artifactId}-${project.version}</hpiName>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>xalan</groupId>
+            <artifactId>xalan</artifactId>
+            <version>2.7.1</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.1</version>
+          <configuration/>
+        </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.7.5.201505241946</version>
+          <executions>
+            <execution>
+              <id>pre-unit-test</id>
+              <goals>
+                <goal>prepare-agent</goal>
+              </goals>
+              <configuration>
+                <destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
+                <propertyName>surefireArgLine</propertyName>
+              </configuration>
+            </execution>
+            <execution>
+              <id>post-unit-test</id>
+              <phase>test</phase>
+              <goals>
+                <goal>report</goal>
+              </goals>
+              <configuration>
+                <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
+                <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-eclipse-plugin</artifactId>
+          <configuration>
+            <classpathContainers>
+              <classpathContainer>
 								org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6
 							</classpathContainer>
-						</classpathContainers>
-						<source>1.6</source>
-						<target>1.6</target>
-					</configuration>
-				</plugin>
-				<plugin>
-					<!--This plugin's configuration is used to store Eclipse m2e settings 
-						only. It has no influence on the Maven build itself. -->
-					<groupId>org.eclipse.m2e</groupId>
-					<artifactId>lifecycle-mapping</artifactId>
-					<version>1.0.0</version>
-					<configuration>
-						<lifecycleMappingMetadata>
-							<pluginExecutions>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>org.jacoco</groupId>
-										<artifactId>jacoco-maven-plugin</artifactId>
-										<versionRange>[0.5,)
+            </classpathContainers>
+            <source>1.6</source>
+            <target>1.6</target>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <versionRange>[0.5,)
 										</versionRange>
-										<goals>
-											<goal>prepare-agent</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<!-- m2e doesn't know what to do with jacoco, let's ignore it or 
-											annoying error markers appear see http://wiki.eclipse.org/M2E_plugin_execution_not_covered -->
-										<ignore></ignore>
-									</action>
-								</pluginExecution>
-							</pluginExecutions>
-						</lifecycleMappingMetadata>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-
-	</build>
-
-	<profiles>
-		<profile>
-			<properties>
-				<repo-id>bds-artifactory</repo-id>
-				<repo-url>http://artifactory.blackducksoftware.com:8081/artifactory/bds-jenkins-hub-plugins</repo-url>
-			</properties>
-			<!-- Internal testing profile -->
-			<id>jenkins-integration</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<build>
-				<filters>
-					<filter>internal.properties</filter>
-				</filters>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.16</version>
-						<configuration>
-							<argLine>-Dfile.encoding=UTF-8</argLine>
-							<!-- Sets the VM argument line used when unit tests are run. -->
-							<argLine>${surefireArgLine}</argLine>
-							<!-- Skips unit tests if the value of skip.unit.tests property is 
-								true -->
-							<skipTests>${skip.unit.tests}</skipTests>
-							<!-- Excludes integration tests when unit tests are run. -->
-							<excludes>
-								<exclude>**/com/blackducksoftware/integration/hub/jenkins/tests/release/PluginReleaseTest.java</exclude>
-								<exclude>**/IT*.java</exclude>
-							</excludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<properties>
-				<repo-id>suiterepo</repo-id>
-				<repo-url>http://suiterepo.blackducksoftware.com:8181/artifactory/bds-jenkins-hub-plugins</repo-url>
-			</properties>
-			<!-- Release profile -->
-			<id>jenkins-production-integration</id>
-			<activation>
-				<activeByDefault>false</activeByDefault>
-			</activation>
-			<build>
-				<filters>
-					<filter>deployment.properties</filter>
-				</filters>
-
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.16</version>
-						<configuration>
-							<argLine>-Dfile.encoding=UTF-8</argLine>
-							<includes>
-								<include>**/PluginReleaseTest.java</include>
-							</includes>
-							<!-- Sets the VM argument line used when unit tests are run. -->
-							<argLine>${surefireArgLine}</argLine>
-							<!-- Skips unit tests if the value of skip.unit.tests property is 
-								true -->
-							<skipTests>${skip.unit.tests}</skipTests>
-							<!-- Excludes integration tests when unit tests are run. -->
-							<excludes>
-								<exclude>**/com/blackducksoftware/integration/hub/jenkins/tests/release/PluginSnapShotTest.java</exclude>
-								<exclude>**/IT*.java</exclude>
-							</excludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
+                    <goals>
+                      <goal>prepare-agent</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore/>
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+  <profiles>
+    <profile>
+      <properties>
+        <repo-id>bds-artifactory</repo-id>
+        <repo-url>http://artifactory.blackducksoftware.com:8081/artifactory/bds-jenkins-hub-plugins</repo-url>
+      </properties>
+      <id>jenkins-integration</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <filters>
+          <filter>internal.properties</filter>
+        </filters>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.16</version>
+            <configuration>
+              <argLine>-Dfile.encoding=UTF-8</argLine>
+              <argLine>${surefireArgLine}</argLine>
+              <skipTests>${skip.unit.tests}</skipTests>
+              <excludes>
+                <exclude>**/com/blackducksoftware/integration/hub/jenkins/tests/release/PluginReleaseTest.java</exclude>
+                <exclude>**/IT*.java</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <properties>
+        <repo-id>suiterepo</repo-id>
+        <repo-url>http://suiterepo.blackducksoftware.com:8181/artifactory/bds-jenkins-hub-plugins</repo-url>
+      </properties>
+      <id>jenkins-production-integration</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <filters>
+          <filter>deployment.properties</filter>
+        </filters>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.16</version>
+            <configuration>
+              <argLine>-Dfile.encoding=UTF-8</argLine>
+              <includes>
+                <include>**/PluginReleaseTest.java</include>
+              </includes>
+              <argLine>${surefireArgLine}</argLine>
+              <skipTests>${skip.unit.tests}</skipTests>
+              <excludes>
+                <exclude>**/com/blackducksoftware/integration/hub/jenkins/tests/release/PluginSnapShotTest.java</exclude>
+                <exclude>**/IT*.java</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
