@@ -198,7 +198,7 @@ public class HubMavenReporter extends MavenReporter {
 
     /*
      * (non-JSDoc)
-     *
+     * 
      * @see hudson.maven.MavenReporter#end(hudson.maven.MavenBuild, hudson.Launcher, hudson.model.BuildListener)
      */
     @Override
@@ -225,60 +225,13 @@ public class HubMavenReporter extends MavenReporter {
                         Thread.currentThread().setContextClassLoader(HubMavenReporter.class.getClassLoader());
                     }
 
-                    // add action
-                    // boolean reportComplete = false;
-                    // CodeCenterGovernanceReportAction reportAction =
-                    // rootBuild.getAction(CodeCenterGovernanceReportAction.class);
-                    // if (reportAction == null) {
-                    // reportAction = new CodeCenterGovernanceReportAction(rootBuild);
-                    // buildLogger.debug("Adding Action " + reportAction);
-                    // rootBuild.addAction(reportAction);
-                    // } else {
-                    // reportComplete = true;
-                    // }
-
                     BuildInfoAction biAction = rootBuild.getAction(BuildInfoAction.class);
                     if (biAction != null) {
                         buildLogger.debug(
                                 "BuildInfo :" + biAction.getBuildInfo().getBuildId() + "==" + rootBuild.getId());
-                        // We don't want that action anymore
-
-                        // rootBuild.getActions().remove(biAction);
-
-                        // GovernanceReportGenerator reportGenerator = new GovernanceReportGenerator(facade,
-                        // biAction.getBuildInfo(),
-                        // getCodeCenterApplicationName(), getCodeCenterApplicationVersion(),
-                        // isAutoCreateComponentRequests(),
-                        // isSubmitComponentRequests(), isAutoSwitchNotInUseRequests(),
-                        // getScopesAsList(buildLogger), build);
-                        //
-                        // Result result = rootBuild.getResult();
-                        // try {
-                        // result = reportGenerator.generateReport(reportAction, buildLogger, BuilderType.MAVEN);
-                        // } catch (BDCIFacadeException e) {
-                        // buildLogger.error(e.getMessage(), e);
-                        // rootBuild.setResult(Result.UNSTABLE);
-                        // }
-
-                        // rootBuild.setResult(result);
-
                     } else {
-                        // if (!reportComplete) {
                         buildLogger.warn("No buildInfoAction found on build: " + rootBuild.getId());
-                        // } else {
-                        // The report has already been completed.
-                        // This method runs after the entire multi-module build is done
-                        // This is called for each module
-                        // We only need one report
-                        // }
                     }
-                    // for (hudson.model.Action a : build.getActions()) {
-                    // buildLogger.info("Action: " + a.getDisplayName() + " (" + a.getClass().getName() + ")");
-                    // if (a instanceof CodeCenterGovernanceReportAction) {
-                    // CodeCenterGovernanceReportAction b = (CodeCenterGovernanceReportAction) a;
-                    // buildLogger.info("** Application: " + b.getApplication() + "::" + b.getBuild());
-                    // }
-                    // }
                 } catch (Exception e1) {
                     buildLogger.error(e1.getMessage(), e1);
                     rootBuild.setResult(Result.UNSTABLE);
@@ -404,14 +357,6 @@ public class HubMavenReporter extends MavenReporter {
             isPluginConfigured = false;
             logger.error("No Hub project name configured!");
         }
-        // if (StringUtils.isBlank(getHubVersionPhase())) {
-        // isPluginConfigured = false;
-        // logger.error("");
-        // }
-        // if (StringUtils.isBlank(getHubVersionDist())) {
-        // isPluginConfigured = false;
-        // logger.error("");
-        // }
         if (StringUtils.isBlank(getMavenHubProjectVersion())) {
             isPluginConfigured = false;
             logger.error("No Hub project version configured!");

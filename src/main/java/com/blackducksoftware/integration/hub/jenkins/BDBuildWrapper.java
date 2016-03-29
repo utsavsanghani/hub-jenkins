@@ -127,7 +127,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
     @Override
     public abstract Environment setUp(final AbstractBuild build, Launcher launcher, final BuildListener listener) throws IOException, InterruptedException;
 
-    public boolean universalTearDown(AbstractBuild build, IntLogger buildLogger, FilePath buildInfoFilePath, BDBuildWrapperDescriptor descriptor,
+    public boolean universalTearDown(AbstractBuild<?, ?> build, IntLogger buildLogger, FilePath buildInfoFilePath, BDBuildWrapperDescriptor descriptor,
             BuilderType buidler) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException,
             IOException {
 
@@ -193,7 +193,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         }
     }
 
-    protected BuildInfo readBuildInfo(AbstractBuild build, FilePath buildInfoFilePath, String buildId, IntLogger buildLogger)
+    protected BuildInfo readBuildInfo(AbstractBuild<?, ?> build, FilePath buildInfoFilePath, String buildId, IntLogger buildLogger)
             throws BDJenkinsHubPluginException {
         BuildInfo buildInfo = new BuildInfo();
         // Gets the build-info.json file so we can retrieve
@@ -227,7 +227,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         return buildInfo;
     }
 
-    private String ensureProjectExists(HubIntRestService service, IntLogger logger, String projectName, String projectVersion) throws IOException,
+    protected String ensureProjectExists(HubIntRestService service, IntLogger logger, String projectName, String projectVersion) throws IOException,
             URISyntaxException,
             BDJenkinsHubPluginException {
         String projectId = null;
@@ -261,7 +261,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         return projectId;
     }
 
-    private String ensureVersionExists(HubIntRestService service, IntLogger logger, String projectVersion, String projectId) throws IOException,
+    protected String ensureVersionExists(HubIntRestService service, IntLogger logger, String projectVersion, String projectId) throws IOException,
             URISyntaxException, BDJenkinsHubPluginException {
         String versionId = null;
         try {
@@ -380,14 +380,6 @@ public abstract class BDBuildWrapper extends BuildWrapper {
             isPluginConfigured = false;
             logger.error("No Hub project name configured!");
         }
-        // if (StringUtils.isBlank(getHubVersionPhase())) {
-        // isPluginConfigured = false;
-        // logger.error("");
-        // }
-        // if (StringUtils.isBlank(getHubVersionDist())) {
-        // isPluginConfigured = false;
-        // logger.error("");
-        // }
         if (StringUtils.isBlank(getHubWrapperProjectVersion())) {
             isPluginConfigured = false;
             logger.error("No Hub project version configured!");

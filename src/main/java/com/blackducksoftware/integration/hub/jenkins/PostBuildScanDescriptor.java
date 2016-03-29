@@ -268,7 +268,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     }
 
     @Override
-    public boolean isApplicable(Class aClass) {
+    public boolean isApplicable(Class<? extends AbstractProject> aClass) {
         // Indicates that this builder can be used with all kinds of project
         // types
         return true;

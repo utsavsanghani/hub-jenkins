@@ -3,6 +3,7 @@ package com.blackducksoftware.integration.hub.jenkins;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
+import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -48,7 +49,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
      * In order to load the persisted global configuration, you have to call
      * load() in the constructor.
      */
-    public BDBuildWrapperDescriptor(Class subClass) {
+    public BDBuildWrapperDescriptor(Class<? extends BuildWrapper> subClass) {
         super(subClass);
         load();
     }

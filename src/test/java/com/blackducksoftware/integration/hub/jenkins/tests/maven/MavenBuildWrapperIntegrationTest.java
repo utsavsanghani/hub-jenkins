@@ -1,15 +1,14 @@
 package com.blackducksoftware.integration.hub.jenkins.tests.maven;
 
-import java.util.Properties;
 
 public class MavenBuildWrapperIntegrationTest {
-
-    private static String basePath;
-
-    private static String testWorkspace;
-
-    private static Properties testProperties;
-
+    //
+    // private static String basePath;
+    //
+    // private static String testWorkspace;
+    //
+    // private static Properties testProperties;
+    //
     // @Rule
     // public static JenkinsRule j = new JenkinsRule();
     //

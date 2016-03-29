@@ -1,23 +1,20 @@
 package com.blackducksoftware.integration.hub.jenkins.tests.maven;
 
-import java.util.Properties;
-
-import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
 
 public class MavenReporterDescriptorTest {
 
-    private static final String PASSWORD_WRONG = "Assert.failurePassword";
-
-    private static final String USERNAME_NON_EXISTING = "Assert.failureUser";
-
-    private static final String PROJECT_NAME_NOT_EXISTING = "Assert Project Does Not Exist";
-
-    private static final String PROJECT_RELEASE_NOT_EXISTING = "Assert Release Does Not Exist";
-
-    private static Properties testProperties;
-
-    private static JenkinsHubIntTestHelper restHelper;
-
+    // private static final String PASSWORD_WRONG = "Assert.failurePassword";
+    //
+    // private static final String USERNAME_NON_EXISTING = "Assert.failureUser";
+    //
+    // private static final String PROJECT_NAME_NOT_EXISTING = "Assert Project Does Not Exist";
+    //
+    // private static final String PROJECT_RELEASE_NOT_EXISTING = "Assert Release Does Not Exist";
+    //
+    // private static Properties testProperties;
+    //
+    // private static JenkinsHubIntTestHelper restHelper;
+    //
     // @Rule
     // public ExpectedException exception = ExpectedException.none();
     //

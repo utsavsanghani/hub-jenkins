@@ -3,7 +3,6 @@ package com.blackducksoftware.integration.hub.jenkins.maven;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.maven.MavenUtil;
-import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
@@ -198,16 +197,6 @@ public class MavenBuildWrapper extends BDBuildWrapper {
                         }
                     } catch (Exception e) {
                         buildLogger.error(e.getMessage(), e);
-                    } finally {
-
-                        List<Action> old = new ArrayList<Action>();
-                        List<Action> current = build.getActions();
-                        for (Action curr : current) {
-                            if (curr instanceof MavenClasspathAction) {
-                                old.add(curr);
-                            }
-                        }
-                        current.removeAll(old);
                     }
                     return true;
                 }
@@ -220,7 +209,7 @@ public class MavenBuildWrapper extends BDBuildWrapper {
         }
     }
 
-    private void setupAndAddMavenClasspathAction(AbstractBuild build, HubJenkinsLogger buildLogger) {
+    private void setupAndAddMavenClasspathAction(AbstractBuild<?, ?> build, HubJenkinsLogger buildLogger) {
         try {
             MavenClasspathAction mavenClasspathAction = new MavenClasspathAction();
 
