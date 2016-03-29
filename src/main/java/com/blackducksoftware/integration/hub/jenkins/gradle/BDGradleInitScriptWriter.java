@@ -23,7 +23,7 @@ import com.google.gson.Gson;
  *
  */
 public class BDGradleInitScriptWriter {
-    private final AbstractBuild build;
+    private final AbstractBuild<?, ?> build;
 
     private transient IntLogger buildLogger;
 
@@ -32,7 +32,7 @@ public class BDGradleInitScriptWriter {
      *
      * @param build
      */
-    public BDGradleInitScriptWriter(AbstractBuild build, IntLogger buildLogger) {
+    public BDGradleInitScriptWriter(AbstractBuild<?, ?> build, IntLogger buildLogger) {
         this.build = build;
         this.buildLogger = buildLogger;
     }

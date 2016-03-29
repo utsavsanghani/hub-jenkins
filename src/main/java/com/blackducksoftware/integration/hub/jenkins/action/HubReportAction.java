@@ -11,14 +11,14 @@ import org.apache.commons.lang3.StringUtils;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.report.api.AggregateBomViewEntry;
 import com.blackducksoftware.integration.hub.report.api.DetailedReleaseSummary;
-import com.blackducksoftware.integration.hub.report.api.HubBomReportData;
+import com.blackducksoftware.integration.hub.report.api.HubRiskReportData;
 import com.blackducksoftware.integration.hub.report.api.VersionReport;
 
 public class HubReportAction implements Action {
 
     private final AbstractBuild<?, ?> build;
 
-    private HubBomReportData reportData;
+    private HubRiskReportData reportData;
 
     public HubReportAction(AbstractBuild<?, ?> build) {
         this.build = build;
@@ -113,7 +113,7 @@ public class HubReportAction implements Action {
         return StringEscapeUtils.escapeHtml4(valueToEscape);
     }
 
-    public void setReportData(HubBomReportData reportData) {
+    public void setReportData(HubRiskReportData reportData) {
         this.reportData = reportData;
     }
 

@@ -3,6 +3,7 @@ package com.blackducksoftware.integration.hub.jenkins;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
+import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -24,11 +25,11 @@ import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.maven.MavenBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.maven.Scope;
-import com.blackducksoftware.integration.hub.response.AutoCompleteItem;
-import com.blackducksoftware.integration.hub.response.DistributionEnum;
-import com.blackducksoftware.integration.hub.response.PhaseEnum;
-import com.blackducksoftware.integration.hub.response.ProjectItem;
-import com.blackducksoftware.integration.hub.response.ReleaseItem;
+import com.blackducksoftware.integration.hub.project.api.AutoCompleteItem;
+import com.blackducksoftware.integration.hub.project.api.ProjectItem;
+import com.blackducksoftware.integration.hub.version.api.DistributionEnum;
+import com.blackducksoftware.integration.hub.version.api.PhaseEnum;
+import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
 // This indicates to Jenkins that this is an implementation of an extension
@@ -48,7 +49,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
      * In order to load the persisted global configuration, you have to call
      * load() in the constructor.
      */
-    public BDBuildWrapperDescriptor(Class subClass) {
+    public BDBuildWrapperDescriptor(Class<? extends BuildWrapper> subClass) {
         super(subClass);
         load();
     }
@@ -68,7 +69,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
         boolean changed = false;
         ListBoxModel items = new ListBoxModel();
         try {
-            // FIXME should get this list from the Hub server, ticket HUB-1610
+            // should get this list from the Hub server, ticket HUB-1610
             for (PhaseEnum phase : PhaseEnum.values()) {
                 if (phase != PhaseEnum.UNKNOWNPHASE) {
                     items.add(phase.name(), phase.name());
@@ -97,7 +98,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
         boolean changed = false;
         ListBoxModel items = new ListBoxModel();
         try {
-            // FIXME should get this list from the Hub server, ticket HUB-1610
+            // should get this list from the Hub server, ticket HUB-1610
             for (DistributionEnum distribution : DistributionEnum.values()) {
                 if (distribution != DistributionEnum.UNKNOWNDISTRIBUTION) {
                     items.add(distribution.name(), distribution.name());

@@ -22,11 +22,11 @@ import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.maven.Scope;
-import com.blackducksoftware.integration.hub.response.AutoCompleteItem;
-import com.blackducksoftware.integration.hub.response.DistributionEnum;
-import com.blackducksoftware.integration.hub.response.PhaseEnum;
-import com.blackducksoftware.integration.hub.response.ProjectItem;
-import com.blackducksoftware.integration.hub.response.ReleaseItem;
+import com.blackducksoftware.integration.hub.project.api.AutoCompleteItem;
+import com.blackducksoftware.integration.hub.project.api.ProjectItem;
+import com.blackducksoftware.integration.hub.version.api.DistributionEnum;
+import com.blackducksoftware.integration.hub.version.api.PhaseEnum;
+import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
 // TODO Uncomment extension to add the maven reporter back in
@@ -69,7 +69,7 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
         boolean changed = false;
         ListBoxModel items = new ListBoxModel();
         try {
-            // FIXME should get this list from the Hub server, ticket HUB-1610
+            // should get this list from the Hub server, ticket HUB-1610
             for (PhaseEnum phase : PhaseEnum.values()) {
                 if (phase != PhaseEnum.UNKNOWNPHASE) {
                     items.add(phase.name(), phase.name());
@@ -98,7 +98,7 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
         boolean changed = false;
         ListBoxModel items = new ListBoxModel();
         try {
-            // FIXME should get this list from the Hub server, ticket HUB-1610
+            // should get this list from the Hub server, ticket HUB-1610
             for (DistributionEnum distribution : DistributionEnum.values()) {
                 if (distribution != DistributionEnum.UNKNOWNDISTRIBUTION) {
                     items.add(distribution.name(), distribution.name());

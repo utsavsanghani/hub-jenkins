@@ -24,12 +24,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import jenkins.model.Jenkins;
 
-import org.codehaus.plexus.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -58,7 +57,8 @@ import com.blackducksoftware.integration.hub.jenkins.remote.GetOneJarFile;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.remote.RemoteBomGenerator;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
-import com.blackducksoftware.integration.hub.response.ReleaseItem;
+import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
+import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
 import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
 
@@ -267,7 +267,7 @@ public class PostBuildHubScan extends Recorder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
             BuildListener listener) throws InterruptedException, IOException {
         HubJenkinsLogger logger = new HubJenkinsLogger(listener);
-        logger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
+        logger.setLogLevel(LogLevel.TRACE);
         setResult(build.getResult());
         if (BuildHelper.isSuccess(build)) {
             try {
@@ -384,23 +384,13 @@ public class PostBuildHubScan extends Recorder {
                     HubSupportHelper hubSupport = new HubSupportHelper();
                     hubSupport.checkHubSupport(service, logger);
 
-                    JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(), scanTargets, build.getNumber(), build, launcher,
+                    JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(), scanTargets, build.getNumber(), hubSupport, build, launcher,
                             logger.getJenkinsListener());
 
                     DateTime beforeScanTime = new DateTime();
-                    Boolean mappingDone = runScan(service, build, scan, logger, scanExec, jrePath, oneJarPath, scanTargets, projectName, projectVersion,
+                    runScan(service, build, scan, logger, scanExec, jrePath, oneJarPath, scanTargets, projectName, projectVersion,
                             hubSupport);
                     DateTime afterScanTime = new DateTime();
-
-                    // Only map the scans to a Project Version if the Project name and Project Version have been
-                    // configured
-                    if (!mappingDone && getResult().equals(Result.SUCCESS) && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
-                        // Wait 5 seconds for the scans to be recognized in the Hub server
-                        logger.info("Waiting a few seconds for the scans to be recognized by the Hub server.");
-                        Thread.sleep(5000);
-
-                        doScanMapping(service, localHostName, logger, versionId, scanTargets);
-                    }
 
                     if (getResult().equals(Result.SUCCESS) && getShouldGenerateHubReport()) {
 
@@ -529,25 +519,6 @@ public class PostBuildHubScan extends Recorder {
         return versionId;
     }
 
-    private void doScanMapping(HubIntRestService service, String hostname, IntLogger logger, String versionId, List<String> scanTargets)
-            throws IOException, BDRestException,
-            BDJenkinsHubPluginException,
-            InterruptedException, HubIntegrationException, URISyntaxException {
-
-        Map<String, Boolean> scanLocationIds = service.getScanLocationIds(hostname, scanTargets, versionId);
-        if (scanLocationIds != null && !scanLocationIds.isEmpty()) {
-            logger.debug("These scan Id's were found for the scan targets.");
-            for (Entry<String, Boolean> scanId : scanLocationIds.entrySet()) {
-                logger.debug(scanId.getKey());
-            }
-
-            service.mapScansToProjectVersion(scanLocationIds, versionId);
-        } else {
-            logger.debug("There was an issue getting the Scan Location Id's for the defined scan targets.");
-        }
-
-    }
-
     /**
      *
      * @param variables
@@ -638,39 +609,26 @@ public class PostBuildHubScan extends Recorder {
      * @throws URISyntaxException
      * @throws HubIntegrationException
      */
-    private Boolean runScan(HubIntRestService service, AbstractBuild<?, ?> build, JenkinsScanExecutor scan, HubJenkinsLogger logger,
+    private void runScan(HubIntRestService service, AbstractBuild<?, ?> build, JenkinsScanExecutor scan, HubJenkinsLogger logger,
             String scanExec, String javaExec, String oneJarPath,
             List<String> scanTargets,
             String projectName, String versionName, HubSupportHelper hubSupport)
             throws IOException, HubConfigurationException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException
     {
         validateScanTargets(logger, scanTargets, build.getBuiltOn().getChannel());
-        Boolean mappingDone = false;
-
         scan.setLogger(logger);
         addProxySettingsToScanner(logger, scan);
 
-        scan.setHubSupportLogOption(hubSupport.isLogOptionSupport());
         scan.setScanMemory(scanMemory);
         scan.setWorkingDirectory(getWorkingDirectory().getRemote());
 
-        scan.setShouldParseStatus(hubSupport.isCliStatusReturnSupport());
-
         scan.setVerboseRun(isVerbose());
-        if (hubSupport.isCliMappingSupport() &&
-                StringUtils.isNotBlank(projectName)
+        if (StringUtils.isNotBlank(projectName)
                 && StringUtils.isNotBlank(versionName)) {
 
-            scan.setCliSupportsMapping(hubSupport.isCliMappingSupport());
             scan.setProject(projectName);
             scan.setVersion(versionName);
-            mappingDone = true;
-        } else {
-            scan.setCliSupportsMapping(false);
         }
-
-        scan.setCliSupportStatusOption(hubSupport.isCliStatusDirOptionSupport());
-
         com.blackducksoftware.integration.hub.ScanExecutor.Result result = scan.setupAndRunScan(scanExec,
                 oneJarPath, javaExec);
         if (result == com.blackducksoftware.integration.hub.ScanExecutor.Result.SUCCESS) {
@@ -678,8 +636,6 @@ public class PostBuildHubScan extends Recorder {
         } else {
             setResult(Result.UNSTABLE);
         }
-
-        return mappingDone;
     }
 
     public void addProxySettingsToScanner(IntLogger logger, JenkinsScanExecutor scan) throws BDJenkinsHubPluginException, HubIntegrationException,

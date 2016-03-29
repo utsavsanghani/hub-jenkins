@@ -33,13 +33,11 @@ public class TestBuildListener implements BuildListener {
 
     @Override
     public void annotate(ConsoleNote ann) throws IOException {
-        // TODO Auto-generated function stub
 
     }
 
     @Override
     public void hyperlink(String url, String text) throws IOException {
-        // TODO Auto-generated function stub
 
     }
 
@@ -69,13 +67,11 @@ public class TestBuildListener implements BuildListener {
 
     @Override
     public void started(List<Cause> causes) {
-        // TODO Auto-generated function stub
 
     }
 
     @Override
     public void finished(Result result) {
-        // TODO Auto-generated function stub
 
     }
 }

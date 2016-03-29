@@ -14,7 +14,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
-import com.blackducksoftware.integration.hub.response.ProjectItem;
+import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 
 public class JenkinsHubIntTestHelper extends HubIntRestService {
 

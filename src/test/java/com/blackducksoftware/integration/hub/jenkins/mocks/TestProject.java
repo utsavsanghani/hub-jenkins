@@ -45,7 +45,6 @@ public class TestProject extends AbstractProject<TestProject, TestBuild> impleme
 
     @Override
     public TopLevelItemDescriptor getDescriptor() {
-        // TODO Auto-generated function stub
         return null;
     }
 

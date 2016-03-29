@@ -30,8 +30,8 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPlug
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatus;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatusEnum;
-import com.blackducksoftware.integration.hub.response.ProjectItem;
-import com.blackducksoftware.integration.hub.response.ReleaseItem;
+import com.blackducksoftware.integration.hub.project.api.ProjectItem;
+import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
 
 public class HubFailureConditionStep extends Recorder {
@@ -61,7 +61,7 @@ public class HubFailureConditionStep extends Recorder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
             BuildListener listener) throws InterruptedException, IOException {
         HubJenkinsLogger logger = new HubJenkinsLogger(listener);
-        logger.setLogLevel(LogLevel.TRACE); // TODO make the log level configurable
+        logger.setLogLevel(LogLevel.TRACE);
 
         if (build.getResult() != Result.SUCCESS) {
             logger.error("The Build did not run sucessfully, will not check the Hub Failure Conditions.");

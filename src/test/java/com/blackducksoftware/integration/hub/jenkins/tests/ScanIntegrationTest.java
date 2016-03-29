@@ -28,6 +28,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import com.blackducksoftware.integration.hub.api.VersionComparison;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
@@ -37,10 +38,9 @@ import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedActio
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
 import com.blackducksoftware.integration.hub.jenkins.failure.HubFailureConditionStep;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
-import com.blackducksoftware.integration.hub.response.DistributionEnum;
-import com.blackducksoftware.integration.hub.response.PhaseEnum;
-import com.blackducksoftware.integration.hub.response.ProjectItem;
-import com.blackducksoftware.integration.hub.response.VersionComparison;
+import com.blackducksoftware.integration.hub.project.api.ProjectItem;
+import com.blackducksoftware.integration.hub.version.api.DistributionEnum;
+import com.blackducksoftware.integration.hub.version.api.PhaseEnum;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
@@ -639,7 +639,7 @@ public class ScanIntegrationTest {
     // assertTrue(buildOutput, buildOutput.contains("Version Id:"));
     /*
      * Only to be asserted if run against hub <2.3.1
-     *
+     * 
      * // assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
      * // assertTrue(buildOutput, buildOutput.contains("The scan target :"));
      * // assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));

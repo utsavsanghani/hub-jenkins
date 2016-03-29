@@ -1,6 +1,17 @@
 Hub plugin for Jenkins. This plugin provides ability to run a BD Hub CLi on build input or output. It offers to run multiple code locations.
 
 ## Release Notes:
+### 1.4.1
+* Removed empty "BlackDuck Scan" configuration entirely from the global configuration
+* Using new CLI option to better check when the BOM has been updated with the scan results (Hub 3.0.0+ only)
+### 1.4.0
+* Auto install of the BD Scanner (CLI)
+* Ability to pull a BOM report from Hub into Jenkins
+* Fail the Jenkins build, if any component does not pass Hub policy (Hub 3.0.0+ only)
+* Network timeout for Hub connection configurable
+* Update of plugin via Jenkins update site
+** Independent of Hub releases
+** Signaled in the Jenkins plugin management
 ### 1.3.7
 * Fix issue where builds run on slaves log less messages to the console log, than when run on master
 ### 1.3.6

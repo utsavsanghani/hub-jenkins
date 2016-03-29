@@ -6,13 +6,13 @@ import hudson.Launcher.ProcStarter;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.ScanExecutor;
 import com.blackducksoftware.integration.hub.ScannerSplitStream;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
@@ -22,15 +22,15 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 public class JenkinsScanExecutor extends ScanExecutor {
     public static final Integer THREAD_SLEEP = 100;
 
-    private final AbstractBuild build;
+    private final AbstractBuild<?, ?> build;
 
     private final Launcher launcher;
 
     private final TaskListener listener;
 
-    public JenkinsScanExecutor(HubServerInfo serverInfo, List<String> scanTargets, Integer buildNumber, AbstractBuild build,
-            Launcher launcher, TaskListener listener) {
-        super(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), scanTargets, buildNumber);
+    public JenkinsScanExecutor(HubServerInfo serverInfo, List<String> scanTargets, Integer buildNumber, HubSupportHelper supportHelper,
+            AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) {
+        super(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), scanTargets, buildNumber, supportHelper);
         this.build = build;
         this.launcher = launcher;
         this.listener = listener;
@@ -145,72 +145,15 @@ public class JenkinsScanExecutor extends ScanExecutor {
                 // ///////////////////////
                 ps.envs(build.getEnvironment(listener));
 
-                String outputString = "";
-
                 ScannerSplitStream splitStream = new ScannerSplitStream(new HubJenkinsLogger(listener), standardOutFile.write());
 
                 exitCode = runScan(ps, cmd, splitStream);
                 splitStream.flush();
                 splitStream.close();
 
-                if (splitStream.hasOutput()) {
-                    outputString = splitStream.getOutput();
-                }
-
-                if (outputString.contains("Illegal character in path")
-                        && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
-                    standardOutFile.delete();
-                    standardOutFile.touch(0);
-
-                    splitStream = new ScannerSplitStream(new HubJenkinsLogger(listener), standardOutFile.write());
-                    // This version of the CLI can not handle spaces in the log directory
-                    // Not sure which version of the CLI this issue was fixed
-
-                    int indexOfLogOption = cmd.indexOf("--logDir") + 1;
-
-                    String logPath = cmd.get(indexOfLogOption);
-                    logPath = logPath.replace(" ", "%20");
-                    cmd.remove(indexOfLogOption);
-                    cmd.add(indexOfLogOption, logPath);
-                    exitCode = runScan(ps, cmd, splitStream);
-                    splitStream.flush();
-                    splitStream.close();
-
-                    if (splitStream.hasOutput()) {
-                        outputString = splitStream.getOutput();
-                    }
-
-                } else if (outputString.contains("Illegal character in opaque")
-                        && (outputString.contains("Finished in") && outputString.contains("with status FAILURE"))) {
-                    standardOutFile.delete();
-                    standardOutFile.touch(0);
-
-                    splitStream = new ScannerSplitStream(new HubJenkinsLogger(listener), standardOutFile.write());
-
-                    // This version of the CLI can not handle spaces in the log directory
-                    // Not sure which version of the CLI this issue was fixed
-
-                    int indexOfLogOption = cmd.indexOf("--logDir") + 1;
-
-                    String logPath = cmd.get(indexOfLogOption);
-
-                    File logFile = new File(logPath);
-
-                    logPath = logFile.toURI().toString();
-                    cmd.remove(indexOfLogOption);
-                    cmd.add(indexOfLogOption, logPath);
-                    exitCode = runScan(ps, cmd, splitStream);
-                    splitStream.flush();
-                    splitStream.close();
-
-                    if (splitStream.hasOutput()) {
-                        outputString = splitStream.getOutput();
-                    }
-
-                }
                 if (logDirectoryPath != null) {
                     FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), logDirectoryPath);
-                    if (logDirectory.exists() && doesHubSupportLogOption()) {
+                    if (logDirectory.exists()) {
 
                         getLogger().info(
                                 "You can view the BlackDuck scan CLI logs at : '" + logDirectory.getRemote()
@@ -219,18 +162,10 @@ public class JenkinsScanExecutor extends ScanExecutor {
                     }
                 }
 
-                if (shouldParseStatus()) {
-                    if (outputString.contains("Finished in") && outputString.contains("with status SUCCESS")) {
-                        return Result.SUCCESS;
-                    } else {
-                        return Result.FAILURE;
-                    }
+                if (exitCode == 0) {
+                    return Result.SUCCESS;
                 } else {
-                    if (exitCode == 0) {
-                        return Result.SUCCESS;
-                    } else {
-                        return Result.FAILURE;
-                    }
+                    return Result.FAILURE;
                 }
             } else {
                 getLogger().error("Could not find a ProcStarter to run the process!");
