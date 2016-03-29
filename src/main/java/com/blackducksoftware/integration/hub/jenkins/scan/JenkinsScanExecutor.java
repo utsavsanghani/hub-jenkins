@@ -68,7 +68,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
             else {
                 FilePath javaExecRemote = new FilePath(build.getBuiltOn().getChannel(), javaExec);
                 if (!javaExecRemote.exists()) {
-                    getLogger().error("The Java home provided does not exist.");
+                    getLogger().error("The Java executable provided does not exist.");
                     return false;
                 }
             }
@@ -100,6 +100,19 @@ public class JenkinsScanExecutor extends ScanExecutor {
         }
 
         return logDirectory.getRemote();
+    }
+
+    /**
+     * Should determine the path to the scan status directory within the log directory.
+     * This should only be used outside of this class to get the path of the satus directory
+     *
+     * @throws IOException
+     */
+    @Override
+    public String getScanStatusDirectoryPath() throws IOException {
+        FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), getLogDirectoryPath());
+        FilePath scanStatusDirectory = new FilePath(logDirectory, "status");
+        return scanStatusDirectory.getRemote();
     }
 
     @Override

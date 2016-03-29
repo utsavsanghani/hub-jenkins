@@ -8,9 +8,6 @@ import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
-import hudson.tools.ToolInstaller;
-import hudson.tools.ToolProperty;
-import hudson.tools.InstallSourceProperty;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.Kind;
 import hudson.util.IOUtils;
@@ -27,7 +24,6 @@ import java.net.Proxy;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -60,8 +56,6 @@ import org.xml.sax.SAXException;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
-import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstaller;
-import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
@@ -108,11 +102,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     public PostBuildScanDescriptor() {
         super(PostBuildHubScan.class);
         load();
-
-        if (hubServerInfo != null) {
-            checkHubScanTool(hubServerInfo.getServerUrl());
-        }
-
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
     }
 
@@ -275,9 +264,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         hubServerInfo = serverInfo;
 
         save();
-        if (hubServerInfo != null) {
-            checkHubScanTool(hubServerInfo.getServerUrl());
-        }
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
     }
 
@@ -310,51 +296,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
         // (easier when there are many fields; need set* methods for this,
         // like setUseFrench)
         save();
-        if (hubServerInfo != null) {
-            checkHubScanTool(hubServerInfo.getServerUrl());
-        }
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         return super.configure(req, formData);
-    }
-
-    public static void checkHubScanTool(String hubUrl) {
-        HubScanInstallation hubScanInstallation = HubServerInfoSingleton.getInstance().getHubScanInstallation();
-
-        if (hubScanInstallation == null) {
-            HubServerInfoSingleton.getInstance().setHubScanInstallation(createCliInsallation(hubUrl));
-        } else {
-            if (StringUtils.isBlank(hubScanInstallation.getUrl()) || !hubScanInstallation.getUrl().equals(hubUrl)) {
-                HubServerInfoSingleton.getInstance().setHubScanInstallation(createCliInsallation(hubUrl));
-            }
-        }
-    }
-
-    private static HubScanInstallation createCliInsallation(String hubUrl) {
-        if (hubUrl == null) {
-            return null;
-        }
-        ArrayList<ToolInstaller> installers = new ArrayList<ToolInstaller>();
-
-        HubScanInstaller autoInstaller = new HubScanInstaller();
-
-        installers.add(autoInstaller);
-
-        ArrayList<ToolProperty<?>> properties = new ArrayList<ToolProperty<?>>();
-
-        InstallSourceProperty sourceProperty = null;
-        try {
-            sourceProperty = new InstallSourceProperty(installers);
-        } catch (IOException e) {
-            return null;
-        }
-        properties.add(sourceProperty);
-
-        HubScanInstallation scanInstallation = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, "", properties);
-
-        scanInstallation.setUrl(hubUrl);
-
-        return scanInstallation;
     }
 
     public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") String scanMemory)

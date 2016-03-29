@@ -7,7 +7,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import hudson.FilePath;
-import hudson.model.BuildListener;
 import hudson.model.StreamBuildListener;
 import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
@@ -16,13 +15,14 @@ import hudson.slaves.DumbSlave;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -36,19 +36,17 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
-import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
-import com.blackducksoftware.integration.hub.jenkins.exceptions.HubScanToolMissingException;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.TestLogger;
-import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.google.common.base.Charsets;
 
 public class PostBuildHubScanUnitTest {
-
-    private static final String CLI_VERSION = "2.3.3";
-
-    private static final String TEST_CLI_PATH = "/lib/scan.cli-" + CLI_VERSION + "-standalone.jar";
 
     private static String VALID_CREDENTIAL = "Valid Credential Id";
 
@@ -56,7 +54,7 @@ public class PostBuildHubScanUnitTest {
 
     private static String basePath;
 
-    private static String hubScanInstallPath;
+    private static Properties testProperties;
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
@@ -76,11 +74,19 @@ public class PostBuildHubScanUnitTest {
         basePath = PostBuildHubScanUnitTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         basePath = basePath.substring(0, basePath.indexOf("/target"));
         basePath = basePath + "/test-workspace";
-        hubScanInstallPath = basePath + "/scan.cli-" + CLI_VERSION;
 
         byteOutput = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(byteOutput);
         listener = new StreamBuildListener(ps, Charsets.UTF_8);
+
+        testProperties = new Properties();
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        InputStream is = classLoader.getResourceAsStream("test.properties");
+        try {
+            testProperties.load(is);
+        } catch (IOException e) {
+            System.err.println("reading test.properties failed!");
+        }
     }
 
     @Before
@@ -151,9 +157,9 @@ public class PostBuildHubScanUnitTest {
         scanTargets.add(createdFile.getCanonicalPath());
 
         TestLogger logger = new TestLogger(listener);
-        Assert.assertTrue(mockpbScan.validateScanTargets(logger, scanTargets, nullChannel));
+        assertTrue(mockpbScan.validateScanTargets(logger, scanTargets, nullChannel));
         String output = logger.getOutputString();
-        Assert.assertTrue(output, output.contains("Scan target exists at : "));
+        assertTrue(output, output.contains("Scan target exists at : "));
     }
 
     @Test
@@ -190,86 +196,54 @@ public class PostBuildHubScanUnitTest {
         mockpbScan.validateScanTargets(logger, scanTargets, nullChannel);
     }
 
-    // getIScanScript
     @Test
-    public void testGetIScanScriptOnMaster() throws Exception {
+    public void testGetIScanScriptNoServerInfo() throws Exception {
         // getIscanScript with empty nodeName (indicates master), with valid iScan installation configured and selected,
         // and with the script existing
+        DumbSlave slave = j.createOnlineSlave();
+        Node node = j.getInstance().getNode(slave.getNodeName());
 
-        DumbSlave slave = j.createSlave();
-        slave.setNodeName("");
-
-        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
+        File toolsDir = j.getInstance().getRootDir();
+        toolsDir = new File(toolsDir, "tools");
 
         PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
         TestLogger logger = new TestLogger(listener);
-        FilePath script = pbScan.getScanCLI(hubScanInstall, logger, slave);
-        Assert.assertTrue(script.exists());
-        Assert.assertTrue(script.getRemote().equals(hubScanInstallPath + TEST_CLI_PATH));
+        assertNull(pbScan.getScanCLI(logger, node, toolsDir.getAbsolutePath(), "TestHost"));
         String output = logger.getOutputString();
-        Assert.assertTrue(output, output.contains("Using this BlackDuck scan CLI at : "));
+        assertTrue(output, output.contains("Could not find the Hub server information."));
     }
 
     @Test
-    public void testGetIScanScriptOnSlave() throws Exception {
-        // getIscanScript with nodeName "Slave machine", with valid iScan installation configured and selected,
-        // and with the script existing
-
-        DumbSlave slave = j.createSlave("Slave machine", null);
-        slave.setNodeName("testSlave");
-
-        HubScanInstallation mockIScanInstall = mock(HubScanInstallation.class);
-        when(mockIScanInstall.getName()).thenReturn(HubScanInstallation.AUTO_INSTALL_TOOL_NAME);
-        when(mockIScanInstall.getHome()).thenReturn(hubScanInstallPath);
-        when(mockIScanInstall.forNode(Mockito.any(Node.class), Mockito.any(BuildListener.class))).thenReturn(mockIScanInstall);
-        when(mockIScanInstall.getCLI(Mockito.any(VirtualChannel.class))).thenCallRealMethod();
-        when(mockIScanInstall.getExists(Mockito.any(VirtualChannel.class), Mockito.any(IntLogger.class))).thenCallRealMethod();
-
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
-
-        TestLogger logger = new TestLogger(listener);
-        FilePath script = pbScan.getScanCLI(mockIScanInstall, logger, slave);
-        Assert.assertTrue(script.exists());
-        Assert.assertTrue(script.getRemote().equals(hubScanInstallPath + TEST_CLI_PATH));
-        String output = logger.getOutputString();
-        Assert.assertTrue(output, output.contains("Using this BlackDuck scan CLI at : "));
-    }
-
-    @Test
-    public void testGetIScanScriptNoiHubScanInstallations() throws Exception {
-        // getIscanScript with empty nodeName (indicates master), with no iScan installation configured and one
-        // selected, and with the script existing
-
-        exception.expect(HubConfigurationException.class);
-        exception.expectMessage("You need to select which BlackDuck scan installation to use.");
-
-        PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
-
-        TestLogger logger = new TestLogger(listener);
-        FilePath script = pbScan.getScanCLI(null, logger, null);
-        Assert.assertTrue(script.exists());
-        Assert.assertTrue(script.getRemote().equals(hubScanInstallPath + TEST_CLI_PATH));
-    }
-
-    @Test
-    public void testGetIScanScriptDoesntExist() throws Exception {
+    public void testGetIScanScript() throws Exception {
         // getIscanScript with empty nodeName (indicates master), with valid iScan installation configured and selected,
-        // and with the script not existing
+        // and with the script existing
+        DumbSlave slave = j.createOnlineSlave();
+        Node node = j.getInstance().getNode(slave.getNodeName());
 
-        exception.expect(HubScanToolMissingException.class);
-        exception.expectMessage("Could not find the CLI file to execute at : '");
+        File toolsDir = j.getInstance().getRootDir();
+        toolsDir = new File(toolsDir, "tools");
+        assertTrue(toolsDir.listFiles() == null);
 
-        DumbSlave slave = j.createSlave();
-        slave.setNodeName("");
+        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+        UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null,
+                testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+        store.addCredentials(Domain.global(), credential);
 
-        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME,
-                hubScanInstallPath + "/FAKE/PATH/scan.cli.jar", null);
+        HubServerInfo hubServerInfo = new HubServerInfo();
+        hubServerInfo.setCredentialsId(credential.getId());
+        hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
         PostBuildHubScan pbScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
         TestLogger logger = new TestLogger(listener);
-        pbScan.getScanCLI(hubScanInstall, logger, slave);
+        String scriptPath = pbScan.getScanCLI(logger, node, toolsDir.getAbsolutePath(), "TestHost");
+        File cli = new File(scriptPath);
+        assertTrue(cli.exists());
+        assertTrue(cli.getAbsolutePath().contains(toolsDir.getAbsolutePath()));
+        String output = logger.getOutputString();
+        assertTrue(output, output.contains("Using this BlackDuck scan CLI at : "));
     }
 
     // validateConfiguration
@@ -284,24 +258,7 @@ public class PostBuildHubScanUnitTest {
 
         PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
-        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
-        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
-
-        Assert.assertTrue(postBuildScan.validateConfiguration());
-    }
-
-    @Test
-    public void testValidateConfigurationNullHubScanInstallations() throws Exception {
-        // validateConfiguration with null IHubScanInstallations and correct IScanJobs
-
-        HubServerInfo hubServerInfo = new HubServerInfo();
-        hubServerInfo.setCredentialsId(VALID_CREDENTIAL);
-        hubServerInfo.setServerUrl(VALID_SERVERURL);
-        HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
-
-        PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
-
-        Assert.assertTrue(postBuildScan.validateConfiguration());
+        assertTrue(postBuildScan.validateConfiguration());
     }
 
     @Test
@@ -316,12 +273,9 @@ public class PostBuildHubScanUnitTest {
         hubServerInfo.setServerUrl("");
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
-        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
-        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
-
         PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
-        Assert.assertTrue(postBuildScan.validateConfiguration());
+        assertTrue(postBuildScan.validateConfiguration());
     }
 
     @Test
@@ -336,12 +290,9 @@ public class PostBuildHubScanUnitTest {
         hubServerInfo.setServerUrl(null);
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
-        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
-        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
-
         PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
-        Assert.assertTrue(postBuildScan.validateConfiguration());
+        assertTrue(postBuildScan.validateConfiguration());
     }
 
     @Test
@@ -355,9 +306,6 @@ public class PostBuildHubScanUnitTest {
         hubServerInfo.setCredentialsId("");
         hubServerInfo.setServerUrl(VALID_SERVERURL);
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
-
-        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
-        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
         PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 
@@ -375,9 +323,6 @@ public class PostBuildHubScanUnitTest {
         hubServerInfo.setCredentialsId(null);
         hubServerInfo.setServerUrl(VALID_SERVERURL);
         HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
-
-        HubScanInstallation hubScanInstall = new HubScanInstallation(HubScanInstallation.AUTO_INSTALL_TOOL_NAME, hubScanInstallPath, null);
-        HubServerInfoSingleton.getInstance().setHubScanInstallation(hubScanInstall);
 
         PostBuildHubScan postBuildScan = new PostBuildHubScan(null, false, null, null, null, null, "4096", false, "0");
 

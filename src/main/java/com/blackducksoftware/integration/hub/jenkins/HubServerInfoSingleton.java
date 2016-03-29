@@ -2,8 +2,6 @@ package com.blackducksoftware.integration.hub.jenkins;
 
 import java.io.Serializable;
 
-import com.blackducksoftware.integration.hub.jenkins.cli.HubScanInstallation;
-
 public class HubServerInfoSingleton implements Serializable {
 
     private final static HubServerInfoSingleton _instance;
@@ -16,15 +14,12 @@ public class HubServerInfoSingleton implements Serializable {
 
     private HubServerInfo _info;
 
-    private HubScanInstallation _hubScanInstallation;
-
     /**
      * Default constructor.
      */
     private HubServerInfoSingleton()
     {
         _info = null;
-        _hubScanInstallation = null;
     }
 
     /**
@@ -57,24 +52,6 @@ public class HubServerInfoSingleton implements Serializable {
     public void setServerInfo(HubServerInfo info)
     {
         _info = info;
-    }
-
-    /**
-     * Retrieve the Hub scan installation.
-     *
-     */
-    public HubScanInstallation getHubScanInstallation()
-    {
-        return _hubScanInstallation;
-    }
-
-    /**
-     * Replace the Hub scan installation.
-     *
-     */
-    public void setHubScanInstallation(HubScanInstallation hubScanInstallation)
-    {
-        _hubScanInstallation = hubScanInstallation;
     }
 
     @Override
