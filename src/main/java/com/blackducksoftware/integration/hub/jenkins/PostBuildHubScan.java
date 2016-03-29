@@ -590,24 +590,6 @@ public class PostBuildHubScan extends Recorder {
      * the necessarry arguments, sets the JAVA_HOME of the Process Builder to the one that the User chose, starts the
      * process and prints out all stderr and stdout to the Console Output.
      *
-     * @param build
-     *            AbstractBuild
-     * @param launcher
-     *            Launcher
-     * @param listener
-     *            BuildListener
-     * @param scanExec
-     *            FilePath
-     * @param scanTargets
-     *            List<String>
-     *
-     * @throws IOException
-     * @throws HubConfigurationException
-     * @throws InterruptedException
-     * @throws BDRestException
-     * @throws BDJenkinsHubPluginException
-     * @throws URISyntaxException
-     * @throws HubIntegrationException
      */
     private void runScan(HubIntRestService service, AbstractBuild<?, ?> build, JenkinsScanExecutor scan, HubJenkinsLogger logger,
             String scanExec, String javaExec, String oneJarPath,
@@ -762,13 +744,6 @@ public class PostBuildHubScan extends Recorder {
     /**
      * Sets the Java Home that is to be used for running the Shell script
      *
-     * @param build
-     *            AbstractBuild
-     * @param listener
-     *            BuildListener
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws HubConfigurationException
      */
     private JDK determineJava(HubJenkinsLogger logger, AbstractBuild<?, ?> build) throws IOException, InterruptedException,
             HubConfigurationException {
@@ -825,15 +800,6 @@ public class PostBuildHubScan extends Recorder {
      * Validates that the Plugin is configured correctly. Checks that the User has defined an iScan tool, a Hub server
      * URL, a Credential, and that there are at least one scan Target/Job defined in the Build
      *
-     * @param iScanTools
-     *            IScanInstallation[] User defined iScan installations
-     * @param scans
-     *            IScanJobs[] the iScan jobs defined in the Job config
-     *
-     * @return True if everything is configured correctly
-     *
-     * @throws HubScanToolMissingException
-     * @throws HubConfigurationException
      */
     public boolean validateConfiguration() throws HubScanToolMissingException,
             HubConfigurationException {
@@ -857,17 +823,6 @@ public class PostBuildHubScan extends Recorder {
     /**
      * Validates that all scan targets exist
      *
-     * @param listener
-     *            BuildListener
-     * @param channel
-     *            VirtualChannel
-     * @param scanTargets
-     *            List<String>
-     *
-     * @return
-     * @throws IOException
-     * @throws HubConfigurationException
-     * @throws InterruptedException
      */
     public boolean validateScanTargets(IntLogger logger, List<String> scanTargets, VirtualChannel channel) throws IOException,
             HubConfigurationException,
