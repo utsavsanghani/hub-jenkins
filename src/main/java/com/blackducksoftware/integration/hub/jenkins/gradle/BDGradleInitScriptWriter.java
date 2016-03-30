@@ -30,7 +30,6 @@ public class BDGradleInitScriptWriter {
     /**
      * The gradle initialization script constructor.
      *
-     * @param build
      */
     public BDGradleInitScriptWriter(AbstractBuild<?, ?> build, IntLogger buildLogger) {
         this.build = build;
@@ -40,7 +39,6 @@ public class BDGradleInitScriptWriter {
     /**
      * Generate the init script from a template
      *
-     * @return The generated script.
      */
     public String generateInitScript() throws URISyntaxException, IOException, InterruptedException {
         StringBuilder initScript = new StringBuilder();

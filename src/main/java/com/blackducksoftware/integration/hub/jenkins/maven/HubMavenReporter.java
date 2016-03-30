@@ -150,8 +150,6 @@ public class HubMavenReporter extends MavenReporter {
      * Mojos perform different dependency resolution, so we add dependencies for
      * each mojo.
      *
-     * @throws IOException
-     * @throws InterruptedException
      */
     @Override
     public boolean postExecute(MavenBuildProxy build, MavenProject pom,
@@ -198,7 +196,7 @@ public class HubMavenReporter extends MavenReporter {
 
     /*
      * (non-JSDoc)
-     * 
+     *
      * @see hudson.maven.MavenReporter#end(hudson.maven.MavenBuild, hudson.Launcher, hudson.model.BuildListener)
      */
     @Override
@@ -272,10 +270,6 @@ public class HubMavenReporter extends MavenReporter {
         }
     }
 
-    /**
-     * @param artifact
-     * @return
-     */
     private BuildDependency getDependencyFromArtifact(Artifact artifact) {
         BuildDependency dependency = new BuildDependency();
         dependency.setGroup(artifact.getGroupId());
@@ -292,9 +286,6 @@ public class HubMavenReporter extends MavenReporter {
     /**
      * Determine if plugin is enabled
      *
-     * @return true if Code Center server info is complete and if
-     *         CodeCenterApplication Name and CodeCenterApplicationVersion are
-     *         not empty
      */
     public boolean isPluginEnabled() {
         // Checks to make sure the user provided an application name and version
@@ -379,15 +370,6 @@ public class HubMavenReporter extends MavenReporter {
         return true;
     }
 
-    /**
-     *
-     * @param variables
-     *            Map of variables
-     * @param value
-     *            String to check for variables
-     * @return the new Value with the variables replaced
-     * @throws BDJenkinsHubPluginException
-     */
     public String handleVariableReplacement(Map<String, String> variables, String value) throws BDJenkinsHubPluginException {
         if (value != null) {
 

@@ -156,10 +156,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     /**
      * Code from https://github.com/jenkinsci/jenkins/blob/master/core/src/main/java/hudson/model/AbstractItem.java#L602
      *
-     * @throws TransformerException
-     * @throws hudson.model.Descriptor.FormException
-     * @throws SAXException
-     * @throws ParserConfigurationException
      */
     // This global configuration can now be accessed at {jenkinsUrl}/descriptorByName/{package}.{ClassName}/config.xml
     // EX:
@@ -491,10 +487,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
     /**
      * Performs on-the-fly validation of the form field 'serverUrl'.
      *
-     * @param value
-     *            This parameter receives the value that the user has typed.
-     * @return Indicates the outcome of the validation. This is sent to the
-     *         browser.
      */
     public FormValidation doCheckServerUrl(@QueryParameter("serverUrl") String serverUrl)
             throws IOException, ServletException {
@@ -602,12 +594,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * Performs on-the-fly validation of the form field 'hubProjectName'. Checks to see if there is already a project in
      * the Hub with this name.
      *
-     * @param hubProjectName
-     *            This parameter receives the value for the project name
-     * @param hubProjectVersion
-     *            This parameter receives the value for the project version
-     * @return Indicates the outcome of the validation. This is sent to the
-     *         browser.
      */
     public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName,
             @QueryParameter("hubProjectVersion") final String hubProjectVersion) throws IOException, ServletException {
@@ -684,10 +670,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * Performs on-the-fly validation of the form field 'hubProjectVersion'. Checks to see if there is already a project
      * in the Hub with this name.
      *
-     * @param hubProjectVersion
-     *            This parameter receives the value that the user has typed for the Version.
-     * @return Indicates the outcome of the validation. This is sent to the
-     *         browser.
      */
     public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion,
             @QueryParameter("hubProjectName") final String hubProjectName) throws IOException, ServletException {
@@ -788,12 +770,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * Validates that the URL, Username, and Password are correct for connecting to the Hub Server.
      *
      *
-     * @param serverUrl
-     *            String
-     * @param hubCredentialsId
-     *            String
-     * @return FormValidation
-     * @throws ServletException
      */
     public FormValidation doTestConnection(@QueryParameter("hubServerUrl") final String serverUrl,
             @QueryParameter("hubCredentialsId") final String hubCredentialsId, @QueryParameter("hubTimeout") String hubTimeout) {
@@ -883,12 +859,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
      * Creates the Hub project AND/OR version
      *
      *
-     * @param serverUrl
-     *            String
-     * @param hubCredentialsId
-     *            String
-     * @return FormValidation
-     * @throws ServletException
      */
     public FormValidation doCreateHubProject(@QueryParameter("hubProjectName") final String hubProjectName,
             @QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("hubVersionPhase") final String hubVersionPhase,

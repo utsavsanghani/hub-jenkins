@@ -30,10 +30,6 @@ public class ScanJobsDescriptor extends Descriptor<ScanJobs> {
     /**
      * Performs on-the-fly validation of the form field 'scanTarget'.
      *
-     * @param value
-     *            This parameter receives the value that the user has typed.
-     * @return Indicates the outcome of the validation. This is sent to the
-     *         browser.
      */
     public FormValidation doCheckScanTarget(@QueryParameter("scanTarget") String scanTarget)
             throws IOException, ServletException {

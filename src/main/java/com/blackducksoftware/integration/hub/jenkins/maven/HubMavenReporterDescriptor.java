@@ -158,10 +158,6 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
      * project in
      * the Hub with this name.
      *
-     * @param mavenHubProjectName
-     *            This parameter receives the value that the user has typed.
-     * @return Indicates the outcome of the validation. This is sent to the
-     *         browser.
      */
     public FormValidation doCheckMavenHubProjectName(@QueryParameter("mavenHubProjectName") final String mavenHubProjectName,
             @QueryParameter("mavenHubProjectVersion") final String mavenHubProjectVersion) throws IOException, ServletException {
@@ -237,10 +233,6 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
      * project
      * in the Hub with this name.
      *
-     * @param mavenHubProjectVersion
-     *            This parameter receives the value that the user has typed for the Version.
-     * @return Indicates the outcome of the validation. This is sent to the
-     *         browser.
      */
     public FormValidation doCheckMavenHubProjectVersion(@QueryParameter("mavenHubProjectVersion") final String mavenHubProjectVersion,
             @QueryParameter("mavenHubProjectName") final String mavenHubProjectName) throws IOException, ServletException {
@@ -333,12 +325,6 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
      * Creates the Hub project AND/OR version
      *
      *
-     * @param serverUrl
-     *            String
-     * @param hubCredentialsId
-     *            String
-     * @return FormValidation
-     * @throws ServletException
      */
     public FormValidation doCreateMavenHubProject(@QueryParameter("mavenHubProjectName") final String mavenHubProjectName,
             @QueryParameter("mavenHubProjectVersion") final String mavenHubProjectVersion,
@@ -467,10 +453,6 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
     /**
      * Performs on-the-fly validation of the form field 'userScopesToInclude'.
      *
-     * @param value
-     *            This parameter receives the value that the user has typed.
-     * @return Indicates the outcome of the validation. This is sent to the
-     *         browser.
      */
     public FormValidation doCheckUserScopesToInclude(@QueryParameter String value)
             throws IOException, ServletException {

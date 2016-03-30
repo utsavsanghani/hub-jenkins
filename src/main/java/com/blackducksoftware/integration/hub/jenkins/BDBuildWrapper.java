@@ -288,15 +288,6 @@ public abstract class BDBuildWrapper extends BuildWrapper {
         return versionId;
     }
 
-    /**
-     *
-     * @param variables
-     *            Map of variables
-     * @param value
-     *            String to check for variables
-     * @return the new Value with the variables replaced
-     * @throws BDJenkinsHubPluginException
-     */
     public String handleVariableReplacement(Map<String, String> variables, String value) throws BDJenkinsHubPluginException {
         if (value != null) {
 
@@ -315,9 +306,6 @@ public abstract class BDBuildWrapper extends BuildWrapper {
     /**
      * Determine if plugin is enabled
      *
-     * @return true if Code Center server info is complete and if
-     *         CodeCenterApplication Name and CodeCenterApplicationVersion are
-     *         not empty
      */
     public boolean isPluginEnabled() {
         // Checks to make sure the user provided an application name and version

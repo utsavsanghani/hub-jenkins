@@ -62,10 +62,6 @@ public class HubServerInfo implements Serializable {
         return hubCredentialsId;
     }
 
-    /**
-     * @param hubCredentialsId
-     *            the hubCredentialsId to set
-     */
     public void setCredentialsId(String hubCredentialsId) {
         this.hubCredentialsId = hubCredentialsId;
     }

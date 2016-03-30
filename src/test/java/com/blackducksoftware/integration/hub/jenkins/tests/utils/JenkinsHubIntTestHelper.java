@@ -25,10 +25,6 @@ public class JenkinsHubIntTestHelper extends HubIntRestService {
     /**
      * Delete HubProject. For test purposes only!
      *
-     * @param projectId
-     *            String
-     * @return boolean true if deleted successfully
-     * @throws BDRestException
      */
     public boolean deleteHubProject(String projectId) {
         if (StringUtils.isEmpty(projectId)) {

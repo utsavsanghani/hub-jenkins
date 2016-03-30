@@ -46,8 +46,6 @@ public class HubServerInfoSingleton implements Serializable {
     /**
      * Replace the Hub server information object.
      *
-     * @param info
-     *            The object containing the server information.
      */
     public void setServerInfo(HubServerInfo info)
     {

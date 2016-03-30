@@ -106,7 +106,6 @@ public class JenkinsScanExecutor extends ScanExecutor {
      * Should determine the path to the scan status directory within the log directory.
      * This should only be used outside of this class to get the path of the satus directory
      *
-     * @throws IOException
      */
     @Override
     public String getScanStatusDirectoryPath() throws IOException {

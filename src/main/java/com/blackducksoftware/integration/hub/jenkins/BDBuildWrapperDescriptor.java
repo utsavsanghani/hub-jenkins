@@ -157,10 +157,6 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
      * project in
      * the Hub with this name.
      *
-     * @param hubWrapperProjectName
-     *            This parameter receives the value that the user has typed.
-     * @return Indicates the outcome of the validation. This is sent to the
-     *         browser.
      */
     public FormValidation doCheckHubWrapperProjectName(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
             @QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion) throws IOException, ServletException {
@@ -236,10 +232,6 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
      * project
      * in the Hub with this name.
      *
-     * @param hubWrapperProjectVersion
-     *            This parameter receives the value that the user has typed for the Version.
-     * @return Indicates the outcome of the validation. This is sent to the
-     *         browser.
      */
     public FormValidation doCheckHubWrapperProjectVersion(@QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion,
             @QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName) throws IOException, ServletException {
@@ -332,12 +324,6 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
      * Creates the Hub project AND/OR version
      *
      *
-     * @param serverUrl
-     *            String
-     * @param hubCredentialsId
-     *            String
-     * @return FormValidation
-     * @throws ServletException
      */
     public FormValidation doCreateHubWrapperProject(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
             @QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion,
@@ -469,10 +455,6 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
     /**
      * Performs on-the-fly validation of the form field 'userScopesToInclude'.
      *
-     * @param value
-     *            This parameter receives the value that the user has typed.
-     * @return Indicates the outcome of the validation. This is sent to the
-     *         browser.
      */
     public FormValidation doCheckUserScopesToInclude(@QueryParameter String value)
             throws IOException, ServletException {

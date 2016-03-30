@@ -8,29 +8,25 @@ public class BuildInfoAction implements Action {
 
     private BuildInfo buildInfo;
 
+    @Override
     public String getIconFileName() {
         return null;
     }
 
+    @Override
     public String getDisplayName() {
         return "Temp build info Action";
     }
 
+    @Override
     public String getUrlName() {
         return null;
     }
 
-    /**
-     * @return the buildInfo
-     */
     public BuildInfo getBuildInfo() {
         return buildInfo;
     }
 
-    /**
-     * @param buildInfo
-     *            the buildInfo to set
-     */
     public void setBuildInfo(BuildInfo buildInfo) {
         this.buildInfo = buildInfo;
     }

@@ -108,8 +108,6 @@ public class BlackDuckHubUpdateSite extends UpdateSite {
     /**
      * Sets the data timestamp (and tries to propagate the change to {@link UpdateSite#dataTimestamp}
      *
-     * @param dataTimestamp
-     *            the new data timestamp.
      */
     private void setDataTimestamp(long dataTimestamp) {
         try {

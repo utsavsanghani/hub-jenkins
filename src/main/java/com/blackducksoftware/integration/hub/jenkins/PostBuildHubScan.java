@@ -253,15 +253,6 @@ public class PostBuildHubScan extends Recorder {
      * Overrides the Recorder perform method. This is the method that gets called by Jenkins to run as a Post Build
      * Action
      *
-     * @param build
-     *            AbstractBuild
-     * @param launcher
-     *            Launcher
-     * @param listener
-     *            BuildListener
-     *
-     * @throws IOException
-     * @throws InterruptedException
      */
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
@@ -388,8 +379,7 @@ public class PostBuildHubScan extends Recorder {
                             logger.getJenkinsListener());
 
                     DateTime beforeScanTime = new DateTime();
-                    runScan(service, build, scan, logger, scanExec, jrePath, oneJarPath, scanTargets, projectName, projectVersion,
-                            hubSupport);
+                    runScan(service, build, scan, logger, scanExec, jrePath, oneJarPath, scanTargets, projectName, projectVersion);
                     DateTime afterScanTime = new DateTime();
 
                     if (getResult().equals(Result.SUCCESS) && getShouldGenerateHubReport()) {
@@ -519,15 +509,6 @@ public class PostBuildHubScan extends Recorder {
         return versionId;
     }
 
-    /**
-     *
-     * @param variables
-     *            Map of variables
-     * @param value
-     *            String to check for variables
-     * @return the new Value with the variables replaced
-     * @throws BDJenkinsHubPluginException
-     */
     public String handleVariableReplacement(Map<String, String> variables, String value) throws BDJenkinsHubPluginException {
         if (value != null) {
 
@@ -594,7 +575,7 @@ public class PostBuildHubScan extends Recorder {
     private void runScan(HubIntRestService service, AbstractBuild<?, ?> build, JenkinsScanExecutor scan, HubJenkinsLogger logger,
             String scanExec, String javaExec, String oneJarPath,
             List<String> scanTargets,
-            String projectName, String versionName, HubSupportHelper hubSupport)
+            String projectName, String versionName)
             throws IOException, HubConfigurationException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException
     {
         validateScanTargets(logger, scanTargets, build.getBuiltOn().getChannel());
