@@ -74,15 +74,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.cloudbees.plugins.credentials.matchers.IdMatcher;
 
-/**
- * Descriptor for {@link PostBuildHubScan}. Used as a singleton. The
- * class is marked as public so that it can be accessed from views.
- *
- * <p>
- * See <tt>src/main/resources/hudson/plugins/hello_world/HelloWorldBuilder/*.jelly</tt> for the actual HTML fragment for
- * the configuration screen.
- */
-@Extension
+@Extension(ordinal = 2)
 // This indicates to Jenkins that this is an implementation of an extension
 // point.
 public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> implements Serializable {

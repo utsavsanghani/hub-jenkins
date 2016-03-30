@@ -20,7 +20,7 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 
-@Extension
+@Extension(ordinal = 1)
 public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publisher> implements Serializable {
 
     public HubFailureConditionStepDescriptor() {
