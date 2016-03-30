@@ -33,6 +33,8 @@ import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.HubScanJobConfig;
+import com.blackducksoftware.integration.hub.HubScanJobConfigBuilder;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
@@ -64,11 +66,6 @@ import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
 
 public class PostBuildHubScan extends Recorder {
 
-    public static final int DEFAULT_MEMORY = 4096;
-
-    // Default wait 5 minutes for the report
-    public static final long DEFAULT_REPORT_WAIT_TIME = 5;
-
     private final ScanJobs[] scans;
 
     protected final boolean sameAsBuildWrapper;
@@ -85,13 +82,13 @@ public class PostBuildHubScan extends Recorder {
     // need to keep this around for now for migration purposes
     private String hubProjectRelease;
 
-    private final Integer scanMemory;
+    private final String scanMemory;
 
     protected final boolean shouldGenerateHubReport;
 
-    protected final long reportMaxiumWaitTime;
+    protected final String reportMaxiumWaitTime;
 
-    private transient FilePath workingDirectory;
+    private transient String workingDirectory;
 
     private transient Result result;
 
@@ -103,52 +100,13 @@ public class PostBuildHubScan extends Recorder {
             String scanMemory, boolean shouldGenerateHubReport, String reportMaxiumWaitTime) {
         this.scans = scans;
         this.sameAsBuildWrapper = sameAsBuildWrapper;
-        if (StringUtils.isNotBlank(hubProjectName)) {
-            this.hubProjectName = hubProjectName.trim();
-        } else {
-            this.hubProjectName = null;
-        }
-        if (StringUtils.isNotBlank(hubProjectVersion)) {
-            this.hubProjectVersion = hubProjectVersion.trim();
-        } else {
-            this.hubProjectVersion = null;
-        }
+        this.hubProjectName = hubProjectName;
+        this.hubProjectVersion = hubProjectVersion;
         this.hubVersionPhase = hubVersionPhase;
         this.hubVersionDist = hubVersionDist;
-        Integer memory;
-        try {
-            memory = Integer.valueOf(scanMemory);
-            if (memory == 0) {
-                memory = DEFAULT_MEMORY;
-            }
-        } catch (NumberFormatException e) {
-            memory = DEFAULT_MEMORY;
-        }
-
-        this.scanMemory = memory;
-
-        if (StringUtils.isBlank(hubProjectName) || StringUtils.isBlank(hubProjectVersion)) {
-            // Dont want to generate the report if they have not provided a Project name or version
-            this.shouldGenerateHubReport = false;
-        } else {
-            this.shouldGenerateHubReport = shouldGenerateHubReport;
-        }
-
-        Long longValueWaitTime;
-
-        try {
-            // maxiumWaitTimeForBomUpdate needs to be a String because the UI stores a string on save
-            longValueWaitTime = Long.valueOf(reportMaxiumWaitTime);
-            if (longValueWaitTime == 0) {
-                longValueWaitTime = DEFAULT_REPORT_WAIT_TIME;
-            }
-        } catch (NumberFormatException e) {
-            // Ignore the exception here, use the default value instead;
-            longValueWaitTime = DEFAULT_REPORT_WAIT_TIME;
-        }
-
-        this.reportMaxiumWaitTime = longValueWaitTime;
-
+        this.scanMemory = scanMemory;
+        this.shouldGenerateHubReport = shouldGenerateHubReport;
+        this.reportMaxiumWaitTime = reportMaxiumWaitTime;
     }
 
     public void setverbose(boolean verbose) {
@@ -175,7 +133,7 @@ public class PostBuildHubScan extends Recorder {
     }
 
     public String getDefaultMemory() {
-        return String.valueOf(DEFAULT_MEMORY);
+        return String.valueOf(HubScanJobConfigBuilder.DEFAULT_MEMORY_IN_MEGABYTES);
     }
 
     public String getScanMemory() {
@@ -183,20 +141,11 @@ public class PostBuildHubScan extends Recorder {
     }
 
     public String getReportMaxiumWaitTime() {
-        // need to return a String for the Ui to display correctly
-        if (reportMaxiumWaitTime == 0) {
-            return getDefaultReportWaitTime();
-        }
-        return String.valueOf(reportMaxiumWaitTime);
+        return reportMaxiumWaitTime;
     }
 
     public String getDefaultReportWaitTime() {
-        return String.valueOf(DEFAULT_REPORT_WAIT_TIME);
-    }
-
-    public long getConvertedReportMaxiumWaitTime() {
-        // Converts the minutes that the User set to milliseconds
-        return reportMaxiumWaitTime * 1000 * 60;
+        return String.valueOf(HubScanJobConfigBuilder.DEFAULT_REPORT_WAIT_TIME_IN_MINUTES);
     }
 
     public String getHubProjectVersion() {
@@ -226,12 +175,12 @@ public class PostBuildHubScan extends Recorder {
         return scans;
     }
 
-    public FilePath getWorkingDirectory() {
+    public String getWorkingDirectory() {
         return workingDirectory;
     }
 
-    private void setWorkingDirectory(VirtualChannel channel, String workingDirectory) {
-        this.workingDirectory = new FilePath(channel, workingDirectory);
+    private void setWorkingDirectory(String workingDirectory) {
+        this.workingDirectory = workingDirectory;
     }
 
     // http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
@@ -280,29 +229,61 @@ public class PostBuildHubScan extends Recorder {
                 }
                 logger.info("Hub Plugin running on machine : " + localHostName);
 
-                if (validateConfiguration()) {
-                    // This set the base of the scan Target, DO NOT remove this or the user will be able to specify any
-                    // file even outside of the Jenkins directories
-                    File workspace = null;
-                    if (build.getWorkspace() == null) {
-                        // might be using custom workspace
-                        workspace = new File(build.getProject().getCustomWorkspace());
-                    } else {
-                        workspace = new File(build.getWorkspace().getRemote());
-                    }
+                if (validateGlobalConfiguration()) {
                     String workingDirectory = "";
                     try {
-                        workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(workspace));
+                        if (build.getWorkspace() == null) {
+                            // might be using custom workspace
+                            workingDirectory = build.getProject().getCustomWorkspace();
+                        } else {
+                            workingDirectory = build.getWorkspace().getRemote();
+                        }
+
+                        workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(new File(workingDirectory)));
                     } catch (IOException e) {
                         logger.error("Problem getting the working directory on this node. Error : " + e.getMessage(), e);
                     }
+                    setWorkingDirectory(workingDirectory);
                     logger.info("Node workspace " + workingDirectory);
-                    VirtualChannel remotingChannel = build.getBuiltOn().getChannel();
-                    setWorkingDirectory(remotingChannel, workingDirectory);
-                    EnvVars variables = build.getEnvironment(listener);
-                    List<String> scanTargets = new ArrayList<String>();
 
+                    EnvVars variables = build.getEnvironment(listener);
+
+                    List<String> scanTargetPaths = new ArrayList<String>();
                     ScanJobs[] scans = getScans();
+                    if (scans == null || scans.length == 0) {
+                        scanTargetPaths.add(getWorkingDirectory());
+                    } else {
+                        for (ScanJobs scanJob : scans) {
+                            if (StringUtils.isEmpty(scanJob.getScanTarget())) {
+                                scanTargetPaths.add(getWorkingDirectory());
+                            } else {
+                                String target = handleVariableReplacement(variables, scanJob.getScanTarget().trim());
+                                // make sure the target provided doesn't already begin with a slash or end in a slash
+                                // removes the slash if the target begins or ends with one
+                                File targetFile = new File(getWorkingDirectory(), target);
+
+                                try {
+                                    target = build.getBuiltOn().getChannel().call(new GetCanonicalPath(targetFile));
+                                } catch (IOException e) {
+                                    logger.error("Problem getting the real path of the target : " + target + " on this node. Error : " + e.getMessage(), e);
+                                }
+                                scanTargetPaths.add(target);
+                            }
+                        }
+                    }
+
+                    String scanTargetParameter = getParameter(HubConstantValues.HUB_SCAN_TARGETS);
+                    if (StringUtils.isNotBlank(scanTargetParameter)) {
+                        String[] scanTargetPathsArray = scanTargetParameter.split("\\r?\\n");
+                        for (String target : scanTargetPathsArray) {
+                            if (!StringUtils.isBlank(target)) {
+                                scanTargetPaths.add(new File(workingDirectory, target).getAbsolutePath());
+                            }
+                        }
+                    } else {
+                        scanTargetPaths.add(workingDirectory.getAbsolutePath());
+                    }
+
                     if (scans == null) {
                         // They deleted all the scan targets in the Job config and then saved,
                         // So the ScanJobs[] will be null
@@ -339,6 +320,19 @@ public class PostBuildHubScan extends Recorder {
                         projectVersion = handleVariableReplacement(variables, getHubProjectVersion());
 
                     }
+                    HubScanJobConfigBuilder hubScanJobConfigBuilder = new HubScanJobConfigBuilder();
+                    hubScanJobConfigBuilder.setProjectName(projectName);
+                    hubScanJobConfigBuilder.setVersion(projectVersion);
+                    hubScanJobConfigBuilder.setPhase(getHubVersionPhase());
+                    hubScanJobConfigBuilder.setDistribution(getHubVersionDist());
+                    hubScanJobConfigBuilder.setWorkingDirectory(getWorkingDirectory());
+                    hubScanJobConfigBuilder.setShouldGenerateRiskReport(getShouldGenerateHubReport());
+                    hubScanJobConfigBuilder.setMaxWaitTimeForRiskReport(getReportMaxiumWaitTime());
+                    hubScanJobConfigBuilder.setScanMemory(getScanMemory());
+                    hubScanJobConfigBuilder.addAllScanTargetPaths(scanTargetPaths);
+
+                    HubScanJobConfig jobConfig = hubScanJobConfigBuilder.build(logger);
+
                     printConfiguration(build, logger, projectName, projectVersion, scanTargets, getShouldGenerateHubReport(),
                             getConvertedReportMaxiumWaitTime());
 
@@ -782,7 +776,7 @@ public class PostBuildHubScan extends Recorder {
      * URL, a Credential, and that there are at least one scan Target/Job defined in the Build
      *
      */
-    public boolean validateConfiguration() throws HubScanToolMissingException,
+    public boolean validateGlobalConfiguration() throws HubScanToolMissingException,
             HubConfigurationException {
 
         if (getHubServerInfo() == null) {
