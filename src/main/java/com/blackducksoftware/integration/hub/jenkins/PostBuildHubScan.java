@@ -175,13 +175,6 @@ public class PostBuildHubScan extends Recorder {
 		return scans;
 	}
 
-	public String getWorkingDirectory() {
-		return workingDirectory;
-	}
-
-	private void setWorkingDirectory(final String workingDirectory) {
-		this.workingDirectory = workingDirectory;
-	}
 
 	// http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
 	@Override
@@ -213,64 +206,14 @@ public class PostBuildHubScan extends Recorder {
 			try {
 				logger.info("Starting BlackDuck Scans...");
 
-				String localHostName = "";
-				try {
-					localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
-				} catch (final IOException e) {
-					// logger.error("Problem getting the Local Host name : " + e.getMessage(), e);
-					// ignore the error, try to get the host name from the network interfaces
-				}
-				if (StringUtils.isBlank(localHostName)) {
-					try {
-						localHostName = build.getBuiltOn().getChannel().call(new GetHostNameFromNetworkInterfaces());
-					} catch (final IOException e) {
-						logger.error("Problem getting the Local Host name : " + e.getMessage(), e);
-					}
-				}
-				logger.info("Hub Plugin running on machine : " + localHostName);
+				final String localHostName = getLocalHostName(logger, build);
 
 				if (validateGlobalConfiguration()) {
-					String workingDirectory = "";
-					try {
-						if (build.getWorkspace() == null) {
-							// might be using custom workspace
-							workingDirectory = build.getProject().getCustomWorkspace();
-						} else {
-							workingDirectory = build.getWorkspace().getRemote();
-						}
-
-						workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(new File(workingDirectory)));
-					} catch (final IOException e) {
-						logger.error("Problem getting the working directory on this node. Error : " + e.getMessage(), e);
-					}
-					setWorkingDirectory(workingDirectory);
-					logger.info("Node workspace " + workingDirectory);
+					final String workingDirectory = getWorkingDirectory(logger, build);
 
 					final EnvVars variables = build.getEnvironment(listener);
 
-					final List<String> scanTargetPaths = new ArrayList<String>();
-					final ScanJobs[] scans = getScans();
-					if (scans == null || scans.length == 0) {
-						scanTargetPaths.add(getWorkingDirectory());
-					} else {
-						for (final ScanJobs scanJob : scans) {
-							if (StringUtils.isEmpty(scanJob.getScanTarget())) {
-								scanTargetPaths.add(getWorkingDirectory());
-							} else {
-								String target = handleVariableReplacement(variables, scanJob.getScanTarget().trim());
-								// make sure the target provided doesn't already begin with a slash or end in a slash
-								// removes the slash if the target begins or ends with one
-								final File targetFile = new File(getWorkingDirectory(), target);
-
-								try {
-									target = build.getBuiltOn().getChannel().call(new GetCanonicalPath(targetFile));
-								} catch (final IOException e) {
-									logger.error("Problem getting the real path of the target : " + target + " on this node. Error : " + e.getMessage(), e);
-								}
-								scanTargetPaths.add(target);
-							}
-						}
-					}
+					final List<String> scanTargetPaths =getScanTargets(logger, build, variables, workingDirectory);
 
 					String projectName = null;
 					String projectVersion = null;
@@ -285,7 +228,7 @@ public class PostBuildHubScan extends Recorder {
 					hubScanJobConfigBuilder.setVersion(projectVersion);
 					hubScanJobConfigBuilder.setPhase(getHubVersionPhase());
 					hubScanJobConfigBuilder.setDistribution(getHubVersionDist());
-					hubScanJobConfigBuilder.setWorkingDirectory(getWorkingDirectory());
+					hubScanJobConfigBuilder.setWorkingDirectory(workingDirectory);
 					hubScanJobConfigBuilder.setShouldGenerateRiskReport(getShouldGenerateHubReport());
 					hubScanJobConfigBuilder.setMaxWaitTimeForRiskReport(getReportMaxiumWaitTime());
 					hubScanJobConfigBuilder.setScanMemory(getScanMemory());
@@ -358,6 +301,9 @@ public class PostBuildHubScan extends Recorder {
 			} catch (final BDJenkinsHubPluginException e) {
 				logger.error(e.getMessage(), e);
 				setResult(Result.UNSTABLE);
+			} catch (final HubIntegrationException e) {
+				logger.error(e.getMessage(), e);
+				setResult(Result.UNSTABLE);
 			} catch (final Exception e) {
 				String message;
 				if (e.getMessage() != null && e.getMessage().contains("Project could not be found")) {
@@ -391,12 +337,104 @@ public class PostBuildHubScan extends Recorder {
 		return true;
 	}
 
+	public String getLocalHostName(final IntLogger logger, final AbstractBuild<?,?> build) throws InterruptedException{
+		String localHostName = "";
+		try {
+			localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
+		} catch (final IOException e) {
+			// logger.error("Problem getting the Local Host name : " + e.getMessage(), e);
+			// ignore the error, try to get the host name from the network interfaces
+		}
+		if (StringUtils.isBlank(localHostName)) {
+			try {
+				localHostName = build.getBuiltOn().getChannel().call(new GetHostNameFromNetworkInterfaces());
+			} catch (final IOException e) {
+				logger.error("Problem getting the Local Host name : " + e.getMessage(), e);
+			}
+		}
+		logger.info("Hub Plugin running on machine : " + localHostName);
+		return localHostName;
+	}
+
+	public String getWorkingDirectory(final IntLogger logger, final AbstractBuild<?,?> build) throws InterruptedException {
+		String workingDirectory = "";
+		try {
+			if (build.getWorkspace() == null) {
+				// might be using custom workspace
+				workingDirectory = build.getProject().getCustomWorkspace();
+			} else {
+				workingDirectory = build.getWorkspace().getRemote();
+			}
+
+			workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(new File(workingDirectory)));
+		} catch (final IOException e) {
+			logger.error("Problem getting the working directory on this node. Error : " + e.getMessage(), e);
+		}
+		logger.info("Node workspace " + workingDirectory);
+		return workingDirectory;
+	}
+
+	public List<String> getScanTargets(final IntLogger logger, final AbstractBuild<?,?> build, final EnvVars variables, final String workingDirectory) throws BDJenkinsHubPluginException, InterruptedException{
+		final List<String> scanTargetPaths = new ArrayList<String>();
+		final ScanJobs[] scans = getScans();
+		if (scans == null || scans.length == 0) {
+			scanTargetPaths.add(workingDirectory);
+		} else {
+			for (final ScanJobs scanJob : scans) {
+				if (StringUtils.isEmpty(scanJob.getScanTarget())) {
+					scanTargetPaths.add(workingDirectory);
+				} else {
+					String target = handleVariableReplacement(variables, scanJob.getScanTarget().trim());
+					// make sure the target provided doesn't already begin with a slash or end in a slash
+					// removes the slash if the target begins or ends with one
+					final File targetFile = new File(workingDirectory, target);
+
+					try {
+						target = build.getBuiltOn().getChannel().call(new GetCanonicalPath(targetFile));
+					} catch (final IOException e) {
+						logger.error("Problem getting the real path of the target : " + target + " on this node. Error : " + e.getMessage(), e);
+					}
+					scanTargetPaths.add(target);
+				}
+			}
+		}
+		return scanTargetPaths;
+	}
+
 	private void generateHubReport(final AbstractBuild<?, ?> build, final HubJenkinsLogger logger, final HubReportGenerationInfo reportGenInfo,final HubServerInfo serverInfo,
 			final HubSupportHelper hubSupport)
 					throws Exception {
 		final HubReportAction reportAction = new HubReportAction(build);
+		final RemoteBomGenerator remoteBomGenerator = new RemoteBomGenerator(logger, reportGenInfo, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), hubSupport);
+		final Jenkins jenkins = Jenkins.getInstance();
+		if (jenkins != null) {
+			final ProxyConfiguration proxyConfig = jenkins.proxy;
+			if (proxyConfig != null) {
 
-		final RemoteBomGenerator remoteBomGenerator = new RemoteBomGenerator(logger, reportGenInfo,serverInfo, hubSupport);
+				final URL serverUrl = new URL(getHubServerInfo().getServerUrl());
+
+				final Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name, proxyConfig.port,
+						proxyConfig.noProxyHost);
+
+				if (proxy != Proxy.NO_PROXY && proxy.address() != null) {
+					final InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
+					if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
+						if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
+							remoteBomGenerator.setProxyHost(proxyAddress.getHostName());
+							remoteBomGenerator.setProxyPort(proxyAddress.getPort());
+							remoteBomGenerator.setProxyUsername(jenkins.proxy.getUserName());
+							remoteBomGenerator.setProxyPassword(jenkins.proxy.getPassword());
+						} else {
+							remoteBomGenerator.setProxyHost(proxyAddress.getHostName());
+							remoteBomGenerator.setProxyPort(proxyAddress.getPort());
+						}
+						if (logger != null) {
+							logger.debug("Using proxy: '" + proxyAddress.getHostName() + "' at Port: '" + proxyAddress.getPort() + "'");
+						}
+					}
+				}
+			}
+		}
 
 		reportAction.setReportData(build.getBuiltOn().getChannel().call(remoteBomGenerator));
 
@@ -533,7 +571,7 @@ public class PostBuildHubScan extends Recorder {
 			final HubScanJobConfig jobConfig)
 					throws IOException, HubConfigurationException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException
 	{
-		validateScanTargets(logger, jobConfig.getScanTargetPaths(), build.getBuiltOn().getChannel());
+		validateScanTargets(logger, jobConfig.getScanTargetPaths(),jobConfig.getWorkingDirectory(), build.getBuiltOn().getChannel());
 		scan.setLogger(logger);
 		addProxySettingsToScanner(logger, scan);
 
@@ -761,13 +799,13 @@ public class PostBuildHubScan extends Recorder {
 	 * Validates that all scan targets exist
 	 *
 	 */
-	public boolean validateScanTargets(final IntLogger logger, final List<String> scanTargets, final VirtualChannel channel) throws IOException,
+	public boolean validateScanTargets(final IntLogger logger, final List<String> scanTargets, final String workingDirectory, final VirtualChannel channel) throws IOException,
 	HubConfigurationException,
 	InterruptedException {
 		for (final String currTarget : scanTargets) {
 
-			if (currTarget.length() <= getWorkingDirectory().length()
-					&& !getWorkingDirectory().equals(currTarget) && !currTarget.contains(getWorkingDirectory())) {
+			if (currTarget.length() <= workingDirectory.length()
+					|| !currTarget.startsWith(workingDirectory)) {
 				throw new HubConfigurationException("Can not scan targets outside of the workspace.");
 			}
 
