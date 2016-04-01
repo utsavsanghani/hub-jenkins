@@ -28,14 +28,18 @@ import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
+import com.blackducksoftware.integration.hub.jenkins.bom.RemoteHubEventPolling;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.logging.IntLogger;
+import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatus;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatusEnum;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
+import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
-import com.blackducksoftware.integration.hub.logging.LogLevel;
 
 public class HubFailureConditionStep extends Recorder {
 
@@ -108,6 +112,10 @@ public class HubFailureConditionStep extends Recorder {
 		try {
 			final HubIntRestService restService = getHubIntRestService(logger, serverInfo);
 
+			final HubSupportHelper hubSupport = getDescriptor().getCheckedHubSupportHelper();
+
+			waitForBomToBeUpdated(build, logger, restService, hubSupport);
+
 			final EnvVars variables = build.getEnvironment(listener);
 
 			final String projectName = handleVariableReplacement(variables, hubScanStep.getHubProjectName());
@@ -124,7 +132,6 @@ public class HubFailureConditionStep extends Recorder {
 				return true;
 			}
 
-			final HubSupportHelper hubSupport = getDescriptor().getCheckedHubSupportHelper();
 
 			if (!hubSupport.isPolicyApiSupport()) {
 				logger.error("This version of the Hub does not have support for Policies.");
@@ -238,6 +245,36 @@ public class HubFailureConditionStep extends Recorder {
 	BDRestException, URISyntaxException, BDJenkinsHubPluginException, HubIntegrationException {
 		return BuildHelper.getRestService(logger, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(),
 				serverInfo.getTimeout());
+	}
+
+	public void waitForBomToBeUpdated(final AbstractBuild<?,?> build, final IntLogger logger, final HubIntRestService service, final HubSupportHelper supportHelper) throws BDJenkinsHubPluginException, InterruptedException, BDRestException, HubIntegrationException, URISyntaxException, IOException{
+		final BomUpToDateAction action = build.getAction(BomUpToDateAction.class);
+		if(action == null){
+			throw new BDJenkinsHubPluginException("Could not find the BomUpToDateAction in the Hub Failure Conditions. Make sure the Hub scan was run before the Failure Conditions.");
+		}
+
+
+		final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
+		reportGenInfo.setService(service);
+		reportGenInfo.setHostname(action.getLocalHostName());
+		reportGenInfo.setScanTargets(action.getScanTargets());
+
+		reportGenInfo.setMaximumWaitTime(action.getMaxWaitTime());
+
+		reportGenInfo.setBeforeScanTime(action.getBeforeScanTime());
+		reportGenInfo.setAfterScanTime(action.getAfterScanTime());
+
+		reportGenInfo.setScanStatusDirectory(action.getScanStatusDirectory());
+
+		final RemoteHubEventPolling hubEventPolling = new RemoteHubEventPolling(service, build.getBuiltOn().getChannel());
+
+		if (supportHelper.isCliStatusDirOptionSupport()) {
+			hubEventPolling.assertBomUpToDate(reportGenInfo, logger);
+		} else {
+			hubEventPolling.assertBomUpToDate(reportGenInfo);
+		}
+
+
 	}
 
 }

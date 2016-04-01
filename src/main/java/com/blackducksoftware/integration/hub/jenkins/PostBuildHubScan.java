@@ -39,6 +39,7 @@ import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
+import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
 import com.blackducksoftware.integration.hub.jenkins.bom.RemoteBomGenerator;
@@ -87,8 +88,6 @@ public class PostBuildHubScan extends Recorder {
 	protected final boolean shouldGenerateHubReport;
 
 	protected final String reportMaxiumWaitTime;
-
-	private transient String workingDirectory;
 
 	private transient Result result;
 
@@ -280,6 +279,8 @@ public class PostBuildHubScan extends Recorder {
 					runScan(service, build, scan, logger, scanExec, jrePath, oneJarPath, jobConfig);
 					final DateTime afterScanTime = new DateTime();
 
+
+					final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
 					if (getResult().equals(Result.SUCCESS) && getShouldGenerateHubReport()) {
 
 						final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
@@ -296,8 +297,18 @@ public class PostBuildHubScan extends Recorder {
 
 						reportGenInfo.setScanStatusDirectory(scan.getScanStatusDirectoryPath());
 
-						generateHubReport(build, logger, reportGenInfo,getHubServerInfo(), hubSupport);
+						generateHubReport(build, logger, reportGenInfo,getHubServerInfo(), hubSupport, bomUpdatedAction);
+					} else{
+						bomUpdatedAction.setHasBomBeenUdpated(false);
+						bomUpdatedAction.setAfterScanTime(afterScanTime);
+						bomUpdatedAction.setBeforeScanTime(beforeScanTime);
+						bomUpdatedAction.setLocalHostName(localHostName);
+						bomUpdatedAction.setMaxWaitTime(jobConfig.getMaxWaitTimeForRiskReportInMilliseconds());
+						bomUpdatedAction.setScanStatusDirectory(scan.getScanStatusDirectoryPath());
+						bomUpdatedAction.setScanTargets(jobConfig.getScanTargetPaths());
 					}
+
+					build.addAction(bomUpdatedAction);
 				}
 			} catch (final BDJenkinsHubPluginException e) {
 				logger.error(e.getMessage(), e);
@@ -403,12 +414,13 @@ public class PostBuildHubScan extends Recorder {
 	}
 
 	private void generateHubReport(final AbstractBuild<?, ?> build, final HubJenkinsLogger logger, final HubReportGenerationInfo reportGenInfo,final HubServerInfo serverInfo,
-			final HubSupportHelper hubSupport)
+			final HubSupportHelper hubSupport, final BomUpToDateAction action)
 					throws Exception {
 		final HubReportAction reportAction = new HubReportAction(build);
 		final RemoteBomGenerator remoteBomGenerator = new RemoteBomGenerator(reportGenInfo, hubSupport, build.getBuiltOn().getChannel());
 
 		reportAction.setReportData(remoteBomGenerator.generateHubReport(logger));
+		action.setHasBomBeenUdpated(true);
 	}
 
 	private String ensureProjectExists(final HubIntRestService service, final IntLogger logger, final String projectName, final String projectVersion)
