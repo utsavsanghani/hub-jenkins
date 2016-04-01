@@ -54,14 +54,11 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
-import com.blackducksoftware.integration.hub.HubScanJobConfigBuilder;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
-import com.blackducksoftware.integration.hub.logging.BufferedLogger;
-import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.blackducksoftware.integration.hub.project.api.AutoCompleteItem;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.version.api.DistributionEnum;
@@ -301,50 +298,26 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	}
 
 
-	private FormValidation getResponseFromBufferedLogger(final BufferedLogger logger){
-
-		final String errorOutput = logger.getOutputString(LogLevel.ERROR);
-		if(StringUtils.isNotBlank(errorOutput)){
-			return FormValidation.error(errorOutput);
-		}
-
-		final String warnOutput = logger.getOutputString(LogLevel.WARN);
-		if(StringUtils.isNotBlank(warnOutput)){
-			return FormValidation.warning(warnOutput);
-		}
-
-		return FormValidation.ok();
-	}
 
 	public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") final String scanMemory)
 			throws IOException, ServletException {
 
-		final BufferedLogger logger = new BufferedLogger();
+		if (scanMemory.length() == 0) {
+			return FormValidation.error(Messages
+					.HubBuildScan_getNeedMemory());
+		}
 
-		final HubScanJobConfigBuilder hubScanJobConfigBuilder = new HubScanJobConfigBuilder();
+		try {
+			final Integer scanMem = Integer.valueOf(scanMemory);
+			if (scanMem < 256) {
+				return FormValidation.error(Messages.HubBuildScan_getInvalidMemoryString());
+			}
+		} catch (final NumberFormatException e) {
+			return FormValidation.error(e, Messages
+					.HubBuildScan_getInvalidMemoryString());
+		}
 
-		hubScanJobConfigBuilder.setScanMemory(scanMemory);
-
-		hubScanJobConfigBuilder.validateScanMemory(logger);
-
-		return getResponseFromBufferedLogger(logger);
-
-		//		if (scanMemory.length() == 0) {
-		//			return FormValidation.error(Messages
-		//					.HubBuildScan_getNeedMemory());
-		//		}
-		//
-		//		try {
-		//			final Integer scanMem = Integer.valueOf(scanMemory);
-		//			if (scanMem < 256) {
-		//				return FormValidation.error(Messages.HubBuildScan_getInvalidMemoryString());
-		//			}
-		//		} catch (final NumberFormatException e) {
-		//			return FormValidation.error(e, Messages
-		//					.HubBuildScan_getInvalidMemoryString());
-		//		}
-		//
-		//		return FormValidation.ok();
+		return FormValidation.ok();
 	}
 
 	public FormValidation doCheckReportMaxiumWaitTime(@QueryParameter("shouldGenerateHubReport") final boolean shouldGenerateHubReport,

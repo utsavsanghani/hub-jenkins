@@ -41,6 +41,7 @@ import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
+import com.blackducksoftware.integration.hub.jenkins.bom.RemoteBomGenerator;
 import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstallation;
 import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstaller;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
@@ -57,12 +58,11 @@ import com.blackducksoftware.integration.hub.jenkins.remote.GetHostNameFromNetwo
 import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetOneJarFile;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
-import com.blackducksoftware.integration.hub.jenkins.remote.RemoteBomGenerator;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
-import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
-import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.logging.LogLevel;
+import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
+import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 
 public class PostBuildHubScan extends Recorder {
 
@@ -283,6 +283,7 @@ public class PostBuildHubScan extends Recorder {
 					if (getResult().equals(Result.SUCCESS) && getShouldGenerateHubReport()) {
 
 						final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
+						reportGenInfo.setService(service);
 						reportGenInfo.setHostname(localHostName);
 						reportGenInfo.setProjectId(projectId);
 						reportGenInfo.setVersionId(versionId);
@@ -405,40 +406,9 @@ public class PostBuildHubScan extends Recorder {
 			final HubSupportHelper hubSupport)
 					throws Exception {
 		final HubReportAction reportAction = new HubReportAction(build);
-		final RemoteBomGenerator remoteBomGenerator = new RemoteBomGenerator(logger, reportGenInfo, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), hubSupport);
-		final Jenkins jenkins = Jenkins.getInstance();
-		if (jenkins != null) {
-			final ProxyConfiguration proxyConfig = jenkins.proxy;
-			if (proxyConfig != null) {
+		final RemoteBomGenerator remoteBomGenerator = new RemoteBomGenerator(reportGenInfo, hubSupport, build.getBuiltOn().getChannel());
 
-				final URL serverUrl = new URL(getHubServerInfo().getServerUrl());
-
-				final Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name, proxyConfig.port,
-						proxyConfig.noProxyHost);
-
-				if (proxy != Proxy.NO_PROXY && proxy.address() != null) {
-					final InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
-					if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
-						if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
-							remoteBomGenerator.setProxyHost(proxyAddress.getHostName());
-							remoteBomGenerator.setProxyPort(proxyAddress.getPort());
-							remoteBomGenerator.setProxyUsername(jenkins.proxy.getUserName());
-							remoteBomGenerator.setProxyPassword(jenkins.proxy.getPassword());
-						} else {
-							remoteBomGenerator.setProxyHost(proxyAddress.getHostName());
-							remoteBomGenerator.setProxyPort(proxyAddress.getPort());
-						}
-						if (logger != null) {
-							logger.debug("Using proxy: '" + proxyAddress.getHostName() + "' at Port: '" + proxyAddress.getPort() + "'");
-						}
-					}
-				}
-			}
-		}
-
-		reportAction.setReportData(build.getBuiltOn().getChannel().call(remoteBomGenerator));
-
-		build.addAction(reportAction);
+		reportAction.setReportData(remoteBomGenerator.generateHubReport(logger));
 	}
 
 	private String ensureProjectExists(final HubIntRestService service, final IntLogger logger, final String projectName, final String projectVersion)
