@@ -109,22 +109,22 @@ public class PostBuildHubScanUnitTest {
 		assertNull(pbScan.getHubVersionDist());
 		assertNull(pbScan.getScanMemory());
 		assertTrue(!pbScan.getShouldGenerateHubReport());
-		assertEquals(pbScan.getDefaultReportWaitTime(), pbScan.getReportMaxiumWaitTime());
+		assertNull(pbScan.getReportMaxiumWaitTime());
 
 		final String testString = "testString";
 		final ScanJobs oneScan = new ScanJobs("");
 		final ScanJobs[] scans = new ScanJobs[1];
 		scans[0] = oneScan;
-		pbScan = new PostBuildHubScan(scans, true, testString, testString, testString, testString, "Not Number", true, "Not Number");
+		pbScan = new PostBuildHubScan(scans, true, testString, testString, testString, testString, testString, true, testString);
 		assertArrayEquals(pbScan.getScans(), scans);
 		assertTrue(pbScan.getSameAsBuildWrapper());
 		assertEquals(testString, pbScan.getHubProjectName());
 		assertEquals(testString, pbScan.getHubProjectVersion());
 		assertEquals(testString, pbScan.getHubVersionPhase());
 		assertEquals(testString, pbScan.getHubVersionDist());
-		assertEquals(pbScan.getDefaultMemory(), pbScan.getScanMemory());
+		assertEquals(testString, pbScan.getScanMemory());
 		assertTrue(pbScan.getShouldGenerateHubReport());
-		assertEquals(pbScan.getDefaultReportWaitTime(), pbScan.getReportMaxiumWaitTime());
+		assertEquals(testString, pbScan.getReportMaxiumWaitTime());
 
 		pbScan = new PostBuildHubScan(null, false, null, null, null, null, "9001", false, "66");
 		assertNull(pbScan.getScans());

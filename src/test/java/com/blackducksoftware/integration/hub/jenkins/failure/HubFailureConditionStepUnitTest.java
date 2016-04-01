@@ -254,6 +254,7 @@ public class HubFailureConditionStepUnitTest {
 	public void testPerformNullProject() throws Exception {
 		final Boolean failBuildForPolicyViolations = true;
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
+		final HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
 		final HubIntRestService service = getMockedService("1.0.0", null);
 		Mockito.doReturn(null).when(service).getProjectByName(Mockito.anyString());
@@ -262,6 +263,7 @@ public class HubFailureConditionStepUnitTest {
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
 		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
+		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
 
 		final TestProject project = new TestProject(j.getInstance(), "Test Project");
 		final TestBuild build = new TestBuild(project);
@@ -291,6 +293,7 @@ public class HubFailureConditionStepUnitTest {
 	public void testPerformNoProjectId() throws Exception {
 		final Boolean failBuildForPolicyViolations = true;
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
+		final HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
 		final HubIntRestService service = getMockedService("1.0.0", null);
 		final ProjectItem projectItem = new ProjectItem();
@@ -301,6 +304,7 @@ public class HubFailureConditionStepUnitTest {
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
 		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
+		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
 
 		final TestProject project = new TestProject(j.getInstance(), "Test Project");
 		final TestBuild build = new TestBuild(project);
@@ -330,6 +334,7 @@ public class HubFailureConditionStepUnitTest {
 	public void testPerformNullVersions() throws Exception {
 		final Boolean failBuildForPolicyViolations = true;
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
+		final HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
 		final HubIntRestService service = getMockedService("1.0.0", null);
 		final ProjectItem projectItem = new ProjectItem();
@@ -341,6 +346,7 @@ public class HubFailureConditionStepUnitTest {
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
 		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
+		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
 
 		final TestProject project = new TestProject(j.getInstance(), "Test Project");
 		final TestBuild build = new TestBuild(project);
@@ -370,6 +376,7 @@ public class HubFailureConditionStepUnitTest {
 	public void testPerformNoVersionId() throws Exception {
 		final Boolean failBuildForPolicyViolations = true;
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
+		final HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
 		final HubIntRestService service = getMockedService("1.0.0", null);
 		final ProjectItem projectItem = new ProjectItem();
@@ -386,6 +393,7 @@ public class HubFailureConditionStepUnitTest {
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
 		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
+		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
 
 		final TestProject project = new TestProject(j.getInstance(), "Test Project");
 		final TestBuild build = new TestBuild(project);
@@ -431,10 +439,10 @@ public class HubFailureConditionStepUnitTest {
 		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-		descriptor = Mockito.spy(descriptor);
-
 		final HubSupportHelper hubSupport = new HubSupportHelper();
 		hubSupport.checkHubSupport(service, null);
+
+		descriptor = Mockito.spy(descriptor);
 
 		Mockito.doReturn(hubSupport).when(descriptor).getCheckedHubSupportHelper();
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
@@ -488,10 +496,10 @@ public class HubFailureConditionStepUnitTest {
 		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-		descriptor = Mockito.spy(descriptor);
-
 		final HubSupportHelper hubSupport = new HubSupportHelper();
 		hubSupport.checkHubSupport(service, null);
+
+		descriptor = Mockito.spy(descriptor);
 
 		Mockito.doReturn(hubSupport).when(descriptor).getCheckedHubSupportHelper();
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
@@ -553,10 +561,10 @@ public class HubFailureConditionStepUnitTest {
 		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-		descriptor = Mockito.spy(descriptor);
-
 		final HubSupportHelper hubSupport = new HubSupportHelper();
 		hubSupport.checkHubSupport(service, null);
+
+		descriptor = Mockito.spy(descriptor);
 
 		Mockito.doReturn(hubSupport).when(descriptor).getCheckedHubSupportHelper();
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
@@ -620,10 +628,10 @@ public class HubFailureConditionStepUnitTest {
 		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
-		descriptor = Mockito.spy(descriptor);
-
 		final HubSupportHelper hubSupport = new HubSupportHelper();
 		hubSupport.checkHubSupport(service, null);
+
+		descriptor = Mockito.spy(descriptor);
 
 		Mockito.doReturn(hubSupport).when(descriptor).getCheckedHubSupportHelper();
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();

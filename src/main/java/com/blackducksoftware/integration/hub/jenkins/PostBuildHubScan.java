@@ -136,7 +136,7 @@ public class PostBuildHubScan extends Recorder {
 	}
 
 	public String getScanMemory() {
-		return String.valueOf(scanMemory);
+		return scanMemory;
 	}
 
 	public String getReportMaxiumWaitTime() {
