@@ -32,7 +32,7 @@ import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistExcept
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
-import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
+import com.blackducksoftware.integration.hub.logging.IntLogger;
 
 /**
  * Sample {@link Builder}.

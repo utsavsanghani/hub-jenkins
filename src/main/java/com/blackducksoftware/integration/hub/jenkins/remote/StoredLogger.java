@@ -4,8 +4,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 
-import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
-import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
+import com.blackducksoftware.integration.hub.logging.IntLogger;
+import com.blackducksoftware.integration.hub.logging.LogLevel;
 
 public class StoredLogger implements IntLogger {
 

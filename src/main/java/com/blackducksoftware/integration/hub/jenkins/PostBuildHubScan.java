@@ -61,8 +61,8 @@ import com.blackducksoftware.integration.hub.jenkins.remote.RemoteBomGenerator;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
-import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
-import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
+import com.blackducksoftware.integration.hub.logging.IntLogger;
+import com.blackducksoftware.integration.hub.logging.LogLevel;
 
 public class PostBuildHubScan extends Recorder {
 

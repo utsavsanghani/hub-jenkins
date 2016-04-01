@@ -14,7 +14,7 @@ import java.util.List;
 import org.apache.commons.io.IOUtils;
 
 import com.blackducksoftware.integration.build.BuildInfo;
-import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
+import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 

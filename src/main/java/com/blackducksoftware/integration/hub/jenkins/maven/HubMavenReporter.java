@@ -31,8 +31,8 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.maven.Scope;
-import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
-import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
+import com.blackducksoftware.integration.hub.logging.IntLogger;
+import com.blackducksoftware.integration.hub.logging.LogLevel;
 
 public class HubMavenReporter extends MavenReporter {
 
