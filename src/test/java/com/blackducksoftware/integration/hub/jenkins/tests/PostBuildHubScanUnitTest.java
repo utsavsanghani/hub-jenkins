@@ -107,7 +107,7 @@ public class PostBuildHubScanUnitTest {
 		assertNull(pbScan.getHubProjectVersion());
 		assertNull(pbScan.getHubVersionPhase());
 		assertNull(pbScan.getHubVersionDist());
-		assertEquals(pbScan.getDefaultMemory(), pbScan.getScanMemory());
+		assertNull(pbScan.getScanMemory());
 		assertTrue(!pbScan.getShouldGenerateHubReport());
 		assertEquals(pbScan.getDefaultReportWaitTime(), pbScan.getReportMaxiumWaitTime());
 

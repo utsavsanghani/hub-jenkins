@@ -421,6 +421,7 @@ public class PostBuildHubScan extends Recorder {
 
 		reportAction.setReportData(remoteBomGenerator.generateHubReport(logger));
 		action.setHasBomBeenUdpated(true);
+		build.addAction(reportAction);
 	}
 
 	private String ensureProjectExists(final HubIntRestService service, final IntLogger logger, final String projectName, final String projectVersion)
@@ -786,7 +787,7 @@ public class PostBuildHubScan extends Recorder {
 	InterruptedException {
 		for (final String currTarget : scanTargets) {
 
-			if (currTarget.length() <= workingDirectory.length()
+			if (currTarget.length() < workingDirectory.length()
 					|| !currTarget.startsWith(workingDirectory)) {
 				throw new HubConfigurationException("Can not scan targets outside of the workspace.");
 			}

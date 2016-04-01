@@ -252,7 +252,9 @@ public class HubFailureConditionStep extends Recorder {
 		if(action == null){
 			throw new BDJenkinsHubPluginException("Could not find the BomUpToDateAction in the Hub Failure Conditions. Make sure the Hub scan was run before the Failure Conditions.");
 		}
-
+		if(action.isHasBomBeenUdpated()){
+			return;
+		}
 
 		final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
 		reportGenInfo.setService(service);
