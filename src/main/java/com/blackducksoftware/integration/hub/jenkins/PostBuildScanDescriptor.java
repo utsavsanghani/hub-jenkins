@@ -60,6 +60,8 @@ import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistExcept
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
+import com.blackducksoftware.integration.hub.logging.BufferedLogger;
+import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.blackducksoftware.integration.hub.project.api.AutoCompleteItem;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.version.api.DistributionEnum;
@@ -298,8 +300,26 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 		return super.configure(req, formData);
 	}
 
+
+	private FormValidation getResponseFromBufferedLogger(final BufferedLogger logger){
+
+		final String errorOutput = logger.getOutputString(LogLevel.ERROR);
+		if(StringUtils.isNotBlank(errorOutput)){
+			return FormValidation.error(errorOutput);
+		}
+
+		final String warnOutput = logger.getOutputString(LogLevel.WARN);
+		if(StringUtils.isNotBlank(warnOutput)){
+			return FormValidation.warning(warnOutput);
+		}
+
+		return FormValidation.ok();
+	}
+
 	public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") final String scanMemory)
 			throws IOException, ServletException {
+
+		final BufferedLogger logger = new BufferedLogger();
 
 		final HubScanJobConfigBuilder hubScanJobConfigBuilder = new HubScanJobConfigBuilder();
 
@@ -307,23 +327,24 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
 		hubScanJobConfigBuilder.validateScanMemory(logger);
 
+		return getResponseFromBufferedLogger(logger);
 
-		if (scanMemory.length() == 0) {
-			return FormValidation.error(Messages
-					.HubBuildScan_getNeedMemory());
-		}
-
-		try {
-			final Integer scanMem = Integer.valueOf(scanMemory);
-			if (scanMem < 256) {
-				return FormValidation.error(Messages.HubBuildScan_getInvalidMemoryString());
-			}
-		} catch (final NumberFormatException e) {
-			return FormValidation.error(e, Messages
-					.HubBuildScan_getInvalidMemoryString());
-		}
-
-		return FormValidation.ok();
+		//		if (scanMemory.length() == 0) {
+		//			return FormValidation.error(Messages
+		//					.HubBuildScan_getNeedMemory());
+		//		}
+		//
+		//		try {
+		//			final Integer scanMem = Integer.valueOf(scanMemory);
+		//			if (scanMem < 256) {
+		//				return FormValidation.error(Messages.HubBuildScan_getInvalidMemoryString());
+		//			}
+		//		} catch (final NumberFormatException e) {
+		//			return FormValidation.error(e, Messages
+		//					.HubBuildScan_getInvalidMemoryString());
+		//		}
+		//
+		//		return FormValidation.ok();
 	}
 
 	public FormValidation doCheckReportMaxiumWaitTime(@QueryParameter("shouldGenerateHubReport") final boolean shouldGenerateHubReport,
