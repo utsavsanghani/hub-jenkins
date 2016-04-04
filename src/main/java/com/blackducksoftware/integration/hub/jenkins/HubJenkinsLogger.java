@@ -6,8 +6,8 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 
-import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
-import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
+import com.blackducksoftware.integration.hub.logging.IntLogger;
+import com.blackducksoftware.integration.hub.logging.LogLevel;
 
 public class HubJenkinsLogger implements IntLogger, Serializable {
 

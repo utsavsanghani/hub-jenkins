@@ -39,8 +39,8 @@ import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetPathSeparator;
 import com.blackducksoftware.integration.hub.maven.BdMavenConfigurator;
 import com.blackducksoftware.integration.hub.maven.Scope;
-import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
-import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
+import com.blackducksoftware.integration.hub.logging.IntLogger;
+import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.google.gson.Gson;
 
 /**

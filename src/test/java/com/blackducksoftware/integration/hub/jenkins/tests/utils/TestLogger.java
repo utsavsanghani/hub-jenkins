@@ -7,7 +7,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
-import com.blackducksoftware.integration.suite.sdk.logging.LogLevel;
+import com.blackducksoftware.integration.hub.logging.LogLevel;
 
 public class TestLogger extends HubJenkinsLogger {
 

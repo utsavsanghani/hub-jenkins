@@ -18,7 +18,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
-import com.blackducksoftware.integration.suite.sdk.logging.IntLogger;
+import com.blackducksoftware.integration.hub.logging.IntLogger;
 
 public class BuildHelper {
 
