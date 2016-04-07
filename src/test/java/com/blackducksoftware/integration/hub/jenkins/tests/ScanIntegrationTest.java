@@ -368,8 +368,8 @@ public class ScanIntegrationTest {
 			final String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
 			System.out.println(buildOutput);
 
-			assertTrue(buildOutput, !buildOutput.contains("-> Generate Hub report : true"));
-			assertTrue(buildOutput, !buildOutput.contains("-> Maximum wait time for the BOM Update : 5 minutes"));
+			assertTrue(buildOutput, buildOutput.contains("-> Generate Hub report : false"));
+			assertTrue(buildOutput, buildOutput.contains("-> Maximum wait time for the BOM Update : 5 minutes"));
 			assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
 			assertTrue(buildOutput, buildOutput.contains("Finished in"));
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
@@ -441,8 +441,8 @@ public class ScanIntegrationTest {
 			final String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
 			System.out.println(buildOutput);
 
-			assertTrue(buildOutput, !buildOutput.contains("-> Generate Hub report : true"));
-			assertTrue(buildOutput, !buildOutput.contains("-> Maximum wait time for the BOM Update : 5 minutes"));
+			assertTrue(buildOutput, buildOutput.contains("-> Generate Hub report : false"));
+			assertTrue(buildOutput, buildOutput.contains("-> Maximum wait time for the BOM Update : 5 minutes"));
 			assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
 			assertTrue(buildOutput, buildOutput.contains("Finished in"));
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
