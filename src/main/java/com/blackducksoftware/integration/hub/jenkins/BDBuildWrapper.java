@@ -1,14 +1,5 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.Util;
-import hudson.model.BuildListener;
-import hudson.model.Result;
-import hudson.model.AbstractBuild;
-import hudson.tasks.BuildWrapper;
-import hudson.tasks.Builder;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -29,10 +20,21 @@ import com.blackducksoftware.integration.hub.BuilderType;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
+import com.blackducksoftware.integration.hub.exception.VersionDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
+import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
+
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.Util;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.tasks.BuildWrapper;
+import hudson.tasks.Builder;
 
 /**
  * Sample {@link Builder}.
@@ -129,7 +131,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
 
 	public boolean universalTearDown(final AbstractBuild<?, ?> build, final IntLogger buildLogger, final FilePath buildInfoFilePath, final BDBuildWrapperDescriptor descriptor,
 			final BuilderType buidler) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException,
-			IOException {
+	IOException {
 
 		final ClassLoader originalClassLoader = Thread.currentThread()
 				.getContextClassLoader();
@@ -199,20 +201,19 @@ public abstract class BDBuildWrapper extends BuildWrapper {
 		return buildInfo;
 	}
 
-	protected String ensureProjectExists(final HubIntRestService service, final IntLogger logger, final String projectName, final String projectVersion) throws IOException,
+	protected ProjectItem ensureProjectExists(final HubIntRestService service, final IntLogger logger,
+			final String projectName) throws IOException,
 	URISyntaxException,
 	BDJenkinsHubPluginException {
-		String projectId = null;
+		ProjectItem project = null;
 		try {
-			projectId = service.getProjectByName(projectName).getId();
+			project = service.getProjectByName(projectName);
 
 		} catch (final ProjectDoesNotExistException e) {
 			// Project was not found, try to create it
 			try {
-
-				projectId = service.createHubProjectAndVersion(projectName, projectVersion, getHubWrapperVersionPhase(), getHubWrapperVersionDist());
-				logger.debug("Project and Version created!");
-
+				final String projectUrl = service.createHubProject(projectName);
+				project = service.getProject(projectUrl);
 			} catch (final BDRestException e1) {
 				if (e1.getResource() != null) {
 					logger.error("Status : " + e1.getResource().getStatus().getCode());
@@ -230,34 +231,42 @@ public abstract class BDBuildWrapper extends BuildWrapper {
 			}
 		}
 
-		return projectId;
+		return project;
 	}
 
-	protected String ensureVersionExists(final HubIntRestService service, final IntLogger logger, final String projectVersion, final String projectId) throws IOException,
-	URISyntaxException, BDJenkinsHubPluginException {
-		String versionId = null;
+	/**
+	 * Ensures the Version exists. Returns the version URL
+	 */
+	protected ReleaseItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
+			final String projectVersion, final ProjectItem project)
+			throws IOException, URISyntaxException, BDJenkinsHubPluginException {
+		ReleaseItem version = null;
 		try {
-
-			final List<ReleaseItem> projectVersions = service.getVersionsForProject(projectId);
-			for (final ReleaseItem release : projectVersions) {
-				if (projectVersion.equals(release.getVersion())) {
-					versionId = release.getId();
-					if (!release.getPhase().equals(getHubWrapperVersionPhase())) {
-						logger.warn("The selected Phase does not match the Phase of this Version. If you wish to update the Phase please do so in the Hub UI.");
-					}
-					if (!release.getDistribution().equals(getHubWrapperVersionDist())) {
-						logger.warn("The selected Distribution does not match the Distribution of this Version. If you wish to update the Distribution please do so in the Hub UI.");
-					}
-				}
+			version = service.getVersion(project, projectVersion);
+			if (!version.getPhase().equals(getHubWrapperVersionPhase())) {
+				logger.warn(
+						"The selected Phase does not match the Phase of this Version. If you wish to update the Phase please do so in the Hub UI.");
 			}
-			if (versionId == null) {
-				versionId = service.createHubVersion(projectVersion, projectId, getHubWrapperVersionPhase(), getHubWrapperVersionDist());
-				logger.debug("Version created!");
+			if (!version.getDistribution().equals(getHubWrapperVersionDist())) {
+				logger.warn(
+						"The selected Distribution does not match the Distribution of this Version. If you wish to update the Distribution please do so in the Hub UI.");
+			}
+		} catch (final VersionDoesNotExistException e) {
+			try {
+				final String versionURL = service.createHubVersion(project, projectVersion, getHubWrapperVersionPhase(),
+						getHubWrapperVersionDist());
+				version = service.getProjectVersion(versionURL);
+			} catch (final BDRestException e1) {
+				if (e1.getResource() != null) {
+					logger.error("Status : " + e1.getResource().getStatus().getCode());
+					logger.error("Response : " + e1.getResource().getResponse().getEntityAsText());
+				}
+				throw new BDJenkinsHubPluginException("Problem creating the Version. ", e1);
 			}
 		} catch (final BDRestException e) {
 			throw new BDJenkinsHubPluginException("Could not retrieve or create the specified version.", e);
 		}
-		return versionId;
+		return version;
 	}
 
 	public String handleVariableReplacement(final Map<String, String> variables, final String value) throws BDJenkinsHubPluginException {

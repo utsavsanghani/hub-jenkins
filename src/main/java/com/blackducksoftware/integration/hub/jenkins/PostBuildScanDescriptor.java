@@ -1,18 +1,5 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
-import hudson.Extension;
-import hudson.ProxyConfiguration;
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.AbstractProject;
-import hudson.model.Descriptor;
-import hudson.security.ACL;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.Publisher;
-import hudson.util.FormValidation;
-import hudson.util.FormValidation.Kind;
-import hudson.util.IOUtils;
-import hudson.util.ListBoxModel;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -39,9 +26,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
-
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -55,15 +39,9 @@ import org.xml.sax.SAXException;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
-import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
-import com.blackducksoftware.integration.hub.project.api.AutoCompleteItem;
-import com.blackducksoftware.integration.hub.project.api.ProjectItem;
-import com.blackducksoftware.integration.hub.version.api.DistributionEnum;
-import com.blackducksoftware.integration.hub.version.api.PhaseEnum;
-import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -73,6 +51,21 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.cloudbees.plugins.credentials.matchers.IdMatcher;
+
+import hudson.Extension;
+import hudson.ProxyConfiguration;
+import hudson.model.AbstractProject;
+import hudson.model.AutoCompletionCandidates;
+import hudson.model.Descriptor;
+import hudson.security.ACL;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Publisher;
+import hudson.util.FormValidation;
+import hudson.util.FormValidation.Kind;
+import hudson.util.IOUtils;
+import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
 
 @Extension(ordinal = 2)
 // This indicates to Jenkins that this is an implementation of an extension
@@ -289,8 +282,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 		return super.configure(req, formData);
 	}
 
-
-
 	public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") final String scanMemory)
 			throws IOException, ServletException {
 
@@ -373,34 +364,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 		return boxModel;
 	}
 
-	// /**
-	// * Fills the iScan drop down list in the job config
-	// *
-	// * @return
-	// */
-	// public ListBoxModel doFillScanNameItems() {
-	// ClassLoader originalClassLoader = Thread.currentThread()
-	// .getContextClassLoader();
-	// boolean changed = false;
-	// ListBoxModel items = null;
-	// try {
-	// items = new ListBoxModel();
-	// Jenkins jenkins = Jenkins.getInstance();
-	// IScanDescriptor iScanDescriptor = jenkins.getDescriptorByType(IScanDescriptor.class);
-	//
-	// ScanInstallation[] iScanInstallations = iScanDescriptor.getInstallations();
-	// for (ScanInstallation iScan : iScanInstallations) {
-	// items.add(iScan.getName());
-	// }
-	//
-	// } finally {
-	// if (changed) {
-	// Thread.currentThread().setContextClassLoader(
-	// originalClassLoader);
-	// }
-	// }
-	// return items;
-	// }
 
 	/**
 	 * Fills the drop down list of possible Version phases
@@ -408,27 +371,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	 * @return
 	 */
 	public ListBoxModel doFillHubVersionPhaseItems() {
-		final ClassLoader originalClassLoader = Thread.currentThread()
-				.getContextClassLoader();
-		final boolean changed = false;
-		final ListBoxModel items = new ListBoxModel();
-		try {
-			// should get this list from the Hub server, ticket HUB-1610
-			for (final PhaseEnum phase : PhaseEnum.values()) {
-				if (phase != PhaseEnum.UNKNOWNPHASE) {
-					items.add(phase.getDisplayValue(), phase.name());
-				}
-			}
-		} catch (final Exception e) {
-			e.printStackTrace();
-			System.err.println(e.getMessage());
-		} finally {
-			if (changed) {
-				Thread.currentThread().setContextClassLoader(
-						originalClassLoader);
-			}
-		}
-		return items;
+		return BDCommonDescriptorUtil.doFillHubVersionPhaseItems();
 	}
 
 	/**
@@ -437,27 +380,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	 * @return
 	 */
 	public ListBoxModel doFillHubVersionDistItems() {
-		final ClassLoader originalClassLoader = Thread.currentThread()
-				.getContextClassLoader();
-		final boolean changed = false;
-		final ListBoxModel items = new ListBoxModel();
-		try {
-			// should get this list from the Hub server, ticket HUB-1610
-			for (final DistributionEnum distribution : DistributionEnum.values()) {
-				if (distribution != DistributionEnum.UNKNOWNDISTRIBUTION) {
-					items.add(distribution.getDisplayValue(), distribution.name());
-				}
-			}
-		} catch (final Exception e) {
-			e.printStackTrace();
-			System.err.println(e.getMessage());
-		} finally {
-			if (changed) {
-				Thread.currentThread().setContextClassLoader(
-						originalClassLoader);
-			}
-		}
-		return items;
+		return BDCommonDescriptorUtil.doFillHubVersionDistItems();
 	}
 
 	public FormValidation doCheckTimeout(@QueryParameter("hubTimeout") final String hubTimeout)
@@ -552,37 +475,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
 	public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName) throws IOException,
 	ServletException {
-		final AutoCompletionCandidates potentialMatches = new AutoCompletionCandidates();
-		if (StringUtils.isNotBlank(getHubServerUrl()) || StringUtils.isNotBlank(getHubServerInfo().getCredentialsId())) {
-			final ClassLoader originalClassLoader = Thread.currentThread()
-					.getContextClassLoader();
-			final boolean changed = false;
-			try {
-				if (hubProjectName.contains("$")) {
-					return potentialMatches;
-				}
-
-				final HubIntRestService service = BuildHelper.getRestService(getHubServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword(),
-						getHubServerInfo().getTimeout());
-
-				final List<AutoCompleteItem> suggestions = service.getProjectMatches(hubProjectName);
-
-				if (!suggestions.isEmpty()) {
-					for (final AutoCompleteItem projectSuggestion : suggestions) {
-						potentialMatches.add(projectSuggestion.getValue());
-					}
-				}
-			} catch (final Exception e) {
-				// do nothing for exception, there is nowhere in the UI to display this error
-			} finally {
-				if (changed) {
-					Thread.currentThread().setContextClassLoader(
-							originalClassLoader);
-				}
-			}
-
-		}
-		return potentialMatches;
+		return BDCommonDescriptorUtil.doAutoCompleteHubProjectName(getHubServerInfo(), hubProjectName);
 	}
 
 	/**
@@ -592,73 +485,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	 */
 	public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName,
 			@QueryParameter("hubProjectVersion") final String hubProjectVersion) throws IOException, ServletException {
-		// Query for the project version so hopefully the check methods run for boths fields
-		// when the User changes the Name of the project
-		if (hubProjectName.length() > 0) {
-			final ClassLoader originalClassLoader = Thread.currentThread()
-					.getContextClassLoader();
-			final boolean changed = false;
-			try {
-				if (StringUtils.isBlank(getHubServerUrl())) {
-					return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
-				}
-				if (StringUtils.isBlank(getHubServerInfo().getCredentialsId())) {
-					return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
-				}
-				if (hubProjectName.contains("$")) {
-					return FormValidation
-							.warning(Messages.HubBuildScan_getProjectNameContainsVariable());
-				}
-
-				final HubIntRestService service = BuildHelper.getRestService(getHubServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword(),
-						getHubServerInfo()
-						.getTimeout());
-
-				final ProjectItem project = service.getProjectByName(hubProjectName);
-
-				if (project != null && StringUtils.isNotBlank(project.getId())) {
-					return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getHubServerUrl()));
-				} else {
-					return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getHubServerUrl()));
-				}
-			} catch (final ProjectDoesNotExistException e) {
-				return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getHubServerUrl()));
-			} catch (final BDRestException e) {
-				String message;
-				if (e.getCause() != null) {
-					message = e.getCause().toString();
-					if (message.contains("(407)")) {
-						return FormValidation.error(e, message);
-					}
-				}
-				return FormValidation.error(e, e.getMessage());
-			} catch (final Exception e) {
-				String message;
-				if (e.getCause() != null && e.getCause().getCause() != null) {
-					message = e.getCause().getCause().toString();
-				} else if (e.getCause() != null) {
-					message = e.getCause().toString();
-				} else {
-					message = e.toString();
-				}
-				if (message.toLowerCase().contains("service unavailable")) {
-					message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getHubServerUrl());
-				} else if (message.toLowerCase().contains("precondition failed")) {
-					message = message + ", Check your configuration.";
-				}
-				return FormValidation.error(e, message);
-			} finally {
-				if (changed) {
-					Thread.currentThread().setContextClassLoader(
-							originalClassLoader);
-				}
-			}
-		} else {
-			if (StringUtils.isNotBlank(hubProjectVersion)) {
-				return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
-			}
-		}
-		return FormValidation.ok();
+		return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubProjectName, hubProjectVersion);
 	}
 
 	/**
@@ -668,97 +495,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	 */
 	public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion,
 			@QueryParameter("hubProjectName") final String hubProjectName) throws IOException, ServletException {
-		if (hubProjectVersion.length() > 0) {
-
-			final ClassLoader originalClassLoader = Thread.currentThread()
-					.getContextClassLoader();
-			final boolean changed = false;
-			try {
-				if (StringUtils.isBlank(getHubServerUrl())) {
-					return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
-				}
-				if (StringUtils.isBlank(getHubServerInfo().getCredentialsId())) {
-					return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
-				}
-				if (StringUtils.isBlank(hubProjectName)) {
-					// Error will be displayed for the project name field
-					return FormValidation.ok();
-				}
-				if (hubProjectVersion.contains("$")) {
-					return FormValidation
-							.warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
-				}
-				if (hubProjectName.contains("$")) {
-					// Warning will be displayed for the project name field
-					return FormValidation.ok();
-				}
-
-				final HubIntRestService service = BuildHelper.getRestService(getHubServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword(),
-						getHubServerInfo()
-						.getTimeout());
-
-				ProjectItem project = null;
-				try {
-					project = service.getProjectByName(hubProjectName);
-				} catch (final ProjectDoesNotExistException e) {
-					// This error will already show up for the name field
-					return FormValidation.ok();
-				} catch (final BDRestException e) {
-					// This error will already show up for the name field
-					return FormValidation.ok();
-				}
-				final List<ReleaseItem> releases = service.getVersionsForProject(project.getId());
-
-				final StringBuilder projectVersions = new StringBuilder();
-				for (final ReleaseItem release : releases) {
-					if (release.getVersion().equals(hubProjectVersion)) {
-						return FormValidation.ok(Messages.HubBuildScan_getVersionExistsIn_0_(project.getName()));
-					} else {
-						if (projectVersions.length() > 0) {
-							projectVersions.append(", " + release.getVersion());
-						} else {
-							projectVersions.append(release.getVersion());
-						}
-					}
-				}
-
-				return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(project.getName(), projectVersions.toString()));
-			} catch (final BDRestException e) {
-				String message;
-				if (e.getCause() != null) {
-					message = e.getCause().toString();
-					if (message.contains("(407)")) {
-						return FormValidation.error(e, message);
-					}
-				}
-				return FormValidation.error(e, e.getMessage());
-			} catch (final Exception e) {
-				String message;
-				if (e.getCause() != null && e.getCause().getCause() != null) {
-					message = e.getCause().getCause().toString();
-				} else if (e.getCause() != null) {
-					message = e.getCause().toString();
-				} else {
-					message = e.toString();
-				}
-				if (message.toLowerCase().contains("service unavailable")) {
-					message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getHubServerUrl());
-				} else if (message.toLowerCase().contains("precondition failed")) {
-					message = message + ", Check your configuration.";
-				}
-				return FormValidation.error(e, message);
-			} finally {
-				if (changed) {
-					Thread.currentThread().setContextClassLoader(
-							originalClassLoader);
-				}
-			}
-		} else {
-			if (StringUtils.isNotBlank(hubProjectName)) {
-				return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
-			}
-		}
-		return FormValidation.ok();
+		return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubProjectVersion, hubProjectName);
 	}
 
 	/**
@@ -858,123 +595,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	public FormValidation doCreateHubProject(@QueryParameter("hubProjectName") final String hubProjectName,
 			@QueryParameter("hubProjectVersion") final String hubProjectVersion, @QueryParameter("hubVersionPhase") final String hubVersionPhase,
 			@QueryParameter("hubVersionDist") final String hubVersionDist) {
-		final ClassLoader originalClassLoader = Thread.currentThread()
-				.getContextClassLoader();
-		final boolean changed = false;
-		try {
-
-			save();
-
-			if (StringUtils.isBlank(hubProjectName)) {
-				return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
-			}
-			if (StringUtils.isBlank(hubProjectVersion)) {
-				return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
-			}
-			if (hubProjectName.contains("$")) {
-				return FormValidation
-						.warning(Messages.HubBuildScan_getProjectNameContainsVariable());
-			}
-			if (hubProjectVersion.contains("$")) {
-				return FormValidation
-						.warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
-			}
-			if (StringUtils.isBlank(hubVersionPhase)) {
-				return FormValidation.error(Messages.HubBuildScan_getProvideVersionPhase());
-			}
-			if (StringUtils.isBlank(hubVersionDist)) {
-				return FormValidation.error(Messages.HubBuildScan_getProvideVersionDist());
-			}
-
-			String credentialUserName = null;
-			String credentialPassword = null;
-
-			final UsernamePasswordCredentialsImpl credential = getHubServerInfo().getCredential();
-			if (credential == null) {
-				return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
-			}
-			credentialUserName = credential.getUsername();
-			credentialPassword = credential.getPassword().getPlainText();
-
-			final HubIntRestService service = BuildHelper.getRestService(getHubServerUrl(), credentialUserName, credentialPassword, getHubServerInfo().getTimeout());
-
-			boolean projectExists = false;
-
-			ProjectItem project = null;
-			try {
-				project = service.getProjectByName(hubProjectName);
-				if (project != null && project.getId() != null && project.getName() != null) {
-					projectExists = true;
-				}
-
-			} catch (final ProjectDoesNotExistException e) {
-				// Project Doesnt exist
-			}
-
-			String projectId = null;
-			if (!projectExists) {
-				try {
-					projectId = service.createHubProjectAndVersion(hubProjectName, hubProjectVersion, hubVersionPhase, hubVersionDist);
-					return FormValidation.ok(Messages.HubBuildScan_getProjectAndVersionCreated());
-				} catch (final BDRestException e) {
-					return FormValidation.error(e, e.getMessage());
-				}
-			} else {
-				projectId = project.getId();
-				String versionId = null;
-				try {
-					final List<ReleaseItem> releases = service.getVersionsForProject(projectId);
-					for (final ReleaseItem release : releases) {
-						if (release.getVersion().equals(hubProjectVersion)) {
-							versionId = release.getId();
-						}
-
-					}
-					if (projectExists && versionId != null) {
-						return FormValidation
-								.warning(Messages.HubBuildScan_getProjectAndVersionExist());
-					}
-
-					if (versionId == null) {
-						versionId = service.createHubVersion(hubProjectVersion, projectId, hubVersionPhase, hubVersionDist);
-					}
-					return FormValidation.ok(Messages.HubBuildScan_getVersionCreated());
-				} catch (final BDRestException e) {
-					if (e.getResource().getResponse().getStatus().getCode() == 412) {
-						return FormValidation.error(e, Messages.HubBuildScan_getProjectVersionCreationProblem());
-					} else if (e.getResource().getResponse().getStatus().getCode() == 401) {
-						// If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
-						return FormValidation.error(e, Messages.HubBuildScan_getCredentialsInValidFor_0_(getHubServerUrl()));
-					} else if (e.getResource().getResponse().getStatus().getCode() == 407) {
-						return FormValidation.error(e, Messages.HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
-					} else {
-						return FormValidation.error(e, Messages.HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
-					}
-				}
-			}
-
-		} catch (final Exception e) {
-			String message;
-			if (e.getCause() != null && e.getCause().getCause() != null) {
-				message = e.getCause().getCause().toString();
-			} else if (e.getCause() != null) {
-				message = e.getCause().toString();
-			} else {
-				message = e.toString();
-			}
-			if (message.toLowerCase().contains("service unavailable")) {
-				message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getHubServerUrl());
-			} else if (message.toLowerCase().contains("precondition failed")) {
-				message = message + ", Check your configuration.";
-			}
-			return FormValidation.error(e, message);
-		} finally {
-			if (changed) {
-				Thread.currentThread().setContextClassLoader(
-						originalClassLoader);
-			}
-		}
-
+		save();
+		return BDCommonDescriptorUtil.doCreateHubProject(getHubServerInfo(), hubProjectName, hubProjectVersion,
+				hubVersionPhase, hubVersionDist);
 	}
 
 }
