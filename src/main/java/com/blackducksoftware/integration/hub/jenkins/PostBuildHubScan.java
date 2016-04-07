@@ -1,19 +1,5 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.Util;
-import hudson.ProxyConfiguration;
-import hudson.model.BuildListener;
-import hudson.model.Result;
-import hudson.model.AbstractBuild;
-import hudson.model.JDK;
-import hudson.model.Node;
-import hudson.remoting.VirtualChannel;
-import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Recorder;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -25,8 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import jenkins.model.Jenkins;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -40,8 +24,8 @@ import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
-import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
+import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.bom.RemoteBomGenerator;
 import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstallation;
 import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstaller;
@@ -65,6 +49,21 @@ import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.ProxyConfiguration;
+import hudson.Util;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
+import hudson.model.JDK;
+import hudson.model.Node;
+import hudson.model.Result;
+import hudson.remoting.VirtualChannel;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Recorder;
+import jenkins.model.Jenkins;
+
 public class PostBuildHubScan extends Recorder {
 
 	private final ScanJobs[] scans;
@@ -87,7 +86,11 @@ public class PostBuildHubScan extends Recorder {
 
 	protected final boolean shouldGenerateHubReport;
 
-	protected final String reportMaxiumWaitTime;
+	// Hub Jenkins 1.4.1, renaming this variable to bomUpdateMaxiumWaitTime
+	// need to keep this around for now for migration purposes
+	protected String reportMaxiumWaitTime;
+
+	protected String bomUpdateMaxiumWaitTime;
 
 	private transient Result result;
 
@@ -96,7 +99,8 @@ public class PostBuildHubScan extends Recorder {
 	@DataBoundConstructor
 	public PostBuildHubScan(final ScanJobs[] scans, final boolean sameAsBuildWrapper, final String hubProjectName, final String hubProjectVersion,
 			final String hubVersionPhase, final String hubVersionDist,
-			final String scanMemory, final boolean shouldGenerateHubReport, final String reportMaxiumWaitTime) {
+			final String scanMemory, final boolean shouldGenerateHubReport,
+			final String bomUpdateMaxiumWaitTime) {
 		this.scans = scans;
 		this.sameAsBuildWrapper = sameAsBuildWrapper;
 		this.hubProjectName = hubProjectName;
@@ -105,7 +109,7 @@ public class PostBuildHubScan extends Recorder {
 		this.hubVersionDist = hubVersionDist;
 		this.scanMemory = scanMemory;
 		this.shouldGenerateHubReport = shouldGenerateHubReport;
-		this.reportMaxiumWaitTime = reportMaxiumWaitTime;
+		this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
 	}
 
 	public void setverbose(final boolean verbose) {
@@ -131,21 +135,17 @@ public class PostBuildHubScan extends Recorder {
 		this.result = result;
 	}
 
-	public String getDefaultMemory() {
-		return String.valueOf(HubScanJobConfigBuilder.DEFAULT_MEMORY_IN_MEGABYTES);
-	}
-
 	public String getScanMemory() {
 		return scanMemory;
 	}
 
-	public String getReportMaxiumWaitTime() {
-		return reportMaxiumWaitTime;
+	public String getBomUpdateMaxiumWaitTime() {
+		if (bomUpdateMaxiumWaitTime == null && reportMaxiumWaitTime != null) {
+			bomUpdateMaxiumWaitTime = reportMaxiumWaitTime;
+		}
+		return bomUpdateMaxiumWaitTime;
 	}
 
-	public String getDefaultReportWaitTime() {
-		return String.valueOf(HubScanJobConfigBuilder.DEFAULT_REPORT_WAIT_TIME_IN_MINUTES);
-	}
 
 	public String getHubProjectVersion() {
 		if (hubProjectVersion == null && hubProjectRelease != null) {
@@ -229,7 +229,7 @@ public class PostBuildHubScan extends Recorder {
 					hubScanJobConfigBuilder.setDistribution(getHubVersionDist());
 					hubScanJobConfigBuilder.setWorkingDirectory(workingDirectory);
 					hubScanJobConfigBuilder.setShouldGenerateRiskReport(getShouldGenerateHubReport());
-					hubScanJobConfigBuilder.setMaxWaitTimeForRiskReport(getReportMaxiumWaitTime());
+					hubScanJobConfigBuilder.setMaxWaitTimeForBomUpdate(getBomUpdateMaxiumWaitTime());
 					hubScanJobConfigBuilder.setScanMemory(getScanMemory());
 					hubScanJobConfigBuilder.addAllScanTargetPaths(scanTargetPaths);
 					hubScanJobConfigBuilder.disableScanTargetPathExistenceCheck();
@@ -536,11 +536,9 @@ public class PostBuildHubScan extends Recorder {
 
 		logger.info(
 				"-> Generate Hub report : " + jobConfig.isShouldGenerateRiskReport());
-		if (jobConfig.isShouldGenerateRiskReport()) {
-			final String formattedTime = String.format("%d minutes", TimeUnit.MILLISECONDS.toMinutes(jobConfig.getMaxWaitTimeForRiskReportInMilliseconds()));
-			logger.info(
-					"-> Maximum wait time for the report : " + formattedTime);
-		}
+		final String formattedTime = String.format("%d minutes",
+				TimeUnit.MILLISECONDS.toMinutes(jobConfig.getMaxWaitTimeForRiskReportInMilliseconds()));
+		logger.info("-> Maximum wait time for the BOM Update : " + formattedTime);
 	}
 
 	/**

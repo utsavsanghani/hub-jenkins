@@ -3,19 +3,15 @@ package com.blackducksoftware.integration.hub.jenkins.tests;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import hudson.ProxyConfiguration;
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
-
-import jenkins.model.Jenkins;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
@@ -32,10 +28,10 @@ import com.blackducksoftware.integration.hub.api.VersionComparison;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
-import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
-import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
+import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
+import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.failure.HubFailureConditionStep;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
@@ -46,6 +42,11 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+
+import hudson.ProxyConfiguration;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import jenkins.model.Jenkins;
 
 public class ScanIntegrationTest {
 
@@ -79,7 +80,7 @@ public class ScanIntegrationTest {
 		basePath = ScanIntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		basePath = basePath.substring(0, basePath.indexOf(File.separator + "target"));
 		basePath = basePath + File.separator + "test-workspace";
-		testWorkspace = basePath + File.separator + "workspace";
+		testWorkspace = URLDecoder.decode(basePath + File.separator + "workspace", "UTF-8");
 
 		testProperties = new Properties();
 		final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -286,7 +287,7 @@ public class ScanIntegrationTest {
 			System.out.println(buildOutput);
 
 			assertTrue(buildOutput, buildOutput.contains("-> Generate Hub report : true"));
-			assertTrue(buildOutput, buildOutput.contains("-> Maximum wait time for the report : 5 minutes"));
+			assertTrue(buildOutput, buildOutput.contains("-> Maximum wait time for the BOM Update : 5 minutes"));
 			assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
 			assertTrue(buildOutput, buildOutput.contains("Finished in"));
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
@@ -354,7 +355,7 @@ public class ScanIntegrationTest {
 
 			final PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, testProperties.getProperty("TEST_PROJECT"),
 					testProperties.getProperty("TEST_VERSION"), null,
-					null, "4096", false, "5");
+					null, "4096", false, "0");
 			final HubFailureConditionStep failureCond = new HubFailureConditionStep(true);
 
 			final FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
@@ -368,7 +369,7 @@ public class ScanIntegrationTest {
 			System.out.println(buildOutput);
 
 			assertTrue(buildOutput, !buildOutput.contains("-> Generate Hub report : true"));
-			assertTrue(buildOutput, !buildOutput.contains("-> Maximum wait time for the report : 5 minutes"));
+			assertTrue(buildOutput, !buildOutput.contains("-> Maximum wait time for the BOM Update : 5 minutes"));
 			assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
 			assertTrue(buildOutput, buildOutput.contains("Finished in"));
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
@@ -394,6 +395,79 @@ public class ScanIntegrationTest {
 			restHelper.deleteHubProject(projectId);
 		}
 
+	}
+
+	@Test
+	public void completeRunthroughAndScanAndFailureConditionWithVariables() throws Exception {
+		final Jenkins jenkins = j.jenkins;
+
+		final CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+		final UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
+				null, null, testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+		store.addCredentials(Domain.global(), credential);
+
+		final HubServerInfo serverInfo = new HubServerInfo();
+		serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+		serverInfo.setCredentialsId(credential.getId());
+		serverInfo.setTimeout(200);
+
+		final ScanJobs oneScan = new ScanJobs("");
+		final ScanJobs twoScan = new ScanJobs("ch-simple-web/simple-webapp/target");
+		final ScanJobs threeScan = new ScanJobs("ch-simple-web/simple-webapp/target/simple-webapp.war");
+		final ScanJobs fourScan = new ScanJobs("ch-simple-web");
+		final ScanJobs fiveScan = new ScanJobs("ch-simple-web/simple-webapp");
+		final ScanJobs[] scans = new ScanJobs[5];
+		scans[0] = oneScan;
+		scans[1] = twoScan;
+		scans[2] = threeScan;
+		scans[3] = fourScan;
+		scans[4] = fiveScan;
+
+		final String projectName = "Jenkins Hub Integration Variable Project Name";
+		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
+		try {
+			final PostBuildHubScan pbScan = new PostBuildHubScan(scans, false,
+					"${JOB_NAME}", "${BUILD_NUMBER}", PhaseEnum.DEVELOPMENT.name(), DistributionEnum.EXTERNAL.name(),
+					"4096", false, "5");
+			final HubFailureConditionStep failureCond = new HubFailureConditionStep(true);
+
+			final FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, projectName);
+			project.setCustomWorkspace(testWorkspace);
+
+			project.getPublishersList().add(pbScan);
+			project.getPublishersList().add(failureCond);
+
+			final FreeStyleBuild build = project.scheduleBuild2(0).get();
+			final String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+			System.out.println(buildOutput);
+
+			assertTrue(buildOutput, !buildOutput.contains("-> Generate Hub report : true"));
+			assertTrue(buildOutput, !buildOutput.contains("-> Maximum wait time for the BOM Update : 5 minutes"));
+			assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+			assertTrue(buildOutput, buildOutput.contains("Finished in"));
+			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
+			assertTrue(buildOutput, buildOutput.contains("You can view the BlackDuck scan CLI logs at :"));
+			assertTrue(buildOutput, buildOutput.contains("Project Id:"));
+			assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+
+			assertNull(build.getAction(HubReportAction.class));
+			assertNotNull(build.getAction(HubScanFinishedAction.class));
+
+			if (isHubOlderThanThisVersion("3.0.0")) {
+				// server does not support policies
+				assertTrue(buildOutput,
+						buildOutput.contains("This version of the Hub does not have support for Policies."));
+			} else {
+				assertTrue(buildOutput, buildOutput.contains("bom entries to be In Violation of a defined Policy."));
+				assertTrue(buildOutput, buildOutput.contains(
+						"bom entries to be In Violation of a defined Policy, but they have been overridden."));
+				assertTrue(buildOutput,
+						buildOutput.contains("bom entries to be Not In Violation of a defined Policy."));
+			}
+			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+		} finally {
+			restHelper.deleteHubProject(restHelper.getProjectByName(projectName).getId());
+		}
 	}
 
 	@Test

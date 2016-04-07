@@ -5,10 +5,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import hudson.model.StreamBuildListener;
-import hudson.model.Node;
-import hudson.remoting.VirtualChannel;
-import hudson.slaves.DumbSlave;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,8 +28,8 @@ import org.mockito.Mockito;
 
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
-import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
+import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.TestLogger;
@@ -43,6 +39,11 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.google.common.base.Charsets;
+
+import hudson.model.Node;
+import hudson.model.StreamBuildListener;
+import hudson.remoting.VirtualChannel;
+import hudson.slaves.DumbSlave;
 
 public class PostBuildHubScanUnitTest {
 
@@ -109,7 +110,7 @@ public class PostBuildHubScanUnitTest {
 		assertNull(pbScan.getHubVersionDist());
 		assertNull(pbScan.getScanMemory());
 		assertTrue(!pbScan.getShouldGenerateHubReport());
-		assertNull(pbScan.getReportMaxiumWaitTime());
+		assertNull(pbScan.getBomUpdateMaxiumWaitTime());
 
 		final String testString = "testString";
 		final ScanJobs oneScan = new ScanJobs("");
@@ -124,7 +125,7 @@ public class PostBuildHubScanUnitTest {
 		assertEquals(testString, pbScan.getHubVersionDist());
 		assertEquals(testString, pbScan.getScanMemory());
 		assertTrue(pbScan.getShouldGenerateHubReport());
-		assertEquals(testString, pbScan.getReportMaxiumWaitTime());
+		assertEquals(testString, pbScan.getBomUpdateMaxiumWaitTime());
 
 		pbScan = new PostBuildHubScan(null, false, null, null, null, null, "9001", false, "66");
 		assertNull(pbScan.getScans());
@@ -135,7 +136,7 @@ public class PostBuildHubScanUnitTest {
 		assertNull(pbScan.getHubVersionDist());
 		assertEquals("9001", pbScan.getScanMemory());
 		assertTrue(!pbScan.getShouldGenerateHubReport());
-		assertEquals("66", pbScan.getReportMaxiumWaitTime());
+		assertEquals("66", pbScan.getBomUpdateMaxiumWaitTime());
 	}
 
 	// These test the public methods of this class, anything not tested here should be covered in the integration tests
