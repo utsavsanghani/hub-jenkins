@@ -1,18 +1,5 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
-import hudson.Extension;
-import hudson.ProxyConfiguration;
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.AbstractProject;
-import hudson.model.Descriptor;
-import hudson.security.ACL;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.Publisher;
-import hudson.util.FormValidation;
-import hudson.util.FormValidation.Kind;
-import hudson.util.IOUtils;
-import hudson.util.ListBoxModel;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -38,9 +25,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-
-import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
@@ -73,6 +57,21 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.cloudbees.plugins.credentials.matchers.IdMatcher;
+
+import hudson.Extension;
+import hudson.ProxyConfiguration;
+import hudson.model.AbstractProject;
+import hudson.model.AutoCompletionCandidates;
+import hudson.model.Descriptor;
+import hudson.security.ACL;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Publisher;
+import hudson.util.FormValidation;
+import hudson.util.FormValidation.Kind;
+import hudson.util.IOUtils;
+import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
 
 @Extension(ordinal = 2)
 // This indicates to Jenkins that this is an implementation of an extension
@@ -312,29 +311,25 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 		return FormValidation.ok();
 	}
 
-	public FormValidation doCheckReportMaxiumWaitTime(@QueryParameter("shouldGenerateHubReport") final boolean shouldGenerateHubReport,
-			@QueryParameter("reportMaxiumWaitTime") final String reportMaxiumWaitTime)
+	public FormValidation doCheckBomUpdateMaxiumWaitTime(
+			@QueryParameter("bomUpdateMaxiumWaitTime") final String bomUpdateMaxiumWaitTime)
 					throws IOException, ServletException {
-		if (!shouldGenerateHubReport) {
-			// Not going to generate the report so this field doesnt matter.
-			return FormValidation.ok();
-		}
-		if (reportMaxiumWaitTime == null || reportMaxiumWaitTime.length() == 0) {
+		if (bomUpdateMaxiumWaitTime == null || bomUpdateMaxiumWaitTime.length() == 0) {
 			return FormValidation.error(Messages
-					.HubBuildScan_getReportWaitTimeEmpty());
+					.HubBuildScan_getBomUpdateWaitTimeEmpty());
 		}
 
 		try {
-			final Integer scanMem = Integer.valueOf(reportMaxiumWaitTime);
+			final Integer scanMem = Integer.valueOf(bomUpdateMaxiumWaitTime);
 			if (scanMem == 0) {
-				return FormValidation.error(Messages.HubBuildScan_getReportWaitTimeGreaterThanZero());
+				return FormValidation.error(Messages.HubBuildScan_getBomUpdateWaitTimeGreaterThanZero());
 			}
 			if (scanMem < 2) {
-				return FormValidation.warning(Messages.HubBuildScan_getReportWaitTimeShort());
+				return FormValidation.warning(Messages.HubBuildScan_getBomUpdateWaitTimeShort());
 			}
 		} catch (final NumberFormatException e) {
 			return FormValidation.error(e, Messages
-					.HubBuildScan_getReportWaitTimeInvalid());
+					.HubBuildScan_getBomUpdateWaitTimeInvalid());
 		}
 
 		return FormValidation.ok();
