@@ -303,29 +303,25 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 		return FormValidation.ok();
 	}
 
-	public FormValidation doCheckReportMaxiumWaitTime(@QueryParameter("shouldGenerateHubReport") final boolean shouldGenerateHubReport,
-			@QueryParameter("reportMaxiumWaitTime") final String reportMaxiumWaitTime)
+	public FormValidation doCheckBomUpdateMaxiumWaitTime(
+			@QueryParameter("bomUpdateMaxiumWaitTime") final String bomUpdateMaxiumWaitTime)
 					throws IOException, ServletException {
-		if (!shouldGenerateHubReport) {
-			// Not going to generate the report so this field doesnt matter.
-			return FormValidation.ok();
-		}
-		if (reportMaxiumWaitTime == null || reportMaxiumWaitTime.length() == 0) {
+		if (bomUpdateMaxiumWaitTime == null || bomUpdateMaxiumWaitTime.length() == 0) {
 			return FormValidation.error(Messages
-					.HubBuildScan_getReportWaitTimeEmpty());
+					.HubBuildScan_getBomUpdateWaitTimeEmpty());
 		}
 
 		try {
-			final Integer scanMem = Integer.valueOf(reportMaxiumWaitTime);
+			final Integer scanMem = Integer.valueOf(bomUpdateMaxiumWaitTime);
 			if (scanMem == 0) {
-				return FormValidation.error(Messages.HubBuildScan_getReportWaitTimeGreaterThanZero());
+				return FormValidation.error(Messages.HubBuildScan_getBomUpdateWaitTimeGreaterThanZero());
 			}
 			if (scanMem < 2) {
-				return FormValidation.warning(Messages.HubBuildScan_getReportWaitTimeShort());
+				return FormValidation.warning(Messages.HubBuildScan_getBomUpdateWaitTimeShort());
 			}
 		} catch (final NumberFormatException e) {
 			return FormValidation.error(e, Messages
-					.HubBuildScan_getReportWaitTimeInvalid());
+					.HubBuildScan_getBomUpdateWaitTimeInvalid());
 		}
 
 		return FormValidation.ok();
