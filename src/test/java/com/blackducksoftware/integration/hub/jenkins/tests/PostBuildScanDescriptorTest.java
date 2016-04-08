@@ -77,8 +77,8 @@ public class PostBuildScanDescriptorTest {
 	public static void projectCleanup() {
 		try {
 			final ProjectItem project = restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT"));
-			if (project != null && project.getId() != null) {
-				restHelper.deleteHubProject(project.getId());
+			if (project != null) {
+				restHelper.deleteHubProject(project);
 			}
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -184,7 +184,7 @@ public class PostBuildScanDescriptorTest {
 			assertTrue(form3.getMessage().contains(Messages.HubBuildScan_getVersionExistsIn_0_("")));
 			assertEquals(FormValidation.Kind.OK, form3.kind);
 		} finally {
-			restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
+			restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")));
 		}
 
 	}
@@ -211,7 +211,7 @@ public class PostBuildScanDescriptorTest {
 			Assert.assertEquals(Messages.HubBuildScan_getVersionCreated(), form2.getMessage());
 			Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
 		} finally {
-			restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
+			restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")));
 		}
 	}
 
@@ -240,7 +240,7 @@ public class PostBuildScanDescriptorTest {
 			Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
 			Assert.assertEquals(Messages.HubBuildScan_getProjectAndVersionExist(), form2.getMessage());
 		} finally {
-			restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
+			restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")));
 		}
 	}
 
@@ -298,7 +298,7 @@ public class PostBuildScanDescriptorTest {
 		HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
 		try {
-			restHelper.deleteHubProject(restHelper.getProjectByName(PROJECT_NAME_NOT_EXISTING).getId());
+			restHelper.deleteHubProject(restHelper.getProjectByName(PROJECT_NAME_NOT_EXISTING));
 		} catch (final Exception e) {
 			// ignore all exceptions
 		}
@@ -339,7 +339,7 @@ public class PostBuildScanDescriptorTest {
 		HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
 		try {
-			restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
+			restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")));
 		} catch (final Exception e) {
 		}
 
@@ -355,7 +355,7 @@ public class PostBuildScanDescriptorTest {
 					form2.getMessage().contains(Messages.HubBuildScan_getVersionNonExistingIn_0_(testProperties.getProperty("TEST_CREATE_PROJECT"), "")));
 			Assert.assertEquals(FormValidation.Kind.ERROR, form2.kind);
 		} finally {
-			restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
+			restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")));
 		}
 	}
 
@@ -387,7 +387,7 @@ public class PostBuildScanDescriptorTest {
 		HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
 		try {
-			restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
+			restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")));
 		} catch (final Exception e) {
 			// ignore all exceptions
 		}
@@ -480,7 +480,7 @@ public class PostBuildScanDescriptorTest {
 			assertTrue(matches.getValues().size() > 0);
 
 		} finally {
-			restHelper.deleteHubProject(restHelper.getProjectByName(projectAutoCompleteName).getId());
+			restHelper.deleteHubProject(restHelper.getProjectByName(projectAutoCompleteName));
 		}
 
 	}

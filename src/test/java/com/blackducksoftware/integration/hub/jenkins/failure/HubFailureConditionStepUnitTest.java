@@ -3,10 +3,6 @@ package com.blackducksoftware.integration.hub.jenkins.failure;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import hudson.model.Result;
-import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Publisher;
-import hudson.tasks.ArtifactArchiver;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -36,6 +32,11 @@ import com.blackducksoftware.integration.hub.policy.api.PolicyStatusEnum;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 
+import hudson.model.Result;
+import hudson.tasks.ArtifactArchiver;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Publisher;
+
 public class HubFailureConditionStepUnitTest {
 
 	@Rule
@@ -44,7 +45,7 @@ public class HubFailureConditionStepUnitTest {
 	private HubIntRestService getMockedService(final String returnVersion, final PolicyStatus status) throws Exception {
 		final HubIntRestService service = Mockito.mock(HubIntRestService.class);
 		Mockito.doReturn(returnVersion).when(service).getHubVersion();
-		Mockito.doReturn(status).when(service).getPolicyStatus(Mockito.anyString(), Mockito.anyString());
+		Mockito.doReturn(status).when(service).getPolicyStatus(Mockito.anyString());
 
 		return service;
 	}
@@ -290,57 +291,15 @@ public class HubFailureConditionStepUnitTest {
 	}
 
 	@Test
-	public void testPerformNoProjectId() throws Exception {
-		final Boolean failBuildForPolicyViolations = true;
-		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
-		final HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
-		failureStep = Mockito.spy(failureStep);
-		final HubIntRestService service = getMockedService("1.0.0", null);
-		final ProjectItem projectItem = new ProjectItem();
-		projectItem.setId(null);
-		Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-
-		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
-		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
-
-		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
-		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
-
-		final TestProject project = new TestProject(j.getInstance(), "Test Project");
-		final TestBuild build = new TestBuild(project);
-		build.setResult(Result.SUCCESS);
-		final List<Publisher> publishers = new ArrayList<Publisher>();
-		final PostBuildHubScan hubScanStep = new PostBuildHubScan(null, false, null, null, null, null, null,
-				false, null);
-		publishers.add(hubScanStep);
-		project.setPublishersList(publishers);
-		build.setScanFinishedAction(new HubScanFinishedAction());
-		final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
-		bomUpdatedAction.setHasBomBeenUdpated(true);
-		build.setBomUpdatedAction(bomUpdatedAction);
-
-		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		final PrintStream stream = new PrintStream(baos);
-		final TestBuildListener listener = new TestBuildListener(stream);
-
-		failureStep.perform(build, null, listener);
-
-		final String output = baos.toString();
-		assertTrue(output, output.contains("Could not find the specified Hub Project."));
-		assertEquals(Result.UNSTABLE, build.getResult());
-	}
-
-	@Test
 	public void testPerformNullVersions() throws Exception {
 		final Boolean failBuildForPolicyViolations = true;
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
 		final HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
 		final HubIntRestService service = getMockedService("1.0.0", null);
-		final ProjectItem projectItem = new ProjectItem();
-		projectItem.setId("ProjectId");
+		final ProjectItem projectItem = new ProjectItem(null, null, null);
 		Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-		Mockito.doReturn(null).when(service).getVersionsForProject(Mockito.anyString());
+		Mockito.doReturn(null).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
 
 		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
@@ -372,52 +331,6 @@ public class HubFailureConditionStepUnitTest {
 		assertEquals(Result.UNSTABLE, build.getResult());
 	}
 
-	@Test
-	public void testPerformNoVersionId() throws Exception {
-		final Boolean failBuildForPolicyViolations = true;
-		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
-		final HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
-		failureStep = Mockito.spy(failureStep);
-		final HubIntRestService service = getMockedService("1.0.0", null);
-		final ProjectItem projectItem = new ProjectItem();
-		projectItem.setId("ProjectId");
-		Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-		final List<ReleaseItem> projectVersions = new ArrayList<ReleaseItem>();
-		final ReleaseItem releaseItem = new ReleaseItem();
-		releaseItem.setId("VersionId");
-		releaseItem.setVersion("FakeVersion");
-		projectVersions.add(releaseItem);
-		Mockito.doReturn(projectVersions).when(service).getVersionsForProject(Mockito.anyString());
-
-		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
-		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
-
-		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
-		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
-
-		final TestProject project = new TestProject(j.getInstance(), "Test Project");
-		final TestBuild build = new TestBuild(project);
-		build.setResult(Result.SUCCESS);
-		final List<Publisher> publishers = new ArrayList<Publisher>();
-		final PostBuildHubScan hubScanStep = new PostBuildHubScan(null, false, null, "VerisonName", null, null, null,
-				false, null);
-		publishers.add(hubScanStep);
-		project.setPublishersList(publishers);
-		build.setScanFinishedAction(new HubScanFinishedAction());
-		final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
-		bomUpdatedAction.setHasBomBeenUdpated(true);
-		build.setBomUpdatedAction(bomUpdatedAction);
-
-		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		final PrintStream stream = new PrintStream(baos);
-		final TestBuildListener listener = new TestBuildListener(stream);
-
-		failureStep.perform(build, null, listener);
-
-		final String output = baos.toString();
-		assertTrue(output, output.contains("Could not find the specified Version for this Hub Project."));
-		assertEquals(Result.UNSTABLE, build.getResult());
-	}
 
 	@Test
 	public void testPerformPoliciesNotSupported() throws Exception {
@@ -426,15 +339,10 @@ public class HubFailureConditionStepUnitTest {
 		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
 		final HubIntRestService service = getMockedService("1.0.0", null);
-		final ProjectItem projectItem = new ProjectItem();
-		projectItem.setId("ProjectId");
+		final ProjectItem projectItem = new ProjectItem(null, null, null);
 		Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-		final List<ReleaseItem> projectVersions = new ArrayList<ReleaseItem>();
-		final ReleaseItem releaseItem = new ReleaseItem();
-		releaseItem.setId("VersionId");
-		releaseItem.setVersion("VerisonName");
-		projectVersions.add(releaseItem);
-		Mockito.doReturn(projectVersions).when(service).getVersionsForProject(Mockito.anyString());
+		final ReleaseItem releaseItem = new ReleaseItem(null, null, null, null, null);
+		Mockito.doReturn(releaseItem).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
 
 		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
@@ -484,15 +392,11 @@ public class HubFailureConditionStepUnitTest {
 
 		final PolicyStatus policyStatus = new PolicyStatus(PolicyStatusEnum.NOT_IN_VIOLATION.name(), null, counts, null);
 		final HubIntRestService service = getMockedService("3.0.0", policyStatus);
-		final ProjectItem projectItem = new ProjectItem();
-		projectItem.setId("ProjectId");
+		final ProjectItem projectItem = new ProjectItem(null, null, null);
 		Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-		final List<ReleaseItem> projectVersions = new ArrayList<ReleaseItem>();
-		final ReleaseItem releaseItem = new ReleaseItem();
-		releaseItem.setId("VersionId");
-		releaseItem.setVersion("VerisonName");
-		projectVersions.add(releaseItem);
-		Mockito.doReturn(projectVersions).when(service).getVersionsForProject(Mockito.anyString());
+		final ReleaseItem releaseItem = new ReleaseItem(null, null, null, null, null);
+		Mockito.doReturn(releaseItem).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
+
 		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
@@ -549,15 +453,10 @@ public class HubFailureConditionStepUnitTest {
 
 		final PolicyStatus policyStatus = new PolicyStatus(PolicyStatusEnum.NOT_IN_VIOLATION.name(), null, counts, null);
 		final HubIntRestService service = getMockedService("3.0.0", policyStatus);
-		final ProjectItem projectItem = new ProjectItem();
-		projectItem.setId("ProjectId");
+		final ProjectItem projectItem = new ProjectItem(null, null, null);
 		Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-		final List<ReleaseItem> projectVersions = new ArrayList<ReleaseItem>();
-		final ReleaseItem releaseItem = new ReleaseItem();
-		releaseItem.setId("VersionId");
-		releaseItem.setVersion("VerisonName");
-		projectVersions.add(releaseItem);
-		Mockito.doReturn(projectVersions).when(service).getVersionsForProject(Mockito.anyString());
+		final ReleaseItem releaseItem = new ReleaseItem(null, null, null, null, null);
+		Mockito.doReturn(releaseItem).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
 		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
 
@@ -615,15 +514,10 @@ public class HubFailureConditionStepUnitTest {
 		counts.add(countsNotInViolation);
 		final PolicyStatus policyStatus = new PolicyStatus(PolicyStatusEnum.IN_VIOLATION.name(), null, counts, null);
 		final HubIntRestService service = getMockedService("3.0.0", policyStatus);
-		final ProjectItem projectItem = new ProjectItem();
-		projectItem.setId("ProjectId");
+		final ProjectItem projectItem = new ProjectItem(null, null, null);
 		Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
-		final List<ReleaseItem> projectVersions = new ArrayList<ReleaseItem>();
-		final ReleaseItem releaseItem = new ReleaseItem();
-		releaseItem.setId("VersionId");
-		releaseItem.setVersion("VerisonName");
-		projectVersions.add(releaseItem);
-		Mockito.doReturn(projectVersions).when(service).getVersionsForProject(Mockito.anyString());
+		final ReleaseItem releaseItem = new ReleaseItem(null, null, null, null, null);
+		Mockito.doReturn(releaseItem).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
 
 		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);

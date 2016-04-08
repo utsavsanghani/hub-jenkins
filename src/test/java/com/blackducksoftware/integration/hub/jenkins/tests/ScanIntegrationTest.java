@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -119,8 +118,8 @@ public class ScanIntegrationTest {
 	public static void projectCleanup() {
 		try {
 			final ProjectItem project = restHelper.getProjectByName(testProperties.getProperty("TEST_PROJECT"));
-			if (project != null && project.getId() != null) {
-				restHelper.deleteHubProject(project.getId());
+			if (project != null) {
+				restHelper.deleteHubProject(project);
 			}
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -196,15 +195,17 @@ public class ScanIntegrationTest {
 		scans[2] = threeScan;
 
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
-		String projectId = null;
+		String projectUrl = null;
 		try {
-			projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
-			Assert.assertNotNull(projectId);
+			projectUrl = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
 			// Give server time to recognize the Project
 			Thread.sleep(2000);
-			final String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId, PhaseEnum.DEVELOPMENT.name(),
+			final ProjectItem hubProject = restHelper.getProject(projectUrl);
+
+			restHelper.createHubVersion(hubProject,
+					testProperties.getProperty("TEST_VERSION"),
+					PhaseEnum.DEVELOPMENT.name(),
 					DistributionEnum.EXTERNAL.name());
-			assertNotNull(versionId);
 			// Give server time to recognize the Version
 			Thread.sleep(2000);
 
@@ -226,11 +227,11 @@ public class ScanIntegrationTest {
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
 			assertTrue(buildOutput, buildOutput.contains(
 					"You can view the BlackDuck scan CLI logs at :"));
-			assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-			assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+			assertTrue(buildOutput, buildOutput.contains("Found Project : "));
+			assertTrue(buildOutput, buildOutput.contains("Found Version : "));
 			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 		} finally {
-			restHelper.deleteHubProject(projectId);
+			restHelper.deleteHubProject(projectUrl);
 		}
 	}
 
@@ -261,15 +262,16 @@ public class ScanIntegrationTest {
 		scans[4] = fiveScan;
 
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
-		String projectId = null;
+		String projectUrl = null;
 		try {
-			projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
-			Assert.assertNotNull(projectId);
+			projectUrl = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
 			// Give server time to recognize the Project
 			Thread.sleep(2000);
-			final String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId, PhaseEnum.DEVELOPMENT.name(),
+			final ProjectItem hubProject = restHelper.getProject(projectUrl);
+
+			restHelper.createHubVersion(hubProject, testProperties.getProperty("TEST_VERSION"),
+					PhaseEnum.DEVELOPMENT.name(),
 					DistributionEnum.EXTERNAL.name());
-			assertNotNull(versionId);
 			// Give server time to recognize the Version
 			Thread.sleep(2000);
 
@@ -293,8 +295,8 @@ public class ScanIntegrationTest {
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
 			assertTrue(buildOutput, buildOutput.contains(
 					"You can view the BlackDuck scan CLI logs at :"));
-			assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-			assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+			assertTrue(buildOutput, buildOutput.contains("Found Project : "));
+			assertTrue(buildOutput, buildOutput.contains("Found Version : "));
 			assertTrue(buildOutput, buildOutput.contains("The bom has been updated, generating the report."));
 			assertTrue(buildOutput, buildOutput.contains("Finished retrieving the report."));
 
@@ -309,7 +311,7 @@ public class ScanIntegrationTest {
 
 			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 		} finally {
-			restHelper.deleteHubProject(projectId);
+			restHelper.deleteHubProject(projectUrl);
 		}
 
 	}
@@ -341,15 +343,16 @@ public class ScanIntegrationTest {
 		scans[4] = fiveScan;
 
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
-		String projectId = null;
+		String projectUrl = null;
 		try {
-			projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
-			Assert.assertNotNull(projectId);
+			projectUrl = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
 			// Give server time to recognize the Project
 			Thread.sleep(2000);
-			final String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId, PhaseEnum.DEVELOPMENT.name(),
+			final ProjectItem hubProject = restHelper.getProject(projectUrl);
+
+			restHelper.createHubVersion(hubProject, testProperties.getProperty("TEST_VERSION"),
+					PhaseEnum.DEVELOPMENT.name(),
 					DistributionEnum.EXTERNAL.name());
-			assertNotNull(versionId);
 			// Give server time to recognize the Version
 			Thread.sleep(2000);
 
@@ -375,8 +378,8 @@ public class ScanIntegrationTest {
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
 			assertTrue(buildOutput, buildOutput.contains(
 					"You can view the BlackDuck scan CLI logs at :"));
-			assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-			assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+			assertTrue(buildOutput, buildOutput.contains("Found Project : "));
+			assertTrue(buildOutput, buildOutput.contains("Found Version : "));
 			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
 			assertNull(build.getAction(HubReportAction.class));
@@ -392,7 +395,7 @@ public class ScanIntegrationTest {
 			}
 			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 		} finally {
-			restHelper.deleteHubProject(projectId);
+			restHelper.deleteHubProject(projectUrl);
 		}
 
 	}
@@ -447,8 +450,8 @@ public class ScanIntegrationTest {
 			assertTrue(buildOutput, buildOutput.contains("Finished in"));
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
 			assertTrue(buildOutput, buildOutput.contains("You can view the BlackDuck scan CLI logs at :"));
-			assertTrue(buildOutput, buildOutput.contains("Project Id:"));
-			assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+			assertTrue(buildOutput, buildOutput.contains("Found Project : "));
+			assertTrue(buildOutput, buildOutput.contains("Found Version : "));
 
 			assertNull(build.getAction(HubReportAction.class));
 			assertNotNull(build.getAction(HubScanFinishedAction.class));
@@ -466,7 +469,7 @@ public class ScanIntegrationTest {
 			}
 			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 		} finally {
-			restHelper.deleteHubProject(restHelper.getProjectByName(projectName).getId());
+			restHelper.deleteHubProject(restHelper.getProjectByName(projectName));
 		}
 	}
 
@@ -513,11 +516,11 @@ public class ScanIntegrationTest {
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
 			assertTrue(buildOutput, buildOutput.contains(
 					"You can view the BlackDuck scan CLI logs at :"));
-			assertTrue(buildOutput, buildOutput.contains("Project Id:"));
-			assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+			assertTrue(buildOutput, buildOutput.contains("Found Project : "));
+			assertTrue(buildOutput, buildOutput.contains("Found Version : "));
 			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 		} finally {
-			restHelper.deleteHubProject(restHelper.getProjectByName(projectName).getId());
+			restHelper.deleteHubProject(restHelper.getProjectByName(projectName));
 		}
 	}
 
@@ -544,15 +547,16 @@ public class ScanIntegrationTest {
 		scans[2] = threeScan;
 
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
-		String projectId = null;
+		String projectUrl = null;
 		try {
-			projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
-			Assert.assertNotNull(projectId);
+			projectUrl = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
 			// Give server time to recognize the Project
 			Thread.sleep(2000);
-			final String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId, PhaseEnum.DEVELOPMENT.name(),
+			final ProjectItem hubProject = restHelper.getProject(projectUrl);
+
+			restHelper.createHubVersion(hubProject, testProperties.getProperty("TEST_VERSION"),
+					PhaseEnum.DEVELOPMENT.name(),
 					DistributionEnum.EXTERNAL.name());
-			assertNotNull(versionId);
 			// Give server time to recognize the Version
 			Thread.sleep(2000);
 
@@ -586,187 +590,15 @@ public class ScanIntegrationTest {
 					"You can view the BlackDuck scan CLI logs at :"));
 			assertTrue(buildOutput, buildOutput.contains("Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH") + "' at Port: '"
 					+ testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH") + "'"));
-			assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-			assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+			assertTrue(buildOutput, buildOutput.contains("Found Project : "));
+			assertTrue(buildOutput, buildOutput.contains("Found Version : "));
 			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
 		} finally {
-			restHelper.deleteHubProject(projectId);
+			restHelper.deleteHubProject(projectUrl);
 		}
 	}
 
-	// @Test
-	// public void completeRunthroughAndScanWithMappingThroughBASICProxy() throws Exception {
-	// Jenkins jenkins = j.jenkins;
-	//
-	// HubScanInstallation iScanInstall = new HubScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-	//
-	// IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-	// iScanDesc.setInstallations(iScanInstall);
-	//
-	// CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
-	// UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null,
-	// null,
-	// testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
-	// store.addCredentials(Domain.global(), credential);
-	//
-	// HubServerInfo serverInfo = new HubServerInfo();
-	// serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-	// serverInfo.setCredentialsId(credential.getId());
-	//
-	// ScanJobs oneScan = new ScanJobs("");
-	// ScanJobs twoScan = new ScanJobs("ch-simple-web/simple-webapp/target");
-	// ScanJobs threeScan = new ScanJobs("ch-simple-web/simple-webapp/target/simple-webapp.war");
-	// ScanJobs[] scans = new ScanJobs[3];
-	// scans[0] = oneScan;
-	// scans[1] = twoScan;
-	// scans[2] = threeScan;
-	//
-	// PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-	// scanDesc.setHubServerInfo(serverInfo);
-	// String projectId = null;
-	// try {
-	// projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
-	// Assert.assertNotNull(projectId);
-	// // Give server time to recognize the Project
-	// Thread.sleep(2000);
-	// String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId,
-	// PhaseEnum.DEVELOPMENT.name(),
-	// DistributionEnum.EXTERNAL.name());
-	// assertNotNull(versionId);
-	// // Give server time to recognize the Version
-	// Thread.sleep(2000);
-	//
-	// PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
-	// testProperties.getProperty("TEST_VERSION"), null,
-	// null, "4096");
-	// jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_BASIC"),
-	// Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_BASIC")),
-	// testProperties.getProperty("TEST_PROXY_USER_BASIC"),
-	// testProperties.getProperty("TEST_PROXY_PASSWORD_BASIC"));
-	//
-	// FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
-	// project.setCustomWorkspace(testWorkspace);
-	//
-	// project.getPublishersList().add(pbScan);
-	//
-	// FreeStyleBuild build = project.scheduleBuild2(0).get();
-	// String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-	// System.out.println(buildOutput);
-	//
-	// assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-	// assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyHost="));
-	// assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPort="));
-	// assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyUser="));
-	// assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPassword="));
-	//
-	// assertTrue(buildOutput, buildOutput.contains("Finished in"));
-	// assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-	// assertTrue(buildOutput, buildOutput.contains(
-	// "You can view the BlackDuck scan CLI logs at :"));
-	// assertTrue(buildOutput, buildOutput.contains("Using proxy: '" +
-	// testProperties.getProperty("TEST_PROXY_HOST_BASIC") + "' at Port: '"
-	// + testProperties.getProperty("TEST_PROXY_PORT_BASIC") + "'"));
-	// assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-	// assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-	/*
-	 * Only to be asserted if run against hub <2.3.1
-	 *
-	 * // assertTrue(buildOutput, buildOutput.contains("Checking for the scan location with Host name:"));
-	 * // assertTrue(buildOutput, buildOutput.contains("The scan target :"));
-	 * // assertTrue(buildOutput, buildOutput.contains("' has Scan Location Id:"));
-	 * // assertTrue(buildOutput, buildOutput.contains("These scan Id's were found for the scan targets."));
-	 * // assertTrue(buildOutput, buildOutput.contains("Mapping the scan location with id:"));
-	 * // assertTrue(buildOutput, buildOutput.contains("Successfully mapped the scan with id:"));
-	 */
-	// assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
-	//
-	// } finally {
-	// restHelper.deleteHubProject(projectId);
-	// }
-	// }
-	//
-	// @Test
-	// public void completeRunthroughAndScanWithMappingThroughDIGESTProxy() throws Exception {
-	// Jenkins jenkins = j.jenkins;
-	//
-	// HubScanInstallation iScanInstall = new HubScanInstallation(DEFAULT_ISCAN, iScanInstallPath, null);
-	//
-	// IScanDescriptor iScanDesc = jenkins.getExtensionList(ToolDescriptor.class).get(IScanDescriptor.class);
-	// iScanDesc.setInstallations(iScanInstall);
-	//
-	// CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
-	// UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null,
-	// null,
-	// testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
-	// store.addCredentials(Domain.global(), credential);
-	//
-	// HubServerInfo serverInfo = new HubServerInfo();
-	// serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
-	// serverInfo.setCredentialsId(credential.getId());
-	//
-	// ScanJobs oneScan = new ScanJobs("");
-	// ScanJobs twoScan = new ScanJobs("ch-simple-web/simple-webapp/target");
-	// ScanJobs threeScan = new ScanJobs("ch-simple-web/simple-webapp/target/simple-webapp.war");
-	// ScanJobs[] scans = new ScanJobs[3];
-	// scans[0] = oneScan;
-	// scans[1] = twoScan;
-	// scans[2] = threeScan;
-	//
-	// PostBuildScanDescriptor scanDesc = jenkins.getExtensionList(Descriptor.class).get(PostBuildScanDescriptor.class);
-	// scanDesc.setHubServerInfo(serverInfo);
-	// String projectId = null;
-	// try {
-	// projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
-	// Assert.assertNotNull(projectId);
-	// // Give server time to recognize the Project
-	// Thread.sleep(2000);
-	// String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId,
-	// PhaseEnum.DEVELOPMENT.name(),
-	// DistributionEnum.EXTERNAL.name());
-	// assertNotNull(versionId);
-	// // Give server time to recognize the Version
-	// Thread.sleep(2000);
-	//
-	// PostBuildHubScan pbScan = new PostBuildHubScan(scans, DEFAULT_ISCAN, testProperties.getProperty("TEST_PROJECT"),
-	// testProperties.getProperty("TEST_VERSION"), null,
-	// null, "4096");
-	//
-	// jenkins.proxy = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_DIGEST"),
-	// Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_DIGEST")),
-	// testProperties.getProperty("TEST_PROXY_USER_DIGEST"),
-	// testProperties.getProperty("TEST_PROXY_PASSWORD_DIGEST"));
-	//
-	// FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
-	// project.setCustomWorkspace(testWorkspace);
-	//
-	// project.getPublishersList().add(pbScan);
-	//
-	// FreeStyleBuild build = project.scheduleBuild2(0).get();
-	// String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-	// System.out.println(buildOutput);
-	//
-	// assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
-	// assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyHost="));
-	// assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPort="));
-	// assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyUser="));
-	// assertTrue(buildOutput, buildOutput.contains("-Dhttp.proxyPassword="));
-	//
-	// assertTrue(buildOutput, buildOutput.contains("Finished in"));
-	// assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
-	// assertTrue(buildOutput, buildOutput.contains(
-	// "You can view the BlackDuck scan CLI logs at :"));
-	// assertTrue(buildOutput, buildOutput.contains("Using proxy: '" +
-	// testProperties.getProperty("TEST_PROXY_HOST_DIGEST") + "' at Port: '"
-	// + testProperties.getProperty("TEST_PROXY_PORT_DIGEST") + "'"));
-	// assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-	// assertTrue(buildOutput, buildOutput.contains("Version Id:"));
-	// assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
-	//
-	// } finally {
-	// restHelper.deleteHubProject(projectId);
-	// }
-	// }
 
 	@Test
 	public void completeRunthroughAndScanWithMappingWithProxyIgnored() throws Exception {
@@ -790,15 +622,16 @@ public class ScanIntegrationTest {
 		scans[1] = twoScan;
 		scans[2] = threeScan;
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
-		String projectId = null;
+		String projectUrl = null;
 		try {
-			projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
-			Assert.assertNotNull(projectId);
+			projectUrl = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
 			// Give server time to recognize the Project
 			Thread.sleep(2000);
-			final String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId, PhaseEnum.DEVELOPMENT.name(),
+			final ProjectItem hubProject = restHelper.getProject(projectUrl);
+
+			restHelper.createHubVersion(hubProject, testProperties.getProperty("TEST_VERSION"),
+					PhaseEnum.DEVELOPMENT.name(),
 					DistributionEnum.EXTERNAL.name());
-			assertNotNull(versionId);
 			// Give server time to recognize the Version
 			Thread.sleep(2000);
 
@@ -827,12 +660,12 @@ public class ScanIntegrationTest {
 					"You can view the BlackDuck scan CLI logs at :"));
 			assertTrue(buildOutput, !buildOutput.contains("Using proxy: '" + testProperties.getProperty("TEST_PROXY_HOST") + "' at Port: '"
 					+ testProperties.getProperty("TEST_PROXY_PORT") + "'"));
-			assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-			assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+			assertTrue(buildOutput, buildOutput.contains("Found Project : "));
+			assertTrue(buildOutput, buildOutput.contains("Found Version : "));
 			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
 		} finally {
-			restHelper.deleteHubProject(projectId);
+			restHelper.deleteHubProject(projectUrl);
 		}
 	}
 
@@ -894,12 +727,12 @@ public class ScanIntegrationTest {
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
 			assertTrue(buildOutput, buildOutput.contains(
 					"You can view the BlackDuck scan CLI logs at :"));
-			assertTrue(buildOutput, buildOutput.contains("Project Id: '"));
-			assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
+			assertTrue(buildOutput, buildOutput.contains("Found Project : "));
+			assertTrue(buildOutput, buildOutput.contains("Found Version : "));
 			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 			assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
 		} finally {
-			restHelper.deleteHubProject(restHelper.getProjectByName(PROJECT_NAME_NOT_EXISTING).getId());
+			restHelper.deleteHubProject(restHelper.getProjectByName(PROJECT_NAME_NOT_EXISTING));
 		}
 	}
 
@@ -922,10 +755,9 @@ public class ScanIntegrationTest {
 		scans[0] = oneScan;
 
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
-		String projectId = null;
+		String projectUrl = null;
 		try {
-			projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
-			Assert.assertNotNull(projectId);
+			projectUrl = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
 			// Give server time to recognize the Project
 			Thread.sleep(2000);
 
@@ -953,12 +785,12 @@ public class ScanIntegrationTest {
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
 			assertTrue(buildOutput, buildOutput.contains(
 					"You can view the BlackDuck scan CLI logs at :"));
-			assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-			assertTrue(buildOutput, buildOutput.contains("Version Id: '"));
+			assertTrue(buildOutput, buildOutput.contains("Found Project : "));
+			assertTrue(buildOutput, buildOutput.contains("Found Version : "));
 			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 			assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
 		} finally {
-			restHelper.deleteHubProject(projectId);
+			restHelper.deleteHubProject(projectUrl);
 		}
 	}
 
@@ -985,15 +817,16 @@ public class ScanIntegrationTest {
 		scans[2] = threeScan;
 
 		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
-		String projectId = null;
+		String projectUrl = null;
 		try {
-			projectId = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
-			Assert.assertNotNull(projectId);
+			projectUrl = restHelper.createHubProject(testProperties.getProperty("TEST_PROJECT"));
 			// Give server time to recognize the Project
 			Thread.sleep(2000);
-			final String versionId = restHelper.createHubVersion(testProperties.getProperty("TEST_VERSION"), projectId, PhaseEnum.DEVELOPMENT.name(),
+			final ProjectItem hubProject = restHelper.getProject(projectUrl);
+
+			restHelper.createHubVersion(hubProject, testProperties.getProperty("TEST_VERSION"),
+					PhaseEnum.DEVELOPMENT.name(),
 					DistributionEnum.EXTERNAL.name());
-			assertNotNull(versionId);
 			// Give server time to recognize the Version
 			Thread.sleep(2000);
 
@@ -1017,8 +850,8 @@ public class ScanIntegrationTest {
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
 			assertTrue(buildOutput, buildOutput.contains(
 					"You can view the BlackDuck scan CLI logs at :"));
-			assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-			assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+			assertTrue(buildOutput, buildOutput.contains("Found Project : "));
+			assertTrue(buildOutput, buildOutput.contains("Found Version : "));
 			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 
 			// Second run, scans should already be mapped
@@ -1031,11 +864,11 @@ public class ScanIntegrationTest {
 			assertTrue(buildOutput, buildOutput.contains("with status SUCCESS"));
 			assertTrue(buildOutput, buildOutput.contains(
 					"You can view the BlackDuck scan CLI logs at :"));
-			assertTrue(buildOutput, buildOutput.contains("Project Id: '" + projectId + "'"));
-			assertTrue(buildOutput, buildOutput.contains("Version Id:"));
+			assertTrue(buildOutput, buildOutput.contains("Found Project : "));
+			assertTrue(buildOutput, buildOutput.contains("Found Version : "));
 			assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
 		} finally {
-			restHelper.deleteHubProject(projectId);
+			restHelper.deleteHubProject(projectUrl);
 		}
 	}
 
