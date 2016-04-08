@@ -10,15 +10,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
-import com.blackducksoftware.integration.hub.HubScanJobConfig;
-import com.blackducksoftware.integration.hub.HubScanJobConfigBuilder;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
@@ -45,6 +42,8 @@ import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetOneJarFile;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
+import com.blackducksoftware.integration.hub.job.HubScanJobConfig;
+import com.blackducksoftware.integration.hub.job.HubScanJobConfigBuilder;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
@@ -283,7 +282,7 @@ public class PostBuildHubScan extends Recorder {
 						reportGenInfo.setVersion(version);
 						reportGenInfo.setScanTargets(jobConfig.getScanTargetPaths());
 
-						reportGenInfo.setMaximumWaitTime(jobConfig.getMaxWaitTimeForRiskReportInMilliseconds());
+						reportGenInfo.setMaximumWaitTime(jobConfig.getMaxWaitTimeForBomUpdateInMilliseconds());
 
 						reportGenInfo.setBeforeScanTime(beforeScanTime);
 						reportGenInfo.setAfterScanTime(afterScanTime);
@@ -296,7 +295,7 @@ public class PostBuildHubScan extends Recorder {
 						bomUpdatedAction.setAfterScanTime(afterScanTime);
 						bomUpdatedAction.setBeforeScanTime(beforeScanTime);
 						bomUpdatedAction.setLocalHostName(localHostName);
-						bomUpdatedAction.setMaxWaitTime(jobConfig.getMaxWaitTimeForRiskReportInMilliseconds());
+						bomUpdatedAction.setMaxWaitTime(jobConfig.getMaxWaitTimeForBomUpdateInMilliseconds());
 						bomUpdatedAction.setScanStatusDirectory(scan.getScanStatusDirectoryPath());
 						bomUpdatedAction.setScanTargets(jobConfig.getScanTargetPaths());
 					}
@@ -534,8 +533,7 @@ public class PostBuildHubScan extends Recorder {
 
 		logger.info(
 				"-> Generate Hub report : " + jobConfig.isShouldGenerateRiskReport());
-		final String formattedTime = String.format("%d minutes",
-				TimeUnit.MILLISECONDS.toMinutes(jobConfig.getMaxWaitTimeForRiskReportInMilliseconds()));
+		final String formattedTime = String.format("%d minutes", jobConfig.getMaxWaitTimeForBomUpdate());
 		logger.info("-> Maximum wait time for the BOM Update : " + formattedTime);
 	}
 

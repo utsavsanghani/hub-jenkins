@@ -348,12 +348,15 @@ public class BDCommonDescriptorUtil {
 			final HubIntRestService service = BuildHelper.getRestService(serverInfo.getServerUrl(), credentialUserName,
 					credentialPassword, serverInfo.getTimeout());
 
+			Boolean projectCreated = false;
+
 			ProjectItem project = null;
 			try {
 				project = service.getProjectByName(hubProjectName);
 			} catch (final ProjectDoesNotExistException e) {
 				final String projectUrl = service.createHubProject(hubProjectName);
 				project = service.getProject(projectUrl);
+				projectCreated = true;
 			}
 
 			try {
@@ -361,7 +364,11 @@ public class BDCommonDescriptorUtil {
 				return FormValidation.warning(Messages.HubBuildScan_getProjectAndVersionExist());
 			} catch (final VersionDoesNotExistException e) {
 				service.createHubVersion(project, hubProjectVersion, hubVersionPhase, hubVersionDist);
-				return FormValidation.ok(Messages.HubBuildScan_getVersionCreated());
+				if (projectCreated) {
+					return FormValidation.ok(Messages.HubBuildScan_getProjectAndVersionCreated());
+				} else {
+					return FormValidation.ok(Messages.HubBuildScan_getVersionCreated());
+				}
 			}
 		} catch (final BDRestException e) {
 			if (e.getResource().getResponse().getStatus().getCode() == 412) {
