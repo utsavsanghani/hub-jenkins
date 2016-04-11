@@ -301,7 +301,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
 		try {
 			final Integer scanMem = Integer.valueOf(bomUpdateMaxiumWaitTime);
-			if (scanMem == 0) {
+			if (scanMem <= 0) {
 				return FormValidation.error(Messages.HubBuildScan_getBomUpdateWaitTimeGreaterThanZero());
 			}
 			if (scanMem < 2) {
