@@ -160,7 +160,7 @@ public class BDCommonDescriptorUtil {
 		// Query for the project version so hopefully the check methods run for
 		// boths fields
 		// when the User changes the Name of the project
-		if (hubProjectName.length() > 0) {
+		if (StringUtils.isBlank(hubProjectName)) {
 			final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 			final boolean changed = false;
 			try {
@@ -222,7 +222,7 @@ public class BDCommonDescriptorUtil {
 
 	public static FormValidation doCheckHubProjectVersion(final HubServerInfo serverInfo,
 			final String hubProjectVersion, final String hubProjectName) throws IOException, ServletException {
-		if (hubProjectVersion.length() > 0) {
+		if (StringUtils.isBlank(hubProjectVersion)) {
 
 			final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 			final boolean changed = false;

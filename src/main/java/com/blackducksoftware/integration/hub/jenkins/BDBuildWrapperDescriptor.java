@@ -5,6 +5,7 @@ import java.io.Serializable;
 
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.blackducksoftware.integration.hub.exception.BDCIScopeException;
@@ -21,23 +22,13 @@ import hudson.tasks.BuildWrapperDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
-// This indicates to Jenkins that this is an implementation of an extension
-// point.
 public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements Serializable {
 
-	/**
-	 * In order to load the persisted global configuration, you have to call
-	 * load() in the constructor.
-	 */
 	public BDBuildWrapperDescriptor() {
 		super(BDBuildWrapper.class);
 		load();
 	}
 
-	/**
-	 * In order to load the persisted global configuration, you have to call
-	 * load() in the constructor.
-	 */
 	public BDBuildWrapperDescriptor(final Class<? extends BuildWrapper> subClass) {
 		super(subClass);
 		load();
@@ -98,7 +89,6 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 	/**
 	 * Creates the Hub project AND/OR version
 	 *
-	 *
 	 */
 	public FormValidation doCreateHubWrapperProject(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
 			@QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion,
@@ -117,7 +107,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 	public FormValidation doCheckUserScopesToInclude(@QueryParameter final String value)
 			throws IOException, ServletException {
 		if (this instanceof MavenBuildWrapperDescriptor) {
-			if (value.length() == 0) {
+			if (StringUtils.isBlank(value)) {
 				return FormValidation.error(Messages
 						.HubMavenWrapper_getPleaseIncludeAScope());
 			}
@@ -128,7 +118,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 				return FormValidation.error(Messages.HubMavenWrapper_getIncludedInvalidScope_0_(scope));
 			}
 		} else if (this instanceof GradleBuildWrapperDescriptor) {
-			if (value.length() == 0) {
+			if (StringUtils.isBlank(value)) {
 				return FormValidation.error(Messages
 						.HubGradleWrapper_getPleaseIncludeAConfiguration());
 			}
@@ -138,10 +128,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 
 	@Override
 	public boolean isApplicable(final AbstractProject<?, ?> aClass) {
-		// Indicates that this builder can be used with all kinds of project
-		// types
 		return aClass.getClass().isAssignableFrom(FreeStyleProject.class);
-		// || aClass.getClass().isAssignableFrom(MavenModuleSet.class);
 	}
 
 	@Override

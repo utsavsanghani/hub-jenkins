@@ -67,9 +67,10 @@ import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
+//This indicates to Jenkins that this is an implementation of an extension
+//point. The ordinal implies an order to the UI element. The Post-Build Actions add new actions in descending order
+// so have this ordinal as a higher value than the failure condition Post-Build Action
 @Extension(ordinal = 2)
-// This indicates to Jenkins that this is an implementation of an extension
-// point.
 public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> implements Serializable {
 
 	private static final String FORM_SERVER_URL = "hubServerUrl";
@@ -118,7 +119,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	/**
 	 * We return a String here instead of an int or Integer because the UI needs a String to display correctly
 	 *
-	 * @return
 	 */
 	public String getDefaultTimeout() {
 		return String.valueOf(HubServerInfo.getDefaultTimeout());
@@ -127,7 +127,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	/**
 	 * We return a String here instead of an int or Integer because the UI needs a String to display correctly
 	 *
-	 * @return
 	 */
 	public String getHubTimeout() {
 		return getHubServerInfo() == null ? getDefaultTimeout()
@@ -158,7 +157,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 			}
 			if (req.getMethod().equals("GET")) {
 				// read
-				// checkPermission(EXTENDED_READ);
 				rsp.setContentType("application/xml");
 				IOUtils.copy(getConfigFile().getFile(), rsp.getOutputStream());
 				return;
@@ -179,7 +177,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	}
 
 	public void updateByXml(final Source source) throws IOException, TransformerException, ParserConfigurationException, SAXException {
-
 		final TransformerFactory tFactory = TransformerFactory.newInstance();
 		final Transformer transformer = tFactory.newTransformer();
 		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
@@ -187,7 +184,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
 		final ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
 
-		// StreamResult result = new StreamResult(new OutputStreamWriter(System.out, "UTF-8"));
 		final StreamResult result = new StreamResult(byteOutput);
 		transformer.transform(source, result);
 
@@ -250,10 +246,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
 	@Override
 	public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
-		// Indicates that this builder can be used with all kinds of project
-		// types
 		return true;
-		// || aClass.getClass().isAssignableFrom(MavenModuleSet.class);
 	}
 
 	/**
@@ -272,10 +265,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 		final String hubServerUrl = formData.getString(FORM_SERVER_URL);
 
 		hubServerInfo = new HubServerInfo(hubServerUrl, formData.getString(FORM_CREDENTIALSID), formData.getInt(FORM_TIMEOUT));
-		// formData.getLong(FORM_TIMEOUT));
-		// ^Can also use req.bindJSON(this, formData);
-		// (easier when there are many fields; need set* methods for this,
-		// like setUseFrench)
 		save();
 		HubServerInfoSingleton.getInstance().setServerInfo(hubServerInfo);
 
@@ -284,8 +273,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
 	public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") final String scanMemory)
 			throws IOException, ServletException {
-
-		if (scanMemory.length() == 0) {
+		if (StringUtils.isBlank(scanMemory)) {
 			return FormValidation.error(Messages
 					.HubBuildScan_getNeedMemory());
 		}
@@ -306,7 +294,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	public FormValidation doCheckBomUpdateMaxiumWaitTime(
 			@QueryParameter("bomUpdateMaxiumWaitTime") final String bomUpdateMaxiumWaitTime)
 					throws IOException, ServletException {
-		if (bomUpdateMaxiumWaitTime == null || bomUpdateMaxiumWaitTime.length() == 0) {
+		if (StringUtils.isBlank(bomUpdateMaxiumWaitTime)) {
 			return FormValidation.error(Messages
 					.HubBuildScan_getBomUpdateWaitTimeEmpty());
 		}
@@ -364,7 +352,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	/**
 	 * Fills the drop down list of possible Version phases
 	 *
-	 * @return
 	 */
 	public ListBoxModel doFillHubVersionPhaseItems() {
 		return BDCommonDescriptorUtil.doFillHubVersionPhaseItems();
@@ -373,7 +360,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	/**
 	 * Fills the drop down list of possible Version distribution types
 	 *
-	 * @return
 	 */
 	public ListBoxModel doFillHubVersionDistItems() {
 		return BDCommonDescriptorUtil.doFillHubVersionDistItems();
@@ -381,7 +367,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
 	public FormValidation doCheckTimeout(@QueryParameter("hubTimeout") final String hubTimeout)
 			throws IOException, ServletException {
-		if (hubTimeout.length() == 0) {
+		if (StringUtils.isBlank(hubTimeout)) {
 			return FormValidation.error(Messages.HubBuildScan_getPleaseSetTimeout());
 		}
 		Integer i = 0;
@@ -404,7 +390,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	 */
 	public FormValidation doCheckServerUrl(@QueryParameter("serverUrl") final String serverUrl)
 			throws IOException, ServletException {
-		if (serverUrl.length() == 0) {
+		if (StringUtils.isBlank(serverUrl)) {
 			return FormValidation.error(Messages
 					.HubBuildScan_getPleaseSetServerUrl());
 		}

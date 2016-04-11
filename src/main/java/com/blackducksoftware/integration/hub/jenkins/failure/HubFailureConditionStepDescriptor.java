@@ -1,11 +1,5 @@
 package com.blackducksoftware.integration.hub.jenkins.failure;
 
-import hudson.Extension;
-import hudson.model.AbstractProject;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.Publisher;
-import hudson.util.FormValidation;
-
 import java.io.IOException;
 import java.io.Serializable;
 
@@ -20,6 +14,12 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 
+import hudson.Extension;
+import hudson.model.AbstractProject;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Publisher;
+import hudson.util.FormValidation;
+
 @Extension(ordinal = 1)
 public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publisher> implements Serializable {
 
@@ -28,26 +28,23 @@ public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publi
     }
 
     public HubSupportHelper getCheckedHubSupportHelper() {
-        HubSupportHelper hubSupport = new HubSupportHelper();
-        HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
+        final HubSupportHelper hubSupport = new HubSupportHelper();
+        final HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
         try {
-            HubIntRestService service = BuildHelper.getRestService(null, serverInfo.getServerUrl(),
+            final HubIntRestService service = BuildHelper.getRestService(null, serverInfo.getServerUrl(),
                     serverInfo.getUsername(),
                     serverInfo.getPassword(),
                     serverInfo.getTimeout());
             hubSupport.checkHubSupport(service, null);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             return null;
         }
         return hubSupport;
     }
 
     @Override
-    public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-        // Indicates that this builder can be used with all kinds of project
-        // types
-
-        HubSupportHelper hubSupport = getCheckedHubSupportHelper();
+    public boolean isApplicable(final Class<? extends AbstractProject> jobType) {
+        final HubSupportHelper hubSupport = getCheckedHubSupportHelper();
         if (hubSupport != null && hubSupport.isPolicyApiSupport()) {
             return true;
         }
@@ -60,17 +57,15 @@ public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publi
         return Messages.HubFailureCondition_getDisplayName();
     }
 
-    public FormValidation doCheckFailBuildForPolicyViolations(@QueryParameter("failBuildForPolicyViolations") boolean failBuildForPolicyViolations)
+    public FormValidation doCheckFailBuildForPolicyViolations(@QueryParameter("failBuildForPolicyViolations") final boolean failBuildForPolicyViolations)
             throws IOException, ServletException {
         if (failBuildForPolicyViolations) {
-
-            HubSupportHelper hubSupport = getCheckedHubSupportHelper();
+            final HubSupportHelper hubSupport = getCheckedHubSupportHelper();
 
             if (hubSupport != null && !hubSupport.isPolicyApiSupport()) {
                 return FormValidation.error(Messages.HubFailureCondition_getPoliciesNotSupported());
             }
         }
-
         return FormValidation.ok();
     }
 

@@ -13,7 +13,6 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kohsuke.stapler.StaplerRequest;
 
 import com.blackducksoftware.integration.build.BuildInfo;
 import com.blackducksoftware.integration.hub.BuilderType;
@@ -34,20 +33,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.tasks.BuildWrapper;
-import hudson.tasks.Builder;
 
-/**
- * Sample {@link Builder}.
- * <p>
- * When the user configures the project and enables this builder, {@link DescriptorImpl#newInstance(StaplerRequest)} is
- * invoked and a new {@link BDBuildWrapper} is created. The created instance is persisted to the project configuration
- * XML by using XStream, so this allows you to use instance fields (like {@link #name}) to remember the configuration.
- *
- * <p>
- * When a build is performed, the {@link #perform(AbstractBuild, Launcher, BuildListener)} method will be invoked.
- *
- * @author James Richard
- */
 public abstract class BDBuildWrapper extends BuildWrapper {
 
 	protected final String userScopesToInclude;
@@ -112,9 +98,6 @@ public abstract class BDBuildWrapper extends BuildWrapper {
 		return userScopesToInclude;
 	}
 
-	// Overridden for better type safety.
-	// If your plugin doesn't really define any property on Descriptor,
-	// you don't have to do this.
 	@Override
 	public BDBuildWrapperDescriptor getDescriptor() {
 		return (BDBuildWrapperDescriptor) super.getDescriptor();
