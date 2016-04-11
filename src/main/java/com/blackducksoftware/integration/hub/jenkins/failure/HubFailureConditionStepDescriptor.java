@@ -1,7 +1,6 @@
 package com.blackducksoftware.integration.hub.jenkins.failure;
 
 import java.io.IOException;
-import java.io.Serializable;
 
 import javax.servlet.ServletException;
 
@@ -21,52 +20,52 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 
 @Extension(ordinal = 1)
-public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publisher> implements Serializable {
+public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publisher> {
 
-    public HubFailureConditionStepDescriptor() {
-        super(HubFailureConditionStep.class);
-    }
+	public HubFailureConditionStepDescriptor() {
+		super(HubFailureConditionStep.class);
+	}
 
-    public HubSupportHelper getCheckedHubSupportHelper() {
-        final HubSupportHelper hubSupport = new HubSupportHelper();
-        final HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
-        try {
-            final HubIntRestService service = BuildHelper.getRestService(null, serverInfo.getServerUrl(),
-                    serverInfo.getUsername(),
-                    serverInfo.getPassword(),
-                    serverInfo.getTimeout());
-            hubSupport.checkHubSupport(service, null);
-        } catch (final Exception e) {
-            return null;
-        }
-        return hubSupport;
-    }
+	public HubSupportHelper getCheckedHubSupportHelper() {
+		final HubSupportHelper hubSupport = new HubSupportHelper();
+		final HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
+		try {
+			final HubIntRestService service = BuildHelper.getRestService(null, serverInfo.getServerUrl(),
+					serverInfo.getUsername(),
+					serverInfo.getPassword(),
+					serverInfo.getTimeout());
+			hubSupport.checkHubSupport(service, null);
+		} catch (final Exception e) {
+			return null;
+		}
+		return hubSupport;
+	}
 
-    @Override
-    public boolean isApplicable(final Class<? extends AbstractProject> jobType) {
-        final HubSupportHelper hubSupport = getCheckedHubSupportHelper();
-        if (hubSupport != null && hubSupport.isPolicyApiSupport()) {
-            return true;
-        }
+	@Override
+	public boolean isApplicable(final Class<? extends AbstractProject> jobType) {
+		final HubSupportHelper hubSupport = getCheckedHubSupportHelper();
+		if (hubSupport != null && hubSupport.isPolicyApiSupport()) {
+			return true;
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    @Override
-    public String getDisplayName() {
-        return Messages.HubFailureCondition_getDisplayName();
-    }
+	@Override
+	public String getDisplayName() {
+		return Messages.HubFailureCondition_getDisplayName();
+	}
 
-    public FormValidation doCheckFailBuildForPolicyViolations(@QueryParameter("failBuildForPolicyViolations") final boolean failBuildForPolicyViolations)
-            throws IOException, ServletException {
-        if (failBuildForPolicyViolations) {
-            final HubSupportHelper hubSupport = getCheckedHubSupportHelper();
+	public FormValidation doCheckFailBuildForPolicyViolations(@QueryParameter("failBuildForPolicyViolations") final boolean failBuildForPolicyViolations)
+			throws IOException, ServletException {
+		if (failBuildForPolicyViolations) {
+			final HubSupportHelper hubSupport = getCheckedHubSupportHelper();
 
-            if (hubSupport != null && !hubSupport.isPolicyApiSupport()) {
-                return FormValidation.error(Messages.HubFailureCondition_getPoliciesNotSupported());
-            }
-        }
-        return FormValidation.ok();
-    }
+			if (hubSupport != null && !hubSupport.isPolicyApiSupport()) {
+				return FormValidation.error(Messages.HubFailureCondition_getPoliciesNotSupported());
+			}
+		}
+		return FormValidation.ok();
+	}
 
 }
