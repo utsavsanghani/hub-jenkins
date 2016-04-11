@@ -3,7 +3,6 @@ package com.blackducksoftware.integration.hub.jenkins.failure;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Map;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -28,7 +27,6 @@ import com.blackducksoftware.integration.hub.policy.api.PolicyStatusEnum;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 
 import hudson.Launcher;
-import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Result;
@@ -168,22 +166,6 @@ public class HubFailureConditionStep extends Recorder {
 		}
 		return true;
 	}
-
-	public String handleVariableReplacement(final Map<String, String> variables, final String value) throws BDJenkinsHubPluginException {
-		if (value != null) {
-
-			final String newValue = Util.replaceMacro(value, variables);
-
-			if (newValue.contains("$")) {
-				throw new BDJenkinsHubPluginException("Variable was not properly replaced. Value : " + value + ", Result : " + newValue
-						+ ". Make sure the variable has been properly defined.");
-			}
-			return newValue;
-		} else {
-			return null;
-		}
-	}
-
 
 	public HubIntRestService getHubIntRestService(final HubJenkinsLogger logger, final HubServerInfo serverInfo) throws IOException,
 	BDRestException, URISyntaxException, BDJenkinsHubPluginException, HubIntegrationException {

@@ -32,6 +32,7 @@ import com.blackducksoftware.integration.hub.jenkins.PostBuildHubScan;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
+import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.tests.utils.TestLogger;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -330,22 +331,19 @@ public class PostBuildHubScanUnitTest {
 		exception
 		.expectMessage("Variable was not properly replaced. Value : ${JOB_NAME}, Result : ${JOB_NAME}. Make sure the variable has been properly defined.");
 
-		final PostBuildHubScan postScan = new PostBuildHubScan(null, false, null, null, null, null, null, false, "0");
 		final Map<String, String> emptyVariables = new HashMap<String, String>();
-		postScan.handleVariableReplacement(emptyVariables, "${JOB_NAME}");
+		BuildHelper.handleVariableReplacement(emptyVariables, "${JOB_NAME}");
 	}
 
 	@Test
 	public void testHandleVariableReplacementVariable() throws Exception {
-		final PostBuildHubScan postScan = new PostBuildHubScan(null, false, null, null, null, null, null, false, "0");
 		final Map<String, String> emptyVariables = new HashMap<String, String>();
 		emptyVariables.put("JOB_NAME", "Test Job");
-		assertEquals("Test Job", postScan.handleVariableReplacement(emptyVariables, "${JOB_NAME}"));
+		assertEquals("Test Job", BuildHelper.handleVariableReplacement(emptyVariables, "${JOB_NAME}"));
 	}
 
 	@Test
 	public void testHandleVariableReplacementVariableNull() throws Exception {
-		final PostBuildHubScan postScan = new PostBuildHubScan(null, false, null, null, null, null, null, false, "0");
-		assertNull(postScan.handleVariableReplacement(null, null));
+		assertNull(BuildHelper.handleVariableReplacement(null, null));
 	}
 }

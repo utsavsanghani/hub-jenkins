@@ -41,7 +41,6 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 	/**
 	 * Fills the drop down list of possible Version phases
 	 *
-	 * @return
 	 */
 	public ListBoxModel doFillHubWrapperVersionPhaseItems() {
 		return BDCommonDescriptorUtil.doFillHubVersionPhaseItems();
@@ -50,7 +49,6 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 	/**
 	 * Fills the drop down list of possible Version distribution types
 	 *
-	 * @return
 	 */
 	public ListBoxModel doFillHubWrapperVersionDistItems() {
 		return BDCommonDescriptorUtil.doFillHubVersionDistItems();

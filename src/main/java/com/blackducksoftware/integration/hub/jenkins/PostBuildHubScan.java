@@ -9,7 +9,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -54,7 +53,6 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.ProxyConfiguration;
-import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.JDK;
@@ -219,8 +217,8 @@ public class PostBuildHubScan extends Recorder {
 					String projectVersion = null;
 
 					if (StringUtils.isNotBlank(getHubProjectName()) && StringUtils.isNotBlank(getHubProjectVersion())) {
-						projectName = handleVariableReplacement(variables, getHubProjectName());
-						projectVersion = handleVariableReplacement(variables, getHubProjectVersion());
+						projectName = BuildHelper.handleVariableReplacement(variables, getHubProjectName());
+						projectVersion = BuildHelper.handleVariableReplacement(variables, getHubProjectVersion());
 
 					}
 					final HubScanJobConfigBuilder hubScanJobConfigBuilder = new HubScanJobConfigBuilder();
@@ -390,7 +388,7 @@ public class PostBuildHubScan extends Recorder {
 				if (StringUtils.isEmpty(scanJob.getScanTarget())) {
 					scanTargetPaths.add(workingDirectory);
 				} else {
-					String target = handleVariableReplacement(variables, scanJob.getScanTarget().trim());
+					String target = BuildHelper.handleVariableReplacement(variables, scanJob.getScanTarget().trim());
 					// make sure the target provided doesn't already begin with a slash or end in a slash
 					// removes the slash if the target begins or ends with one
 					final File targetFile = new File(workingDirectory, target);
@@ -484,20 +482,6 @@ public class PostBuildHubScan extends Recorder {
 		return version;
 	}
 
-	public String handleVariableReplacement(final Map<String, String> variables, final String value) throws BDJenkinsHubPluginException {
-		if (value != null) {
-
-			final String newValue = Util.replaceMacro(value, variables);
-
-			if (newValue.contains("$")) {
-				throw new BDJenkinsHubPluginException("Variable was not properly replaced. Value : " + value + ", Result : " + newValue
-						+ ". Make sure the variable has been properly defined.");
-			}
-			return newValue;
-		} else {
-			return null;
-		}
-	}
 
 	public void printConfiguration(final AbstractBuild<?, ?> build, final IntLogger logger, final HubScanJobConfig jobConfig)
 			throws IOException,

@@ -1,11 +1,5 @@
 package com.blackducksoftware.integration.hub.jenkins.scan;
 
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.Launcher.ProcStarter;
-import hudson.model.TaskListener;
-import hudson.model.AbstractBuild;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -19,6 +13,12 @@ import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.Launcher.ProcStarter;
+import hudson.model.AbstractBuild;
+import hudson.model.TaskListener;
+
 public class JenkinsScanExecutor extends ScanExecutor {
     public static final Integer THREAD_SLEEP = 100;
 
@@ -28,8 +28,8 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
     private final TaskListener listener;
 
-    public JenkinsScanExecutor(HubServerInfo serverInfo, List<String> scanTargets, Integer buildNumber, HubSupportHelper supportHelper,
-            AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) {
+    public JenkinsScanExecutor(final HubServerInfo serverInfo, final List<String> scanTargets, final Integer buildNumber, final HubSupportHelper supportHelper,
+            final AbstractBuild<?, ?> build, final Launcher launcher, final TaskListener listener) {
         super(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), scanTargets, buildNumber, supportHelper);
         this.build = build;
         this.launcher = launcher;
@@ -37,7 +37,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
     }
 
     @Override
-    protected boolean isConfiguredCorrectly(String scanExec, String oneJarPath, String javaExec) {
+    protected boolean isConfiguredCorrectly(final String scanExec, final String oneJarPath, final String javaExec) {
         if (getLogger() == null) {
             System.out.println("Could not find a logger");
             return false;
@@ -49,38 +49,35 @@ public class JenkinsScanExecutor extends ScanExecutor {
                 return false;
             }
             else {
-                FilePath scanExecRemote = new FilePath(build.getBuiltOn().getChannel(), scanExec);
+                final FilePath scanExecRemote = new FilePath(build.getBuiltOn().getChannel(), scanExec);
                 if (!scanExecRemote.exists()) {
                     getLogger().error("The Hub scan CLI provided does not exist.");
                     return false;
                 }
             }
-
             if (oneJarPath == null) {
                 getLogger().error("Please provide the path for the CLI cache.");
                 return false;
             }
-
             if (javaExec == null) {
                 getLogger().error("Please provide the java home directory.");
                 return false;
             }
             else {
-                FilePath javaExecRemote = new FilePath(build.getBuiltOn().getChannel(), javaExec);
+                final FilePath javaExecRemote = new FilePath(build.getBuiltOn().getChannel(), javaExec);
                 if (!javaExecRemote.exists()) {
                     getLogger().error("The Java executable provided does not exist.");
                     return false;
                 }
             }
-
             if (getScanMemory() <= 0) {
                 getLogger().error("No memory set for the HUB CLI. Will use the default memory, " + DEFAULT_MEMORY);
                 setScanMemory(DEFAULT_MEMORY);
             }
-        } catch (IOException e) {
+        } catch (final IOException e) {
             getLogger().error(e.toString(), e);
             return false;
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             getLogger().error(e.toString(), e);
             return false;
         }
@@ -95,7 +92,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
         // This log directory should never exist as a new one is created for each Build
         try {
             logDirectory.mkdirs();
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             getLogger().error("Could not create the log directory : " + e.getMessage(), e);
         }
 
@@ -109,23 +106,23 @@ public class JenkinsScanExecutor extends ScanExecutor {
      */
     @Override
     public String getScanStatusDirectoryPath() throws IOException {
-        FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), getLogDirectoryPath());
-        FilePath scanStatusDirectory = new FilePath(logDirectory, "status");
+        final FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), getLogDirectoryPath());
+        final FilePath scanStatusDirectory = new FilePath(logDirectory, "status");
         return scanStatusDirectory.getRemote();
     }
 
     @Override
-    protected Result executeScan(List<String> cmd, String logDirectoryPath) throws HubIntegrationException, InterruptedException {
+    protected Result executeScan(final List<String> cmd, final String logDirectoryPath) throws HubIntegrationException, InterruptedException {
         try {
-            FilePath logBaseDirectory = new FilePath(build.getBuiltOn().getChannel(), getLogDirectoryPath());
+            final FilePath logBaseDirectory = new FilePath(build.getBuiltOn().getChannel(), getLogDirectoryPath());
             logBaseDirectory.mkdirs();
-            FilePath standardOutFile = new FilePath(logBaseDirectory, "CLI_Output.txt");
+            final FilePath standardOutFile = new FilePath(logBaseDirectory, "CLI_Output.txt");
             standardOutFile.touch(0);
-            ProcStarter ps = launcher.launch();
+            final ProcStarter ps = launcher.launch();
             int exitCode = 0;
             if (ps != null) {
                 // ////////////////////// Code to mask the password in the logs
-                ArrayList<Integer> indexToMask = new ArrayList<Integer>();
+                final ArrayList<Integer> indexToMask = new ArrayList<Integer>();
                 // The User's password will be at the next index
                 indexToMask.add(cmd.indexOf("--password") + 1);
 
@@ -134,24 +131,24 @@ public class JenkinsScanExecutor extends ScanExecutor {
                         indexToMask.add(i);
                     }
                 }
-                boolean[] masks = new boolean[cmd.size()];
+                final boolean[] masks = new boolean[cmd.size()];
                 Arrays.fill(masks, false);
 
-                for (Integer index : indexToMask) {
+                for (final Integer index : indexToMask) {
                     masks[index] = true;
                 }
                 ps.masks(masks);
                 // ///////////////////////
                 ps.envs(build.getEnvironment(listener));
 
-                ScannerSplitStream splitStream = new ScannerSplitStream(new HubJenkinsLogger(listener), standardOutFile.write());
+                final ScannerSplitStream splitStream = new ScannerSplitStream(new HubJenkinsLogger(listener), standardOutFile.write());
 
                 exitCode = runScan(ps, cmd, splitStream);
                 splitStream.flush();
                 splitStream.close();
 
                 if (logDirectoryPath != null) {
-                    FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), logDirectoryPath);
+                    final FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), logDirectoryPath);
                     if (logDirectory.exists()) {
 
                         getLogger().info(
@@ -169,17 +166,17 @@ public class JenkinsScanExecutor extends ScanExecutor {
             } else {
                 getLogger().error("Could not find a ProcStarter to run the process!");
             }
-        } catch (MalformedURLException e) {
+        } catch (final MalformedURLException e) {
             throw new HubIntegrationException("The server URL provided was not a valid", e);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new HubIntegrationException(e.getMessage(), e);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             throw new HubIntegrationException(e.getMessage(), e);
         }
         return Result.SUCCESS;
     }
 
-    private int runScan(ProcStarter ps, List<String> cmd, ScannerSplitStream splitStream) throws IOException, InterruptedException {
+    private int runScan(final ProcStarter ps, final List<String> cmd, final ScannerSplitStream splitStream) throws IOException, InterruptedException {
         ps.cmds(cmd);
 
         ps.stdout(splitStream);

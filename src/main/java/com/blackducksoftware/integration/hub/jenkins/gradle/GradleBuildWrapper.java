@@ -15,6 +15,7 @@ import com.blackducksoftware.integration.hub.BuilderType;
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapper;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSeparator;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
@@ -246,7 +247,8 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 							if (StringUtils.startsWithIgnoreCase(rootBuildScriptDir, "${WORKSPACE}")
 									|| StringUtils.startsWithIgnoreCase(rootBuildScriptDir, "$WORKSPACE")) {
 								final EnvVars variables = build.getEnvironment(listener);
-								rootBuildScriptDir = handleVariableReplacement(variables, rootBuildScriptDir);
+								rootBuildScriptDir = BuildHelper.handleVariableReplacement(variables,
+										rootBuildScriptDir);
 							}
 
 							String fileSeparator = null;

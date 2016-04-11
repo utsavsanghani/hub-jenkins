@@ -6,7 +6,6 @@ import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import java.util.Map;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -28,7 +27,6 @@ import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Result;
@@ -110,7 +108,8 @@ public abstract class BDBuildWrapper extends BuildWrapper {
 	public abstract List<String> getScopesAsList(IntLogger logger);
 
 	@Override
-	public abstract Environment setUp(final AbstractBuild build, Launcher launcher, final BuildListener listener) throws IOException, InterruptedException;
+	public abstract Environment setUp(final AbstractBuild build, Launcher launcher, final BuildListener listener)
+			throws IOException, InterruptedException;
 
 	public boolean universalTearDown(final AbstractBuild<?, ?> build, final IntLogger buildLogger, final FilePath buildInfoFilePath, final BDBuildWrapperDescriptor descriptor,
 			final BuilderType buidler) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException,
@@ -222,7 +221,7 @@ public abstract class BDBuildWrapper extends BuildWrapper {
 	 */
 	protected ReleaseItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
 			final String projectVersion, final ProjectItem project)
-			throws IOException, URISyntaxException, BDJenkinsHubPluginException {
+					throws IOException, URISyntaxException, BDJenkinsHubPluginException {
 		ReleaseItem version = null;
 		try {
 			version = service.getVersion(project, projectVersion);
@@ -252,20 +251,6 @@ public abstract class BDBuildWrapper extends BuildWrapper {
 		return version;
 	}
 
-	public String handleVariableReplacement(final Map<String, String> variables, final String value) throws BDJenkinsHubPluginException {
-		if (value != null) {
-
-			final String newValue = Util.replaceMacro(value, variables);
-
-			if (newValue.contains("$")) {
-				throw new BDJenkinsHubPluginException("Variable was not properly replaced. Value : " + value + ", Result : " + newValue
-						+ ". Make sure the variable has been properly defined.");
-			}
-			return newValue;
-		} else {
-			return null;
-		}
-	}
 
 	/**
 	 * Determine if plugin is enabled

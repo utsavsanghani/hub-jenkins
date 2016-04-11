@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.blackducksoftware.integration.hub.exception.BDCIScopeException;
@@ -13,8 +14,6 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.maven.Scope;
-import com.blackducksoftware.integration.hub.version.api.DistributionEnum;
-import com.blackducksoftware.integration.hub.version.api.PhaseEnum;
 
 import hudson.maven.MavenReporterDescriptor;
 import hudson.model.AutoCompletionCandidates;
@@ -27,10 +26,6 @@ import hudson.util.ListBoxModel;
 // point.
 public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
 
-	/**
-	 * In order to load the persisted global configuration, you have to call
-	 * load() in the constructor.
-	 */
 	public HubMavenReporterDescriptor() {
 		super(HubMavenReporter.class);
 		load();
@@ -38,7 +33,6 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
 
 	@Override
 	public String getDisplayName() {
-		// Intentional return the BuildWrapper constants
 		return Messages.HubMavenWrapper_getDisplayName();
 	}
 
@@ -53,59 +47,17 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
 	/**
 	 * Fills the drop down list of possible Version phases
 	 *
-	 * @return
 	 */
 	public ListBoxModel doFillMavenHubVersionPhaseItems() {
-		final ClassLoader originalClassLoader = Thread.currentThread()
-				.getContextClassLoader();
-		final boolean changed = false;
-		final ListBoxModel items = new ListBoxModel();
-		try {
-			// should get this list from the Hub server, ticket HUB-1610
-			for (final PhaseEnum phase : PhaseEnum.values()) {
-				if (phase != PhaseEnum.UNKNOWNPHASE) {
-					items.add(phase.name(), phase.name());
-				}
-			}
-		} catch (final Exception e) {
-			e.printStackTrace();
-			System.err.println(e.getMessage());
-		} finally {
-			if (changed) {
-				Thread.currentThread().setContextClassLoader(
-						originalClassLoader);
-			}
-		}
-		return items;
+		return BDCommonDescriptorUtil.doFillHubVersionPhaseItems();
 	}
 
 	/**
 	 * Fills the drop down list of possible Version distribution types
 	 *
-	 * @return
 	 */
 	public ListBoxModel doFillMavenHubVersionDistItems() {
-		final ClassLoader originalClassLoader = Thread.currentThread()
-				.getContextClassLoader();
-		final boolean changed = false;
-		final ListBoxModel items = new ListBoxModel();
-		try {
-			// should get this list from the Hub server, ticket HUB-1610
-			for (final DistributionEnum distribution : DistributionEnum.values()) {
-				if (distribution != DistributionEnum.UNKNOWNDISTRIBUTION) {
-					items.add(distribution.name(), distribution.name());
-				}
-			}
-		} catch (final Exception e) {
-			e.printStackTrace();
-			System.err.println(e.getMessage());
-		} finally {
-			if (changed) {
-				Thread.currentThread().setContextClassLoader(
-						originalClassLoader);
-			}
-		}
-		return items;
+		return BDCommonDescriptorUtil.doFillHubVersionDistItems();
 	}
 
 	public AutoCompletionCandidates doAutoCompleteMavenHubProjectName(@QueryParameter("mavenHubProjectName") final String mavenHubProjectName)
@@ -154,7 +106,7 @@ public class HubMavenReporterDescriptor extends MavenReporterDescriptor {
 	 */
 	public FormValidation doCheckUserScopesToInclude(@QueryParameter final String value)
 			throws IOException, ServletException {
-		if (value.length() == 0) {
+		if (StringUtils.isBlank(value)) {
 			return FormValidation.error(Messages
 					.HubMavenWrapper_getPleaseIncludeAScope());
 		}

@@ -1,4 +1,4 @@
-package com.blackducksoftware.integration.hub.jenkins.maven;
+package com.blackducksoftware.integration.hub.jenkins.action;
 
 import hudson.model.Action;
 
