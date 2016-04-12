@@ -151,10 +151,6 @@
 					<groupId>org.jenkins-ci.main.maven</groupId>
 					<artifactId>*</artifactId>
 				</exclusion>
-				<exclusion>
-					<groupId>org.jvnet.hudson</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
