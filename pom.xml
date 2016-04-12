@@ -18,7 +18,7 @@
 	<description>Runs the Black Duck Hub scan in Jenkins build</description>
 	<inceptionYear>2014</inceptionYear>
 
-	<url>https://github.com/blackducksoftware/integration-docs/blob/master/Hub_Jenkins_Plugin_v1.4.1.pdf</url>
+	<url>https://github.com/blackducksoftware/jenkins-hub</url>
 
 	<licenses>
 		<license>
