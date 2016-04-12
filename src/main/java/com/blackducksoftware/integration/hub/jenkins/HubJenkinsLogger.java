@@ -1,6 +1,7 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.io.StringWriter;
 
 import com.blackducksoftware.integration.hub.logging.IntLogger;
@@ -8,7 +9,9 @@ import com.blackducksoftware.integration.hub.logging.LogLevel;
 
 import hudson.model.TaskListener;
 
-public class HubJenkinsLogger implements IntLogger {
+public class HubJenkinsLogger implements IntLogger, Serializable {
+
+	private static final long serialVersionUID = -685871863395350470L;
 
 	private final TaskListener jenkinsLogger;
 

@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.build.BuildInfo;
-import com.blackducksoftware.integration.gradle.BDCustomTask;
+import com.blackducksoftware.integration.gradle.BDGradleUtil;
 import com.blackducksoftware.integration.hub.BuilderType;
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapper;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
@@ -181,20 +181,22 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 						if (!originalSwitches.get().contains("--init-script ") && !originalSwitches.get().contains("init-blackduck")) {
 							newSwitches = newSwitches + " --init-script " + initScriptPath;
 						}
-						if (!originalSwitches.get().contains(" -D" + BDCustomTask.BUILD_ID_PROPERTY)) {
-							newSwitches = newSwitches + " -D" + BDCustomTask.BUILD_ID_PROPERTY + "=" + build.getId();
+						if (!originalSwitches.get().contains(" -D" + BDGradleUtil.BUILD_ID_PROPERTY)) {
+							newSwitches = newSwitches + " -D" + BDGradleUtil.BUILD_ID_PROPERTY + "=" + build.getId();
 						}
-						if (!originalSwitches.get().contains(" -D" + BDCustomTask.INCLUDED_CONFIGURATIONS_PROPERTY)) {
+						if (!originalSwitches.get().contains(" -D" + BDGradleUtil.INCLUDED_CONFIGURATIONS_PROPERTY)) {
 							String configurations = getUserScopesToInclude();
 							configurations = configurations.replaceAll(" ", "");
 
-							newSwitches = newSwitches + " -D" + BDCustomTask.INCLUDED_CONFIGURATIONS_PROPERTY + "=" + configurations;
+							newSwitches = newSwitches + " -D" + BDGradleUtil.INCLUDED_CONFIGURATIONS_PROPERTY + "=" + configurations;
 						}
 						// // Following used to generate the dependency tree
 						// // written to a file
-						// if (!originalSwitches.get().contains(" -D" + BDGradlePlugin.DEPENDENCY_REPORT_OUTPUT)) {
+						// if (!originalSwitches.get().contains(" -D" +
+						// BDGradleUtil.DEPENDENCY_REPORT_OUTPUT)) {
 						// FilePath dependencyTreeFile = new FilePath(workspace, "dependencyTree.txt");
-						// newSwitches = newSwitches + " -D" + BDGradlePlugin.DEPENDENCY_REPORT_OUTPUT + "='" +
+						// newSwitches = newSwitches + " -D" +
+						// BDGradleUtil.DEPENDENCY_REPORT_OUTPUT + "='" +
 						// dependencyTreeFile.getRemote() + "'";
 						// }
 
