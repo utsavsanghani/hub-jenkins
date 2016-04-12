@@ -144,6 +144,10 @@
 					<artifactId>*</artifactId>
 				</exclusion>
 				<exclusion>
+					<groupId>org.jenkins-ci.lib</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+				<exclusion>
 					<groupId>org.jenkins-ci.main.maven</groupId>
 					<artifactId>*</artifactId>
 				</exclusion>
