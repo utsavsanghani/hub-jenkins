@@ -232,6 +232,10 @@
 					<hpiName>${project.artifactId}-${project.version}</hpiName>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -316,6 +320,25 @@
             </lifecycleMappingMetadata>
           </configuration>
         </plugin>
+        <plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-dependency-plugin</artifactId>
+			<version>2.10</version>
+			<executions>
+				<execution>
+					<id>copy-dependencies</id>
+					<phase>package</phase>
+					<goals>
+						<goal>copy-dependencies</goal>
+					</goals>
+					<configuration>
+						<includeScope>compile</includeScope>
+						<useSubDirectoryPerScope>true</useSubDirectoryPerScope>
+						<outputDirectory>${project.build.directory}/libs</outputDirectory>
+					</configuration>
+				</execution>
+			</executions>
+		</plugin>
       </plugins>
     </pluginManagement>
   </build>
