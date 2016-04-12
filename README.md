@@ -4,6 +4,10 @@ Hub plugin for Jenkins. This plugin provides ability to run a BD Hub CLi on buil
 ### 1.4.1
 * Removed empty "BlackDuck Scan" configuration entirely from the global configuration
 * Using new CLI option to better check when the BOM has been updated with the scan results (Hub 3.0.0+ only)
+* Black Duck Failure Conditions are fixed; they are now added after the Black Duck Hub integration.
+* Failure Conditions now work even if the project name and version contain variables.
+* Failure Conditions now wait until the Bill of Materials is updated before checking the policy status.
+* The field Maximum time to wait for report (in minutes) is changed to Maximum time to wait for BOM update (in minutes).
 ### 1.4.0
 * Auto install of the BD Scanner (CLI)
 * Ability to pull a BOM report from Hub into Jenkins
