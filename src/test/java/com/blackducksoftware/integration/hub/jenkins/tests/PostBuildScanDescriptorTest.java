@@ -176,7 +176,9 @@ public class PostBuildScanDescriptorTest {
 			Thread.sleep(6000);
 			// Need to wait a second before checking if the project exists or it will not be recognized
 			final FormValidation form2 = descriptor.doCheckHubProjectName(testProperties.getProperty("TEST_CREATE_PROJECT"), null);
-			Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectExistsIn_0_(testProperties.getProperty("TEST_HUB_SERVER_URL")));
+			Assert.assertEquals(
+					Messages.HubBuildScan_getProjectExistsIn_0_(testProperties.getProperty("TEST_HUB_SERVER_URL")),
+					form2.getMessage());
 			Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
 
 			final FormValidation form3 = descriptor.doCheckHubProjectVersion(testProperties.getProperty("TEST_CREATE_VERSION"),
