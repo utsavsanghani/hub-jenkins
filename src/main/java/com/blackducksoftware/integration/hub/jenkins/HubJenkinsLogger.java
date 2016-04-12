@@ -1,183 +1,182 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
-import hudson.model.TaskListener;
-
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.io.StringWriter;
 
 import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.logging.LogLevel;
 
-public class HubJenkinsLogger implements IntLogger, Serializable {
+import hudson.model.TaskListener;
 
-    private final TaskListener jenkinsLogger;
+public class HubJenkinsLogger implements IntLogger {
 
-    private LogLevel level = LogLevel.INFO; // default is INFO
+	private final TaskListener jenkinsLogger;
 
-    public HubJenkinsLogger(TaskListener jenkinsLogger) {
-        this.jenkinsLogger = jenkinsLogger;
-    }
+	private LogLevel level = LogLevel.TRACE;
 
-    public TaskListener getJenkinsListener() {
-        return jenkinsLogger;
-    }
+	public HubJenkinsLogger(final TaskListener jenkinsLogger) {
+		this.jenkinsLogger = jenkinsLogger;
+	}
 
-    @Override
-    public void setLogLevel(LogLevel level) {
-        this.level = level;
-    }
+	public TaskListener getJenkinsListener() {
+		return jenkinsLogger;
+	}
 
-    @Override
-    public LogLevel getLogLevel() {
-        return level;
-    }
+	@Override
+	public void setLogLevel(final LogLevel level) {
+		this.level = level;
+	}
 
-    @Override
-    public void debug(String txt) {
-        if (LogLevel.isLoggable(level, LogLevel.DEBUG)) {
-            if (txt != null) {
-                if (jenkinsLogger != null) {
-                    jenkinsLogger.getLogger().println(txt);
-                } else {
-                    System.out.println(txt);
-                }
-            }
-        }
-    }
+	@Override
+	public LogLevel getLogLevel() {
+		return level;
+	}
 
-    @Override
-    public void debug(String txt, Throwable t) {
-        if (LogLevel.isLoggable(level, LogLevel.DEBUG)) {
-            if (txt != null) {
-                if (jenkinsLogger != null) {
-                    jenkinsLogger.error(txt);
-                } else {
-                    System.err.println(txt);
-                }
-            }
-            if (t != null) {
-                StringWriter sw = new StringWriter();
-                t.printStackTrace(new PrintWriter(sw));
-                if (jenkinsLogger != null) {
-                    jenkinsLogger.error(sw.toString());
-                } else {
-                    System.err.println(sw.toString());
-                }
-            }
-        }
-    }
+	@Override
+	public void debug(final String txt) {
+		if (LogLevel.isLoggable(level, LogLevel.DEBUG)) {
+			if (txt != null) {
+				if (jenkinsLogger != null) {
+					jenkinsLogger.getLogger().println(txt);
+				} else {
+					System.out.println(txt);
+				}
+			}
+		}
+	}
 
-    @Override
-    public void error(Throwable e) {
-        if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
-            if (e != null) {
-                StringWriter sw = new StringWriter();
-                e.printStackTrace(new PrintWriter(sw));
-                if (jenkinsLogger != null) {
-                    jenkinsLogger.error(sw.toString());
-                } else {
-                    System.err.println(sw.toString());
-                }
-            }
-        }
-    }
+	@Override
+	public void debug(final String txt, final Throwable t) {
+		if (LogLevel.isLoggable(level, LogLevel.DEBUG)) {
+			if (txt != null) {
+				if (jenkinsLogger != null) {
+					jenkinsLogger.error(txt);
+				} else {
+					System.err.println(txt);
+				}
+			}
+			if (t != null) {
+				final StringWriter sw = new StringWriter();
+				t.printStackTrace(new PrintWriter(sw));
+				if (jenkinsLogger != null) {
+					jenkinsLogger.error(sw.toString());
+				} else {
+					System.err.println(sw.toString());
+				}
+			}
+		}
+	}
 
-    @Override
-    public void error(String txt) {
-        if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
-            if (txt != null) {
-                if (jenkinsLogger != null) {
-                    jenkinsLogger.error(txt);
-                } else {
-                    System.err.println(txt);
-                }
+	@Override
+	public void error(final Throwable e) {
+		if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
+			if (e != null) {
+				final StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				if (jenkinsLogger != null) {
+					jenkinsLogger.error(sw.toString());
+				} else {
+					System.err.println(sw.toString());
+				}
+			}
+		}
+	}
 
-            }
-        }
-    }
+	@Override
+	public void error(final String txt) {
+		if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
+			if (txt != null) {
+				if (jenkinsLogger != null) {
+					jenkinsLogger.error(txt);
+				} else {
+					System.err.println(txt);
+				}
 
-    @Override
-    public void error(String txt, Throwable e) {
-        if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
-            if (txt != null) {
-                if (jenkinsLogger != null) {
-                    jenkinsLogger.error(txt);
-                } else {
-                    System.err.println(txt);
-                }
-            }
-            if (e != null) {
-                StringWriter sw = new StringWriter();
-                e.printStackTrace(new PrintWriter(sw));
-                if (jenkinsLogger != null) {
-                    jenkinsLogger.error(sw.toString());
-                } else {
-                    System.err.println(sw.toString());
-                }
-            }
-        }
-    }
+			}
+		}
+	}
 
-    @Override
-    public void info(String txt) {
-        if (LogLevel.isLoggable(level, LogLevel.INFO)) {
-            if (txt != null) {
-                if (jenkinsLogger != null) {
-                    jenkinsLogger.getLogger().println(txt);
-                } else {
-                    System.out.println(txt);
-                }
-            }
-        }
-    }
+	@Override
+	public void error(final String txt, final Throwable e) {
+		if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
+			if (txt != null) {
+				if (jenkinsLogger != null) {
+					jenkinsLogger.error(txt);
+				} else {
+					System.err.println(txt);
+				}
+			}
+			if (e != null) {
+				final StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				if (jenkinsLogger != null) {
+					jenkinsLogger.error(sw.toString());
+				} else {
+					System.err.println(sw.toString());
+				}
+			}
+		}
+	}
 
-    @Override
-    public void trace(String txt) {
-        if (LogLevel.isLoggable(level, LogLevel.TRACE)) {
-            if (txt != null) {
-                if (jenkinsLogger != null) {
-                    jenkinsLogger.getLogger().println(txt);
-                } else {
-                    System.out.println(txt);
-                }
-            }
-        }
-    }
+	@Override
+	public void info(final String txt) {
+		if (LogLevel.isLoggable(level, LogLevel.INFO)) {
+			if (txt != null) {
+				if (jenkinsLogger != null) {
+					jenkinsLogger.getLogger().println(txt);
+				} else {
+					System.out.println(txt);
+				}
+			}
+		}
+	}
 
-    @Override
-    public void trace(String txt, Throwable e) {
-        if (LogLevel.isLoggable(level, LogLevel.TRACE)) {
-            if (txt != null) {
-                if (jenkinsLogger != null) {
-                    jenkinsLogger.getLogger().println(txt);
-                } else {
-                    System.out.println(txt);
-                }
-            }
-            if (e != null) {
-                StringWriter sw = new StringWriter();
-                e.printStackTrace(new PrintWriter(sw));
-                if (jenkinsLogger != null) {
-                    jenkinsLogger.getLogger().println(sw.toString());
-                } else {
-                    System.out.println(sw.toString());
-                }
-            }
-        }
-    }
+	@Override
+	public void trace(final String txt) {
+		if (LogLevel.isLoggable(level, LogLevel.TRACE)) {
+			if (txt != null) {
+				if (jenkinsLogger != null) {
+					jenkinsLogger.getLogger().println(txt);
+				} else {
+					System.out.println(txt);
+				}
+			}
+		}
+	}
 
-    @Override
-    public void warn(String txt) {
-        if (LogLevel.isLoggable(level, LogLevel.WARN)) {
-            if (txt != null) {
-                if (jenkinsLogger != null) {
-                    jenkinsLogger.getLogger().println(txt);
-                } else {
-                    System.out.println(txt);
-                }
-            }
-        }
-    }
+	@Override
+	public void trace(final String txt, final Throwable e) {
+		if (LogLevel.isLoggable(level, LogLevel.TRACE)) {
+			if (txt != null) {
+				if (jenkinsLogger != null) {
+					jenkinsLogger.getLogger().println(txt);
+				} else {
+					System.out.println(txt);
+				}
+			}
+			if (e != null) {
+				final StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				if (jenkinsLogger != null) {
+					jenkinsLogger.getLogger().println(sw.toString());
+				} else {
+					System.out.println(sw.toString());
+				}
+			}
+		}
+	}
+
+	@Override
+	public void warn(final String txt) {
+		if (LogLevel.isLoggable(level, LogLevel.WARN)) {
+			if (txt != null) {
+				if (jenkinsLogger != null) {
+					jenkinsLogger.getLogger().println(txt);
+				} else {
+					System.out.println(txt);
+				}
+			}
+		}
+	}
 
 }

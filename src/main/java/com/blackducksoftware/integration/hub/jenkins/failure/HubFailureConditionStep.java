@@ -1,21 +1,9 @@
 package com.blackducksoftware.integration.hub.jenkins.failure;
 
-import hudson.EnvVars;
-import hudson.Launcher;
-import hudson.Util;
-import hudson.model.BuildListener;
-import hudson.model.Result;
-import hudson.model.AbstractBuild;
-import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Publisher;
-import hudson.tasks.Recorder;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
@@ -23,7 +11,6 @@ import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.MissingPolicyStatusException;
-import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
@@ -37,9 +24,15 @@ import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatus;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatusEnum;
-import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
-import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
+
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Publisher;
+import hudson.tasks.Recorder;
 
 public class HubFailureConditionStep extends Recorder {
 
@@ -114,23 +107,12 @@ public class HubFailureConditionStep extends Recorder {
 
 			final HubSupportHelper hubSupport = getDescriptor().getCheckedHubSupportHelper();
 
-			waitForBomToBeUpdated(build, logger, restService, hubSupport);
-
-			final EnvVars variables = build.getEnvironment(listener);
-
-			final String projectName = handleVariableReplacement(variables, hubScanStep.getHubProjectName());
-			final String projectVersion = handleVariableReplacement(variables, hubScanStep.getHubProjectVersion());
-
-			final String projectId = getProjectId(logger, restService, projectName);
-			if (StringUtils.isBlank(projectId)) {
-				build.setResult(Result.UNSTABLE);
-				return true;
+			final BomUpToDateAction action = build.getAction(BomUpToDateAction.class);
+			if (action == null) {
+				throw new BDJenkinsHubPluginException(
+						"Could not find the BomUpToDateAction in the Hub Failure Conditions. Make sure the Hub scan was run before the Failure Conditions.");
 			}
-			final String versionId = getVersionId(logger, restService, projectId, projectVersion);
-			if (StringUtils.isBlank(versionId)) {
-				build.setResult(Result.UNSTABLE);
-				return true;
-			}
+			waitForBomToBeUpdated(build, logger, action, restService, hubSupport);
 
 
 			if (!hubSupport.isPolicyApiSupport()) {
@@ -140,7 +122,7 @@ public class HubFailureConditionStep extends Recorder {
 			} else if (getFailBuildForPolicyViolations()) {
 				try {
 					// We use this conditional in case there are other failure conditions in the future
-					final PolicyStatus policyStatus = restService.getPolicyStatus(projectId, versionId);
+					final PolicyStatus policyStatus = restService.getPolicyStatus(action.getPolicyStatusUrl());
 					if (policyStatus == null) {
 						logger.error("Could not find any information about the Policy status of the bom.");
 						build.setResult(Result.UNSTABLE);
@@ -185,73 +167,16 @@ public class HubFailureConditionStep extends Recorder {
 		return true;
 	}
 
-	public String handleVariableReplacement(final Map<String, String> variables, final String value) throws BDJenkinsHubPluginException {
-		if (value != null) {
-
-			final String newValue = Util.replaceMacro(value, variables);
-
-			if (newValue.contains("$")) {
-				throw new BDJenkinsHubPluginException("Variable was not properly replaced. Value : " + value + ", Result : " + newValue
-						+ ". Make sure the variable has been properly defined.");
-			}
-			return newValue;
-		} else {
-			return null;
-		}
-	}
-
-	public String getProjectId(final HubJenkinsLogger logger, final HubIntRestService restService, final String projectName) throws IOException, BDRestException,
-	URISyntaxException {
-		String projectId = null;
-		ProjectItem project = null;
-		try {
-			project = restService.getProjectByName(projectName);
-			if (project == null) {
-				logger.error("Could not find the specified Hub Project.");
-				return null;
-			}
-			projectId = project.getId();
-			if (StringUtils.isBlank(projectId)) {
-				logger.error("Could not find the specified Hub Project.");
-				return null;
-			}
-		} catch (final ProjectDoesNotExistException e) {
-			logger.error(e.getMessage(), e);
-			return null;
-		}
-		return projectId;
-	}
-
-	public String getVersionId(final HubJenkinsLogger logger, final HubIntRestService restService, final String projectId, final String versionName) throws IOException,
-	BDRestException, URISyntaxException {
-		String versionId = null;
-
-		final List<ReleaseItem> projectVersions = restService.getVersionsForProject(projectId);
-		if (projectVersions != null) {
-			for (final ReleaseItem release : projectVersions) {
-				if (versionName.equals(release.getVersion())) {
-					versionId = release.getId();
-				}
-			}
-		}
-		if (StringUtils.isBlank(versionId)) {
-			logger.error("Could not find the specified Version for this Hub Project.");
-			return null;
-		}
-		return versionId;
-	}
-
 	public HubIntRestService getHubIntRestService(final HubJenkinsLogger logger, final HubServerInfo serverInfo) throws IOException,
 	BDRestException, URISyntaxException, BDJenkinsHubPluginException, HubIntegrationException {
 		return BuildHelper.getRestService(logger, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(),
 				serverInfo.getTimeout());
 	}
 
-	public void waitForBomToBeUpdated(final AbstractBuild<?,?> build, final IntLogger logger, final HubIntRestService service, final HubSupportHelper supportHelper) throws BDJenkinsHubPluginException, InterruptedException, BDRestException, HubIntegrationException, URISyntaxException, IOException{
-		final BomUpToDateAction action = build.getAction(BomUpToDateAction.class);
-		if(action == null){
-			throw new BDJenkinsHubPluginException("Could not find the BomUpToDateAction in the Hub Failure Conditions. Make sure the Hub scan was run before the Failure Conditions.");
-		}
+	public void waitForBomToBeUpdated(final AbstractBuild<?, ?> build, final IntLogger logger,
+			final BomUpToDateAction action, final HubIntRestService service, final HubSupportHelper supportHelper)
+					throws BDJenkinsHubPluginException, InterruptedException, BDRestException, HubIntegrationException,
+					URISyntaxException, IOException {
 		if(action.isHasBomBeenUdpated()){
 			return;
 		}

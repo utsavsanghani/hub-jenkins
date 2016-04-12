@@ -1,10 +1,10 @@
 package com.blackducksoftware.integration.hub.jenkins.action;
 
-import hudson.model.Action;
-
 import java.util.List;
 
 import org.joda.time.DateTime;
+
+import hudson.model.Action;
 
 public class BomUpToDateAction implements Action {
 
@@ -21,6 +21,8 @@ public class BomUpToDateAction implements Action {
 	private DateTime afterScanTime;
 
 	private String scanStatusDirectory;
+
+	private String policyStatusUrl;
 
 	public boolean isHasBomBeenUdpated() {
 		return hasBomBeenUdpated;
@@ -76,6 +78,14 @@ public class BomUpToDateAction implements Action {
 
 	public void setScanStatusDirectory(final String scanStatusDirectory) {
 		this.scanStatusDirectory = scanStatusDirectory;
+	}
+
+	public String getPolicyStatusUrl() {
+		return policyStatusUrl;
+	}
+
+	public void setPolicyStatusUrl(final String policyStatusUrl) {
+		this.policyStatusUrl = policyStatusUrl;
 	}
 
 	@Override

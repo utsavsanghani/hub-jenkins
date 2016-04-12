@@ -1,498 +1,141 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.AbstractProject;
-import hudson.model.FreeStyleProject;
-import hudson.tasks.BuildWrapper;
-import hudson.tasks.BuildWrapperDescriptor;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.List;
 
 import javax.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDCIScopeException;
-import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.gradle.GradleBuildWrapperDescriptor;
-import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.maven.MavenBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.maven.Scope;
-import com.blackducksoftware.integration.hub.project.api.AutoCompleteItem;
-import com.blackducksoftware.integration.hub.project.api.ProjectItem;
-import com.blackducksoftware.integration.hub.version.api.DistributionEnum;
-import com.blackducksoftware.integration.hub.version.api.PhaseEnum;
-import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
-import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
-// This indicates to Jenkins that this is an implementation of an extension
-// point.
+import hudson.model.AbstractProject;
+import hudson.model.AutoCompletionCandidates;
+import hudson.model.FreeStyleProject;
+import hudson.tasks.BuildWrapper;
+import hudson.tasks.BuildWrapperDescriptor;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+
 public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements Serializable {
 
-    /**
-     * In order to load the persisted global configuration, you have to call
-     * load() in the constructor.
-     */
-    public BDBuildWrapperDescriptor() {
-        super(BDBuildWrapper.class);
-        load();
-    }
+	public BDBuildWrapperDescriptor() {
+		super(BDBuildWrapper.class);
+		load();
+	}
 
-    /**
-     * In order to load the persisted global configuration, you have to call
-     * load() in the constructor.
-     */
-    public BDBuildWrapperDescriptor(Class<? extends BuildWrapper> subClass) {
-        super(subClass);
-        load();
-    }
+	public BDBuildWrapperDescriptor(final Class<? extends BuildWrapper> subClass) {
+		super(subClass);
+		load();
+	}
 
-    public HubServerInfo getHubServerInfo() {
-        return HubServerInfoSingleton.getInstance().getServerInfo();
-    }
+	public HubServerInfo getHubServerInfo() {
+		return HubServerInfoSingleton.getInstance().getServerInfo();
+	}
 
-    /**
-     * Fills the drop down list of possible Version phases
-     *
-     * @return
-     */
-    public ListBoxModel doFillHubWrapperVersionPhaseItems() {
-        ClassLoader originalClassLoader = Thread.currentThread()
-                .getContextClassLoader();
-        boolean changed = false;
-        ListBoxModel items = new ListBoxModel();
-        try {
-            // should get this list from the Hub server, ticket HUB-1610
-            for (PhaseEnum phase : PhaseEnum.values()) {
-                if (phase != PhaseEnum.UNKNOWNPHASE) {
-                    items.add(phase.name(), phase.name());
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getMessage());
-        } finally {
-            if (changed) {
-                Thread.currentThread().setContextClassLoader(
-                        originalClassLoader);
-            }
-        }
-        return items;
-    }
+	/**
+	 * Fills the drop down list of possible Version phases
+	 *
+	 */
+	public ListBoxModel doFillHubWrapperVersionPhaseItems() {
+		return BDCommonDescriptorUtil.doFillHubVersionPhaseItems();
+	}
 
-    /**
-     * Fills the drop down list of possible Version distribution types
-     *
-     * @return
-     */
-    public ListBoxModel doFillHubWrapperVersionDistItems() {
-        ClassLoader originalClassLoader = Thread.currentThread()
-                .getContextClassLoader();
-        boolean changed = false;
-        ListBoxModel items = new ListBoxModel();
-        try {
-            // should get this list from the Hub server, ticket HUB-1610
-            for (DistributionEnum distribution : DistributionEnum.values()) {
-                if (distribution != DistributionEnum.UNKNOWNDISTRIBUTION) {
-                    items.add(distribution.name(), distribution.name());
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getMessage());
-        } finally {
-            if (changed) {
-                Thread.currentThread().setContextClassLoader(
-                        originalClassLoader);
-            }
-        }
-        return items;
-    }
+	/**
+	 * Fills the drop down list of possible Version distribution types
+	 *
+	 */
+	public ListBoxModel doFillHubWrapperVersionDistItems() {
+		return BDCommonDescriptorUtil.doFillHubVersionDistItems();
+	}
 
-    public AutoCompletionCandidates doAutoCompleteHubWrapperProjectName(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName)
-            throws IOException,
-            ServletException {
-        AutoCompletionCandidates potentialMatches = new AutoCompletionCandidates();
-        if (StringUtils.isNotBlank(getHubServerInfo().getServerUrl()) || StringUtils.isNotBlank(getHubServerInfo().getCredentialsId())) {
-            ClassLoader originalClassLoader = Thread.currentThread()
-                    .getContextClassLoader();
-            boolean changed = false;
-            try {
-                if (hubWrapperProjectName.contains("$")) {
-                    return potentialMatches;
-                }
+	public AutoCompletionCandidates doAutoCompleteHubWrapperProjectName(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName)
+			throws IOException,
+			ServletException {
+		return BDCommonDescriptorUtil.doAutoCompleteHubProjectName(getHubServerInfo(), hubWrapperProjectName);
+	}
 
-                HubIntRestService service = BuildHelper.getRestService(getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo()
-                        .getPassword(), getHubServerInfo().getTimeout());
+	/**
+	 * Performs on-the-fly validation of the form field 'hubWrapperProjectName'. Checks to see if there is already a
+	 * project in
+	 * the Hub with this name.
+	 *
+	 */
+	public FormValidation doCheckHubWrapperProjectName(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
+			@QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion) throws IOException, ServletException {
+		return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubWrapperProjectName,
+				hubWrapperProjectVersion);
+	}
 
-                List<AutoCompleteItem> suggestions = service.getProjectMatches(hubWrapperProjectName);
+	/**
+	 * Performs on-the-fly validation of the form field 'hubWrapperProjectVersion'. Checks to see if there is already a
+	 * project
+	 * in the Hub with this name.
+	 *
+	 */
+	public FormValidation doCheckHubWrapperProjectVersion(@QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion,
+			@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName) throws IOException, ServletException {
+		return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubWrapperProjectVersion,
+				hubWrapperProjectName);
+	}
 
-                if (!suggestions.isEmpty()) {
-                    for (AutoCompleteItem projectSuggestion : suggestions) {
-                        potentialMatches.add(projectSuggestion.getValue());
-                    }
-                }
-            } catch (Exception e) {
-                // do nothing for exception, there is nowhere in the UI to display this error
-            } finally {
-                if (changed) {
-                    Thread.currentThread().setContextClassLoader(
-                            originalClassLoader);
-                }
-            }
+	/**
+	 * Creates the Hub project AND/OR version
+	 *
+	 */
+	public FormValidation doCreateHubWrapperProject(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
+			@QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion,
+			@QueryParameter("hubWrapperVersionPhase") final String hubWrapperVersionPhase,
+			@QueryParameter("hubWrapperVersionDist") final String hubWrapperVersionDist) {
 
-        }
-        return potentialMatches;
-    }
+		save();
+		return BDCommonDescriptorUtil.doCreateHubProject(getHubServerInfo(), hubWrapperProjectName,
+				hubWrapperProjectVersion, hubWrapperVersionPhase, hubWrapperVersionDist);
+	}
 
-    /**
-     * Performs on-the-fly validation of the form field 'hubWrapperProjectName'. Checks to see if there is already a
-     * project in
-     * the Hub with this name.
-     *
-     */
-    public FormValidation doCheckHubWrapperProjectName(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
-            @QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion) throws IOException, ServletException {
-        // Query for the project version so hopefully the check methods run for boths fields
-        // when the User changes the Name of the project
-        if (hubWrapperProjectName.length() > 0) {
-            ClassLoader originalClassLoader = Thread.currentThread()
-                    .getContextClassLoader();
-            boolean changed = false;
-            try {
-                if (StringUtils.isBlank(getHubServerInfo().getServerUrl())) {
-                    return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
-                }
-                if (StringUtils.isBlank(getHubServerInfo().getCredentialsId())) {
-                    return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
-                }
-                if (hubWrapperProjectName.contains("$")) {
-                    return FormValidation
-                            .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
-                }
+	/**
+	 * Performs on-the-fly validation of the form field 'userScopesToInclude'.
+	 *
+	 */
+	public FormValidation doCheckUserScopesToInclude(@QueryParameter final String value)
+			throws IOException, ServletException {
+		if (this instanceof MavenBuildWrapperDescriptor) {
+			if (StringUtils.isBlank(value)) {
+				return FormValidation.error(Messages
+						.HubMavenWrapper_getPleaseIncludeAScope());
+			}
+			try {
+				Scope.getScopeListFromString(value);
+			} catch (final BDCIScopeException e) {
+				final String scope = e.getMessage().substring(e.getMessage().indexOf(":") + 1).trim();
+				return FormValidation.error(Messages.HubMavenWrapper_getIncludedInvalidScope_0_(scope));
+			}
+		} else if (this instanceof GradleBuildWrapperDescriptor) {
+			if (StringUtils.isBlank(value)) {
+				return FormValidation.error(Messages
+						.HubGradleWrapper_getPleaseIncludeAConfiguration());
+			}
+		}
+		return FormValidation.ok();
+	}
 
-                String credentialUserName = null;
-                String credentialPassword = null;
+	@Override
+	public boolean isApplicable(final AbstractProject<?, ?> aClass) {
+		return aClass.getClass().isAssignableFrom(FreeStyleProject.class);
+	}
 
-                UsernamePasswordCredentialsImpl credential = getHubServerInfo().getCredential();
-                if (credential == null) {
-                    return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
-                }
-                credentialUserName = credential.getUsername();
-                credentialPassword = credential.getPassword().getPlainText();
+	@Override
+	public String getDisplayName() {
+		return "";
+	}
 
-                HubIntRestService service = BuildHelper.getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword,
-                        getHubServerInfo()
-                                .getTimeout());
-
-                ProjectItem project = service.getProjectByName(hubWrapperProjectName);
-
-                if (project != null && StringUtils.isNotBlank(project.getId())) {
-                    return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(getHubServerInfo().getServerUrl()));
-                } else {
-                    return FormValidation.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(getHubServerInfo().getServerUrl()));
-                }
-            } catch (BDRestException e) {
-                e.printStackTrace();
-                return FormValidation.error(e, e.getMessage());
-            } catch (Exception e) {
-                String message;
-                if (e.getCause() != null && e.getCause().getCause() != null) {
-                    message = e.getCause().getCause().toString();
-                } else if (e.getCause() != null) {
-                    message = e.getCause().toString();
-                } else {
-                    message = e.toString();
-                }
-                if (message.toLowerCase().contains("service unavailable")) {
-                    message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getHubServerInfo().getServerUrl());
-                } else if (message.toLowerCase().contains("precondition failed")) {
-                    message = message + ", Check your configuration.";
-                }
-                return FormValidation.error(e, message);
-            } finally {
-                if (changed) {
-                    Thread.currentThread().setContextClassLoader(
-                            originalClassLoader);
-                }
-            }
-        }
-        return FormValidation.ok();
-    }
-
-    /**
-     * Performs on-the-fly validation of the form field 'hubWrapperProjectVersion'. Checks to see if there is already a
-     * project
-     * in the Hub with this name.
-     *
-     */
-    public FormValidation doCheckHubWrapperProjectVersion(@QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion,
-            @QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName) throws IOException, ServletException {
-        if (hubWrapperProjectVersion.length() > 0) {
-
-            ClassLoader originalClassLoader = Thread.currentThread()
-                    .getContextClassLoader();
-            boolean changed = false;
-            try {
-                if (StringUtils.isBlank(getHubServerInfo().getServerUrl())) {
-                    return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
-                }
-                if (StringUtils.isBlank(getHubServerInfo().getCredentialsId())) {
-                    return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
-                }
-                if (StringUtils.isBlank(hubWrapperProjectName)) {
-                    return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
-                }
-                if (hubWrapperProjectVersion.contains("$")) {
-                    return FormValidation
-                            .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
-                }
-                if (hubWrapperProjectName.contains("$")) {
-                    return FormValidation
-                            .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
-                }
-
-                String credentialUserName = null;
-                String credentialPassword = null;
-
-                UsernamePasswordCredentialsImpl credential = getHubServerInfo().getCredential();
-                if (credential == null) {
-                    return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
-                }
-                credentialUserName = credential.getUsername();
-                credentialPassword = credential.getPassword().getPlainText();
-
-                HubIntRestService service = BuildHelper.getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword,
-                        getHubServerInfo()
-                                .getTimeout());
-
-                ProjectItem project = null;
-                try {
-                    project = service.getProjectByName(hubWrapperProjectName);
-                } catch (BDRestException e) {
-                    return FormValidation.error(e, e.getMessage());
-                }
-                List<ReleaseItem> releases = service.getVersionsForProject(project.getId());
-
-                StringBuilder projectVersions = new StringBuilder();
-                for (ReleaseItem release : releases) {
-                    if (release.getVersion().equals(hubWrapperProjectVersion)) {
-                        return FormValidation.ok(Messages.HubBuildScan_getVersionExistsIn_0_(project.getName()));
-                    } else {
-                        if (projectVersions.length() > 0) {
-                            projectVersions.append(", " + release.getVersion());
-                        } else {
-                            projectVersions.append(release.getVersion());
-                        }
-                    }
-                }
-
-                return FormValidation.error(Messages.HubBuildScan_getVersionNonExistingIn_0_(project.getName(), projectVersions.toString()));
-            } catch (Exception e) {
-                String message;
-                if (e.getCause() != null && e.getCause().getCause() != null) {
-                    message = e.getCause().getCause().toString();
-                } else if (e.getCause() != null) {
-                    message = e.getCause().toString();
-                } else {
-                    message = e.toString();
-                }
-                if (message.toLowerCase().contains("service unavailable")) {
-                    message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getHubServerInfo().getServerUrl());
-                } else if (message.toLowerCase().contains("precondition failed")) {
-                    message = message + ", Check your configuration.";
-                }
-                return FormValidation.error(e, message);
-            } finally {
-                if (changed) {
-                    Thread.currentThread().setContextClassLoader(
-                            originalClassLoader);
-                }
-            }
-        }
-        return FormValidation.ok();
-    }
-
-    /**
-     * Creates the Hub project AND/OR version
-     *
-     *
-     */
-    public FormValidation doCreateHubWrapperProject(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
-            @QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion,
-            @QueryParameter("hubWrapperVersionPhase") final String hubWrapperVersionPhase,
-            @QueryParameter("hubWrapperVersionDist") final String hubWrapperVersionDist) {
-        ClassLoader originalClassLoader = Thread.currentThread()
-                .getContextClassLoader();
-        boolean changed = false;
-        try {
-
-            save();
-
-            if (StringUtils.isBlank(hubWrapperProjectName)) {
-                return FormValidation.error(Messages.HubBuildScan_getProvideProjectName());
-            }
-            if (StringUtils.isBlank(hubWrapperProjectVersion)) {
-                return FormValidation.error(Messages.HubBuildScan_getProvideProjectVersion());
-            }
-            if (hubWrapperProjectName.contains("$")) {
-                return FormValidation
-                        .warning(Messages.HubBuildScan_getProjectNameContainsVariable());
-            }
-            if (hubWrapperProjectVersion.contains("$")) {
-                return FormValidation
-                        .warning(Messages.HubBuildScan_getProjectVersionContainsVariable());
-            }
-            if (StringUtils.isBlank(hubWrapperVersionPhase)) {
-                return FormValidation.error(Messages.HubBuildScan_getProvideVersionPhase());
-            }
-            if (StringUtils.isBlank(hubWrapperVersionDist)) {
-                return FormValidation.error(Messages.HubBuildScan_getProvideVersionDist());
-            }
-
-            String credentialUserName = null;
-            String credentialPassword = null;
-
-            UsernamePasswordCredentialsImpl credential = getHubServerInfo().getCredential();
-            if (credential == null) {
-                return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
-            }
-            credentialUserName = credential.getUsername();
-            credentialPassword = credential.getPassword().getPlainText();
-
-            HubIntRestService service = BuildHelper.getRestService(getHubServerInfo().getServerUrl(), credentialUserName, credentialPassword,
-                    getHubServerInfo()
-                            .getTimeout());
-
-            boolean projectExists = false;
-
-            ProjectItem project = null;
-            try {
-                project = service.getProjectByName(hubWrapperProjectName);
-                if (project != null && project.getId() != null && project.getName() != null) {
-                    projectExists = true;
-                }
-
-            } catch (BDRestException e) {
-                // Either doesnt exist or cant connect to the server.
-                // Assume it doesnt exist for now
-            }
-
-            String projectId = null;
-            if (!projectExists) {
-                try {
-                    projectId = service.createHubProjectAndVersion(hubWrapperProjectName, hubWrapperProjectVersion, hubWrapperVersionPhase,
-                            hubWrapperVersionDist);
-                    return FormValidation.ok(Messages.HubBuildScan_getProjectAndVersionCreated());
-                } catch (BDRestException e) {
-                    return FormValidation.error(e, e.getMessage());
-                }
-            } else {
-                projectId = project.getId();
-                String versionId = null;
-                try {
-                    List<ReleaseItem> releases = service.getVersionsForProject(projectId);
-                    for (ReleaseItem release : releases) {
-                        if (release.getVersion().equals(hubWrapperProjectVersion)) {
-                            versionId = release.getId();
-                        }
-
-                    }
-                    if (projectExists && versionId != null) {
-                        return FormValidation
-                                .warning(Messages.HubBuildScan_getProjectAndVersionExist());
-                    }
-
-                    if (versionId == null) {
-                        versionId = service.createHubVersion(hubWrapperProjectVersion, projectId, hubWrapperVersionPhase, hubWrapperVersionDist);
-                    }
-                    return FormValidation.ok(Messages.HubBuildScan_getVersionCreated());
-                } catch (BDRestException e) {
-                    if (e.getResource().getResponse().getStatus().getCode() == 412) {
-                        return FormValidation.error(e, Messages.HubBuildScan_getProjectVersionCreationProblem());
-                    } else if (e.getResource().getResponse().getStatus().getCode() == 401) {
-                        // If User is Not Authorized, 401 error, an exception should be thrown by the ClientResource
-                        return FormValidation.error(e, Messages.HubBuildScan_getCredentialsInValidFor_0_(getHubServerInfo().getServerUrl()));
-                    } else if (e.getResource().getResponse().getStatus().getCode() == 407) {
-                        return FormValidation.error(e, Messages.HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
-                    } else {
-                        return FormValidation.error(e, Messages.HubBuildScan_getErrorConnectingTo_0_(e.getResource().getResponse().getStatus().getCode()));
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            String message;
-            if (e.getCause() != null && e.getCause().getCause() != null) {
-                message = e.getCause().getCause().toString();
-            } else if (e.getCause() != null) {
-                message = e.getCause().toString();
-            } else {
-                message = e.toString();
-            }
-            if (message.toLowerCase().contains("service unavailable")) {
-                message = Messages.HubBuildScan_getCanNotReachThisServer_0_(getHubServerInfo().getServerUrl());
-            } else if (message.toLowerCase().contains("precondition failed")) {
-                message = message + ", Check your configuration.";
-            }
-            return FormValidation.error(e, message);
-        } finally {
-            if (changed) {
-                Thread.currentThread().setContextClassLoader(
-                        originalClassLoader);
-            }
-        }
-
-    }
-
-    /**
-     * Performs on-the-fly validation of the form field 'userScopesToInclude'.
-     *
-     */
-    public FormValidation doCheckUserScopesToInclude(@QueryParameter String value)
-            throws IOException, ServletException {
-        if (this instanceof MavenBuildWrapperDescriptor) {
-            if (value.length() == 0) {
-                return FormValidation.error(Messages
-                        .HubMavenWrapper_getPleaseIncludeAScope());
-            }
-            try {
-                Scope.getScopeListFromString(value);
-            } catch (BDCIScopeException e) {
-                String scope = e.getMessage().substring(e.getMessage().indexOf(":") + 1).trim();
-                return FormValidation.error(Messages.HubMavenWrapper_getIncludedInvalidScope_0_(scope));
-            }
-        } else if (this instanceof GradleBuildWrapperDescriptor) {
-            if (value.length() == 0) {
-                return FormValidation.error(Messages
-                        .HubGradleWrapper_getPleaseIncludeAConfiguration());
-            }
-        }
-        return FormValidation.ok();
-    }
-
-    @Override
-    public boolean isApplicable(AbstractProject<?, ?> aClass) {
-        // Indicates that this builder can be used with all kinds of project
-        // types
-        return aClass.getClass().isAssignableFrom(FreeStyleProject.class);
-        // || aClass.getClass().isAssignableFrom(MavenModuleSet.class);
-    }
-
-    @Override
-    public String getDisplayName() {
-        return "";
-    }
-
-    public String getPluginVersion() {
-        return PluginHelper.getPluginVersion();
-    }
+	public String getPluginVersion() {
+		return PluginHelper.getPluginVersion();
+	}
 
 }

@@ -9,20 +9,17 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
-import com.blackducksoftware.integration.hub.HubScanJobConfig;
-import com.blackducksoftware.integration.hub.HubScanJobConfigBuilder;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
+import com.blackducksoftware.integration.hub.exception.VersionDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
@@ -44,8 +41,11 @@ import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetOneJarFile;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
+import com.blackducksoftware.integration.hub.job.HubScanJobConfig;
+import com.blackducksoftware.integration.hub.job.HubScanJobConfigBuilder;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.logging.LogLevel;
+import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 
@@ -53,7 +53,6 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.ProxyConfiguration;
-import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.JDK;
@@ -218,8 +217,8 @@ public class PostBuildHubScan extends Recorder {
 					String projectVersion = null;
 
 					if (StringUtils.isNotBlank(getHubProjectName()) && StringUtils.isNotBlank(getHubProjectVersion())) {
-						projectName = handleVariableReplacement(variables, getHubProjectName());
-						projectVersion = handleVariableReplacement(variables, getHubProjectVersion());
+						projectName = BuildHelper.handleVariableReplacement(variables, getHubProjectName());
+						projectVersion = BuildHelper.handleVariableReplacement(variables, getHubProjectVersion());
 
 					}
 					final HubScanJobConfigBuilder hubScanJobConfigBuilder = new HubScanJobConfigBuilder();
@@ -251,22 +250,13 @@ public class PostBuildHubScan extends Recorder {
 							getHubServerInfo().getUsername(),
 							getHubServerInfo().getPassword(),
 							getHubServerInfo().getTimeout());
-					String projectId = null;
-					String versionId = null;
+					ProjectItem project = null;
+					ReleaseItem version = null;
 					if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
-						projectId = ensureProjectExists(service, logger, projectName, projectVersion);
-						versionId = ensureVersionExists(service, logger, projectVersion, projectId);
-
-						if (StringUtils.isEmpty(projectId)) {
-							throw new BDJenkinsHubPluginException("The specified Project could not be found.");
-						}
-
-						logger.debug("Project Id: '" + projectId + "'");
-
-						if (StringUtils.isEmpty(versionId)) {
-							throw new BDJenkinsHubPluginException("The specified Version could not be found in the Project.");
-						}
-						logger.debug("Version Id: '" + versionId + "'");
+						project = ensureProjectExists(service, logger, projectName);
+						version = ensureVersionExists(service, logger, projectVersion, project);
+						logger.debug("Found Project : " + projectName);
+						logger.debug("Found Version : " + projectVersion);
 					}
 					final HubSupportHelper hubSupport = new HubSupportHelper();
 					hubSupport.checkHubSupport(service, logger);
@@ -286,11 +276,11 @@ public class PostBuildHubScan extends Recorder {
 						final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
 						reportGenInfo.setService(service);
 						reportGenInfo.setHostname(localHostName);
-						reportGenInfo.setProjectId(projectId);
-						reportGenInfo.setVersionId(versionId);
+						reportGenInfo.setProject(project);
+						reportGenInfo.setVersion(version);
 						reportGenInfo.setScanTargets(jobConfig.getScanTargetPaths());
 
-						reportGenInfo.setMaximumWaitTime(jobConfig.getMaxWaitTimeForRiskReportInMilliseconds());
+						reportGenInfo.setMaximumWaitTime(jobConfig.getMaxWaitTimeForBomUpdateInMilliseconds());
 
 						reportGenInfo.setBeforeScanTime(beforeScanTime);
 						reportGenInfo.setAfterScanTime(afterScanTime);
@@ -303,10 +293,12 @@ public class PostBuildHubScan extends Recorder {
 						bomUpdatedAction.setAfterScanTime(afterScanTime);
 						bomUpdatedAction.setBeforeScanTime(beforeScanTime);
 						bomUpdatedAction.setLocalHostName(localHostName);
-						bomUpdatedAction.setMaxWaitTime(jobConfig.getMaxWaitTimeForRiskReportInMilliseconds());
+						bomUpdatedAction.setMaxWaitTime(jobConfig.getMaxWaitTimeForBomUpdateInMilliseconds());
 						bomUpdatedAction.setScanStatusDirectory(scan.getScanStatusDirectoryPath());
 						bomUpdatedAction.setScanTargets(jobConfig.getScanTargetPaths());
 					}
+
+					bomUpdatedAction.setPolicyStatusUrl(version.getLink(ReleaseItem.POLICY_STATUS_LINK));
 
 					build.addAction(bomUpdatedAction);
 				}
@@ -396,7 +388,7 @@ public class PostBuildHubScan extends Recorder {
 				if (StringUtils.isEmpty(scanJob.getScanTarget())) {
 					scanTargetPaths.add(workingDirectory);
 				} else {
-					String target = handleVariableReplacement(variables, scanJob.getScanTarget().trim());
+					String target = BuildHelper.handleVariableReplacement(variables, scanJob.getScanTarget().trim());
 					// make sure the target provided doesn't already begin with a slash or end in a slash
 					// removes the slash if the target begins or ends with one
 					final File targetFile = new File(workingDirectory, target);
@@ -424,21 +416,17 @@ public class PostBuildHubScan extends Recorder {
 		build.addAction(reportAction);
 	}
 
-	private String ensureProjectExists(final HubIntRestService service, final IntLogger logger, final String projectName, final String projectVersion)
-			throws IOException,
-			URISyntaxException,
-			BDJenkinsHubPluginException {
-		String projectId = null;
+	protected ProjectItem ensureProjectExists(final HubIntRestService service, final IntLogger logger,
+			final String projectName) throws IOException, URISyntaxException, BDJenkinsHubPluginException {
+		ProjectItem project = null;
 		try {
-			projectId = service.getProjectByName(projectName).getId();
+			project = service.getProjectByName(projectName);
 
 		} catch (final ProjectDoesNotExistException e) {
 			// Project was not found, try to create it
 			try {
-
-				projectId = service.createHubProjectAndVersion(projectName, projectVersion, getHubVersionPhase(), getHubVersionDist());
-				logger.debug("Project and Version created!");
-
+				final String projectUrl = service.createHubProject(projectName);
+				project = service.getProject(projectUrl);
 			} catch (final BDRestException e1) {
 				if (e1.getResource() != null) {
 					logger.error("Status : " + e1.getResource().getStatus().getCode());
@@ -456,51 +444,44 @@ public class PostBuildHubScan extends Recorder {
 			}
 		}
 
-		return projectId;
+		return project;
 	}
 
-	private String ensureVersionExists(final HubIntRestService service, final IntLogger logger, final String projectVersion, final String projectId)
-			throws IOException,
-			URISyntaxException, BDJenkinsHubPluginException {
-		String versionId = null;
+	/**
+	 * Ensures the Version exists. Returns the version URL
+	 */
+	protected ReleaseItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
+			final String projectVersion, final ProjectItem project)
+					throws IOException, URISyntaxException, BDJenkinsHubPluginException {
+		ReleaseItem version = null;
 		try {
-
-			final List<ReleaseItem> projectVersions = service.getVersionsForProject(projectId);
-			for (final ReleaseItem release : projectVersions) {
-				if (projectVersion.equals(release.getVersion())) {
-					versionId = release.getId();
-					if (!release.getPhase().equals(getHubVersionPhase())) {
-						logger.warn("The selected Phase does not match the Phase of this Version. If you wish to update the Phase please do so in the Hub UI.");
-					}
-					if (!release.getDistribution().equals(getHubVersionDist())) {
-						logger.warn("The selected Distribution does not match the Distribution of this Version. If you wish to update the Distribution please do so in the Hub UI.");
-					}
-				}
+			version = service.getVersion(project, projectVersion);
+			if (!version.getPhase().equals(getHubVersionPhase())) {
+				logger.warn(
+						"The selected Phase does not match the Phase of this Version. If you wish to update the Phase please do so in the Hub UI.");
 			}
-			if (versionId == null) {
-				versionId = service.createHubVersion(projectVersion, projectId, getHubVersionPhase(), getHubVersionDist());
-				logger.debug("Version created!");
+			if (!version.getDistribution().equals(getHubVersionDist())) {
+				logger.warn(
+						"The selected Distribution does not match the Distribution of this Version. If you wish to update the Distribution please do so in the Hub UI.");
+			}
+		} catch (final VersionDoesNotExistException e) {
+			try {
+				final String versionURL = service.createHubVersion(project, projectVersion, getHubVersionPhase(),
+						getHubVersionDist());
+				version = service.getProjectVersion(versionURL);
+			} catch (final BDRestException e1) {
+				if (e1.getResource() != null) {
+					logger.error("Status : " + e1.getResource().getStatus().getCode());
+					logger.error("Response : " + e1.getResource().getResponse().getEntityAsText());
+				}
+				throw new BDJenkinsHubPluginException("Problem creating the Version. ", e1);
 			}
 		} catch (final BDRestException e) {
 			throw new BDJenkinsHubPluginException("Could not retrieve or create the specified version.", e);
 		}
-		return versionId;
+		return version;
 	}
 
-	public String handleVariableReplacement(final Map<String, String> variables, final String value) throws BDJenkinsHubPluginException {
-		if (value != null) {
-
-			final String newValue = Util.replaceMacro(value, variables);
-
-			if (newValue.contains("$")) {
-				throw new BDJenkinsHubPluginException("Variable was not properly replaced. Value : " + value + ", Result : " + newValue
-						+ ". Make sure the variable has been properly defined.");
-			}
-			return newValue;
-		} else {
-			return null;
-		}
-	}
 
 	public void printConfiguration(final AbstractBuild<?, ?> build, final IntLogger logger, final HubScanJobConfig jobConfig)
 			throws IOException,
@@ -536,8 +517,7 @@ public class PostBuildHubScan extends Recorder {
 
 		logger.info(
 				"-> Generate Hub report : " + jobConfig.isShouldGenerateRiskReport());
-		final String formattedTime = String.format("%d minutes",
-				TimeUnit.MILLISECONDS.toMinutes(jobConfig.getMaxWaitTimeForRiskReportInMilliseconds()));
+		final String formattedTime = String.format("%d minutes", jobConfig.getMaxWaitTimeForBomUpdate());
 		logger.info("-> Maximum wait time for the BOM Update : " + formattedTime);
 	}
 

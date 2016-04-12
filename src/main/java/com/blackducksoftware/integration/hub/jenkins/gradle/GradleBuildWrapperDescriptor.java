@@ -1,39 +1,34 @@
 package com.blackducksoftware.integration.hub.jenkins.gradle;
 
-import hudson.Plugin;
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.AbstractProject;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-
 import java.io.IOException;
 
 import javax.servlet.ServletException;
-
-import jenkins.model.Jenkins;
 
 import org.kohsuke.stapler.QueryParameter;
 
 import com.blackducksoftware.integration.hub.jenkins.BDBuildWrapperDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 
+import hudson.Plugin;
+import hudson.model.AbstractProject;
+import hudson.model.AutoCompletionCandidates;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
+
 // TODO Uncomment extension to add the gradle wrapper back in
 // @Extension(optional = true)
 public class GradleBuildWrapperDescriptor extends BDBuildWrapperDescriptor {
 
-    /**
-     * In order to load the persisted global configuration, you have to call
-     * load() in the constructor.
-     */
     public GradleBuildWrapperDescriptor() {
         super(GradleBuildWrapper.class);
         load();
     }
 
     @Override
-    public boolean isApplicable(AbstractProject<?, ?> aClass) {
+    public boolean isApplicable(final AbstractProject<?, ?> aClass) {
         if (super.isApplicable(aClass)) {
-            Plugin requiredPlugin = Jenkins.getInstance().getPlugin("gradle");
+            final Plugin requiredPlugin = Jenkins.getInstance().getPlugin("gradle");
             if (requiredPlugin != null && requiredPlugin.getWrapper() != null) {
                 return true;
             } else {
@@ -44,19 +39,11 @@ public class GradleBuildWrapperDescriptor extends BDBuildWrapperDescriptor {
         }
     }
 
-    /**
-     * This human readable name is used in the configuration screen.
-     */
     @Override
     public String getDisplayName() {
         return Messages.HubGradleWrapper_getDisplayName();
     }
 
-    /*
-     * (non-JSDoc)
-     * 
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
         return "GradleBuildWrapperDescriptor [hubServerInfo=" + getHubServerInfo() + "]";
@@ -65,7 +52,6 @@ public class GradleBuildWrapperDescriptor extends BDBuildWrapperDescriptor {
     /**
      * Fills the drop down list of possible Version phases
      *
-     * @return
      */
     public ListBoxModel doFillGradleHubVersionPhaseItems() {
         return doFillHubWrapperVersionPhaseItems();
@@ -74,7 +60,6 @@ public class GradleBuildWrapperDescriptor extends BDBuildWrapperDescriptor {
     /**
      * Fills the drop down list of possible Version distribution types
      *
-     * @return
      */
     public ListBoxModel doFillGradleHubVersionDistItems() {
         return doFillHubWrapperVersionDistItems();

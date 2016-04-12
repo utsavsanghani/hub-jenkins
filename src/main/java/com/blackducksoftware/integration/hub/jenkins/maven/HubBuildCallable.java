@@ -1,10 +1,5 @@
 package com.blackducksoftware.integration.hub.jenkins.maven;
 
-import hudson.FilePath;
-import hudson.maven.MavenBuildProxy.BuildCallable;
-import hudson.maven.MavenBuild;
-import hudson.model.AbstractBuild;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Set;
@@ -13,6 +8,12 @@ import com.blackducksoftware.integration.build.BuildArtifact;
 import com.blackducksoftware.integration.build.BuildDependency;
 import com.blackducksoftware.integration.build.BuildInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
+import com.blackducksoftware.integration.hub.jenkins.action.BuildInfoAction;
+
+import hudson.FilePath;
+import hudson.maven.MavenBuild;
+import hudson.maven.MavenBuildProxy.BuildCallable;
+import hudson.model.AbstractBuild;
 
 public class HubBuildCallable implements BuildCallable<Void, IOException> {
     private static final long serialVersionUID = 3459269768733083577L;
@@ -23,14 +24,14 @@ public class HubBuildCallable implements BuildCallable<Void, IOException> {
 
     private final Set<BuildDependency> buildDependencies;
 
-    public HubBuildCallable(HubJenkinsLogger buildLogger, BuildArtifact bArtifact, Set<BuildDependency> buildDependencies) {
+    public HubBuildCallable(final HubJenkinsLogger buildLogger, final BuildArtifact bArtifact, final Set<BuildDependency> buildDependencies) {
         this.buildLogger = buildLogger;
         this.bArtifact = bArtifact;
         this.buildDependencies = buildDependencies;
     }
 
     @Override
-    public Void call(MavenBuild build) throws IOException, InterruptedException {
+    public Void call(final MavenBuild build) throws IOException, InterruptedException {
         buildLogger.debug("reportGenerated().asynch-call()");
         AbstractBuild<?, ?> rootBuild = build.getRootBuild();
         if (rootBuild == null) {
@@ -41,14 +42,13 @@ public class HubBuildCallable implements BuildCallable<Void, IOException> {
             buildLogger.debug("buildId: " + build.getId() + " -- parent: " + build.getRootBuild().getId());
         }
 
-        // if (build.getId().equals(rootBuild.getId())) {
         BuildInfoAction biAction = rootBuild.getAction(BuildInfoAction.class);
         BuildInfo buildInfo = null;
         if (biAction == null) {
             biAction = new BuildInfoAction();
             rootBuild.addAction(biAction);
             buildInfo = new BuildInfo();
-            FilePath workspace = rootBuild.getWorkspace();
+            final FilePath workspace = rootBuild.getWorkspace();
             if (workspace == null) {
                 buildLogger.info("Workspace: null" + " @" + InetAddress.getLocalHost().getHostName());
             } else {
