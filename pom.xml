@@ -79,11 +79,11 @@
 	<distributionManagement>
 		<repository>
 			<id>bds-int-public</id>
-			<url>https://updates.suite.blackducksoftware.com/bdhubjenkins</url>
+			<url>http://suiterepo.blackducksoftware.com:8181/artifactory/bds-jenkins-hub-plugins</url>
 		</repository>
 		<snapshotRepository>
 			<id>bds-int-public</id>
-			<url>https://updates.suite.blackducksoftware.com/bdhubjenkins</url>
+			<url>http://suiterepo.blackducksoftware.com:8181/artifactory/bds-jenkins-hub-plugins</url>
 		</snapshotRepository>
 	</distributionManagement>
 
