@@ -3,5 +3,5 @@ notifications:
   email:
     recipients:
       - akamen@blackducksoftware.com
-	  - jrichard@blackducksoftware.com
+      - jrichard@blackducksoftware.com
    
