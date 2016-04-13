@@ -2,6 +2,13 @@
 
 Hub plugin for Jenkins. This plugin provides ability to run a BD Hub CLi on build input or output. It offers to run multiple code locations.
 
+## Build
+
+[![Build Status](https://travis-ci.org/blackducksoftware/jenkins-hub.svg?branch=master)](https://travis-ci.org/blackducksoftware/jenkins-hub)
+
+## Overview
+
+
 # Documentation
 1.5.0 - TBD
 
