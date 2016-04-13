@@ -5,6 +5,4 @@ notifications:
       - akamen@blackducksoftware.com
       - jrichard@blackducksoftware.com
       
-mvn package -Dmaven.test.skip=true
-
 install: /bin/true
