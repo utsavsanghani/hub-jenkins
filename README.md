@@ -9,12 +9,10 @@ Hub plugin for Jenkins. This plugin provides ability to run a scan using the BD 
 ## Where can I get the latest release? ##
 You can download the latest source from GitHub: https://github.com/blackducksoftware/jenkins-hub
 
-You can download the latest artifact through your preferred dependency management system from BinTray: https://bintray.com/bds/integration/hub-jenkins/view
-
-Lastly, release tab on GitHub will contain the latest artifacts.
+You can download the latest artifact from releases: https://github.com/blackducksoftware/jenkins-hub/releases
 
 ## Documentation ##
-All documentation for build-info can be found on the base project:  https://github.com/blackducksoftware/jenkins-hub/wiki
+All documentation can be found on the GitHub wiki:  https://github.com/blackducksoftware/jenkins-hub/wiki
 
 ## License ##
 GNU General Public License 2 only
