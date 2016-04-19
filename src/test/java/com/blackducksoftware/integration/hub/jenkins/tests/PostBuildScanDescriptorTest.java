@@ -422,7 +422,8 @@ public class PostBuildScanDescriptorTest {
 
 		final FormValidation form = descriptor.doCheckScanMemory("This is not an Integer");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-		Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getInvalidMemoryString()));
+		Assert.assertTrue(form.getMessage(),
+				form.getMessage().contains("The String : This is not an Integer , is not an Integer."));
 	}
 
 	@Test
@@ -440,6 +441,16 @@ public class PostBuildScanDescriptorTest {
 
 		final FormValidation form = descriptor.doCheckScanMemory("512");
 		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+	}
+
+	@Test
+	public void testCheckLowMemory() throws Exception {
+		final PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+		final FormValidation form = descriptor.doCheckScanMemory("1");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertTrue(form.getMessage(),
+				form.getMessage().contains("The minimum amount of memory for the scan is 256 MB."));
 	}
 
 	@Test
@@ -519,15 +530,15 @@ public class PostBuildScanDescriptorTest {
 		form = descriptor.doCheckBomUpdateMaxiumWaitTime("This is not an Integer");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
 		Assert.assertTrue(form.getMessage(),
-				form.getMessage().contains(Messages.HubBuildScan_getBomUpdateWaitTimeInvalid()));
+				form.getMessage().contains("The String : This is not an Integer , is not an Integer."));
 
 		form = descriptor.doCheckBomUpdateMaxiumWaitTime("0");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-		Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getBomUpdateWaitTimeGreaterThanZero());
+		Assert.assertEquals(form.getMessage(), "The maximum wait time for the BOM Update must be greater than 0.");
 
 		form = descriptor.doCheckBomUpdateMaxiumWaitTime("1");
 		Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
-		Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getBomUpdateWaitTimeShort());
+		Assert.assertEquals(form.getMessage(), "This wait time may be too short.");
 
 		form = descriptor.doCheckBomUpdateMaxiumWaitTime("5");
 		Assert.assertEquals(FormValidation.Kind.OK, form.kind);

@@ -59,6 +59,9 @@ import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
+import com.blackducksoftware.integration.hub.job.HubScanJobConfigBuilder;
+import com.blackducksoftware.integration.hub.logging.IntBufferedLogger;
+import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -294,15 +297,18 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 			return FormValidation.error(Messages
 					.HubBuildScan_getNeedMemory());
 		}
-
 		try {
-			final Integer scanMem = Integer.valueOf(scanMemory);
-			if (scanMem < 256) {
-				return FormValidation.error(Messages.HubBuildScan_getInvalidMemoryString());
+			final HubScanJobConfigBuilder validator = new HubScanJobConfigBuilder();
+			validator.setScanMemory(scanMemory);
+			final IntBufferedLogger logger = new IntBufferedLogger();
+			validator.validateScanMemory(logger);
+
+			final String errorString = logger.getOutputString(LogLevel.ERROR);
+			if (StringUtils.isNotBlank(errorString)) {
+				return FormValidation.error(errorString);
 			}
-		} catch (final NumberFormatException e) {
-			return FormValidation.error(e, Messages
-					.HubBuildScan_getInvalidMemoryString());
+		} catch (final IllegalArgumentException e) {
+			return FormValidation.error(e, e.getMessage());
 		}
 
 		return FormValidation.ok();
@@ -315,20 +321,22 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 			return FormValidation.error(Messages
 					.HubBuildScan_getBomUpdateWaitTimeEmpty());
 		}
-
 		try {
-			final Integer scanMem = Integer.valueOf(bomUpdateMaxiumWaitTime);
-			if (scanMem <= 0) {
-				return FormValidation.error(Messages.HubBuildScan_getBomUpdateWaitTimeGreaterThanZero());
-			}
-			if (scanMem < 2) {
-				return FormValidation.warning(Messages.HubBuildScan_getBomUpdateWaitTimeShort());
-			}
-		} catch (final NumberFormatException e) {
-			return FormValidation.error(e, Messages
-					.HubBuildScan_getBomUpdateWaitTimeInvalid());
-		}
+			final HubScanJobConfigBuilder validator = new HubScanJobConfigBuilder();
+			validator.setMaxWaitTimeForBomUpdate(bomUpdateMaxiumWaitTime);
+			final IntBufferedLogger logger = new IntBufferedLogger();
+			validator.validateMaxWaitTimeForBomUpdate(logger);
 
+			final String errorString = logger.getOutputString(LogLevel.ERROR);
+			final String warnString = logger.getOutputString(LogLevel.WARN);
+			if (StringUtils.isNotBlank(errorString)) {
+				return FormValidation.error(errorString);
+			} else if (StringUtils.isNotBlank(warnString)) {
+				return FormValidation.warning(warnString);
+			}
+		} catch (final IllegalArgumentException e) {
+			return FormValidation.error(e, e.getMessage());
+		}
 		return FormValidation.ok();
 	}
 
