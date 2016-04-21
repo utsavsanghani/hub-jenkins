@@ -547,60 +547,60 @@ public class PostBuildScanDescriptorTest {
 	}
 
 	@Test
-	public void testDoCheckTimeout() throws Exception {
+	public void testDoCheckHubTimeout() throws Exception {
 		final PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
 
-		FormValidation form = descriptor.doCheckTimeout(null);
+		FormValidation form = descriptor.doCheckHubTimeout(null);
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
 		Assert.assertEquals(Messages.HubBuildScan_getPleaseSetTimeout(), form.getMessage());
 
-		form = descriptor.doCheckTimeout("   ");
+		form = descriptor.doCheckHubTimeout("   ");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
 		Assert.assertEquals(Messages.HubBuildScan_getPleaseSetTimeout(), form.getMessage());
 
-		form = descriptor.doCheckTimeout("Not Integer");
+		form = descriptor.doCheckHubTimeout("Not Integer");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
 		Assert.assertTrue(form.getMessage(),
 				form.getMessage().contains("The String : Not Integer , is not an Integer."));
 
-		form = descriptor.doCheckTimeout("-5");
+		form = descriptor.doCheckHubTimeout("-5");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
 		Assert.assertEquals("The Timeout must be greater than 0.", form.getMessage());
 
-		form = descriptor.doCheckTimeout("5");
+		form = descriptor.doCheckHubTimeout("5");
 		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 
 	@Test
-	public void testDoCheckServerUrl() throws Exception {
+	public void testDoCheckHubServerUrl() throws Exception {
 		final PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
 
-		FormValidation form = descriptor.doCheckServerUrl(null);
+		FormValidation form = descriptor.doCheckHubServerUrl(null);
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
 		Assert.assertEquals("No Hub Url was found.", form.getMessage());
 
-		form = descriptor.doCheckServerUrl("   ");
+		form = descriptor.doCheckHubServerUrl("   ");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
 		Assert.assertEquals("No Hub Url was found.", form.getMessage());
 
-		form = descriptor.doCheckServerUrl("Not Url");
+		form = descriptor.doCheckHubServerUrl("Not Url");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
 		Assert.assertEquals("The Hub Url is not a valid URL.", form.getMessage());
 
-		form = descriptor.doCheckServerUrl("http://fakeURL");
+		form = descriptor.doCheckHubServerUrl("http://fakeURL");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
 		Assert.assertTrue(form.getMessage(), form.getMessage().contains("Can not reach this server : http://fakeURL"));
 
 		final String hubUrl = testProperties.getProperty("TEST_HUB_SERVER_URL");
 
-		form = descriptor.doCheckServerUrl(hubUrl);
+		form = descriptor.doCheckHubServerUrl(hubUrl);
 		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
 
 		ProxyConfiguration proxyConfig = new ProxyConfiguration(
 				testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
 				Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH")));
 		j.getInstance().proxy = proxyConfig;
-		form = descriptor.doCheckServerUrl(hubUrl);
+		form = descriptor.doCheckHubServerUrl(hubUrl);
 		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
 
 		final URL hubURL = new URL(hubUrl);
@@ -608,7 +608,7 @@ public class PostBuildScanDescriptorTest {
 				Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH")), null, null,
 				hubURL.getHost());
 		j.getInstance().proxy = proxyConfig;
-		form = descriptor.doCheckServerUrl(hubUrl);
+		form = descriptor.doCheckHubServerUrl(hubUrl);
 		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 

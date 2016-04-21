@@ -384,7 +384,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 		return BDCommonDescriptorUtil.doFillHubVersionDistItems();
 	}
 
-	public FormValidation doCheckTimeout(@QueryParameter("hubTimeout") final String hubTimeout)
+	public FormValidation doCheckHubTimeout(@QueryParameter("hubTimeout") final String hubTimeout)
 			throws IOException, ServletException {
 		if (StringUtils.isBlank(hubTimeout)) {
 			return FormValidation.error(Messages.HubBuildScan_getPleaseSetTimeout());
@@ -408,7 +408,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	 * Performs on-the-fly validation of the form field 'serverUrl'.
 	 *
 	 */
-	public FormValidation doCheckServerUrl(@QueryParameter("serverUrl") final String serverUrl)
+	public FormValidation doCheckHubServerUrl(@QueryParameter("hubServerUrl") final String hubServerUrl)
 			throws IOException, ServletException {
 		ProxyConfiguration proxyConfig = null;
 		final Jenkins jenkins = Jenkins.getInstance();
@@ -426,7 +426,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 				validator.setIgnoredProxyHosts(proxyConfig.noProxyHost);
 				validator.validateProxyConfig(logger);
 			}
-			validator.setHubUrl(serverUrl);
+			validator.setHubUrl(hubServerUrl);
 			validator.validateHubUrl(logger);
 			final String errorString = logger.getOutputString(LogLevel.ERROR);
 			if (StringUtils.isNotBlank(errorString)) {
@@ -480,7 +480,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 			if (StringUtils.isBlank(hubCredentialsId)) {
 				return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
 			}
-			final FormValidation urlCheck = doCheckServerUrl(serverUrl);
+			final FormValidation urlCheck = doCheckHubServerUrl(serverUrl);
 			if (urlCheck.kind != Kind.OK) {
 				return urlCheck;
 			}
