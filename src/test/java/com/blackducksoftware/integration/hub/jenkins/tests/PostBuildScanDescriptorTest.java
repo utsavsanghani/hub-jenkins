@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Properties;
 
 import org.junit.Before;
@@ -42,6 +43,7 @@ import com.cloudbees.plugins.credentials.SystemCredentialsProvider.UserFacingAct
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
+import hudson.ProxyConfiguration;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -541,6 +543,72 @@ public class PostBuildScanDescriptorTest {
 		Assert.assertEquals(form.getMessage(), "This wait time may be too short.");
 
 		form = descriptor.doCheckBomUpdateMaxiumWaitTime("5");
+		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+	}
+
+	@Test
+	public void testDoCheckTimeout() throws Exception {
+		final PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+		FormValidation form = descriptor.doCheckTimeout(null);
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertEquals(Messages.HubBuildScan_getPleaseSetTimeout(), form.getMessage());
+
+		form = descriptor.doCheckTimeout("   ");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertEquals(Messages.HubBuildScan_getPleaseSetTimeout(), form.getMessage());
+
+		form = descriptor.doCheckTimeout("Not Integer");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertTrue(form.getMessage(),
+				form.getMessage().contains("The String : Not Integer , is not an Integer."));
+
+		form = descriptor.doCheckTimeout("-5");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertEquals("The Timeout must be greater than 0.", form.getMessage());
+
+		form = descriptor.doCheckTimeout("5");
+		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+	}
+
+	@Test
+	public void testDoCheckServerUrl() throws Exception {
+		final PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+		FormValidation form = descriptor.doCheckServerUrl(null);
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertEquals("No Hub Url was found.", form.getMessage());
+
+		form = descriptor.doCheckServerUrl("   ");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertEquals("No Hub Url was found.", form.getMessage());
+
+		form = descriptor.doCheckServerUrl("Not Url");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertEquals("The Hub Url is not a valid URL.", form.getMessage());
+
+		form = descriptor.doCheckServerUrl("http://fakeURL");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertTrue(form.getMessage(), form.getMessage().contains("Can not reach this server : http://fakeURL"));
+
+		final String hubUrl = testProperties.getProperty("TEST_HUB_SERVER_URL");
+
+		form = descriptor.doCheckServerUrl(hubUrl);
+		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+
+		ProxyConfiguration proxyConfig = new ProxyConfiguration(
+				testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
+				Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH")));
+		j.getInstance().proxy = proxyConfig;
+		form = descriptor.doCheckServerUrl(hubUrl);
+		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+
+		final URL hubURL = new URL(hubUrl);
+		proxyConfig = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
+				Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH")), null, null,
+				hubURL.getHost());
+		j.getInstance().proxy = proxyConfig;
+		form = descriptor.doCheckServerUrl(hubUrl);
 		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 

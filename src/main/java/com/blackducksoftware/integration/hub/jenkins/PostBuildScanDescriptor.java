@@ -21,13 +21,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
-import java.net.Authenticator;
-import java.net.MalformedURLException;
-import java.net.PasswordAuthentication;
-import java.net.Proxy;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.Collections;
 import java.util.List;
 
@@ -56,6 +49,7 @@ import org.xml.sax.SAXException;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
+import com.blackducksoftware.integration.hub.global.HubServerConfigBuilder;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
@@ -395,16 +389,17 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 		if (StringUtils.isBlank(hubTimeout)) {
 			return FormValidation.error(Messages.HubBuildScan_getPleaseSetTimeout());
 		}
-		Integer i = 0;
 		try {
-			i = Integer.valueOf(hubTimeout);
-		} catch (final NumberFormatException e) {
-			return FormValidation
-					.error(Messages.HubBuildScan_getTimeoutMustBeInteger());
-		}
-		if (i.equals(0)) {
-			return FormValidation
-					.error(Messages.HubBuildScan_getTimeoutCantBeZero());
+			final HubServerConfigBuilder validator = new HubServerConfigBuilder();
+			validator.setTimeout(hubTimeout);
+			final IntBufferedLogger logger = new IntBufferedLogger();
+			validator.validateTimeout(logger);
+			final String errorString = logger.getOutputString(LogLevel.ERROR);
+			if (StringUtils.isNotBlank(errorString)) {
+				return FormValidation.error(errorString);
+			}
+		} catch (final IllegalArgumentException e) {
+			return FormValidation.error(e, e.getMessage());
 		}
 		return FormValidation.ok();
 	}
@@ -415,67 +410,30 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	 */
 	public FormValidation doCheckServerUrl(@QueryParameter("serverUrl") final String serverUrl)
 			throws IOException, ServletException {
-		if (StringUtils.isBlank(serverUrl)) {
-			return FormValidation.error(Messages
-					.HubBuildScan_getPleaseSetServerUrl());
-		}
-		URL url;
-		try {
-			url = new URL(serverUrl);
-			try {
-				url.toURI();
-			} catch (final URISyntaxException e) {
-				return FormValidation.error(e, Messages
-						.HubBuildScan_getNotAValidUrl());
-			}
-		} catch (final MalformedURLException e) {
-			return FormValidation.error(e, Messages
-					.HubBuildScan_getNotAValidUrl());
+		ProxyConfiguration proxyConfig = null;
+		final Jenkins jenkins = Jenkins.getInstance();
+		if (jenkins != null) {
+			proxyConfig = jenkins.proxy;
 		}
 		try {
-			Proxy proxy = null;
-
-			final Jenkins jenkins = Jenkins.getInstance();
-			if (jenkins != null) {
-				final ProxyConfiguration proxyConfig = jenkins.proxy;
-				if (proxyConfig != null) {
-					proxy = ProxyConfiguration.createProxy(url.getHost(), proxyConfig.name, proxyConfig.port,
-							proxyConfig.noProxyHost);
-
-					if (proxy != null && proxy != Proxy.NO_PROXY) {
-
-						if (StringUtils.isNotBlank(proxyConfig.getUserName()) && StringUtils.isNotBlank(proxyConfig.getPassword())) {
-							Authenticator.setDefault(
-									new Authenticator() {
-										@Override
-										public PasswordAuthentication getPasswordAuthentication() {
-											return new PasswordAuthentication(
-													proxyConfig.getUserName(),
-													proxyConfig.getPassword().toCharArray());
-										}
-									}
-									);
-						} else {
-							Authenticator.setDefault(null);
-						}
-					}
-				}
+			final IntBufferedLogger logger = new IntBufferedLogger();
+			final HubServerConfigBuilder validator = new HubServerConfigBuilder();
+			if (proxyConfig != null) {
+				validator.setProxyHost(proxyConfig.name);
+				validator.setProxyPort(proxyConfig.port);
+				validator.setProxyUsername(proxyConfig.getUserName());
+				validator.setProxyPassword(proxyConfig.getPassword());
+				validator.setIgnoredProxyHosts(proxyConfig.noProxyHost);
+				validator.validateProxyConfig(logger);
 			}
-
-			URLConnection connection = null;
-			if (proxy != null) {
-				connection = url.openConnection(proxy);
-			} else {
-				connection = url.openConnection();
+			validator.setHubUrl(serverUrl);
+			validator.validateHubUrl(logger);
+			final String errorString = logger.getOutputString(LogLevel.ERROR);
+			if (StringUtils.isNotBlank(errorString)) {
+				return FormValidation.error(errorString);
 			}
-
-			connection.getContent();
-		} catch (final IOException ioe) {
-			return FormValidation.error(ioe, Messages
-					.HubBuildScan_getCanNotReachThisServer_0_(serverUrl));
-		} catch (final RuntimeException e) {
-			return FormValidation.error(e, Messages
-					.HubBuildScan_getNotAValidUrl());
+		} catch (final IllegalArgumentException e) {
+			return FormValidation.error(e, e.getMessage());
 		}
 		return FormValidation.ok();
 	}
