@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Properties;
 
 import org.junit.Before;
@@ -42,6 +43,7 @@ import com.cloudbees.plugins.credentials.SystemCredentialsProvider.UserFacingAct
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
+import hudson.ProxyConfiguration;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -422,7 +424,8 @@ public class PostBuildScanDescriptorTest {
 
 		final FormValidation form = descriptor.doCheckScanMemory("This is not an Integer");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-		Assert.assertTrue(form.getMessage(), form.getMessage().contains(Messages.HubBuildScan_getInvalidMemoryString()));
+		Assert.assertTrue(form.getMessage(),
+				form.getMessage().contains("The String : This is not an Integer , is not an Integer."));
 	}
 
 	@Test
@@ -440,6 +443,16 @@ public class PostBuildScanDescriptorTest {
 
 		final FormValidation form = descriptor.doCheckScanMemory("512");
 		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+	}
+
+	@Test
+	public void testCheckLowMemory() throws Exception {
+		final PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+		final FormValidation form = descriptor.doCheckScanMemory("1");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertTrue(form.getMessage(),
+				form.getMessage().contains("The minimum amount of memory for the scan is 256 MB."));
 	}
 
 	@Test
@@ -519,17 +532,83 @@ public class PostBuildScanDescriptorTest {
 		form = descriptor.doCheckBomUpdateMaxiumWaitTime("This is not an Integer");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
 		Assert.assertTrue(form.getMessage(),
-				form.getMessage().contains(Messages.HubBuildScan_getBomUpdateWaitTimeInvalid()));
+				form.getMessage().contains("The String : This is not an Integer , is not an Integer."));
 
 		form = descriptor.doCheckBomUpdateMaxiumWaitTime("0");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-		Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getBomUpdateWaitTimeGreaterThanZero());
+		Assert.assertEquals(form.getMessage(), "The maximum wait time for the BOM Update must be greater than 0.");
 
 		form = descriptor.doCheckBomUpdateMaxiumWaitTime("1");
 		Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
-		Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getBomUpdateWaitTimeShort());
+		Assert.assertEquals(form.getMessage(), "This wait time may be too short.");
 
 		form = descriptor.doCheckBomUpdateMaxiumWaitTime("5");
+		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+	}
+
+	@Test
+	public void testDoCheckHubTimeout() throws Exception {
+		final PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+		FormValidation form = descriptor.doCheckHubTimeout(null);
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertEquals(Messages.HubBuildScan_getPleaseSetTimeout(), form.getMessage());
+
+		form = descriptor.doCheckHubTimeout("   ");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertEquals(Messages.HubBuildScan_getPleaseSetTimeout(), form.getMessage());
+
+		form = descriptor.doCheckHubTimeout("Not Integer");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertTrue(form.getMessage(),
+				form.getMessage().contains("The String : Not Integer , is not an Integer."));
+
+		form = descriptor.doCheckHubTimeout("-5");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertEquals("The Timeout must be greater than 0.", form.getMessage());
+
+		form = descriptor.doCheckHubTimeout("5");
+		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+	}
+
+	@Test
+	public void testDoCheckHubServerUrl() throws Exception {
+		final PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
+
+		FormValidation form = descriptor.doCheckHubServerUrl(null);
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertEquals("No Hub Url was found.", form.getMessage());
+
+		form = descriptor.doCheckHubServerUrl("   ");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertEquals("No Hub Url was found.", form.getMessage());
+
+		form = descriptor.doCheckHubServerUrl("Not Url");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertEquals("The Hub Url is not a valid URL.", form.getMessage());
+
+		form = descriptor.doCheckHubServerUrl("http://fakeURL");
+		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
+		Assert.assertTrue(form.getMessage(), form.getMessage().contains("Can not reach this server : http://fakeURL"));
+
+		final String hubUrl = testProperties.getProperty("TEST_HUB_SERVER_URL");
+
+		form = descriptor.doCheckHubServerUrl(hubUrl);
+		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+
+		ProxyConfiguration proxyConfig = new ProxyConfiguration(
+				testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
+				Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH")));
+		j.getInstance().proxy = proxyConfig;
+		form = descriptor.doCheckHubServerUrl(hubUrl);
+		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
+
+		final URL hubURL = new URL(hubUrl);
+		proxyConfig = new ProxyConfiguration(testProperties.getProperty("TEST_PROXY_HOST_PASSTHROUGH"),
+				Integer.valueOf(testProperties.getProperty("TEST_PROXY_PORT_PASSTHROUGH")), null, null,
+				hubURL.getHost());
+		j.getInstance().proxy = proxyConfig;
+		form = descriptor.doCheckHubServerUrl(hubUrl);
 		Assert.assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 

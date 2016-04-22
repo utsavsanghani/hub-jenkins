@@ -21,13 +21,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
-import java.net.Authenticator;
-import java.net.MalformedURLException;
-import java.net.PasswordAuthentication;
-import java.net.Proxy;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.Collections;
 import java.util.List;
 
@@ -56,9 +49,13 @@ import org.xml.sax.SAXException;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
+import com.blackducksoftware.integration.hub.global.HubServerConfigBuilder;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
+import com.blackducksoftware.integration.hub.job.HubScanJobConfigBuilder;
+import com.blackducksoftware.integration.hub.logging.IntBufferedLogger;
+import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -294,15 +291,18 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 			return FormValidation.error(Messages
 					.HubBuildScan_getNeedMemory());
 		}
-
 		try {
-			final Integer scanMem = Integer.valueOf(scanMemory);
-			if (scanMem < 256) {
-				return FormValidation.error(Messages.HubBuildScan_getInvalidMemoryString());
+			final HubScanJobConfigBuilder validator = new HubScanJobConfigBuilder();
+			validator.setScanMemory(scanMemory);
+			final IntBufferedLogger logger = new IntBufferedLogger();
+			validator.validateScanMemory(logger);
+
+			final String errorString = logger.getOutputString(LogLevel.ERROR);
+			if (StringUtils.isNotBlank(errorString)) {
+				return FormValidation.error(errorString);
 			}
-		} catch (final NumberFormatException e) {
-			return FormValidation.error(e, Messages
-					.HubBuildScan_getInvalidMemoryString());
+		} catch (final IllegalArgumentException e) {
+			return FormValidation.error(e, e.getMessage());
 		}
 
 		return FormValidation.ok();
@@ -315,20 +315,22 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 			return FormValidation.error(Messages
 					.HubBuildScan_getBomUpdateWaitTimeEmpty());
 		}
-
 		try {
-			final Integer scanMem = Integer.valueOf(bomUpdateMaxiumWaitTime);
-			if (scanMem <= 0) {
-				return FormValidation.error(Messages.HubBuildScan_getBomUpdateWaitTimeGreaterThanZero());
-			}
-			if (scanMem < 2) {
-				return FormValidation.warning(Messages.HubBuildScan_getBomUpdateWaitTimeShort());
-			}
-		} catch (final NumberFormatException e) {
-			return FormValidation.error(e, Messages
-					.HubBuildScan_getBomUpdateWaitTimeInvalid());
-		}
+			final HubScanJobConfigBuilder validator = new HubScanJobConfigBuilder();
+			validator.setMaxWaitTimeForBomUpdate(bomUpdateMaxiumWaitTime);
+			final IntBufferedLogger logger = new IntBufferedLogger();
+			validator.validateMaxWaitTimeForBomUpdate(logger);
 
+			final String errorString = logger.getOutputString(LogLevel.ERROR);
+			final String warnString = logger.getOutputString(LogLevel.WARN);
+			if (StringUtils.isNotBlank(errorString)) {
+				return FormValidation.error(errorString);
+			} else if (StringUtils.isNotBlank(warnString)) {
+				return FormValidation.warning(warnString);
+			}
+		} catch (final IllegalArgumentException e) {
+			return FormValidation.error(e, e.getMessage());
+		}
 		return FormValidation.ok();
 	}
 
@@ -382,21 +384,22 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 		return BDCommonDescriptorUtil.doFillHubVersionDistItems();
 	}
 
-	public FormValidation doCheckTimeout(@QueryParameter("hubTimeout") final String hubTimeout)
+	public FormValidation doCheckHubTimeout(@QueryParameter("hubTimeout") final String hubTimeout)
 			throws IOException, ServletException {
 		if (StringUtils.isBlank(hubTimeout)) {
 			return FormValidation.error(Messages.HubBuildScan_getPleaseSetTimeout());
 		}
-		Integer i = 0;
 		try {
-			i = Integer.valueOf(hubTimeout);
-		} catch (final NumberFormatException e) {
-			return FormValidation
-					.error(Messages.HubBuildScan_getTimeoutMustBeInteger());
-		}
-		if (i.equals(0)) {
-			return FormValidation
-					.error(Messages.HubBuildScan_getTimeoutCantBeZero());
+			final HubServerConfigBuilder validator = new HubServerConfigBuilder();
+			validator.setTimeout(hubTimeout);
+			final IntBufferedLogger logger = new IntBufferedLogger();
+			validator.validateTimeout(logger);
+			final String errorString = logger.getOutputString(LogLevel.ERROR);
+			if (StringUtils.isNotBlank(errorString)) {
+				return FormValidation.error(errorString);
+			}
+		} catch (final IllegalArgumentException e) {
+			return FormValidation.error(e, e.getMessage());
 		}
 		return FormValidation.ok();
 	}
@@ -405,69 +408,32 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 	 * Performs on-the-fly validation of the form field 'serverUrl'.
 	 *
 	 */
-	public FormValidation doCheckServerUrl(@QueryParameter("serverUrl") final String serverUrl)
+	public FormValidation doCheckHubServerUrl(@QueryParameter("hubServerUrl") final String hubServerUrl)
 			throws IOException, ServletException {
-		if (StringUtils.isBlank(serverUrl)) {
-			return FormValidation.error(Messages
-					.HubBuildScan_getPleaseSetServerUrl());
-		}
-		URL url;
-		try {
-			url = new URL(serverUrl);
-			try {
-				url.toURI();
-			} catch (final URISyntaxException e) {
-				return FormValidation.error(e, Messages
-						.HubBuildScan_getNotAValidUrl());
-			}
-		} catch (final MalformedURLException e) {
-			return FormValidation.error(e, Messages
-					.HubBuildScan_getNotAValidUrl());
+		ProxyConfiguration proxyConfig = null;
+		final Jenkins jenkins = Jenkins.getInstance();
+		if (jenkins != null) {
+			proxyConfig = jenkins.proxy;
 		}
 		try {
-			Proxy proxy = null;
-
-			final Jenkins jenkins = Jenkins.getInstance();
-			if (jenkins != null) {
-				final ProxyConfiguration proxyConfig = jenkins.proxy;
-				if (proxyConfig != null) {
-					proxy = ProxyConfiguration.createProxy(url.getHost(), proxyConfig.name, proxyConfig.port,
-							proxyConfig.noProxyHost);
-
-					if (proxy != null && proxy != Proxy.NO_PROXY) {
-
-						if (StringUtils.isNotBlank(proxyConfig.getUserName()) && StringUtils.isNotBlank(proxyConfig.getPassword())) {
-							Authenticator.setDefault(
-									new Authenticator() {
-										@Override
-										public PasswordAuthentication getPasswordAuthentication() {
-											return new PasswordAuthentication(
-													proxyConfig.getUserName(),
-													proxyConfig.getPassword().toCharArray());
-										}
-									}
-									);
-						} else {
-							Authenticator.setDefault(null);
-						}
-					}
-				}
+			final IntBufferedLogger logger = new IntBufferedLogger();
+			final HubServerConfigBuilder validator = new HubServerConfigBuilder();
+			if (proxyConfig != null) {
+				validator.setProxyHost(proxyConfig.name);
+				validator.setProxyPort(proxyConfig.port);
+				validator.setProxyUsername(proxyConfig.getUserName());
+				validator.setProxyPassword(proxyConfig.getPassword());
+				validator.setIgnoredProxyHosts(proxyConfig.noProxyHost);
+				validator.validateProxyConfig(logger);
 			}
-
-			URLConnection connection = null;
-			if (proxy != null) {
-				connection = url.openConnection(proxy);
-			} else {
-				connection = url.openConnection();
+			validator.setHubUrl(hubServerUrl);
+			validator.validateHubUrl(logger);
+			final String errorString = logger.getOutputString(LogLevel.ERROR);
+			if (StringUtils.isNotBlank(errorString)) {
+				return FormValidation.error(errorString);
 			}
-
-			connection.getContent();
-		} catch (final IOException ioe) {
-			return FormValidation.error(ioe, Messages
-					.HubBuildScan_getCanNotReachThisServer_0_(serverUrl));
-		} catch (final RuntimeException e) {
-			return FormValidation.error(e, Messages
-					.HubBuildScan_getNotAValidUrl());
+		} catch (final IllegalArgumentException e) {
+			return FormValidation.error(e, e.getMessage());
 		}
 		return FormValidation.ok();
 	}
@@ -514,7 +480,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 			if (StringUtils.isBlank(hubCredentialsId)) {
 				return FormValidation.error(Messages.HubBuildScan_getCredentialsNotFound());
 			}
-			final FormValidation urlCheck = doCheckServerUrl(serverUrl);
+			final FormValidation urlCheck = doCheckHubServerUrl(serverUrl);
 			if (urlCheck.kind != Kind.OK) {
 				return urlCheck;
 			}
