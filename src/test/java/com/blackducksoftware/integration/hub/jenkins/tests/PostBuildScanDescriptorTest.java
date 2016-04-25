@@ -536,7 +536,8 @@ public class PostBuildScanDescriptorTest {
 
 		form = descriptor.doCheckBomUpdateMaxiumWaitTime("0");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-		Assert.assertEquals(form.getMessage(), "The maximum wait time for the BOM Update must be greater than 0.");
+		Assert.assertTrue(form.getMessage(),
+				form.getMessage().contains("The maximum wait time for the BOM Update must be greater than 0."));
 
 		form = descriptor.doCheckBomUpdateMaxiumWaitTime("1");
 		Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
