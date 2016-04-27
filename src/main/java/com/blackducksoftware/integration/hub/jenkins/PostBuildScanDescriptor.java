@@ -49,12 +49,14 @@ import org.xml.sax.SAXException;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
-import com.blackducksoftware.integration.hub.global.HubServerConfigBuilder;
+import com.blackducksoftware.integration.hub.exception.EncryptionException;
+import com.blackducksoftware.integration.hub.global.HubProxyInfo;
+import com.blackducksoftware.integration.hub.global.HubProxyInfoBuilder;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
-import com.blackducksoftware.integration.hub.logging.IntBufferedLogger;
-import com.blackducksoftware.integration.hub.logging.LogLevel;
+import com.blackducksoftware.integration.hub.jenkins.validation.HubJenkinsScanJobConfigValidator;
+import com.blackducksoftware.integration.hub.jenkins.validation.HubJenkinsServerConfigValidator;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -163,7 +165,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	// http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor/config.xml
 	@WebMethod(name = "config.xml")
 	public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException,
-			TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
+	TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
 		final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 		boolean changed = false;
 		try {
@@ -236,7 +238,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 				}
 				final Node timeoutNode = hubServerInfoElement.getElementsByTagName("hubTimeout").item(0);
 				String hubTimeout = String.valueOf(HubServerInfo.getDefaultTimeout()); // default
-																						// timeout
+				// timeout
 				if (timeoutNode != null && timeoutNode.getChildNodes() != null
 						&& timeoutNode.getChildNodes().item(0) != null) {
 					hubTimeout = timeoutNode.getChildNodes().item(0).getNodeValue();
@@ -339,9 +341,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 			final CredentialsMatcher credentialsMatcher = CredentialsMatchers
 					.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
 			final AbstractProject<?, ?> project = null; // Dont want to limit
-														// the search to a
-														// particular project
-														// for the drop
+			// the search to a
+			// particular project
+			// for the drop
 			// down menu
 			boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher,
 					CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM,
@@ -375,19 +377,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 		if (StringUtils.isBlank(hubTimeout)) {
 			return FormValidation.error(Messages.HubBuildScan_getPleaseSetTimeout());
 		}
-		try {
-			final HubServerConfigBuilder validator = new HubServerConfigBuilder();
-			validator.setTimeout(hubTimeout);
-			final IntBufferedLogger logger = new IntBufferedLogger();
-			validator.validateTimeout(logger);
-			final String errorString = logger.getOutputString(LogLevel.ERROR);
-			if (StringUtils.isNotBlank(errorString)) {
-				return FormValidation.error(errorString);
-			}
-		} catch (final IllegalArgumentException e) {
-			return FormValidation.error(e, e.getMessage());
-		}
-		return FormValidation.ok();
+		final HubJenkinsServerConfigValidator validator = new HubJenkinsServerConfigValidator();
+		return validator.validateTimeout(hubTimeout);
 	}
 
 	/**
@@ -402,26 +393,21 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 			proxyConfig = jenkins.proxy;
 		}
 		try {
-			final IntBufferedLogger logger = new IntBufferedLogger();
-			final HubServerConfigBuilder validator = new HubServerConfigBuilder();
+			final HubJenkinsServerConfigValidator validator = new HubJenkinsServerConfigValidator();
+			HubProxyInfo proxyInfo = null;
 			if (proxyConfig != null) {
-				validator.setProxyHost(proxyConfig.name);
-				validator.setProxyPort(proxyConfig.port);
-				validator.setProxyUsername(proxyConfig.getUserName());
-				validator.setProxyPassword(proxyConfig.getPassword());
-				validator.setIgnoredProxyHosts(proxyConfig.noProxyHost);
-				validator.validateProxyConfig(logger);
+				final HubProxyInfoBuilder proxyBuilder = new HubProxyInfoBuilder();
+				proxyBuilder.setHost(proxyConfig.name);
+				proxyBuilder.setPort(proxyConfig.port);
+				proxyBuilder.setUsername(proxyConfig.getUserName());
+				proxyBuilder.setPassword(proxyConfig.getPassword());
+				proxyBuilder.setIgnoredProxyHosts(proxyConfig.name);
+				proxyInfo = proxyBuilder.build();
 			}
-			validator.setHubUrl(hubServerUrl);
-			validator.validateHubUrl(logger);
-			final String errorString = logger.getOutputString(LogLevel.ERROR);
-			if (StringUtils.isNotBlank(errorString)) {
-				return FormValidation.error(errorString);
-			}
-		} catch (final IllegalArgumentException e) {
+			return validator.validateServerUrl(hubServerUrl, proxyInfo);
+		} catch (final EncryptionException e) {
 			return FormValidation.error(e, e.getMessage());
 		}
-		return FormValidation.ok();
 	}
 
 	public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName)
