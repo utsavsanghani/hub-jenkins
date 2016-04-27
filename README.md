@@ -4,7 +4,7 @@ Hub plugin for Jenkins. This plugin provides ability to run a scan using the BD 
 
 ## Build ##
 
-[![Build Status](https://travis-ci.org/blackducksoftware/jenkins-hub.svg?branch=master)](https://travis-ci.org/blackducksoftware/jenkins-hub)
+[![Build Status](https://travis-ci.org/blackducksoftware/hub-jenkins.svg?branch=master)](https://travis-ci.org/blackducksoftware/hub-jenkins)
 
 ## Where can I get the latest release? ##
 You can download the latest source from GitHub: https://github.com/blackducksoftware/jenkins-hub
