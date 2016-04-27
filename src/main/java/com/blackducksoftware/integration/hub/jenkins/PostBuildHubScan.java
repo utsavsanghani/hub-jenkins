@@ -245,7 +245,15 @@ public class PostBuildHubScan extends Recorder {
 					hubScanJobConfigBuilder.setDistribution(getHubVersionDist());
 					hubScanJobConfigBuilder.setWorkingDirectory(workingDirectory);
 					hubScanJobConfigBuilder.setShouldGenerateRiskReport(getShouldGenerateHubReport());
-					hubScanJobConfigBuilder.setMaxWaitTimeForBomUpdate(getBomUpdateMaxiumWaitTime());
+					try {
+						hubScanJobConfigBuilder.setMaxWaitTimeForBomUpdate(getBomUpdateMaxiumWaitTime());
+					} catch (final IllegalArgumentException e) {
+						// Need this catch here because if a User migrates from
+						// version 1.4.0 to here and does not re-save the
+						// configuration the wait time will be null
+						hubScanJobConfigBuilder.setMaxWaitTimeForBomUpdate(
+								HubScanJobConfigBuilder.DEFAULT_REPORT_WAIT_TIME_IN_MINUTES);
+					}
 					hubScanJobConfigBuilder.setScanMemory(getScanMemory());
 					hubScanJobConfigBuilder.addAllScanTargetPaths(scanTargetPaths);
 					hubScanJobConfigBuilder.disableScanTargetPathExistenceCheck();
