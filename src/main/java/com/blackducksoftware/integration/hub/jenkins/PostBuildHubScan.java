@@ -250,7 +250,7 @@ public class PostBuildHubScan extends Recorder {
 						// does not re-save the configuration the wait time will
 						// be null
 						hubScanJobConfigBuilder.setMaxWaitTimeForBomUpdate(
-								HubScanJobConfigBuilder.DEFAULT_REPORT_WAIT_TIME_IN_MINUTES);
+								HubScanJobConfigBuilder.DEFAULT_BOM_UPDATE_WAIT_TIME_IN_MINUTES);
 					} else {
 						hubScanJobConfigBuilder.setMaxWaitTimeForBomUpdate(getBomUpdateMaxiumWaitTime());
 					}
