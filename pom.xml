@@ -94,7 +94,7 @@
 		<dependency>
 			<groupId>com.blackducksoftware.integration</groupId>
 			<artifactId>hub-common</artifactId>
-			<version>1.3.2-SNAPSHOT</version>
+			<version>1.3.2</version>
 			<exclusions>
 				<exclusion>
 					<groupId>com.thoughtworks.xstream</groupId>
