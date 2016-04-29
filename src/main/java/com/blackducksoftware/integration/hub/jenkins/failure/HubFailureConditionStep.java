@@ -140,6 +140,12 @@ public class HubFailureConditionStep extends Recorder {
 				return true;
 			} else if (getFailBuildForPolicyViolations()) {
 				try {
+					if (action.getPolicyStatusUrl() == null) {
+						logger.error(
+								"Can not check policy violations if you have not specified a Project and Version.");
+						build.setResult(Result.UNSTABLE);
+						return true;
+					}
 					// We use this conditional in case there are other failure conditions in the future
 					final PolicyStatus policyStatus = restService.getPolicyStatus(action.getPolicyStatusUrl());
 					if (policyStatus == null) {

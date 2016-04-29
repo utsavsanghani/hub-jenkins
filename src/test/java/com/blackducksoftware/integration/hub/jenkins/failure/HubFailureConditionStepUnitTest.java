@@ -318,6 +318,63 @@ public class HubFailureConditionStepUnitTest {
 	}
 
 	@Test
+	public void testPerformValidUnknownCountsNoPolicyLink() throws Exception {
+		final Boolean failBuildForPolicyViolations = true;
+		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
+		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
+		failureStep = Mockito.spy(failureStep);
+		final ComponentVersionStatusCount countsUnknown = new ComponentVersionStatusCount(
+				PolicyStatusEnum.UNKNOWN.name(), 0);
+		final List<ComponentVersionStatusCount> counts = new ArrayList<ComponentVersionStatusCount>();
+		counts.add(countsUnknown);
+
+		final PolicyStatus policyStatus = new PolicyStatus(PolicyStatusEnum.NOT_IN_VIOLATION.name(), null, counts,
+				null);
+		final HubIntRestService service = getMockedService("3.0.0", policyStatus);
+		final ProjectItem projectItem = new ProjectItem(null, null, null);
+		Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
+		final ReleaseItem releaseItem = new ReleaseItem(null, null, null, null, null);
+		Mockito.doReturn(releaseItem).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
+
+		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
+		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
+
+		final HubSupportHelper hubSupport = new HubSupportHelper();
+		hubSupport.checkHubSupport(service, null);
+
+		descriptor = Mockito.spy(descriptor);
+
+		Mockito.doReturn(hubSupport).when(descriptor).getCheckedHubSupportHelper();
+		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
+		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+				Mockito.any(HubServerInfo.class));
+
+		final TestProject project = new TestProject(j.getInstance(), "Test Project");
+		final TestBuild build = new TestBuild(project);
+		build.setResult(Result.SUCCESS);
+		final List<Publisher> publishers = new ArrayList<Publisher>();
+		final PostBuildHubScan hubScanStep = new PostBuildHubScan(null, false, null, "VerisonName", null, null, null,
+				false, null);
+		publishers.add(hubScanStep);
+		project.setPublishersList(publishers);
+		build.setScanFinishedAction(new HubScanFinishedAction());
+		final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
+		bomUpdatedAction.setHasBomBeenUdpated(true);
+		build.setBomUpdatedAction(bomUpdatedAction);
+
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		final PrintStream stream = new PrintStream(baos);
+		final TestBuildListener listener = new TestBuildListener(stream);
+
+		failureStep.perform(build, null, listener);
+
+		final String output = baos.toString();
+		assertTrue(output,
+				output.contains("Can not check policy violations if you have not specified a Project and Version."));
+		assertEquals(Result.UNSTABLE, build.getResult());
+	}
+
+	@Test
 	public void testPerformValidUnknownCounts() throws Exception {
 		final Boolean failBuildForPolicyViolations = true;
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
@@ -356,6 +413,7 @@ public class HubFailureConditionStepUnitTest {
 		project.setPublishersList(publishers);
 		build.setScanFinishedAction(new HubScanFinishedAction());
 		final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
+		bomUpdatedAction.setPolicyStatusUrl("URL");
 		bomUpdatedAction.setHasBomBeenUdpated(true);
 		build.setBomUpdatedAction(bomUpdatedAction);
 
@@ -416,6 +474,7 @@ public class HubFailureConditionStepUnitTest {
 		project.setPublishersList(publishers);
 		build.setScanFinishedAction(new HubScanFinishedAction());
 		final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
+		bomUpdatedAction.setPolicyStatusUrl("URL");
 		bomUpdatedAction.setHasBomBeenUdpated(true);
 		build.setBomUpdatedAction(bomUpdatedAction);
 
@@ -478,6 +537,7 @@ public class HubFailureConditionStepUnitTest {
 		project.setPublishersList(publishers);
 		build.setScanFinishedAction(new HubScanFinishedAction());
 		final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
+		bomUpdatedAction.setPolicyStatusUrl("URL");
 		bomUpdatedAction.setHasBomBeenUdpated(true);
 		build.setBomUpdatedAction(bomUpdatedAction);
 

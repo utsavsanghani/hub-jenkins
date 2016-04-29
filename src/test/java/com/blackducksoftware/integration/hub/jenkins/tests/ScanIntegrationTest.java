@@ -151,6 +151,59 @@ public class ScanIntegrationTest {
 	}
 
 	@Test
+	public void completeRunthroughAndScanSilent() throws IOException, InterruptedException, ExecutionException {
+		final Jenkins jenkins = j.jenkins;
+
+		final EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
+		final EnvVars envVars = prop.getEnvVars();
+		envVars.put("HUB_LOG_LEVEL", "OFF");
+		j.jenkins.getGlobalNodeProperties().replace(prop);
+
+		final CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+		final UsernamePasswordCredentialsImpl credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
+				null, null, testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
+		store.addCredentials(Domain.global(), credential);
+
+		final HubServerInfo serverInfo = new HubServerInfo();
+		serverInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+		serverInfo.setCredentialsId(credential.getId());
+		serverInfo.setTimeout(200);
+
+		final ScanJobs oneScan = new ScanJobs("");
+		final ScanJobs[] scans = new ScanJobs[1];
+		scans[0] = oneScan;
+
+		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
+
+		final PostBuildHubScan pbScan = new PostBuildHubScan(scans, false, null, null, null, null, "4096", false, "0");
+
+		final FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+		project.setCustomWorkspace(testWorkspace);
+
+		project.getPublishersList().add(pbScan);
+
+		final FreeStyleBuild build = project.scheduleBuild2(0).get();
+		final String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+		System.out.println(buildOutput);
+
+		assertTrue(buildOutput, buildOutput.contains("Starting BlackDuck Scans..."));
+		assertTrue(buildOutput, buildOutput.contains("-> Running on : master"));
+		assertTrue(buildOutput, buildOutput.contains("-> Using Url"));
+		assertTrue(buildOutput, buildOutput.contains("-> Using Username"));
+		assertTrue(buildOutput, buildOutput.contains("-> Using Hub Project Name"));
+		assertTrue(buildOutput, buildOutput.contains("-> Scanning the following targets"));
+		assertTrue(buildOutput, buildOutput.contains("-> Generate Hub report"));
+		assertTrue(buildOutput, !buildOutput.contains("BlackDuck scan directory"));
+		assertTrue(buildOutput, !buildOutput.contains("Found Project"));
+		assertTrue(buildOutput, !buildOutput.contains("Using this java installation"));
+		assertTrue(buildOutput, !buildOutput.contains("Finished in"));
+		assertTrue(buildOutput, !buildOutput.contains("with status SUCCESS"));
+
+		assertTrue(buildOutput, buildOutput.contains("Finished running Black Duck Scans."));
+		assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
+	}
+
+	@Test
 	public void completeRunthroughAndScan() throws IOException, InterruptedException, ExecutionException {
 		final Jenkins jenkins = j.jenkins;
 

@@ -221,7 +221,7 @@ public class PostBuildHubScan extends Recorder {
 		setResult(build.getResult());
 		if (BuildHelper.isSuccess(build)) {
 			try {
-				logger.info("Starting BlackDuck Scans...");
+				logger.off("Starting BlackDuck Scans...");
 
 				final String localHostName = getLocalHostName(logger, build);
 
@@ -261,7 +261,7 @@ public class PostBuildHubScan extends Recorder {
 
 					final HubScanJobConfig jobConfig = hubScanJobConfigBuilder.build(logger);
 
-					printConfiguration(build, logger, jobConfig);
+					printConfiguration(build, listener, logger, jobConfig);
 
 					final DummyToolInstaller dummyInstaller = new DummyToolInstaller();
 					final String toolsDirectory = dummyInstaller.getToolDir(new DummyToolInstallation(), build.getBuiltOn()).getRemote();
@@ -289,7 +289,7 @@ public class PostBuildHubScan extends Recorder {
 
 					final JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(), jobConfig.getScanTargetPaths(), build.getNumber(), hubSupport,
 							build, launcher,
-							logger.getJenkinsListener());
+							logger);
 
 					final DateTime beforeScanTime = new DateTime();
 					runScan(service, build, scan, logger, scanExec, jrePath, oneJarPath, jobConfig);
@@ -323,8 +323,9 @@ public class PostBuildHubScan extends Recorder {
 						bomUpdatedAction.setScanStatusDirectory(scan.getScanStatusDirectoryPath());
 						bomUpdatedAction.setScanTargets(jobConfig.getScanTargetPaths());
 					}
-
-					bomUpdatedAction.setPolicyStatusUrl(version.getLink(ReleaseItem.POLICY_STATUS_LINK));
+					if (version != null) {
+						bomUpdatedAction.setPolicyStatusUrl(version.getLink(ReleaseItem.POLICY_STATUS_LINK));
+					}
 
 					build.addAction(bomUpdatedAction);
 				}
@@ -360,9 +361,9 @@ public class PostBuildHubScan extends Recorder {
 				build.addAction(new HubScanFinishedAction());
 			}
 		} else {
-			logger.info("Build was not successful. Will not run Black Duck Scans.");
+			logger.off("Build was not successful. Will not run Black Duck Scans.");
 		}
-		logger.info("Finished running Black Duck Scans.");
+		logger.off("Finished running Black Duck Scans.");
 		build.setResult(getResult());
 		return true;
 	}
@@ -509,42 +510,43 @@ public class PostBuildHubScan extends Recorder {
 	}
 
 
-	public void printConfiguration(final AbstractBuild<?, ?> build, final IntLogger logger, final HubScanJobConfig jobConfig)
-			throws IOException,
-			InterruptedException {
-		logger.info("Initializing - Hub Jenkins Plugin - "
+	public void printConfiguration(final AbstractBuild<?, ?> build, final BuildListener listener,
+			final HubJenkinsLogger logger, final HubScanJobConfig jobConfig)
+					throws IOException,
+					InterruptedException {
+		logger.off("Initializing - Hub Jenkins Plugin - "
 				+ getDescriptor().getPluginVersion());
 
 		if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
 			// Empty node name indicates master
-			logger.info("-> Running on : master");
+			logger.off("-> Running on : master");
 		} else {
-			logger.debug("Running on : " + build.getBuiltOn().getNodeName());
+			logger.off("Running on : " + build.getBuiltOn().getNodeName());
 		}
-
-		logger.info("-> Using Url : " + getHubServerInfo().getServerUrl());
-		logger.info("-> Using Username : " + getHubServerInfo().getUsername());
-		logger.info(
+		logger.off("-> Log Level : " + logger.getLogLevel());
+		logger.off("-> Using Url : " + getHubServerInfo().getServerUrl());
+		logger.off("-> Using Username : " + getHubServerInfo().getUsername());
+		logger.off(
 				"-> Using Build Full Name : " + build.getFullDisplayName());
-		logger.info(
+		logger.off(
 				"-> Using Build Number : " + build.getNumber());
-		logger.info(
+		logger.off(
 				"-> Using Build Workspace Path : "
 						+ build.getWorkspace().getRemote());
-		logger.info(
+		logger.off(
 				"-> Using Hub Project Name : " + jobConfig.getProjectName() + ", Version : " + jobConfig.getVersion());
 
-		logger.info(
+		logger.off(
 				"-> Scanning the following targets  : ");
 		for (final String target : jobConfig.getScanTargetPaths()) {
-			logger.info(
+			logger.off(
 					"-> " + target);
 		}
 
-		logger.info(
+		logger.off(
 				"-> Generate Hub report : " + jobConfig.isShouldGenerateRiskReport());
 		final String formattedTime = String.format("%d minutes", jobConfig.getMaxWaitTimeForBomUpdate());
-		logger.info("-> Maximum wait time for the BOM Update : " + formattedTime);
+		logger.off("-> Maximum wait time for the BOM Update : " + formattedTime);
 	}
 
 	/**
