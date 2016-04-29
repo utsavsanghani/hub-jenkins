@@ -61,7 +61,6 @@ import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
 import com.blackducksoftware.integration.hub.job.HubScanJobConfig;
 import com.blackducksoftware.integration.hub.job.HubScanJobConfigBuilder;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
-import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
@@ -215,7 +214,10 @@ public class PostBuildHubScan extends Recorder {
 	public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher,
 			final BuildListener listener) throws InterruptedException, IOException {
 		final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
-		logger.setLogLevel(LogLevel.TRACE);
+
+		final EnvVars variables = build.getEnvironment(listener);
+		logger.setLogLevel(variables);
+
 		setResult(build.getResult());
 		if (BuildHelper.isSuccess(build)) {
 			try {
@@ -226,7 +228,6 @@ public class PostBuildHubScan extends Recorder {
 				if (validateGlobalConfiguration()) {
 					final String workingDirectory = getWorkingDirectory(logger, build);
 
-					final EnvVars variables = build.getEnvironment(listener);
 
 					final List<String> scanTargetPaths =getScanTargets(logger, build, variables, workingDirectory);
 

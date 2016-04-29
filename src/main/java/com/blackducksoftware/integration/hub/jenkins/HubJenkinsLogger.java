@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.logging.LogLevel;
 
+import hudson.EnvVars;
 import hudson.model.TaskListener;
 
 public class HubJenkinsLogger implements IntLogger, Serializable {
@@ -32,7 +33,7 @@ public class HubJenkinsLogger implements IntLogger, Serializable {
 
 	private final TaskListener jenkinsLogger;
 
-	private LogLevel level = LogLevel.TRACE;
+	private LogLevel level = LogLevel.INFO;
 
 	public HubJenkinsLogger(final TaskListener jenkinsLogger) {
 		this.jenkinsLogger = jenkinsLogger;
@@ -40,6 +41,15 @@ public class HubJenkinsLogger implements IntLogger, Serializable {
 
 	public TaskListener getJenkinsListener() {
 		return jenkinsLogger;
+	}
+
+	public void setLogLevel(final EnvVars variables) {
+		final String logLevel = variables.get("HUB_LOG_LEVEL", "INFO");
+		try {
+			setLogLevel(LogLevel.valueOf(logLevel.toUpperCase()));
+		} catch (final IllegalArgumentException e) {
+			setLogLevel(LogLevel.INFO);
+		}
 	}
 
 	@Override

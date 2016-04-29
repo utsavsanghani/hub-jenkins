@@ -59,9 +59,11 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
+import hudson.EnvVars;
 import hudson.ProxyConfiguration;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import jenkins.model.Jenkins;
 
 public class ScanIntegrationTest {
@@ -120,6 +122,11 @@ public class ScanIntegrationTest {
 	@Before
 	public void resetServerInfo() {
 		HubServerInfoSingleton.getInstance().setServerInfo(null);
+
+		final EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
+		final EnvVars envVars = prop.getEnvVars();
+		envVars.put("HUB_LOG_LEVEL", "DEBUG");
+		j.jenkins.getGlobalNodeProperties().add(prop);
 
 	}
 

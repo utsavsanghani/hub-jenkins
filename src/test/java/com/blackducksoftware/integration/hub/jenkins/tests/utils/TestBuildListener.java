@@ -17,78 +17,74 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.tests.utils;
 
-import hudson.console.ConsoleNote;
-import hudson.model.BuildListener;
-import hudson.model.Result;
-import hudson.model.Cause;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.List;
 
+import hudson.console.ConsoleNote;
+import hudson.model.BuildListener;
+import hudson.model.Cause;
+import hudson.model.Result;
+
 public class TestBuildListener implements BuildListener {
 
-    private PrintStream stream = null;
+	private PrintStream stream = null;
 
-    public TestBuildListener(PrintStream stream) {
-        this.stream = stream;
-    }
+	public TestBuildListener(final PrintStream stream) {
+		this.stream = stream;
+	}
 
-    @Override
-    public PrintWriter error(String txt) {
-        if (txt != null) {
-            stream.println(txt);
-        }
-        return null;
-    }
+	@Override
+	public PrintWriter error(final String txt) {
+		if (txt != null) {
+			stream.println(txt);
+		}
+		return null;
+	}
 
-    @Override
-    public PrintStream getLogger() {
-        return stream;
-    }
+	@Override
+	public PrintStream getLogger() {
+		return stream;
+	}
 
-    @Override
-    public void annotate(ConsoleNote ann) throws IOException {
+	@Override
+	public void annotate(final ConsoleNote ann) throws IOException {
 
-    }
+	}
 
-    @Override
-    public void hyperlink(String url, String text) throws IOException {
+	@Override
+	public void hyperlink(final String url, final String text) throws IOException {
 
-    }
+	}
 
-    @Override
-    public PrintWriter error(String format, Object... args) {
-        if (format != null) {
-            stream.println(format);
-        }
-        return null;
-    }
+	@Override
+	public PrintWriter error(final String format, final Object... args) {
+		stream.println(String.format(format, args));
+		return null;
+	}
 
-    @Override
-    public PrintWriter fatalError(String msg) {
-        if (msg != null) {
-            stream.println(msg);
-        }
-        return null;
-    }
+	@Override
+	public PrintWriter fatalError(final String msg) {
+		if (msg != null) {
+			stream.println(msg);
+		}
+		return null;
+	}
 
-    @Override
-    public PrintWriter fatalError(String format, Object... args) {
-        if (format != null) {
-            stream.println(format);
-        }
-        return null;
-    }
+	@Override
+	public PrintWriter fatalError(final String format, final Object... args) {
+		stream.println(String.format(format, args));
+		return null;
+	}
 
-    @Override
-    public void started(List<Cause> causes) {
+	@Override
+	public void started(final List<Cause> causes) {
 
-    }
+	}
 
-    @Override
-    public void finished(Result result) {
+	@Override
+	public void finished(final Result result) {
 
-    }
+	}
 }
