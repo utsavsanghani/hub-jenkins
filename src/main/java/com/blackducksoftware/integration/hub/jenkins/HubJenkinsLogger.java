@@ -65,7 +65,7 @@ public class HubJenkinsLogger implements IntLogger, Serializable {
 	/**
 	 * Prints the message regardless of the log level
 	 */
-	public void off(final String txt) {
+	public void alwaysLog(final String txt) {
 		printLog(txt, null);
 	}
 

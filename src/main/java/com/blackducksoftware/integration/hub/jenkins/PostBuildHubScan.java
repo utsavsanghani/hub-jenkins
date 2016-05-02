@@ -221,7 +221,7 @@ public class PostBuildHubScan extends Recorder {
 		setResult(build.getResult());
 		if (BuildHelper.isSuccess(build)) {
 			try {
-				logger.off("Starting BlackDuck Scans...");
+				logger.alwaysLog("Starting BlackDuck Scans...");
 
 				final String localHostName = getLocalHostName(logger, build);
 
@@ -361,9 +361,9 @@ public class PostBuildHubScan extends Recorder {
 				build.addAction(new HubScanFinishedAction());
 			}
 		} else {
-			logger.off("Build was not successful. Will not run Black Duck Scans.");
+			logger.alwaysLog("Build was not successful. Will not run Black Duck Scans.");
 		}
-		logger.off("Finished running Black Duck Scans.");
+		logger.alwaysLog("Finished running Black Duck Scans.");
 		build.setResult(getResult());
 		return true;
 	}
@@ -514,39 +514,39 @@ public class PostBuildHubScan extends Recorder {
 			final HubJenkinsLogger logger, final HubScanJobConfig jobConfig)
 					throws IOException,
 					InterruptedException {
-		logger.off("Initializing - Hub Jenkins Plugin - "
+		logger.alwaysLog("Initializing - Hub Jenkins Plugin - "
 				+ getDescriptor().getPluginVersion());
 
 		if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
 			// Empty node name indicates master
-			logger.off("-> Running on : master");
+			logger.alwaysLog("-> Running on : master");
 		} else {
-			logger.off("Running on : " + build.getBuiltOn().getNodeName());
+			logger.alwaysLog("Running on : " + build.getBuiltOn().getNodeName());
 		}
-		logger.off("-> Log Level : " + logger.getLogLevel());
-		logger.off("-> Using Url : " + getHubServerInfo().getServerUrl());
-		logger.off("-> Using Username : " + getHubServerInfo().getUsername());
-		logger.off(
+		logger.alwaysLog("-> Log Level : " + logger.getLogLevel());
+		logger.alwaysLog("-> Using Url : " + getHubServerInfo().getServerUrl());
+		logger.alwaysLog("-> Using Username : " + getHubServerInfo().getUsername());
+		logger.alwaysLog(
 				"-> Using Build Full Name : " + build.getFullDisplayName());
-		logger.off(
+		logger.alwaysLog(
 				"-> Using Build Number : " + build.getNumber());
-		logger.off(
+		logger.alwaysLog(
 				"-> Using Build Workspace Path : "
 						+ build.getWorkspace().getRemote());
-		logger.off(
+		logger.alwaysLog(
 				"-> Using Hub Project Name : " + jobConfig.getProjectName() + ", Version : " + jobConfig.getVersion());
 
-		logger.off(
+		logger.alwaysLog(
 				"-> Scanning the following targets  : ");
 		for (final String target : jobConfig.getScanTargetPaths()) {
-			logger.off(
+			logger.alwaysLog(
 					"-> " + target);
 		}
 
-		logger.off(
+		logger.alwaysLog(
 				"-> Generate Hub report : " + jobConfig.isShouldGenerateRiskReport());
 		final String formattedTime = String.format("%d minutes", jobConfig.getMaxWaitTimeForBomUpdate());
-		logger.off("-> Maximum wait time for the BOM Update : " + formattedTime);
+		logger.alwaysLog("-> Maximum wait time for the BOM Update : " + formattedTime);
 	}
 
 	/**
