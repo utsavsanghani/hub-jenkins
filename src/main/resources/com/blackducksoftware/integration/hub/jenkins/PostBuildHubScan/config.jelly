@@ -52,13 +52,11 @@
 	<f:entry field="bomUpdateMaxiumWaitTime" title="${%MaximumBOMUpdateTime}">
 		<f:textbox default="5" />
 	</f:entry>
+	<f:entry field="scanMemory" title="${%MemoryAllocation}">
+		<f:textbox value="${it.scanMemory}" default="4096" />
+	</f:entry>
 </f:advanced>
        
-         
-<f:entry field="scanMemory" title="${%MemoryAllocation}">
-	<f:textbox value="${it.scanMemory}" default="4096" />
-</f:entry>
-		
 <f:block>
 	<f:repeatable field="scans" add="${%AddScan}" minimum="1">
 		<table style="width:100%" id="hubBlackDuckTable">
