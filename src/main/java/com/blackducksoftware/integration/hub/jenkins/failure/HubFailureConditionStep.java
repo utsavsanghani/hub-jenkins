@@ -38,11 +38,11 @@ import com.blackducksoftware.integration.hub.jenkins.bom.RemoteHubEventPolling;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
-import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatus;
 import com.blackducksoftware.integration.hub.policy.api.PolicyStatusEnum;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 
+import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -78,7 +78,9 @@ public class HubFailureConditionStep extends Recorder {
 	public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher,
 			final BuildListener listener) throws InterruptedException, IOException {
 		final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
-		logger.setLogLevel(LogLevel.TRACE);
+
+		final EnvVars variables = build.getEnvironment(listener);
+		logger.setLogLevel(variables);
 
 		if (build.getResult() != Result.SUCCESS) {
 			logger.error("The Build did not run sucessfully, will not check the Hub Failure Conditions.");
@@ -138,6 +140,12 @@ public class HubFailureConditionStep extends Recorder {
 				return true;
 			} else if (getFailBuildForPolicyViolations()) {
 				try {
+					if (action.getPolicyStatusUrl() == null) {
+						logger.error(
+								"Can not check policy violations if you have not specified a Project and Version.");
+						build.setResult(Result.UNSTABLE);
+						return true;
+					}
 					// We use this conditional in case there are other failure conditions in the future
 					final PolicyStatus policyStatus = restService.getPolicyStatus(action.getPolicyStatusUrl());
 					if (policyStatus == null) {

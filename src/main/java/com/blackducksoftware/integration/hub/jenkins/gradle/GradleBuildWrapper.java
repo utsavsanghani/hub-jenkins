@@ -36,7 +36,6 @@ import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSeparator;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
-import com.blackducksoftware.integration.hub.logging.LogLevel;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -125,7 +124,10 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 	InterruptedException {
 		// no failure to report yet
 		final HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
-		buildLogger.setLogLevel(LogLevel.TRACE);
+
+		final EnvVars variables = build.getEnvironment(listener);
+		buildLogger.setLogLevel(variables);
+
 		Gradle gradleBuilder = null;
 		if (build.getProject() instanceof FreeStyleProject) {
 			// Project should always be a FreeStyleProject, thats why we have the isApplicable() method
@@ -248,6 +250,10 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 				public boolean tearDown(final AbstractBuild build, final BuildListener listener)
 						throws IOException, InterruptedException {
 					final HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
+
+					final EnvVars variables = build.getEnvironment(listener);
+					buildLogger.setLogLevel(variables);
+
 					Gradle gradleBuilder = null;
 					try {
 						if (build.getProject() instanceof FreeStyleProject) {
@@ -265,7 +271,6 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 
 							if (StringUtils.startsWithIgnoreCase(rootBuildScriptDir, "${WORKSPACE}")
 									|| StringUtils.startsWithIgnoreCase(rootBuildScriptDir, "$WORKSPACE")) {
-								final EnvVars variables = build.getEnvironment(listener);
 								rootBuildScriptDir = BuildHelper.handleVariableReplacement(variables,
 										rootBuildScriptDir);
 							}

@@ -61,7 +61,6 @@ import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
 import com.blackducksoftware.integration.hub.job.HubScanJobConfig;
 import com.blackducksoftware.integration.hub.job.HubScanJobConfigBuilder;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
-import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
@@ -215,18 +214,20 @@ public class PostBuildHubScan extends Recorder {
 	public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher,
 			final BuildListener listener) throws InterruptedException, IOException {
 		final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
-		logger.setLogLevel(LogLevel.TRACE);
+
+		final EnvVars variables = build.getEnvironment(listener);
+		logger.setLogLevel(variables);
+
 		setResult(build.getResult());
 		if (BuildHelper.isSuccess(build)) {
 			try {
-				logger.info("Starting BlackDuck Scans...");
+				logger.alwaysLog("Starting BlackDuck Scans...");
 
 				final String localHostName = getLocalHostName(logger, build);
 
 				if (validateGlobalConfiguration()) {
 					final String workingDirectory = getWorkingDirectory(logger, build);
 
-					final EnvVars variables = build.getEnvironment(listener);
 
 					final List<String> scanTargetPaths =getScanTargets(logger, build, variables, workingDirectory);
 
@@ -260,7 +261,7 @@ public class PostBuildHubScan extends Recorder {
 
 					final HubScanJobConfig jobConfig = hubScanJobConfigBuilder.build(logger);
 
-					printConfiguration(build, logger, jobConfig);
+					printConfiguration(build, listener, logger, jobConfig);
 
 					final DummyToolInstaller dummyInstaller = new DummyToolInstaller();
 					final String toolsDirectory = dummyInstaller.getToolDir(new DummyToolInstallation(), build.getBuiltOn()).getRemote();
@@ -288,7 +289,7 @@ public class PostBuildHubScan extends Recorder {
 
 					final JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(), jobConfig.getScanTargetPaths(), build.getNumber(), hubSupport,
 							build, launcher,
-							logger.getJenkinsListener());
+							logger);
 
 					final DateTime beforeScanTime = new DateTime();
 					runScan(service, build, scan, logger, scanExec, jrePath, oneJarPath, jobConfig);
@@ -322,8 +323,9 @@ public class PostBuildHubScan extends Recorder {
 						bomUpdatedAction.setScanStatusDirectory(scan.getScanStatusDirectoryPath());
 						bomUpdatedAction.setScanTargets(jobConfig.getScanTargetPaths());
 					}
-
-					bomUpdatedAction.setPolicyStatusUrl(version.getLink(ReleaseItem.POLICY_STATUS_LINK));
+					if (version != null) {
+						bomUpdatedAction.setPolicyStatusUrl(version.getLink(ReleaseItem.POLICY_STATUS_LINK));
+					}
 
 					build.addAction(bomUpdatedAction);
 				}
@@ -359,9 +361,9 @@ public class PostBuildHubScan extends Recorder {
 				build.addAction(new HubScanFinishedAction());
 			}
 		} else {
-			logger.info("Build was not successful. Will not run Black Duck Scans.");
+			logger.alwaysLog("Build was not successful. Will not run Black Duck Scans.");
 		}
-		logger.info("Finished running Black Duck Scans.");
+		logger.alwaysLog("Finished running Black Duck Scans.");
 		build.setResult(getResult());
 		return true;
 	}
@@ -508,42 +510,43 @@ public class PostBuildHubScan extends Recorder {
 	}
 
 
-	public void printConfiguration(final AbstractBuild<?, ?> build, final IntLogger logger, final HubScanJobConfig jobConfig)
-			throws IOException,
-			InterruptedException {
-		logger.info("Initializing - Hub Jenkins Plugin - "
+	public void printConfiguration(final AbstractBuild<?, ?> build, final BuildListener listener,
+			final HubJenkinsLogger logger, final HubScanJobConfig jobConfig)
+					throws IOException,
+					InterruptedException {
+		logger.alwaysLog("Initializing - Hub Jenkins Plugin - "
 				+ getDescriptor().getPluginVersion());
 
 		if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
 			// Empty node name indicates master
-			logger.info("-> Running on : master");
+			logger.alwaysLog("-> Running on : master");
 		} else {
-			logger.debug("Running on : " + build.getBuiltOn().getNodeName());
+			logger.alwaysLog("Running on : " + build.getBuiltOn().getNodeName());
 		}
-
-		logger.info("-> Using Url : " + getHubServerInfo().getServerUrl());
-		logger.info("-> Using Username : " + getHubServerInfo().getUsername());
-		logger.info(
+		logger.alwaysLog("-> Log Level : " + logger.getLogLevel());
+		logger.alwaysLog("-> Using Url : " + getHubServerInfo().getServerUrl());
+		logger.alwaysLog("-> Using Username : " + getHubServerInfo().getUsername());
+		logger.alwaysLog(
 				"-> Using Build Full Name : " + build.getFullDisplayName());
-		logger.info(
+		logger.alwaysLog(
 				"-> Using Build Number : " + build.getNumber());
-		logger.info(
+		logger.alwaysLog(
 				"-> Using Build Workspace Path : "
 						+ build.getWorkspace().getRemote());
-		logger.info(
+		logger.alwaysLog(
 				"-> Using Hub Project Name : " + jobConfig.getProjectName() + ", Version : " + jobConfig.getVersion());
 
-		logger.info(
+		logger.alwaysLog(
 				"-> Scanning the following targets  : ");
 		for (final String target : jobConfig.getScanTargetPaths()) {
-			logger.info(
+			logger.alwaysLog(
 					"-> " + target);
 		}
 
-		logger.info(
+		logger.alwaysLog(
 				"-> Generate Hub report : " + jobConfig.isShouldGenerateRiskReport());
 		final String formattedTime = String.format("%d minutes", jobConfig.getMaxWaitTimeForBomUpdate());
-		logger.info("-> Maximum wait time for the BOM Update : " + formattedTime);
+		logger.alwaysLog("-> Maximum wait time for the BOM Update : " + formattedTime);
 	}
 
 	/**

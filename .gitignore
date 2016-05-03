@@ -10,3 +10,4 @@
 /.gradle
 
 /target/
+/test.log

@@ -38,11 +38,11 @@ import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.action.MavenClasspathAction;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetPathSeparator;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
-import com.blackducksoftware.integration.hub.logging.LogLevel;
 import com.blackducksoftware.integration.hub.maven.BdMavenConfigurator;
 import com.blackducksoftware.integration.hub.maven.Scope;
 import com.google.gson.Gson;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.maven.MavenUtil;
@@ -118,7 +118,10 @@ public class MavenBuildWrapper extends BDBuildWrapper {
 			final BuildListener listener) throws IOException,
 	InterruptedException {
 		final HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
-		buildLogger.setLogLevel(LogLevel.TRACE);
+
+		final EnvVars variables = build.getEnvironment(listener);
+		buildLogger.setLogLevel(variables);
+
 		Maven mavenBuilder = null;
 		if (build.getProject() instanceof FreeStyleProject) {
 			// Project should always be a FreeStyleProject, thats why we have the isApplicable() method
@@ -178,6 +181,10 @@ public class MavenBuildWrapper extends BDBuildWrapper {
 				@Override
 				public boolean tearDown(final AbstractBuild build, final BuildListener listener) throws IOException, InterruptedException {
 					final HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
+
+					final EnvVars variables = build.getEnvironment(listener);
+					buildLogger.setLogLevel(variables);
+
 					try {
 						final FilePath buildInfoFile = new FilePath(build.getWorkspace(),
 								BuildInfo.OUTPUT_FILE_NAME);
