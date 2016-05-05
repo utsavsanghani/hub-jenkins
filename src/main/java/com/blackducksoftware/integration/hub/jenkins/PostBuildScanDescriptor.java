@@ -49,9 +49,7 @@ import org.xml.sax.SAXException;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
-import com.blackducksoftware.integration.hub.exception.EncryptionException;
 import com.blackducksoftware.integration.hub.global.HubProxyInfo;
-import com.blackducksoftware.integration.hub.global.HubProxyInfoBuilder;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
@@ -392,22 +390,16 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 		if (jenkins != null) {
 			proxyConfig = jenkins.proxy;
 		}
-		try {
-			final HubJenkinsServerConfigValidator validator = new HubJenkinsServerConfigValidator();
-			HubProxyInfo proxyInfo = null;
-			if (proxyConfig != null) {
-				final HubProxyInfoBuilder proxyBuilder = new HubProxyInfoBuilder();
-				proxyBuilder.setHost(proxyConfig.name);
-				proxyBuilder.setPort(proxyConfig.port);
-				proxyBuilder.setUsername(proxyConfig.getUserName());
-				proxyBuilder.setPassword(proxyConfig.getPassword());
-				proxyBuilder.setIgnoredProxyHosts(proxyConfig.name);
-				proxyInfo = proxyBuilder.build();
+		final HubJenkinsServerConfigValidator validator = new HubJenkinsServerConfigValidator();
+		HubProxyInfo proxyInfo = null;
+		if (proxyConfig != null) {
+			try {
+				proxyInfo = new HubProxyInfo(proxyConfig.name, proxyConfig.port, proxyConfig.getUserName(),
+						proxyConfig.getPassword(), proxyConfig.noProxyHost);
+			} catch (final Exception e) {
 			}
-			return validator.validateServerUrl(hubServerUrl, proxyInfo);
-		} catch (final EncryptionException e) {
-			return FormValidation.error(e, e.getMessage());
 		}
+		return validator.validateServerUrl(hubServerUrl, proxyInfo);
 	}
 
 	public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName)
