@@ -133,7 +133,8 @@ public class PostBuildScanDescriptorTest {
 		final PostBuildScanDescriptor descriptor = new PostBuildScanDescriptor();
 		final FormValidation form = descriptor.doTestConnection(testProperties.getProperty("TEST_HUB_SERVER_URL"), "NONEXITENTCREDENTIAL", "120");
 		Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
-		Assert.assertTrue(form.getMessage().contains("User needs to specify which credentials to use."));
+		Assert.assertTrue(form.getMessage(),
+				form.getMessage().contains("User needs to specify which credentials to use."));
 
 	}
 
