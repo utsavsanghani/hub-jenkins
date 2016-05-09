@@ -50,6 +50,7 @@ import org.xml.sax.SAXException;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.EncryptionException;
+import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.global.HubProxyInfo;
 import com.blackducksoftware.integration.hub.global.HubProxyInfoBuilder;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
@@ -87,11 +88,9 @@ import net.sf.json.JSONObject;
 // so have this ordinal as a higher value than the failure condition Post-Build Action
 @Extension(ordinal = 2)
 public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>implements Serializable {
-
+	private static final long serialVersionUID = -3532946484740537334L;
 	private static final String FORM_SERVER_URL = "hubServerUrl";
-
 	private static final String FORM_TIMEOUT = "hubTimeout";
-
 	private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
 	private HubServerInfo hubServerInfo;
@@ -165,7 +164,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	// http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor/config.xml
 	@WebMethod(name = "config.xml")
 	public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException,
-	TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
+			TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
 		final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 		boolean changed = false;
 		try {
@@ -383,10 +382,13 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 
 	/**
 	 * Performs on-the-fly validation of the form field 'serverUrl'.
+	 * 
+	 * @throws HubIntegrationException
+	 * @throws IllegalArgumentException
 	 *
 	 */
 	public FormValidation doCheckHubServerUrl(@QueryParameter("hubServerUrl") final String hubServerUrl)
-			throws IOException, ServletException {
+			throws IOException, ServletException, IllegalArgumentException, HubIntegrationException {
 		ProxyConfiguration proxyConfig = null;
 		final Jenkins jenkins = Jenkins.getInstance();
 		if (jenkins != null) {
@@ -402,7 +404,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 				proxyBuilder.setUsername(proxyConfig.getUserName());
 				proxyBuilder.setPassword(proxyConfig.getPassword());
 				proxyBuilder.setIgnoredProxyHosts(proxyConfig.name);
-				proxyInfo = proxyBuilder.build();
+				proxyInfo = proxyBuilder.build(null);
 			}
 			return validator.validateServerUrl(hubServerUrl, proxyInfo);
 		} catch (final EncryptionException e) {

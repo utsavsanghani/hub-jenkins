@@ -15,32 +15,29 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package com.blackducksoftware.integration.hub.jenkins.tests;
+package com.blackducksoftware.integration.hub.jenkins.maven;
 
-import java.util.Properties;
 
-import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
+public class MavenReporterDescriptorTest {
 
-public class BDBuildWrapperDescriptorTest {
-
-    private static final String PASSWORD_WRONG = "Assert.failurePassword";
-
-    private static final String USERNAME_NON_EXISTING = "Assert.failureUser";
-
-    private static final String PROJECT_NAME_NOT_EXISTING = "Assert Project Does Not Exist";
-
-    private static final String PROJECT_RELEASE_NOT_EXISTING = "Assert Release Does Not Exist";
-
-    private static Properties testProperties;
-
-    private static JenkinsHubIntTestHelper restHelper;
-
+    // private static final String PASSWORD_WRONG = "Assert.failurePassword";
+    //
+    // private static final String USERNAME_NON_EXISTING = "Assert.failureUser";
+    //
+    // private static final String PROJECT_NAME_NOT_EXISTING = "Assert Project Does Not Exist";
+    //
+    // private static final String PROJECT_RELEASE_NOT_EXISTING = "Assert Release Does Not Exist";
+    //
+    // private static Properties testProperties;
+    //
+    // private static JenkinsHubIntTestHelper restHelper;
+    //
     // @Rule
     // public ExpectedException exception = ExpectedException.none();
     //
     // @Rule
     // public static JenkinsRule j = new JenkinsRule();
-
+    //
     // @BeforeClass
     // public static void init() throws Exception {
     // testProperties = new Properties();
@@ -99,7 +96,7 @@ public class BDBuildWrapperDescriptorTest {
     //
     // @Test
     // public void testCreateProjectAndCheckForNameAndRelease() throws Exception, InterruptedException {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
     // testProperties.getProperty("TEST_USERNAME"),
     // testProperties.getProperty("TEST_PASSWORD"));
@@ -109,7 +106,7 @@ public class BDBuildWrapperDescriptorTest {
     // addHubServerInfo(hubServerInfo);
     //
     // try {
-    // FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
+    // FormValidation form = descriptor.doCreateMavenHubProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
     // testProperties.getProperty("TEST_CREATE_VERSION"),
     // "DEVELOPMENT", "EXTERNAL");
     //
@@ -119,14 +116,14 @@ public class BDBuildWrapperDescriptorTest {
     // // wait 1.5 seconds before checking for the project and release
     // Thread.sleep(3000);
     // // Need to wait a second before checking if the project exists or it will not be recognized
-    // FormValidation form2 = descriptor.doCheckHubWrapperProjectName(testProperties.getProperty("TEST_CREATE_PROJECT"),
+    // FormValidation form2 = descriptor.doCheckMavenHubProjectName(testProperties.getProperty("TEST_CREATE_PROJECT"),
     // null);
     // Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
     // Assert.assertEquals(form2.getMessage(),
     // Messages.HubBuildScan_getProjectExistsIn_0_(testProperties.getProperty("TEST_HUB_SERVER_URL")));
     //
     // FormValidation form3 =
-    // descriptor.doCheckHubWrapperProjectVersion(testProperties.getProperty("TEST_CREATE_VERSION"),
+    // descriptor.doCheckMavenHubProjectVersion(testProperties.getProperty("TEST_CREATE_VERSION"),
     // testProperties.getProperty("TEST_CREATE_PROJECT"));
     // assertEquals(FormValidation.Kind.OK, form3.kind);
     // assertTrue(form3.getMessage().contains(Messages.HubBuildScan_getVersionExistsIn_0_("")));
@@ -138,7 +135,7 @@ public class BDBuildWrapperDescriptorTest {
     //
     // @Test
     // public void testCreateProjectDuplicateNameDifferentRelease() throws Exception, InterruptedException {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
     // testProperties.getProperty("TEST_USERNAME"),
     // testProperties.getProperty("TEST_PASSWORD"));
@@ -148,13 +145,13 @@ public class BDBuildWrapperDescriptorTest {
     // addHubServerInfo(hubServerInfo);
     // try {
     // Thread.sleep(3000);
-    // FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
+    // FormValidation form = descriptor.doCreateMavenHubProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
     // testProperties.getProperty("TEST_CREATE_VERSION"),
     // "DEVELOPMENT", "EXTERNAL");
     // Assert.assertEquals(FormValidation.Kind.OK, form.kind);
     // Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectAndVersionCreated());
     // Thread.sleep(3000);
-    // FormValidation form2 = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
+    // FormValidation form2 = descriptor.doCreateMavenHubProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
     // "New Release", "DEVELOPMENT",
     // "EXTERNAL");
     // Assert.assertEquals(FormValidation.Kind.OK, form2.kind);
@@ -166,7 +163,7 @@ public class BDBuildWrapperDescriptorTest {
     //
     // @Test
     // public void testCreateProjectDuplicateRelease() throws Exception, InterruptedException {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
     // testProperties.getProperty("TEST_USERNAME"),
     // testProperties.getProperty("TEST_PASSWORD"));
@@ -177,13 +174,13 @@ public class BDBuildWrapperDescriptorTest {
     //
     // try {
     // Thread.sleep(3000);
-    // FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
+    // FormValidation form = descriptor.doCreateMavenHubProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
     // testProperties.getProperty("TEST_CREATE_VERSION"),
     // "DEVELOPMENT", "EXTERNAL");
     // Assert.assertEquals(FormValidation.Kind.OK, form.kind);
     // Assert.assertEquals(Messages.HubBuildScan_getProjectAndVersionCreated(), form.getMessage());
     // Thread.sleep(3000);
-    // FormValidation form2 = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
+    // FormValidation form2 = descriptor.doCreateMavenHubProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
     // testProperties.getProperty("TEST_CREATE_VERSION"),
     // "DEVELOPMENT", "EXTERNAL");
     // Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
@@ -195,7 +192,7 @@ public class BDBuildWrapperDescriptorTest {
     //
     // @Test
     // public void testCreateProjectVariables() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
     // testProperties.getProperty("TEST_USERNAME"),
     // testProperties.getProperty("TEST_PASSWORD"));
@@ -204,13 +201,13 @@ public class BDBuildWrapperDescriptorTest {
     // hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
     // addHubServerInfo(hubServerInfo);
     //
-    // FormValidation form = descriptor.doCreateHubWrapperProject("${JOB_NAME}",
+    // FormValidation form = descriptor.doCreateMavenHubProject("${JOB_NAME}",
     // testProperties.getProperty("TEST_CREATE_VERSION"), "DEVELOPMENT", "EXTERNAL");
     //
     // Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
     // Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNameContainsVariable());
     //
-    // FormValidation form2 = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
+    // FormValidation form2 = descriptor.doCreateMavenHubProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
     // "${BUILD_NUMBER}", "DEVELOPMENT",
     // "EXTERNAL");
     //
@@ -218,7 +215,7 @@ public class BDBuildWrapperDescriptorTest {
     // Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectCreated() + " :: " +
     // Messages.HubBuildScan_getProjectVersionContainsVariable());
     //
-    // FormValidation form3 = descriptor.doCreateHubWrapperProject("${JOB_NAME}", "${BUILD_NUMBER}", "DEVELOPMENT",
+    // FormValidation form3 = descriptor.doCreateMavenHubProject("${JOB_NAME}", "${BUILD_NUMBER}", "DEVELOPMENT",
     // "EXTERNAL");
     //
     // Assert.assertEquals(FormValidation.Kind.WARNING, form3.kind);
@@ -228,21 +225,21 @@ public class BDBuildWrapperDescriptorTest {
     //
     // @Test
     // public void testCheckForProjectNameVariable() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     //
     // HubServerInfo hubServerInfo = new HubServerInfo();
     // hubServerInfo.setCredentialsId("FAKE ID");
     // hubServerInfo.setServerUrl("FAKE SERVER");
     // addHubServerInfo(hubServerInfo);
     //
-    // FormValidation form = descriptor.doCheckHubWrapperProjectName("${JOB_NAME}", null);
+    // FormValidation form = descriptor.doCheckMavenHubProjectName("${JOB_NAME}", null);
     // Assert.assertEquals(FormValidation.Kind.WARNING, form.kind);
     // Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProjectNameContainsVariable());
     // }
     //
     // @Test
     // public void testCheckForProjectNameNotExistent() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
     // testProperties.getProperty("TEST_USERNAME"),
     // testProperties.getProperty("TEST_PASSWORD"));
@@ -251,7 +248,7 @@ public class BDBuildWrapperDescriptorTest {
     // hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
     // addHubServerInfo(hubServerInfo);
     //
-    // FormValidation form = descriptor.doCheckHubWrapperProjectName(PROJECT_NAME_NOT_EXISTING, null);
+    // FormValidation form = descriptor.doCheckMavenHubProjectName(PROJECT_NAME_NOT_EXISTING, null);
     // Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
     // Assert.assertTrue(form.getMessage(),
     // form.getMessage().contains(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_()));
@@ -259,7 +256,7 @@ public class BDBuildWrapperDescriptorTest {
     //
     // @Test
     // public void testCheckForProjectReleaseNotExistent() throws Exception, InterruptedException {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
     // testProperties.getProperty("TEST_USERNAME"),
     // testProperties.getProperty("TEST_PASSWORD"));
@@ -269,18 +266,18 @@ public class BDBuildWrapperDescriptorTest {
     // addHubServerInfo(hubServerInfo);
     //
     // try {
-    // FormValidation form = descriptor.doCreateHubWrapperProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
+    // FormValidation form = descriptor.doCreateMavenHubProject(testProperties.getProperty("TEST_CREATE_PROJECT"),
     // testProperties.getProperty("TEST_CREATE_VERSION"),
     // "DEVELOPMENT", "EXTERNAL");
     // Assert.assertEquals(FormValidation.Kind.OK, form.kind);
     // Assert.assertEquals(Messages.HubBuildScan_getProjectAndVersionCreated(), form.getMessage());
     // Thread.sleep(2000);
-    // FormValidation form2 = descriptor.doCheckHubWrapperProjectVersion(PROJECT_RELEASE_NOT_EXISTING,
+    // FormValidation form2 = descriptor.doCheckMavenHubProjectVersion(PROJECT_RELEASE_NOT_EXISTING,
     // testProperties.getProperty("TEST_CREATE_PROJECT"));
-    // Assert.assertEquals(FormValidation.Kind.ERROR, form2.kind);
     // Assert.assertTrue(form2.getMessage(),
     // form2.getMessage().contains(Messages.HubBuildScan_getVersionNonExistingIn_0_(testProperties.getProperty("TEST_CREATE_PROJECT"),
     // "")));
+    // Assert.assertEquals(FormValidation.Kind.ERROR, form2.kind);
     // } finally {
     // restHelper.deleteHubProject(restHelper.getProjectByName(testProperties.getProperty("TEST_CREATE_PROJECT")).getId());
     // }
@@ -288,17 +285,17 @@ public class BDBuildWrapperDescriptorTest {
     //
     // @Test
     // public void testCheckForReleaseNameVariable() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     // HubServerInfo hubServerInfo = new HubServerInfo();
     // hubServerInfo.setCredentialsId("FAKE ID");
     // hubServerInfo.setServerUrl("FAKE SERVER");
     // addHubServerInfo(hubServerInfo);
     //
-    // FormValidation form = descriptor.doCheckHubWrapperProjectVersion("${BUILD_NUMBER}", null);
+    // FormValidation form = descriptor.doCheckMavenHubProjectVersion("${BUILD_NUMBER}", null);
     // Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
     // Assert.assertEquals(form.getMessage(), Messages.HubBuildScan_getProvideProjectName());
     //
-    // FormValidation form2 = descriptor.doCheckHubWrapperProjectVersion("${BUILD_NUMBER}",
+    // FormValidation form2 = descriptor.doCheckMavenHubProjectVersion("${BUILD_NUMBER}",
     // testProperties.getProperty("TEST_CREATE_PROJECT"));
     // Assert.assertEquals(FormValidation.Kind.WARNING, form2.kind);
     // Assert.assertEquals(form2.getMessage(), Messages.HubBuildScan_getProjectVersionContainsVariable());
@@ -306,7 +303,7 @@ public class BDBuildWrapperDescriptorTest {
     //
     // @Test
     // public void testCheckForProjectReleaseNotExistentProject() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
     // testProperties.getProperty("TEST_USERNAME"),
     // testProperties.getProperty("TEST_PASSWORD"));
@@ -316,31 +313,31 @@ public class BDBuildWrapperDescriptorTest {
     // addHubServerInfo(hubServerInfo);
     //
     // FormValidation form = descriptor
-    // .doCheckHubWrapperProjectVersion(testProperties.getProperty("TEST_CREATE_VERSION"),
+    // .doCheckMavenHubProjectVersion(testProperties.getProperty("TEST_CREATE_VERSION"),
     // testProperties.getProperty("TEST_CREATE_PROJECT"));
-    // Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
     // Assert.assertTrue(form.getMessage(),
     // form.getMessage().contains(Messages.HubBuildScan_getProjectNonExistingOrTroubleConnecting_()));
+    // Assert.assertEquals(FormValidation.Kind.ERROR, form.kind);
     // }
     //
     // @Test
-    // public void testDoFillHubWrapperVersionPhaseItems() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
-    // ListBoxModel list = descriptor.doFillHubWrapperVersionPhaseItems();
+    // public void testDoFillMavenHubVersionPhaseItems() throws Exception {
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
+    // ListBoxModel list = descriptor.doFillMavenHubVersionPhaseItems();
     // assertTrue(list.size() == 5);
     // }
     //
     // @Test
-    // public void testDoFillHubWrapperVersionDistItems() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
-    // ListBoxModel list = descriptor.doFillHubWrapperVersionDistItems();
+    // public void testDoFillMavenHubVersionDistItems() throws Exception {
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
+    // ListBoxModel list = descriptor.doFillMavenHubVersionDistItems();
     // assertTrue(list.size() == 3);
     //
     // }
     //
     // @Test
-    // public void testDoAutoCompleteHubWrapperProjectNameNotExistent() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // public void testDoAutoCompleteMavenHubProjectNameNotExistent() throws Exception {
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
     // testProperties.getProperty("TEST_USERNAME"),
     // testProperties.getProperty("TEST_PASSWORD"));
@@ -349,14 +346,14 @@ public class BDBuildWrapperDescriptorTest {
     // hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
     // addHubServerInfo(hubServerInfo);
     //
-    // AutoCompletionCandidates matches = descriptor.doAutoCompleteHubWrapperProjectName(PROJECT_NAME_NOT_EXISTING);
+    // AutoCompletionCandidates matches = descriptor.doAutoCompleteMavenHubProjectName(PROJECT_NAME_NOT_EXISTING);
     // assertTrue(matches.getValues().size() == 0);
     //
     // }
     //
     // @Test
-    // public void testDoAutoCompleteHubWrapperProjectName() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // public void testDoAutoCompleteMavenHubProjectName() throws Exception {
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
     // testProperties.getProperty("TEST_USERNAME"),
     // testProperties.getProperty("TEST_PASSWORD"));
@@ -365,14 +362,14 @@ public class BDBuildWrapperDescriptorTest {
     // hubServerInfo.setServerUrl(testProperties.getProperty("TEST_HUB_SERVER_URL"));
     // addHubServerInfo(hubServerInfo);
     //
-    // AutoCompletionCandidates matches = descriptor.doAutoCompleteHubWrapperProjectName("j");
+    // AutoCompletionCandidates matches = descriptor.doAutoCompleteMavenHubProjectName("j");
     // assertTrue(matches.getValues().size() > 0);
     //
     // }
     //
     // @Test
     // public void testGetServerInfoNotConfigured() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     //
     // assertNull(descriptor.getHubServerInfo());
     //
@@ -380,7 +377,7 @@ public class BDBuildWrapperDescriptorTest {
     //
     // @Test
     // public void testGetServerInfo() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore(
     // testProperties.getProperty("TEST_USERNAME"),
     // testProperties.getProperty("TEST_PASSWORD"));
@@ -397,26 +394,26 @@ public class BDBuildWrapperDescriptorTest {
     // }
     //
     // @Test
-    // public void testIsApplicable() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
-    // FreeStyleProject project = j.createFreeStyleProject("test");
-    // assertTrue(descriptor.isApplicable(project));
-    // MavenModuleSet mavenProject = j.createMavenProject();
-    // assertTrue(!descriptor.isApplicable(mavenProject));
+    // public void testGetPluginVersion() throws Exception {
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
+    //
+    // assertTrue(StringUtils.isNotBlank(descriptor.getPluginVersion()));
     // }
     //
     // @Test
     // public void testGetDisplayName() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
-    //
-    // assertTrue(StringUtils.isBlank(descriptor.getDisplayName()));
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
+    // assertEquals(Messages.HubMavenWrapper_getDisplayName(), descriptor.getDisplayName());
     // }
     //
     // @Test
-    // public void testGetPluginVersion() throws Exception {
-    // BDBuildWrapperDescriptor descriptor = new BDBuildWrapperDescriptor();
-    //
-    // assertTrue(StringUtils.isNotBlank(descriptor.getPluginVersion()));
+    // public void testDoCheckUserScopesToInclude() throws Exception {
+    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
+    // assertEquals(Messages.HubMavenWrapper_getPleaseIncludeAScope(),
+    // descriptor.doCheckUserScopesToInclude("").getMessage());
+    // assertEquals(Messages.HubMavenWrapper_getIncludedInvalidScope_0_("what"),
+    // descriptor.doCheckUserScopesToInclude("what").getMessage());
+    // assertEquals(FormValidation.Kind.OK, descriptor.doCheckUserScopesToInclude("compile, test").kind);
     // }
 
 }

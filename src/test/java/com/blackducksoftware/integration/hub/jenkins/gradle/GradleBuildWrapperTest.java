@@ -15,10 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package com.blackducksoftware.integration.hub.jenkins.tests.maven;
+package com.blackducksoftware.integration.hub.jenkins.gradle;
 
 
-public class MavenBuildWrapperTest {
+public class GradleBuildWrapperTest {
 
     // @Rule
     // public static JenkinsRule j = new JenkinsRule();
@@ -40,8 +40,8 @@ public class MavenBuildWrapperTest {
     // }
     // }
     //
-    // public void addMavenBuildWrapperDescriptor() {
-    // MavenBuildWrapperDescriptor descriptor = new MavenBuildWrapperDescriptor();
+    // public void addGradleBuildWrapperDescriptor() {
+    // GradleBuildWrapperDescriptor descriptor = new GradleBuildWrapperDescriptor();
     // j.getInstance().getDescriptorList(BuildWrapper.class).add(descriptor);
     // }
     //
@@ -60,70 +60,70 @@ public class MavenBuildWrapperTest {
     //
     // @Test
     // public void testIsPluginEnabled() {
-    // addMavenBuildWrapperDescriptor();
+    // addGradleBuildWrapperDescriptor();
     //
-    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
+    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
     // assertFalse(buildWrapper.isPluginEnabled());
     //
-    // buildWrapper = new MavenBuildWrapper("compile", false, null, null, null, null);
+    // buildWrapper = new GradleBuildWrapper("compile", false, null, null, null, null);
     // assertFalse(buildWrapper.isPluginEnabled());
     //
-    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", null, null, null);
+    // buildWrapper = new GradleBuildWrapper("compile", false, "projectName", null, null, null);
     // assertFalse(buildWrapper.isPluginEnabled());
     //
-    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", null, null);
+    // buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", null, null);
     // assertFalse(buildWrapper.isPluginEnabled());
     //
-    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", null);
+    // buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", "dist", null);
     // assertFalse(buildWrapper.isPluginEnabled());
     //
-    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+    // buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
     // assertFalse(buildWrapper.isPluginEnabled());
     //
     // addHubServerInfo(new HubServerInfo());
-    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+    // buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
     // assertFalse(buildWrapper.isPluginEnabled());
     //
     // addHubServerInfo(new HubServerInfo("", null));
-    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+    // buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
     // assertFalse(buildWrapper.isPluginEnabled());
     //
     // addHubServerInfo(new HubServerInfo("testServer", null));
-    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+    // buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
     // assertFalse(buildWrapper.isPluginEnabled());
     //
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("", "");
     // addHubServerInfo(new HubServerInfo("testServer", credential.getId()));
-    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
+    // buildWrapper = new GradleBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
     // assertTrue(buildWrapper.isPluginEnabled());
     //
     // }
     //
     // @Test
     // public void testValidateConfigurationNotConfiguredNoGlobalConfiguration() {
-    // addMavenBuildWrapperDescriptor();
+    // addGradleBuildWrapperDescriptor();
     //
     // TestLogger logger = new TestLogger(null);
     //
-    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
+    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
     // assertFalse(buildWrapper.validateConfiguration(logger));
     //
     // String output = logger.getOutputString();
     // assertTrue(output, output.contains("Could not find the Hub global configuration!"));
     // assertTrue(output, output.contains("No Hub project name configured!"));
     // assertTrue(output, output.contains("No Hub project version configured!"));
-    // assertTrue(output, output.contains("No Maven scopes configured!"));
+    // assertTrue(output, output.contains("No Gradle configurations configured!"));
     // }
     //
     // @Test
     // public void testValidateConfigurationWithGlobalConfigurationEmpty() {
-    // addMavenBuildWrapperDescriptor();
+    // addGradleBuildWrapperDescriptor();
     //
     // TestLogger logger = new TestLogger(null);
     //
     // addHubServerInfo(new HubServerInfo("", ""));
     //
-    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
+    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
     // assertFalse(buildWrapper.validateConfiguration(logger));
     //
     // String output = logger.getOutputString();
@@ -133,15 +133,35 @@ public class MavenBuildWrapperTest {
     // }
     //
     // @Test
+    // public void testValidateConfigurationWithGlobalConfigurationEmptyCredentials() {
+    // addGradleBuildWrapperDescriptor();
+    //
+    // TestLogger logger = new TestLogger(null);
+    //
+    // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("", "");
+    // addHubServerInfo(new HubServerInfo("http://server.com", credential.getId()));
+    //
+    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
+    // assertFalse(buildWrapper.validateConfiguration(logger));
+    //
+    // String output = logger.getOutputString();
+    // assertTrue(output, output.contains("No Hub username configured!"));
+    // assertTrue(output, output.contains("No Hub password configured!"));
+    // assertTrue(output, !output.contains("Could not find the Hub global configuration!"));
+    // assertTrue(output, !output.contains("The Hub server URL is not configured!"));
+    // assertTrue(output, !output.contains("No Hub credentials configured!"));
+    // }
+    //
+    // @Test
     // public void testValidateConfigurationWithGlobalConfiguration() {
-    // addMavenBuildWrapperDescriptor();
+    // addGradleBuildWrapperDescriptor();
     //
     // TestLogger logger = new TestLogger(null);
     //
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("User", "Password");
     // addHubServerInfo(new HubServerInfo("http://server.com", credential.getId()));
     //
-    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
+    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
     // assertFalse(buildWrapper.validateConfiguration(logger));
     //
     // String output = logger.getOutputString();
@@ -152,14 +172,14 @@ public class MavenBuildWrapperTest {
     //
     // @Test
     // public void testValidateConfiguration() {
-    // addMavenBuildWrapperDescriptor();
+    // addGradleBuildWrapperDescriptor();
     //
     // TestLogger logger = new TestLogger(null);
     //
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("User", "Password");
     // addHubServerInfo(new HubServerInfo("http://server.com", credential.getId()));
     //
-    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Compile", false, "Project", null, null, "Version");
+    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper("Compile", false, "Project", null, null, "Version");
     // assertTrue(buildWrapper.validateConfiguration(logger));
     //
     // String output = logger.getOutputString();
@@ -171,7 +191,9 @@ public class MavenBuildWrapperTest {
     // exception.expect(BDJenkinsHubPluginException.class);
     // exception.expectMessage("Variable was not properly replaced. Value : ${TEST}, Result : ${TEST}. Make sure the variable has been properly defined.");
     //
-    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
+    // addGradleBuildWrapperDescriptor();
+    //
+    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
     //
     // HashMap<String, String> variables = new HashMap<String, String>();
     //
@@ -180,7 +202,9 @@ public class MavenBuildWrapperTest {
     //
     // @Test
     // public void testHandleVariableReplacement() throws Exception {
-    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
+    // addGradleBuildWrapperDescriptor();
+    //
+    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
     //
     // HashMap<String, String> variables = new HashMap<String, String>();
     // variables.put("TEST", "Value");
@@ -192,26 +216,20 @@ public class MavenBuildWrapperTest {
     // @Test
     // public void testGetScopesAsListInvalidScopes() throws Exception {
     // TestLogger logger = new TestLogger(null);
-    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Invalid", false, null, null, null, null);
+    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
     // buildWrapper.getScopesAsList(logger);
     // String output = logger.getOutputString();
-    // assertTrue(output, output.contains("The user has provided an unknown scope :"));
-    //
-    // logger.resetAllOutput();
-    //
-    // buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
-    // buildWrapper.getScopesAsList(logger);
-    // output = logger.getOutputString();
-    // assertTrue(output, output.contains("Cannot get Scopes from an empty String"));
+    // assertTrue(output, output.contains("Cannot get Configurations from an empty String"));
     // }
     //
     // @Test
     // public void testGetScopesAsList() throws Exception {
-    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Compile, Test", false, null, null, null, null);
+    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper("Compile, Test, Fake", false, null, null, null, null);
     // List<String> scopeList = buildWrapper.getScopesAsList(null);
     //
     // assertTrue(scopeList.contains("COMPILE"));
     // assertTrue(scopeList.contains("TEST"));
+    // assertTrue(scopeList.contains("FAKE"));
     //
     // }
 }

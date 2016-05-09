@@ -40,7 +40,6 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
 public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements Serializable {
-
 	public BDBuildWrapperDescriptor() {
 		super(BDBuildWrapper.class);
 		load();
@@ -71,32 +70,35 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 		return BDCommonDescriptorUtil.doFillHubVersionDistItems();
 	}
 
-	public AutoCompletionCandidates doAutoCompleteHubWrapperProjectName(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName)
-			throws IOException,
-			ServletException {
+	public AutoCompletionCandidates doAutoCompleteHubWrapperProjectName(
+			@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName)
+					throws IOException, ServletException {
 		return BDCommonDescriptorUtil.doAutoCompleteHubProjectName(getHubServerInfo(), hubWrapperProjectName);
 	}
 
 	/**
-	 * Performs on-the-fly validation of the form field 'hubWrapperProjectName'. Checks to see if there is already a
-	 * project in
-	 * the Hub with this name.
+	 * Performs on-the-fly validation of the form field 'hubWrapperProjectName'.
+	 * Checks to see if there is already a project in the Hub with this name.
 	 *
 	 */
-	public FormValidation doCheckHubWrapperProjectName(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
-			@QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion) throws IOException, ServletException {
+	public FormValidation doCheckHubWrapperProjectName(
+			@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
+			@QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion)
+					throws IOException, ServletException {
 		return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubWrapperProjectName,
 				hubWrapperProjectVersion);
 	}
 
 	/**
-	 * Performs on-the-fly validation of the form field 'hubWrapperProjectVersion'. Checks to see if there is already a
-	 * project
+	 * Performs on-the-fly validation of the form field
+	 * 'hubWrapperProjectVersion'. Checks to see if there is already a project
 	 * in the Hub with this name.
 	 *
 	 */
-	public FormValidation doCheckHubWrapperProjectVersion(@QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion,
-			@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName) throws IOException, ServletException {
+	public FormValidation doCheckHubWrapperProjectVersion(
+			@QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion,
+			@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName)
+					throws IOException, ServletException {
 		return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubWrapperProjectVersion,
 				hubWrapperProjectName);
 	}
@@ -105,11 +107,11 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 	 * Creates the Hub project AND/OR version
 	 *
 	 */
-	public FormValidation doCreateHubWrapperProject(@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
+	public FormValidation doCreateHubWrapperProject(
+			@QueryParameter("hubWrapperProjectName") final String hubWrapperProjectName,
 			@QueryParameter("hubWrapperProjectVersion") final String hubWrapperProjectVersion,
 			@QueryParameter("hubWrapperVersionPhase") final String hubWrapperVersionPhase,
 			@QueryParameter("hubWrapperVersionDist") final String hubWrapperVersionDist) {
-
 		save();
 		return BDCommonDescriptorUtil.doCreateHubProject(getHubServerInfo(), hubWrapperProjectName,
 				hubWrapperProjectVersion, hubWrapperVersionPhase, hubWrapperVersionDist);
@@ -123,8 +125,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 			throws IOException, ServletException {
 		if (this instanceof MavenBuildWrapperDescriptor) {
 			if (StringUtils.isBlank(value)) {
-				return FormValidation.error(Messages
-						.HubMavenWrapper_getPleaseIncludeAScope());
+				return FormValidation.error(Messages.HubMavenWrapper_getPleaseIncludeAScope());
 			}
 			try {
 				Scope.getScopeListFromString(value);
@@ -134,8 +135,7 @@ public class BDBuildWrapperDescriptor extends BuildWrapperDescriptor implements 
 			}
 		} else if (this instanceof GradleBuildWrapperDescriptor) {
 			if (StringUtils.isBlank(value)) {
-				return FormValidation.error(Messages
-						.HubGradleWrapper_getPleaseIncludeAConfiguration());
+				return FormValidation.error(Messages.HubGradleWrapper_getPleaseIncludeAConfiguration());
 			}
 		}
 		return FormValidation.ok();

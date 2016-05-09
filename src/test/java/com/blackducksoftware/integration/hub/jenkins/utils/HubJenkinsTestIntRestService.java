@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package com.blackducksoftware.integration.hub.jenkins.tests.utils;
+package com.blackducksoftware.integration.hub.jenkins.utils;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -31,9 +31,8 @@ import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 
-public class JenkinsHubIntTestHelper extends HubIntRestService {
-
-	public JenkinsHubIntTestHelper(final String baseUrl) {
+public class HubJenkinsTestIntRestService extends HubIntRestService {
+	public HubJenkinsTestIntRestService(final String baseUrl) {
 		super(baseUrl);
 	}
 
@@ -46,21 +45,7 @@ public class JenkinsHubIntTestHelper extends HubIntRestService {
 			return false;
 		}
 
-		final Series<Cookie> cookies = getCookies();
-		final ClientResource resource = new ClientResource(project.get_meta().getHref());
-		resource.getRequest().setCookies(cookies);
-		resource.setMethod(Method.DELETE);
-		resource.delete();
-		final int responseCode = resource.getResponse().getStatus().getCode();
-
-		if (responseCode != 204) {
-			throw new BDRestException(
-					"Could not connect to the Hub server with the Given Url and credentials. Error Code: "
-							+ responseCode,
-							resource);
-		} else {
-			return true;
-		}
+		return deleteHubProject(project.get_meta().getHref());
 	}
 
 	/**
@@ -83,7 +68,7 @@ public class JenkinsHubIntTestHelper extends HubIntRestService {
 			throw new BDRestException(
 					"Could not connect to the Hub server with the Given Url and credentials. Error Code: "
 							+ responseCode,
-							resource);
+					resource);
 		} else {
 			return true;
 		}
@@ -100,4 +85,5 @@ public class JenkinsHubIntTestHelper extends HubIntRestService {
 		}
 		return null;
 	}
+
 }

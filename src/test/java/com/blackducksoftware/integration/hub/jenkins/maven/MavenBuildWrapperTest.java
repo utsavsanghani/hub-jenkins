@@ -15,10 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package com.blackducksoftware.integration.hub.jenkins.tests.maven;
+package com.blackducksoftware.integration.hub.jenkins.maven;
 
 
-public class MavenReporterTest {
+public class MavenBuildWrapperTest {
 
     // @Rule
     // public static JenkinsRule j = new JenkinsRule();
@@ -35,14 +35,14 @@ public class MavenReporterTest {
     // }
     //
     // public void resetPublisherDescriptors() {
-    // while (j.getInstance().getDescriptorList(Publisher.class).size() != 0) {
-    // j.getInstance().getDescriptorList(Publisher.class).remove(0);
+    // while (Jenkins.getInstance().getDescriptorList(Publisher.class).size() != 0) {
+    // Jenkins.getInstance().getDescriptorList(Publisher.class).remove(0);
     // }
     // }
     //
-    // public void addHubMavenReporterDescriptor() {
-    // HubMavenReporterDescriptor descriptor = new HubMavenReporterDescriptor();
-    // j.getInstance().getDescriptorList(MavenReporter.class).add(descriptor);
+    // public void addMavenBuildWrapperDescriptor() {
+    // MavenBuildWrapperDescriptor descriptor = new MavenBuildWrapperDescriptor();
+    // j.getInstance().getDescriptorList(BuildWrapper.class).add(descriptor);
     // }
     //
     // public UsernamePasswordCredentialsImpl addCredentialToGlobalStore(String username, String password) {
@@ -60,52 +60,52 @@ public class MavenReporterTest {
     //
     // @Test
     // public void testIsPluginEnabled() {
-    // addHubMavenReporterDescriptor();
+    // addMavenBuildWrapperDescriptor();
     //
-    // HubMavenReporter buildWrapper = new HubMavenReporter(null, false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
     // assertFalse(buildWrapper.isPluginEnabled());
     //
-    // buildWrapper = new HubMavenReporter("compile", false, null, null, null, null);
+    // buildWrapper = new MavenBuildWrapper("compile", false, null, null, null, null);
     // assertFalse(buildWrapper.isPluginEnabled());
     //
-    // buildWrapper = new HubMavenReporter("compile", false, "projectName", null, null, null);
+    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", null, null, null);
     // assertFalse(buildWrapper.isPluginEnabled());
     //
-    // buildWrapper = new HubMavenReporter("compile", false, "projectName", "phase", null, null);
+    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", null, null);
     // assertFalse(buildWrapper.isPluginEnabled());
     //
-    // buildWrapper = new HubMavenReporter("compile", false, "projectName", "phase", "dist", null);
+    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", null);
     // assertFalse(buildWrapper.isPluginEnabled());
     //
-    // buildWrapper = new HubMavenReporter("compile", false, "projectName", "phase", "dist", "version");
+    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
     // assertFalse(buildWrapper.isPluginEnabled());
     //
     // addHubServerInfo(new HubServerInfo());
-    // buildWrapper = new HubMavenReporter("compile", false, "projectName", "phase", "dist", "version");
+    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
     // assertFalse(buildWrapper.isPluginEnabled());
     //
     // addHubServerInfo(new HubServerInfo("", null));
-    // buildWrapper = new HubMavenReporter("compile", false, "projectName", "phase", "dist", "version");
+    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
     // assertFalse(buildWrapper.isPluginEnabled());
     //
     // addHubServerInfo(new HubServerInfo("testServer", null));
-    // buildWrapper = new HubMavenReporter("compile", false, "projectName", "phase", "dist", "version");
+    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
     // assertFalse(buildWrapper.isPluginEnabled());
     //
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("", "");
     // addHubServerInfo(new HubServerInfo("testServer", credential.getId()));
-    // buildWrapper = new HubMavenReporter("compile", false, "projectName", "phase", "dist", "version");
+    // buildWrapper = new MavenBuildWrapper("compile", false, "projectName", "phase", "dist", "version");
     // assertTrue(buildWrapper.isPluginEnabled());
     //
     // }
     //
     // @Test
     // public void testValidateConfigurationNotConfiguredNoGlobalConfiguration() {
-    // addHubMavenReporterDescriptor();
+    // addMavenBuildWrapperDescriptor();
     //
     // TestLogger logger = new TestLogger(null);
     //
-    // HubMavenReporter buildWrapper = new HubMavenReporter(null, false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
     // assertFalse(buildWrapper.validateConfiguration(logger));
     //
     // String output = logger.getOutputString();
@@ -117,13 +117,13 @@ public class MavenReporterTest {
     //
     // @Test
     // public void testValidateConfigurationWithGlobalConfigurationEmpty() {
-    // addHubMavenReporterDescriptor();
+    // addMavenBuildWrapperDescriptor();
     //
     // TestLogger logger = new TestLogger(null);
     //
     // addHubServerInfo(new HubServerInfo("", ""));
     //
-    // HubMavenReporter buildWrapper = new HubMavenReporter(null, false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
     // assertFalse(buildWrapper.validateConfiguration(logger));
     //
     // String output = logger.getOutputString();
@@ -134,14 +134,14 @@ public class MavenReporterTest {
     //
     // @Test
     // public void testValidateConfigurationWithGlobalConfiguration() {
-    // addHubMavenReporterDescriptor();
+    // addMavenBuildWrapperDescriptor();
     //
     // TestLogger logger = new TestLogger(null);
     //
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("User", "Password");
     // addHubServerInfo(new HubServerInfo("http://server.com", credential.getId()));
     //
-    // HubMavenReporter buildWrapper = new HubMavenReporter(null, false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
     // assertFalse(buildWrapper.validateConfiguration(logger));
     //
     // String output = logger.getOutputString();
@@ -152,14 +152,14 @@ public class MavenReporterTest {
     //
     // @Test
     // public void testValidateConfiguration() {
-    // addHubMavenReporterDescriptor();
+    // addMavenBuildWrapperDescriptor();
     //
     // TestLogger logger = new TestLogger(null);
     //
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("User", "Password");
     // addHubServerInfo(new HubServerInfo("http://server.com", credential.getId()));
     //
-    // HubMavenReporter buildWrapper = new HubMavenReporter("Compile", false, "Project", null, null, "Version");
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Compile", false, "Project", null, null, "Version");
     // assertTrue(buildWrapper.validateConfiguration(logger));
     //
     // String output = logger.getOutputString();
@@ -171,7 +171,7 @@ public class MavenReporterTest {
     // exception.expect(BDJenkinsHubPluginException.class);
     // exception.expectMessage("Variable was not properly replaced. Value : ${TEST}, Result : ${TEST}. Make sure the variable has been properly defined.");
     //
-    // HubMavenReporter buildWrapper = new HubMavenReporter(null, false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
     //
     // HashMap<String, String> variables = new HashMap<String, String>();
     //
@@ -180,7 +180,7 @@ public class MavenReporterTest {
     //
     // @Test
     // public void testHandleVariableReplacement() throws Exception {
-    // HubMavenReporter buildWrapper = new HubMavenReporter(null, false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
     //
     // HashMap<String, String> variables = new HashMap<String, String>();
     // variables.put("TEST", "Value");
@@ -192,14 +192,14 @@ public class MavenReporterTest {
     // @Test
     // public void testGetScopesAsListInvalidScopes() throws Exception {
     // TestLogger logger = new TestLogger(null);
-    // HubMavenReporter buildWrapper = new HubMavenReporter("Invalid", false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Invalid", false, null, null, null, null);
     // buildWrapper.getScopesAsList(logger);
     // String output = logger.getOutputString();
     // assertTrue(output, output.contains("The user has provided an unknown scope :"));
     //
     // logger.resetAllOutput();
     //
-    // buildWrapper = new HubMavenReporter(null, false, null, null, null, null);
+    // buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
     // buildWrapper.getScopesAsList(logger);
     // output = logger.getOutputString();
     // assertTrue(output, output.contains("Cannot get Scopes from an empty String"));
@@ -207,12 +207,11 @@ public class MavenReporterTest {
     //
     // @Test
     // public void testGetScopesAsList() throws Exception {
-    // HubMavenReporter buildWrapper = new HubMavenReporter("Compile, Test", false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Compile, Test", false, null, null, null, null);
     // List<String> scopeList = buildWrapper.getScopesAsList(null);
     //
     // assertTrue(scopeList.contains("COMPILE"));
     // assertTrue(scopeList.contains("TEST"));
     //
     // }
-
 }

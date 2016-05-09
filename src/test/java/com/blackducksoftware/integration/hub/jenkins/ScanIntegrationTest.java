@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package com.blackducksoftware.integration.hub.jenkins.tests;
+package com.blackducksoftware.integration.hub.jenkins;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -49,7 +49,7 @@ import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.failure.HubFailureConditionStep;
-import com.blackducksoftware.integration.hub.jenkins.tests.utils.JenkinsHubIntTestHelper;
+import com.blackducksoftware.integration.hub.jenkins.utils.HubJenkinsTestIntRestService;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.version.api.DistributionEnum;
 import com.blackducksoftware.integration.hub.version.api.PhaseEnum;
@@ -82,7 +82,7 @@ public class ScanIntegrationTest {
 
 	private static Properties testProperties;
 
-	private static JenkinsHubIntTestHelper restHelper;
+	private static HubJenkinsTestIntRestService restHelper;
 
 	@Rule
 	public JenkinsRule j = new JenkinsRule();
@@ -113,7 +113,7 @@ public class ScanIntegrationTest {
 		System.out.println(testProperties.getProperty("TEST_USERNAME"));
 		System.out.println(testProperties.getProperty("TEST_PASSWORD"));
 
-		restHelper = new JenkinsHubIntTestHelper(testProperties.getProperty("TEST_HUB_SERVER_URL"));
+		restHelper = new HubJenkinsTestIntRestService(testProperties.getProperty("TEST_HUB_SERVER_URL"));
 		restHelper.setTimeout(300);
 		restHelper.setCookies(testProperties.getProperty("TEST_USERNAME"), testProperties.getProperty("TEST_PASSWORD"));
 		projectCleanup();

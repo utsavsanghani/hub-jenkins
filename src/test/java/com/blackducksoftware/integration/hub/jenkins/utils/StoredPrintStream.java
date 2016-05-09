@@ -1,4 +1,4 @@
-package com.blackducksoftware.integration.hub.jenkins.tests.utils;
+package com.blackducksoftware.integration.hub.jenkins.utils;
 
 import java.io.FileNotFoundException;
 import java.io.PrintStream;

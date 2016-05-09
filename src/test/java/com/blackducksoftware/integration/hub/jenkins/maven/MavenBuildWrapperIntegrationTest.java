@@ -15,18 +15,17 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package com.blackducksoftware.integration.hub.jenkins.tests.gradle;
+package com.blackducksoftware.integration.hub.jenkins.maven;
 
-import java.util.Properties;
 
-public class GradleBuildWrapperIntegrationTest {
-
-    private static String basePath;
-
-    private static String testWorkspace;
-
-    private static Properties testProperties;
-
+public class MavenBuildWrapperIntegrationTest {
+    //
+    // private static String basePath;
+    //
+    // private static String testWorkspace;
+    //
+    // private static Properties testProperties;
+    //
     // @Rule
     // public static JenkinsRule j = new JenkinsRule();
     //
@@ -42,13 +41,13 @@ public class GradleBuildWrapperIntegrationTest {
     // }
     //
     // public void resetPublisherDescriptors() {
-    // while (Jenkins.getInstance().getDescriptorList(Publisher.class).size() != 0) {
-    // Jenkins.getInstance().getDescriptorList(Publisher.class).remove(0);
+    // while (j.getInstance().getDescriptorList(Publisher.class).size() != 0) {
+    // j.getInstance().getDescriptorList(Publisher.class).remove(0);
     // }
     // }
     //
-    // public void addGradleBuildWrapperDescriptor() {
-    // GradleBuildWrapperDescriptor descriptor = new GradleBuildWrapperDescriptor();
+    // public void addMavenBuildWrapperDescriptor() {
+    // MavenBuildWrapperDescriptor descriptor = new MavenBuildWrapperDescriptor();
     // j.getInstance().getDescriptorList(BuildWrapper.class).add(descriptor);
     // }
     //
@@ -70,7 +69,7 @@ public class GradleBuildWrapperIntegrationTest {
     // basePath = ScanIntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
     // basePath = basePath.substring(0, basePath.indexOf(File.separator + "target"));
     // basePath = basePath + File.separator + "test-workspace";
-    // testWorkspace = basePath + File.separator + "gradleWorkspace";
+    // testWorkspace = basePath + File.separator + "mavenWorkspace";
     //
     // testProperties = new Properties();
     // ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -87,33 +86,32 @@ public class GradleBuildWrapperIntegrationTest {
     // }
     //
     // @Test
-    // public void testMavenProject() throws Exception {
+    // public void testGradleBuilder() throws Exception {
     // Jenkins jenkins = j.jenkins;
+    // addMavenBuildWrapperDescriptor();
     //
-    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
     //
-    // Maven.MavenInstallation mvn = MavenSupport.getMavenInstallation();
-    //
-    // MavenModuleSet project = jenkins.createProject(MavenModuleSet.class, "Test_job");
+    // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
     // project.setCustomWorkspace(testWorkspace);
     //
-    // project.getDescriptor().getMavenDescriptor().setInstallations(mvn);
+    // Gradle builder = new Gradle("", "", "", testWorkspace, "", "", true, false, true, false);
+    // project.getBuildersList().add(builder);
     //
     // project.getBuildWrappersList().add(buildWrapper);
     //
-    // MavenModuleSetBuild build = project.scheduleBuild2(0).get();
+    // FreeStyleBuild build = project.scheduleBuild2(0).get();
     // String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-    // assertTrue(buildOutput,
-    // buildOutput.contains("Cannot run the Hub Gradle Build Wrapper for this type of Project."));
-    //
+    // assertTrue(buildOutput, buildOutput.contains("This Wrapper should be run with a Maven Builder"));
+    // assertTrue(buildOutput, buildOutput.contains("Will not run the Hub Maven Build wrapper."));
     // }
     //
     // @Test
     // public void testRunNoBuilder() throws Exception {
     // Jenkins jenkins = j.jenkins;
-    // addGradleBuildWrapperDescriptor();
+    // addMavenBuildWrapperDescriptor();
     //
-    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
     //
     // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
     // project.setCustomWorkspace(testWorkspace);
@@ -123,41 +121,20 @@ public class GradleBuildWrapperIntegrationTest {
     // FreeStyleBuild build = project.scheduleBuild2(0).get();
     // String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
     // assertTrue(buildOutput, buildOutput.contains("No Builder found for this job."));
-    // assertTrue(buildOutput, buildOutput.contains("Will not run the Hub Gradle Build wrapper."));
-    // }
-    //
-    // @Test
-    // public void testRunMavenBuilder() throws Exception {
-    // Jenkins jenkins = j.jenkins;
-    // addGradleBuildWrapperDescriptor();
-    //
-    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
-    //
-    // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
-    // project.setCustomWorkspace(testWorkspace);
-    //
-    // MavenSupport.addMavenBuilder(project, null);
-    // project.getBuildWrappersList().add(buildWrapper);
-    //
-    // FreeStyleBuild build = project.scheduleBuild2(0).get();
-    // String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-    // assertTrue(buildOutput, buildOutput.contains("This Wrapper should be run with a Gradle Builder"));
-    // assertTrue(buildOutput, buildOutput.contains("Will not run the Hub Gradle Build wrapper."));
-    //
+    // assertTrue(buildOutput, buildOutput.contains("Will not run the Hub Maven Build wrapper."));
     // }
     //
     // @Test
     // public void testRunNotConfiguredNoGlobalConfig() throws Exception {
     // Jenkins jenkins = j.jenkins;
-    // addGradleBuildWrapperDescriptor();
+    // addMavenBuildWrapperDescriptor();
     //
-    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
     //
     // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
     // project.setCustomWorkspace(testWorkspace);
     //
-    // Gradle builder = new Gradle("", "", "", testWorkspace, "", "", true, false, true, false);
-    // project.getBuildersList().add(builder);
+    // MavenSupport.addMavenBuilder(project, null);
     //
     // project.getBuildWrappersList().add(buildWrapper);
     //
@@ -166,23 +143,22 @@ public class GradleBuildWrapperIntegrationTest {
     // assertTrue(buildOutput, buildOutput.contains("Could not find the Hub global configuration!"));
     // assertTrue(buildOutput, buildOutput.contains("No Hub project name configured!"));
     // assertTrue(buildOutput, buildOutput.contains("No Hub project version configured!"));
-    // assertTrue(buildOutput, buildOutput.contains("No Gradle configurations configured!"));
+    // assertTrue(buildOutput, buildOutput.contains("No Maven scopes configured!"));
     // }
     //
     // @Test
     // public void testRunNotConfiguredEmptyGlobalConfig() throws Exception {
     // Jenkins jenkins = j.jenkins;
-    // addGradleBuildWrapperDescriptor();
+    // addMavenBuildWrapperDescriptor();
     //
     // addHubServerInfo(new HubServerInfo("", ""));
     //
-    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
     //
     // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
     // project.setCustomWorkspace(testWorkspace);
     //
-    // Gradle builder = new Gradle("", "", "", testWorkspace, "", "", true, false, true, false);
-    // project.getBuildersList().add(builder);
+    // MavenSupport.addMavenBuilder(project, null);
     //
     // project.getBuildWrappersList().add(buildWrapper);
     //
@@ -193,25 +169,23 @@ public class GradleBuildWrapperIntegrationTest {
     // assertTrue(buildOutput, buildOutput.contains("No Hub credentials configured!"));
     // assertTrue(buildOutput, buildOutput.contains("No Hub project name configured!"));
     // assertTrue(buildOutput, buildOutput.contains("No Hub project version configured!"));
-    // assertTrue(buildOutput, buildOutput.contains("No Gradle configurations configured!"));
+    // assertTrue(buildOutput, buildOutput.contains("No Maven scopes configured!"));
     // }
     //
     // @Test
     // public void testRunNotConfiguredEmptyCredentialsGlobalConfig() throws Exception {
     // Jenkins jenkins = j.jenkins;
-    // addGradleBuildWrapperDescriptor();
+    // addMavenBuildWrapperDescriptor();
     //
     // UsernamePasswordCredentialsImpl credential = addCredentialToGlobalStore("", "");
     // addHubServerInfo(new HubServerInfo("http://server.com", credential.getId()));
     //
-    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper(null, false, null, null, null, null);
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper(null, false, null, null, null, null);
     //
     // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
     // project.setCustomWorkspace(testWorkspace);
     //
-    // Gradle builder = new Gradle("", "", "", testWorkspace + File.separator + "GradleNoDependencies", "", "", true,
-    // false, true, false);
-    // project.getBuildersList().add(builder);
+    // MavenSupport.addMavenBuilder(project, null);
     //
     // project.getBuildWrappersList().add(buildWrapper);
     //
@@ -223,26 +197,23 @@ public class GradleBuildWrapperIntegrationTest {
     // assertTrue(buildOutput, buildOutput.contains("No Hub password configured!"));
     // assertTrue(buildOutput, buildOutput.contains("No Hub project name configured!"));
     // assertTrue(buildOutput, buildOutput.contains("No Hub project version configured!"));
-    // assertTrue(buildOutput, buildOutput.contains("No Gradle configurations configured!"));
+    // assertTrue(buildOutput, buildOutput.contains("No Maven scopes configured!"));
     // }
     //
     // @Test
-    // public void testRunConfiguredNoDependencies() throws Exception {
-    // File buildInfo = new File(testWorkspace, "GradleNoDependencies");
-    // buildInfo = new File(buildInfo, "build");
-    // buildInfo = new File(buildInfo, "BlackDuck");
-    // buildInfo = new File(buildInfo, "build-info.json");
+    // public void testRunConfiguredNoPom() throws Exception {
+    // File buildInfo = new File(testWorkspace, "build-info.json");
     //
     // try {
     // Jenkins jenkins = j.jenkins;
-    // addGradleBuildWrapperDescriptor();
+    // addMavenBuildWrapperDescriptor();
     //
     // UsernamePasswordCredentialsImpl credential =
     // addCredentialToGlobalStore(testProperties.getProperty("TEST_USERNAME"),
     // testProperties.getProperty("TEST_PASSWORD"));
     // addHubServerInfo(new HubServerInfo(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId()));
     //
-    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper("Compile", false,
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Compile", false,
     // testProperties.getProperty("TEST_PROJECT"),
     // PhaseEnum.DEVELOPMENT.name(),
     // DistributionEnum.INTERNAL.name(), testProperties.getProperty("TEST_VERSION"));
@@ -250,15 +221,125 @@ public class GradleBuildWrapperIntegrationTest {
     // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
     // project.setCustomWorkspace(testWorkspace);
     //
-    // Gradle builder = new Gradle("", "", "", testWorkspace + File.separator + "GradleNoDependencies", "", "", true,
-    // false, true, false);
-    // project.getBuildersList().add(builder);
+    // MavenSupport.addMavenBuilder(project, null);
     //
     // project.getBuildWrappersList().add(buildWrapper);
     //
     // FreeStyleBuild build = project.scheduleBuild2(0).get();
     // String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-    // assertTrue(buildOutput, buildOutput.contains("Will create build-info.json"));
+    // assertTrue(buildOutput, buildOutput.contains("Please verify you invoked Maven from the correct directory."));
+    // assertTrue(buildOutput, buildOutput.contains("Finished: FAILURE"));
+    // assertTrue(buildOutput, buildInfo.exists());
+    // } finally {
+    // if (buildInfo.exists()) {
+    // buildInfo.delete();
+    // }
+    // }
+    // }
+    //
+    // @Test
+    // public void testRunConfiguredEmptyPom() throws Exception {
+    // File buildInfo = new File(testWorkspace, "build-info.json");
+    //
+    // try {
+    // Jenkins jenkins = j.jenkins;
+    // addMavenBuildWrapperDescriptor();
+    //
+    // UsernamePasswordCredentialsImpl credential =
+    // addCredentialToGlobalStore(testProperties.getProperty("TEST_USERNAME"),
+    // testProperties.getProperty("TEST_PASSWORD"));
+    // addHubServerInfo(new HubServerInfo(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId()));
+    //
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Compile", false,
+    // testProperties.getProperty("TEST_PROJECT"),
+    // PhaseEnum.DEVELOPMENT.name(),
+    // DistributionEnum.INTERNAL.name(), testProperties.getProperty("TEST_VERSION"));
+    //
+    // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+    // project.setCustomWorkspace(testWorkspace);
+    //
+    // MavenSupport.addMavenBuilder(project, "EmptyPom" + File.separator + "pom.xml");
+    //
+    // project.getBuildWrappersList().add(buildWrapper);
+    //
+    // FreeStyleBuild build = project.scheduleBuild2(0).get();
+    // String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+    // assertTrue(buildOutput, buildOutput.contains("Non-readable POM"));
+    // assertTrue(buildOutput, buildOutput.contains("Finished: FAILURE"));
+    // assertTrue(buildOutput, buildInfo.exists());
+    // } finally {
+    // if (buildInfo.exists()) {
+    // buildInfo.delete();
+    // }
+    // }
+    // }
+    //
+    // @Test
+    // public void testRunConfiguredEmptyProject() throws Exception {
+    // File buildInfo = new File(testWorkspace, "build-info.json");
+    //
+    // try {
+    //
+    // Jenkins jenkins = j.jenkins;
+    // addMavenBuildWrapperDescriptor();
+    //
+    // UsernamePasswordCredentialsImpl credential =
+    // addCredentialToGlobalStore(testProperties.getProperty("TEST_USERNAME"),
+    // testProperties.getProperty("TEST_PASSWORD"));
+    // addHubServerInfo(new HubServerInfo(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId()));
+    //
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Compile", false,
+    // testProperties.getProperty("TEST_PROJECT"),
+    // PhaseEnum.DEVELOPMENT.name(),
+    // DistributionEnum.INTERNAL.name(), testProperties.getProperty("TEST_VERSION"));
+    //
+    // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+    // project.setCustomWorkspace(testWorkspace);
+    //
+    // MavenSupport.addMavenBuilder(project, "EmptyProject" + File.separator + "pom.xml");
+    //
+    // project.getBuildWrappersList().add(buildWrapper);
+    //
+    // FreeStyleBuild build = project.scheduleBuild2(0).get();
+    // String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+    // assertTrue(buildOutput, buildOutput.contains("The build could not read 1 project"));
+    // assertTrue(buildOutput, buildOutput.contains("Finished: FAILURE"));
+    // assertTrue(buildOutput, buildInfo.exists());
+    // } finally {
+    // if (buildInfo.exists()) {
+    // buildInfo.delete();
+    // }
+    // }
+    // }
+    //
+    // @Test
+    // public void testRunConfiguredNoDependencies() throws Exception {
+    // File buildInfo = new File(testWorkspace, "build-info.json");
+    //
+    // try {
+    // Jenkins jenkins = j.jenkins;
+    // addMavenBuildWrapperDescriptor();
+    //
+    // UsernamePasswordCredentialsImpl credential =
+    // addCredentialToGlobalStore(testProperties.getProperty("TEST_USERNAME"),
+    // testProperties.getProperty("TEST_PASSWORD"));
+    // addHubServerInfo(new HubServerInfo(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId()));
+    //
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Compile", false,
+    // testProperties.getProperty("TEST_PROJECT"),
+    // PhaseEnum.DEVELOPMENT.name(),
+    // DistributionEnum.INTERNAL.name(), testProperties.getProperty("TEST_VERSION"));
+    //
+    // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
+    // project.setCustomWorkspace(testWorkspace);
+    //
+    // MavenSupport.addMavenBuilder(project, "NoDependencies" + File.separator + "pom.xml");
+    //
+    // project.getBuildWrappersList().add(buildWrapper);
+    //
+    // FreeStyleBuild build = project.scheduleBuild2(0).get();
+    // String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
+    // assertTrue(buildOutput, buildOutput.contains("build-info.json"));
     // assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
     // assertTrue(buildOutput, buildInfo.exists());
     // } finally {
@@ -269,22 +350,19 @@ public class GradleBuildWrapperIntegrationTest {
     // }
     //
     // @Test
-    // public void testRunConfigured() throws Exception {
-    // File buildInfo = new File(testWorkspace, "ValidGradleProject");
-    // buildInfo = new File(buildInfo, "build");
-    // buildInfo = new File(buildInfo, "BlackDuck");
-    // buildInfo = new File(buildInfo, "build-info.json");
+    // public void testRunConfiguredValidProject() throws Exception {
+    // File buildInfo = new File(testWorkspace, "build-info.json");
     //
     // try {
     // Jenkins jenkins = j.jenkins;
-    // addGradleBuildWrapperDescriptor();
+    // addMavenBuildWrapperDescriptor();
     //
     // UsernamePasswordCredentialsImpl credential =
     // addCredentialToGlobalStore(testProperties.getProperty("TEST_USERNAME"),
     // testProperties.getProperty("TEST_PASSWORD"));
     // addHubServerInfo(new HubServerInfo(testProperties.getProperty("TEST_HUB_SERVER_URL"), credential.getId()));
     //
-    // GradleBuildWrapper buildWrapper = new GradleBuildWrapper("Compile", false,
+    // MavenBuildWrapper buildWrapper = new MavenBuildWrapper("Compile", false,
     // testProperties.getProperty("TEST_PROJECT"),
     // PhaseEnum.DEVELOPMENT.name(),
     // DistributionEnum.INTERNAL.name(), testProperties.getProperty("TEST_VERSION"));
@@ -292,22 +370,19 @@ public class GradleBuildWrapperIntegrationTest {
     // FreeStyleProject project = jenkins.createProject(FreeStyleProject.class, "Test_job");
     // project.setCustomWorkspace(testWorkspace);
     //
-    // Gradle builder = new Gradle("", "", "", testWorkspace + File.separator + "ValidGradleProject", "", "", true,
-    // false, true, false);
-    // project.getBuildersList().add(builder);
+    // MavenSupport.addMavenBuilder(project, "ValidProject" + File.separator + "pom.xml");
     //
     // project.getBuildWrappersList().add(buildWrapper);
     //
     // FreeStyleBuild build = project.scheduleBuild2(0).get();
     // String buildOutput = IOUtils.toString(build.getLogInputStream(), "UTF-8");
-    // assertTrue(buildOutput, buildOutput.contains("Will create build-info.json"));
+    // assertTrue(buildOutput, buildOutput.contains("build-info.json"));
     // assertTrue(buildOutput, buildOutput.contains("Finished: SUCCESS"));
-    // assertTrue(buildInfo.exists());
+    // assertTrue(buildOutput, buildInfo.exists());
     // } finally {
     // if (buildInfo.exists()) {
     // buildInfo.delete();
     // }
     // }
     // }
-
 }
