@@ -112,10 +112,9 @@ public class PostBuildHubScan extends Recorder {
 	private Boolean verbose;
 
 	@DataBoundConstructor
-	public PostBuildHubScan(final ScanJobs[] scans, final boolean sameAsBuildWrapper, final String hubProjectName, final String hubProjectVersion,
-			final String hubVersionPhase, final String hubVersionDist,
-			final String scanMemory, final boolean shouldGenerateHubReport,
-			final String bomUpdateMaxiumWaitTime) {
+	public PostBuildHubScan(final ScanJobs[] scans, final boolean sameAsBuildWrapper, final String hubProjectName,
+			final String hubProjectVersion, final String hubVersionPhase, final String hubVersionDist,
+			final String scanMemory, final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime) {
 		this.scans = scans;
 		this.sameAsBuildWrapper = sameAsBuildWrapper;
 		this.hubProjectName = hubProjectName;
@@ -161,7 +160,6 @@ public class PostBuildHubScan extends Recorder {
 		return bomUpdateMaxiumWaitTime;
 	}
 
-
 	public String getHubProjectVersion() {
 		if (hubProjectVersion == null && hubProjectRelease != null) {
 			hubProjectVersion = hubProjectRelease;
@@ -189,7 +187,6 @@ public class PostBuildHubScan extends Recorder {
 		return scans;
 	}
 
-
 	// http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
 	@Override
 	public BuildStepMonitor getRequiredMonitorService() {
@@ -206,13 +203,13 @@ public class PostBuildHubScan extends Recorder {
 	}
 
 	/**
-	 * Overrides the Recorder perform method. This is the method that gets called by Jenkins to run as a Post Build
-	 * Action
+	 * Overrides the Recorder perform method. This is the method that gets
+	 * called by Jenkins to run as a Post Build Action
 	 *
 	 */
 	@Override
-	public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher,
-			final BuildListener listener) throws InterruptedException, IOException {
+	public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener)
+			throws InterruptedException, IOException {
 		final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
 
 		final EnvVars variables = build.getEnvironment(listener);
@@ -228,8 +225,7 @@ public class PostBuildHubScan extends Recorder {
 				if (validateGlobalConfiguration()) {
 					final String workingDirectory = getWorkingDirectory(logger, build);
 
-
-					final List<String> scanTargetPaths =getScanTargets(logger, build, variables, workingDirectory);
+					final List<String> scanTargetPaths = getScanTargets(logger, build, variables, workingDirectory);
 
 					String projectName = null;
 					String projectVersion = null;
@@ -264,7 +260,8 @@ public class PostBuildHubScan extends Recorder {
 					printConfiguration(build, listener, logger, jobConfig);
 
 					final DummyToolInstaller dummyInstaller = new DummyToolInstaller();
-					final String toolsDirectory = dummyInstaller.getToolDir(new DummyToolInstallation(), build.getBuiltOn()).getRemote();
+					final String toolsDirectory = dummyInstaller
+							.getToolDir(new DummyToolInstallation(), build.getBuiltOn()).getRemote();
 
 					final String scanExec = getScanCLI(logger, build.getBuiltOn(), toolsDirectory, localHostName);
 
@@ -272,10 +269,9 @@ public class PostBuildHubScan extends Recorder {
 
 					final String oneJarPath = getOneJarFile(build.getBuiltOn(), toolsDirectory);
 
-					final HubIntRestService service = BuildHelper.getRestService(logger, getHubServerInfo().getServerUrl(),
-							getHubServerInfo().getUsername(),
-							getHubServerInfo().getPassword(),
-							getHubServerInfo().getTimeout());
+					final HubIntRestService service = BuildHelper.getRestService(logger,
+							getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(),
+							getHubServerInfo().getPassword(), getHubServerInfo().getTimeout());
 					ProjectItem project = null;
 					ReleaseItem version = null;
 					if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
@@ -287,14 +283,12 @@ public class PostBuildHubScan extends Recorder {
 					final HubSupportHelper hubSupport = new HubSupportHelper();
 					hubSupport.checkHubSupport(service, logger);
 
-					final JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(), jobConfig.getScanTargetPaths(), build.getNumber(), hubSupport,
-							build, launcher,
-							logger);
+					final JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(),
+							jobConfig.getScanTargetPaths(), build.getNumber(), hubSupport, build, launcher, logger);
 
 					final DateTime beforeScanTime = new DateTime();
 					runScan(service, build, scan, logger, scanExec, jrePath, oneJarPath, jobConfig);
 					final DateTime afterScanTime = new DateTime();
-
 
 					final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
 					if (getResult().equals(Result.SUCCESS) && getShouldGenerateHubReport()) {
@@ -313,8 +307,9 @@ public class PostBuildHubScan extends Recorder {
 
 						reportGenInfo.setScanStatusDirectory(scan.getScanStatusDirectoryPath());
 
-						generateHubReport(build, logger, reportGenInfo,getHubServerInfo(), hubSupport, bomUpdatedAction);
-					} else{
+						generateHubReport(build, logger, reportGenInfo, getHubServerInfo(), hubSupport,
+								bomUpdatedAction);
+					} else {
 						bomUpdatedAction.setHasBomBeenUdpated(false);
 						bomUpdatedAction.setAfterScanTime(afterScanTime);
 						bomUpdatedAction.setBeforeScanTime(beforeScanTime);
@@ -357,7 +352,8 @@ public class PostBuildHubScan extends Recorder {
 				logger.error(message, e);
 				setResult(Result.UNSTABLE);
 			} finally {
-				// Add this action to the Build so we know if the scan ran before the Failure Conditions
+				// Add this action to the Build so we know if the scan ran
+				// before the Failure Conditions
 				build.addAction(new HubScanFinishedAction());
 			}
 		} else {
@@ -368,13 +364,14 @@ public class PostBuildHubScan extends Recorder {
 		return true;
 	}
 
-	public String getLocalHostName(final IntLogger logger, final AbstractBuild<?,?> build) throws InterruptedException{
+	public String getLocalHostName(final IntLogger logger, final AbstractBuild<?, ?> build)
+			throws InterruptedException {
 		String localHostName = "";
 		try {
 			localHostName = build.getBuiltOn().getChannel().call(new GetHostName());
 		} catch (final IOException e) {
-			// logger.error("Problem getting the Local Host name : " + e.getMessage(), e);
-			// ignore the error, try to get the host name from the network interfaces
+			// ignore the error, try to get the host name from the network
+			// interfaces
 		}
 		if (StringUtils.isBlank(localHostName)) {
 			try {
@@ -387,7 +384,8 @@ public class PostBuildHubScan extends Recorder {
 		return localHostName;
 	}
 
-	public String getWorkingDirectory(final IntLogger logger, final AbstractBuild<?,?> build) throws InterruptedException {
+	public String getWorkingDirectory(final IntLogger logger, final AbstractBuild<?, ?> build)
+			throws InterruptedException {
 		String workingDirectory = "";
 		try {
 			if (build.getWorkspace() == null) {
@@ -405,7 +403,8 @@ public class PostBuildHubScan extends Recorder {
 		return workingDirectory;
 	}
 
-	public List<String> getScanTargets(final IntLogger logger, final AbstractBuild<?,?> build, final EnvVars variables, final String workingDirectory) throws BDJenkinsHubPluginException, InterruptedException{
+	public List<String> getScanTargets(final IntLogger logger, final AbstractBuild<?, ?> build, final EnvVars variables,
+			final String workingDirectory) throws BDJenkinsHubPluginException, InterruptedException {
 		final List<String> scanTargetPaths = new ArrayList<String>();
 		final ScanJobs[] scans = getScans();
 		if (scans == null || scans.length == 0) {
@@ -416,14 +415,16 @@ public class PostBuildHubScan extends Recorder {
 					scanTargetPaths.add(workingDirectory);
 				} else {
 					String target = BuildHelper.handleVariableReplacement(variables, scanJob.getScanTarget().trim());
-					// make sure the target provided doesn't already begin with a slash or end in a slash
+					// make sure the target provided doesn't already begin with
+					// a slash or end in a slash
 					// removes the slash if the target begins or ends with one
 					final File targetFile = new File(workingDirectory, target);
 
 					try {
 						target = build.getBuiltOn().getChannel().call(new GetCanonicalPath(targetFile));
 					} catch (final IOException e) {
-						logger.error("Problem getting the real path of the target : " + target + " on this node. Error : " + e.getMessage(), e);
+						logger.error("Problem getting the real path of the target : " + target
+								+ " on this node. Error : " + e.getMessage(), e);
 					}
 					scanTargetPaths.add(target);
 				}
@@ -432,11 +433,12 @@ public class PostBuildHubScan extends Recorder {
 		return scanTargetPaths;
 	}
 
-	private void generateHubReport(final AbstractBuild<?, ?> build, final HubJenkinsLogger logger, final HubReportGenerationInfo reportGenInfo,final HubServerInfo serverInfo,
-			final HubSupportHelper hubSupport, final BomUpToDateAction action)
-					throws Exception {
+	private void generateHubReport(final AbstractBuild<?, ?> build, final HubJenkinsLogger logger,
+			final HubReportGenerationInfo reportGenInfo, final HubServerInfo serverInfo,
+			final HubSupportHelper hubSupport, final BomUpToDateAction action) throws Exception {
 		final HubReportAction reportAction = new HubReportAction(build);
-		final RemoteBomGenerator remoteBomGenerator = new RemoteBomGenerator(reportGenInfo, hubSupport, build.getBuiltOn().getChannel());
+		final RemoteBomGenerator remoteBomGenerator = new RemoteBomGenerator(reportGenInfo, hubSupport,
+				build.getBuiltOn().getChannel());
 
 		reportAction.setReportData(remoteBomGenerator.generateHubReport(logger));
 		action.setHasBomBeenUdpated(true);
@@ -509,13 +511,9 @@ public class PostBuildHubScan extends Recorder {
 		return version;
 	}
 
-
 	public void printConfiguration(final AbstractBuild<?, ?> build, final BuildListener listener,
-			final HubJenkinsLogger logger, final HubScanJobConfig jobConfig)
-					throws IOException,
-					InterruptedException {
-		logger.alwaysLog("Initializing - Hub Jenkins Plugin - "
-				+ getDescriptor().getPluginVersion());
+			final HubJenkinsLogger logger, final HubScanJobConfig jobConfig) throws IOException, InterruptedException {
+		logger.alwaysLog("Initializing - Hub Jenkins Plugin - " + getDescriptor().getPluginVersion());
 
 		if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
 			// Empty node name indicates master
@@ -526,41 +524,35 @@ public class PostBuildHubScan extends Recorder {
 		logger.alwaysLog("-> Log Level : " + logger.getLogLevel());
 		logger.alwaysLog("-> Using Url : " + getHubServerInfo().getServerUrl());
 		logger.alwaysLog("-> Using Username : " + getHubServerInfo().getUsername());
-		logger.alwaysLog(
-				"-> Using Build Full Name : " + build.getFullDisplayName());
-		logger.alwaysLog(
-				"-> Using Build Number : " + build.getNumber());
-		logger.alwaysLog(
-				"-> Using Build Workspace Path : "
-						+ build.getWorkspace().getRemote());
+		logger.alwaysLog("-> Using Build Full Name : " + build.getFullDisplayName());
+		logger.alwaysLog("-> Using Build Number : " + build.getNumber());
+		logger.alwaysLog("-> Using Build Workspace Path : " + build.getWorkspace().getRemote());
 		logger.alwaysLog(
 				"-> Using Hub Project Name : " + jobConfig.getProjectName() + ", Version : " + jobConfig.getVersion());
 
-		logger.alwaysLog(
-				"-> Scanning the following targets  : ");
+		logger.alwaysLog("-> Scanning the following targets  : ");
 		for (final String target : jobConfig.getScanTargetPaths()) {
-			logger.alwaysLog(
-					"-> " + target);
+			logger.alwaysLog("-> " + target);
 		}
 
-		logger.alwaysLog(
-				"-> Generate Hub report : " + jobConfig.isShouldGenerateRiskReport());
+		logger.alwaysLog("-> Generate Hub report : " + jobConfig.isShouldGenerateRiskReport());
 		final String formattedTime = String.format("%d minutes", jobConfig.getMaxWaitTimeForBomUpdate());
 		logger.alwaysLog("-> Maximum wait time for the BOM Update : " + formattedTime);
 	}
 
 	/**
-	 * Validates that the target of the scanJob exists, creates a ProcessBuilder to run the shellscript and passes in
-	 * the necessarry arguments, sets the JAVA_HOME of the Process Builder to the one that the User chose, starts the
-	 * process and prints out all stderr and stdout to the Console Output.
+	 * Validates that the target of the scanJob exists, creates a ProcessBuilder
+	 * to run the shellscript and passes in the necessarry arguments, sets the
+	 * JAVA_HOME of the Process Builder to the one that the User chose, starts
+	 * the process and prints out all stderr and stdout to the Console Output.
 	 *
 	 */
-	private void runScan(final HubIntRestService service, final AbstractBuild<?, ?> build, final JenkinsScanExecutor scan, final HubJenkinsLogger logger,
-			final String scanExec, final String javaExec, final String oneJarPath,
-			final HubScanJobConfig jobConfig)
-					throws IOException, HubConfigurationException, InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException
-	{
-		validateScanTargets(logger, jobConfig.getScanTargetPaths(),jobConfig.getWorkingDirectory(), build.getBuiltOn().getChannel());
+	private void runScan(final HubIntRestService service, final AbstractBuild<?, ?> build,
+			final JenkinsScanExecutor scan, final HubJenkinsLogger logger, final String scanExec, final String javaExec,
+			final String oneJarPath, final HubScanJobConfig jobConfig) throws IOException, HubConfigurationException,
+					InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
+		validateScanTargets(logger, jobConfig.getScanTargetPaths(), jobConfig.getWorkingDirectory(),
+				build.getBuiltOn().getChannel());
 		scan.setLogger(logger);
 		addProxySettingsToScanner(logger, scan);
 
@@ -568,8 +560,7 @@ public class PostBuildHubScan extends Recorder {
 		scan.setWorkingDirectory(jobConfig.getWorkingDirectory());
 
 		scan.setVerboseRun(isVerbose());
-		if (StringUtils.isNotBlank(jobConfig.getProjectName())
-				&& StringUtils.isNotBlank(jobConfig.getVersion())) {
+		if (StringUtils.isNotBlank(jobConfig.getProjectName()) && StringUtils.isNotBlank(jobConfig.getVersion())) {
 
 			scan.setProject(jobConfig.getProjectName());
 			scan.setVersion(jobConfig.getVersion());
@@ -583,9 +574,8 @@ public class PostBuildHubScan extends Recorder {
 		}
 	}
 
-	public void addProxySettingsToScanner(final IntLogger logger, final JenkinsScanExecutor scan) throws BDJenkinsHubPluginException, HubIntegrationException,
-	URISyntaxException,
-	MalformedURLException {
+	public void addProxySettingsToScanner(final IntLogger logger, final JenkinsScanExecutor scan)
+			throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException, MalformedURLException {
 		final Jenkins jenkins = Jenkins.getInstance();
 		if (jenkins != null) {
 			final ProxyConfiguration proxyConfig = jenkins.proxy;
@@ -593,13 +583,14 @@ public class PostBuildHubScan extends Recorder {
 
 				final URL serverUrl = new URL(getHubServerInfo().getServerUrl());
 
-				final Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name, proxyConfig.port,
-						proxyConfig.noProxyHost);
+				final Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name,
+						proxyConfig.port, proxyConfig.noProxyHost);
 
 				if (proxy != Proxy.NO_PROXY && proxy.address() != null) {
 					final InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
 					if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
-						if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
+						if (StringUtils.isNotBlank(jenkins.proxy.getUserName())
+								&& StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
 							scan.setProxyHost(proxyAddress.getHostName());
 							scan.setProxyPort(proxyAddress.getPort());
 							scan.setProxyUsername(jenkins.proxy.getUserName());
@@ -610,7 +601,8 @@ public class PostBuildHubScan extends Recorder {
 							scan.setProxyPort(proxyAddress.getPort());
 						}
 						if (logger != null) {
-							logger.debug("Using proxy: '" + proxyAddress.getHostName() + "' at Port: '" + proxyAddress.getPort() + "'");
+							logger.debug("Using proxy: '" + proxyAddress.getHostName() + "' at Port: '"
+									+ proxyAddress.getPort() + "'");
 						}
 					}
 				}
@@ -618,10 +610,8 @@ public class PostBuildHubScan extends Recorder {
 		}
 	}
 
-	public void addProxySettingsToCLIInstaller(final IntLogger logger, final CLIRemoteInstall remoteCLIInstall) throws BDJenkinsHubPluginException,
-	HubIntegrationException,
-	URISyntaxException,
-	MalformedURLException {
+	public void addProxySettingsToCLIInstaller(final IntLogger logger, final CLIRemoteInstall remoteCLIInstall)
+			throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException, MalformedURLException {
 		final Jenkins jenkins = Jenkins.getInstance();
 		if (jenkins != null) {
 			final ProxyConfiguration proxyConfig = jenkins.proxy;
@@ -629,13 +619,14 @@ public class PostBuildHubScan extends Recorder {
 
 				final URL serverUrl = new URL(getHubServerInfo().getServerUrl());
 
-				final Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name, proxyConfig.port,
-						proxyConfig.noProxyHost);
+				final Proxy proxy = ProxyConfiguration.createProxy(serverUrl.getHost(), proxyConfig.name,
+						proxyConfig.port, proxyConfig.noProxyHost);
 
 				if (proxy != Proxy.NO_PROXY && proxy.address() != null) {
 					final InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
 					if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
-						if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
+						if (StringUtils.isNotBlank(jenkins.proxy.getUserName())
+								&& StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
 							remoteCLIInstall.setProxyHost(proxyAddress.getHostName());
 							remoteCLIInstall.setProxyPort(proxyAddress.getPort());
 							remoteCLIInstall.setProxyUserName(jenkins.proxy.getUserName());
@@ -646,7 +637,8 @@ public class PostBuildHubScan extends Recorder {
 							remoteCLIInstall.setProxyPort(proxyAddress.getPort());
 						}
 						if (logger != null) {
-							logger.debug("Using proxy: '" + proxyAddress.getHostName() + "' at Port: '" + proxyAddress.getPort() + "'");
+							logger.debug("Using proxy: '" + proxyAddress.getHostName() + "' at Port: '"
+									+ proxyAddress.getPort() + "'");
 						}
 					}
 				}
@@ -654,14 +646,14 @@ public class PostBuildHubScan extends Recorder {
 		}
 	}
 
-	public String getScanCLI(final HubJenkinsLogger logger, final Node node, final String toolsDirectory, final String localHostName) throws IOException,
-	InterruptedException, Exception {
+	public String getScanCLI(final HubJenkinsLogger logger, final Node node, final String toolsDirectory,
+			final String localHostName) throws IOException, InterruptedException, Exception {
 		if (getHubServerInfo() == null) {
 			logger.error("Could not find the Hub server information.");
 			return null;
 		}
-		final CLIRemoteInstall remoteCLIInstall = new CLIRemoteInstall(logger, toolsDirectory, localHostName, getHubServerInfo().getServerUrl(),
-				getHubServerInfo().getUsername(), getHubServerInfo().getPassword());
+		final CLIRemoteInstall remoteCLIInstall = new CLIRemoteInstall(logger, toolsDirectory, localHostName,
+				getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword());
 
 		addProxySettingsToCLIInstaller(logger, remoteCLIInstall);
 
@@ -679,8 +671,8 @@ public class PostBuildHubScan extends Recorder {
 		return scanExec.getRemote();
 	}
 
-	public String getJavaExec(final HubJenkinsLogger logger, final AbstractBuild<?, ?> build, final String toolsDirectory) throws IOException,
-	InterruptedException, Exception {
+	public String getJavaExec(final HubJenkinsLogger logger, final AbstractBuild<?, ?> build,
+			final String toolsDirectory) throws IOException, InterruptedException, Exception {
 		final GetCLIProvidedJRE getProvidedJre = new GetCLIProvidedJRE(toolsDirectory);
 		String jrePath = build.getBuiltOn().getChannel().call(getProvidedJre);
 
@@ -700,7 +692,8 @@ public class PostBuildHubScan extends Recorder {
 		return jrePath;
 	}
 
-	public String getOneJarFile(final Node node, final String toolsDirectory) throws IOException, InterruptedException, Exception {
+	public String getOneJarFile(final Node node, final String toolsDirectory)
+			throws IOException, InterruptedException, Exception {
 		final GetOneJarFile getOneJar = new GetOneJarFile(toolsDirectory);
 		return node.getChannel().call(getOneJar);
 	}
@@ -709,8 +702,8 @@ public class PostBuildHubScan extends Recorder {
 	 * Sets the Java Home that is to be used for running the Shell script
 	 *
 	 */
-	private JDK determineJava(final HubJenkinsLogger logger, final AbstractBuild<?, ?> build) throws IOException, InterruptedException,
-	HubConfigurationException {
+	private JDK determineJava(final HubJenkinsLogger logger, final AbstractBuild<?, ?> build)
+			throws IOException, InterruptedException, HubConfigurationException {
 		JDK javaHomeTemp = null;
 
 		final EnvVars envVars = build.getEnvironment(logger.getJenkinsListener());
@@ -729,7 +722,8 @@ public class PostBuildHubScan extends Recorder {
 		} else {
 			logger.info("Getting Jdk on node  : " + build.getBuiltOn().getNodeName());
 
-			final String byteCodeVersion = build.getBuiltOn().getChannel().call(new GetSystemProperty("java.class.version"));
+			final String byteCodeVersion = build.getBuiltOn().getChannel()
+					.call(new GetSystemProperty("java.class.version"));
 			final Double majorVersion = Double.valueOf(byteCodeVersion);
 			if (majorVersion >= 51.0) {
 				// Java 7 bytecode
@@ -748,25 +742,26 @@ public class PostBuildHubScan extends Recorder {
 			if (envVars.get("JAVA_HOME") == null || envVars.get("JAVA_HOME") == "") {
 				throw new HubConfigurationException("Need to define a JAVA_HOME or select an installed JDK.");
 			}
-			// In case the user did not select a java installation, set to the environment variable JAVA_HOME
+			// In case the user did not select a java installation, set to the
+			// environment variable JAVA_HOME
 			javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
 		}
 		final FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), javaHomeTemp.getHome());
 		if (!javaHome.exists()) {
-			throw new HubConfigurationException("Could not find the specified Java installation at: " +
-					javaHome.getRemote());
+			throw new HubConfigurationException(
+					"Could not find the specified Java installation at: " + javaHome.getRemote());
 		}
 
 		return javaHomeTemp;
 	}
 
 	/**
-	 * Validates that the Plugin is configured correctly. Checks that the User has defined an iScan tool, a Hub server
-	 * URL, a Credential, and that there are at least one scan Target/Job defined in the Build
+	 * Validates that the Plugin is configured correctly. Checks that the User
+	 * has defined an iScan tool, a Hub server URL, a Credential, and that there
+	 * are at least one scan Target/Job defined in the Build
 	 *
 	 */
-	public boolean validateGlobalConfiguration() throws HubScanToolMissingException,
-	HubConfigurationException {
+	public boolean validateGlobalConfiguration() throws HubScanToolMissingException, HubConfigurationException {
 
 		if (getHubServerInfo() == null) {
 			throw new HubConfigurationException("Could not find the Hub global configuration.");
@@ -788,13 +783,12 @@ public class PostBuildHubScan extends Recorder {
 	 * Validates that all scan targets exist
 	 *
 	 */
-	public boolean validateScanTargets(final IntLogger logger, final List<String> scanTargets, final String workingDirectory, final VirtualChannel channel) throws IOException,
-	HubConfigurationException,
-	InterruptedException {
+	public boolean validateScanTargets(final IntLogger logger, final List<String> scanTargets,
+			final String workingDirectory, final VirtualChannel channel)
+					throws IOException, HubConfigurationException, InterruptedException {
 		for (final String currTarget : scanTargets) {
 
-			if (currTarget.length() < workingDirectory.length()
-					|| !currTarget.startsWith(workingDirectory)) {
+			if (currTarget.length() < workingDirectory.length() || !currTarget.startsWith(workingDirectory)) {
 				throw new HubConfigurationException("Can not scan targets outside of the workspace.");
 			}
 
@@ -803,8 +797,7 @@ public class PostBuildHubScan extends Recorder {
 			if (!currentTargetPath.exists()) {
 				throw new IOException("Scan target could not be found : " + currTarget);
 			} else {
-				logger.debug(
-						"Scan target exists at : " + currTarget);
+				logger.debug("Scan target exists at : " + currTarget);
 			}
 		}
 		return true;

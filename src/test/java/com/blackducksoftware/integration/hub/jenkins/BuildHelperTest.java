@@ -23,11 +23,9 @@ import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.blackducksoftware.integration.hub.jenkins.category.UnitTest;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 
 import hudson.model.AbstractBuild;
@@ -35,7 +33,6 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 
-@Category(UnitTest.class)
 public class BuildHelperTest {
 	@Mock
 	private AbstractBuild<FreeStyleProject, FreeStyleBuild> build;

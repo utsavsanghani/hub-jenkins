@@ -19,64 +19,64 @@ package com.blackducksoftware.integration.hub.jenkins.utils;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import hudson.maven.MavenModuleSet;
-import hudson.model.FreeStyleProject;
-import hudson.tasks.Maven;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 
+import hudson.maven.MavenModuleSet;
+import hudson.model.FreeStyleProject;
+import hudson.tasks.Maven;
+
 public class MavenSupport {
+	private MavenSupport() {
+	}
 
-    private MavenSupport() {
+	public static void addMavenBuilder(final FreeStyleProject project, final String pomPath) throws Exception {
+		final Maven.MavenInstallation mvn = getMavenInstallation();
 
-    }
+		final Maven builder = new Maven("dependency:resolve", "default", pomPath, null, null);
+		builder.getDescriptor().setInstallations(mvn);
 
-    public static void addMavenBuilder(FreeStyleProject project, String pomPath) throws Exception {
+		project.getBuildersList().add(builder);
+	}
 
-        Maven.MavenInstallation mvn = getMavenInstallation();
+	public static Maven.MavenInstallation getMavenInstallation() throws Exception {
+		final StringBuffer output = new StringBuffer();
+		Process p;
+		try {
+			p = Runtime.getRuntime().exec("which mvn");
+			p.waitFor();
+			final BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			String line = null;
+			while ((line = reader.readLine()) != null) {
+				output.append(line + "\n");
+			}
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
+		File mvnHomeDir = null;
+		if (output.toString().trim().equals("")) {
+			if (System.getenv("M2_HOME") != null) {
+				output.append(System.getenv("M2_HOME")).append("/bin/mvn");
+				mvnHomeDir = new File(System.getenv("M2_HOME"));
+			}
+		} else {
+			final File mvnCommand = new File(output.toString().trim());
+			mvnHomeDir = new File(mvnCommand.getCanonicalFile().getParentFile().getParent());
+		}
+		assertNotNull("Please set your M2_HOME, mvnHomeDir is null", mvnHomeDir);
+		assertTrue("Please set your M2_HOME, as maven is not been found " + mvnHomeDir.getCanonicalPath(),
+				mvnHomeDir.exists());
 
-        // Maven.MavenInstallation mvn = configureMaven3();
-        Maven builder = new Maven("dependency:resolve", "default", pomPath, null, null);
-        builder.getDescriptor().setInstallations(mvn);
+		return new Maven.MavenInstallation("default", mvnHomeDir.getCanonicalPath(), null);
+	}
 
-        project.getBuildersList().add(builder);
-    }
+	public static void addMavenToModuleSet(final MavenModuleSet project, final Maven.MavenInstallation mavenToAdd)
+			throws Exception {
+		final Maven.MavenInstallation[] installations = new Maven.MavenInstallation[1];
+		installations[0] = mavenToAdd;
+		project.getDescriptor().getMavenDescriptor().setInstallations(installations);
+	}
 
-    public static Maven.MavenInstallation getMavenInstallation() throws Exception {
-        StringBuffer output = new StringBuffer();
-        Process p;
-        try {
-            p = Runtime.getRuntime().exec("which mvn");
-            p.waitFor();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                output.append(line + "\n");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        File mvnHomeDir = null;
-        if (output.toString().trim().equals("")) {
-            if (System.getenv("M2_HOME") != null) {
-                output.append(System.getenv("M2_HOME")).append("/bin/mvn");
-                mvnHomeDir = new File(System.getenv("M2_HOME"));
-            }
-        } else {
-            File mvnCommand = new File(output.toString().trim());
-            mvnHomeDir = new File(mvnCommand.getCanonicalFile().getParentFile().getParent());
-        }
-        assertNotNull("Please set your M2_HOME, mvnHomeDir is null", mvnHomeDir);
-        assertTrue("Please set your M2_HOME, as maven is not been found " + mvnHomeDir.getCanonicalPath(), mvnHomeDir.exists());
-
-        return new Maven.MavenInstallation("default", mvnHomeDir.getCanonicalPath(), null);
-    }
-
-    public static void addMavenToModuleSet(MavenModuleSet project, Maven.MavenInstallation mavenToAdd) throws Exception {
-        Maven.MavenInstallation[] installations = new Maven.MavenInstallation[1];
-        installations[0] = mavenToAdd;
-        project.getDescriptor().getMavenDescriptor().setInstallations(installations);
-    }
 }

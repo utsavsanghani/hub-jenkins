@@ -53,7 +53,8 @@ import jenkins.model.Jenkins;
 import jenkins.util.Timer;
 
 /**
- * Majority of the code was copied from http://github.com/jenkinsci/cloudbees-plugin-gateway
+ * Majority of the code was copied from
+ * http://github.com/jenkinsci/cloudbees-plugin-gateway
  *
  */
 public class HubPluginImpl extends Plugin {
@@ -89,12 +90,10 @@ public class HubPluginImpl extends Plugin {
 	private static final Logger LOGGER = Logger.getLogger(HubPluginImpl.class.getName());
 
 	/**
-	 * The current update center URL and any previous URLs that were used for the same content and should be migrated
-	 * to the current one.
+	 * The current update center URL and any previous URLs that were used for
+	 * the same content and should be migrated to the current one.
 	 */
-	private static final Set<String> hubUpdateCenterUrls = new HashSet<String>(Arrays.asList(
-			HUB_UPDATE_CENTER_URL
-			));
+	private static final Set<String> hubUpdateCenterUrls = new HashSet<String>(Arrays.asList(HUB_UPDATE_CENTER_URL));
 
 	/**
 	 * The Jenkins default update site ID.
@@ -102,19 +101,15 @@ public class HubPluginImpl extends Plugin {
 	private static final String JENKINS_UPDATE_CENTER_ID = "default";
 
 	/**
-	 * The current update center ID and any previous IDs that were used for the same content and should be migrated
-	 * to the current one.
+	 * The current update center ID and any previous IDs that were used for the
+	 * same content and should be migrated to the current one.
 	 */
-	private static final Set<String> hubUpdateCenterIds = new HashSet<String>(Arrays.asList(
-			HUB_UPDATE_CENTER_ID
-			));
+	private static final Set<String> hubUpdateCenterIds = new HashSet<String>(Arrays.asList(HUB_UPDATE_CENTER_ID));
 
 	/**
 	 * The plugins that can and/or should be installed/upgraded.
 	 */
-	private static final Dependency[] PLUGIN_DEPENDENCIES = {
-			require("credentials", "1.9.4")
-	};
+	private static final Dependency[] PLUGIN_DEPENDENCIES = { require("credentials", "1.9.4") };
 
 	/**
 	 * The list of plugin installations that remains to be completed.
@@ -139,8 +134,9 @@ public class HubPluginImpl extends Plugin {
 	private static volatile boolean statusImportant = false;
 
 	/**
-	 * The most recently installed version of this plugin, used to trigger whether to re-evaluate installing/upgrading
-	 * the {@link #PLUGIN_DEPENDENCIES}.
+	 * The most recently installed version of this plugin, used to trigger
+	 * whether to re-evaluate installing/upgrading the
+	 * {@link #PLUGIN_DEPENDENCIES}.
 	 */
 	private String installedVersion = null;
 
@@ -193,10 +189,8 @@ public class HubPluginImpl extends Plugin {
 			try {
 				save();
 			} catch (final IOException e) {
-				LOGGER.log(Level.WARNING,
-						"Could not serialize state. If any of the free plugins are uninstalled, "
-								+ "they may be reinstalled on next restart.",
-								e);
+				LOGGER.log(Level.WARNING, "Could not serialize state. If any of the free plugins are uninstalled, "
+						+ "they may be reinstalled on next restart.", e);
 			}
 		}
 	}
@@ -238,8 +232,7 @@ public class HubPluginImpl extends Plugin {
 					LOGGER.log(Level.FINE, "Found possible match:\n  class = {0}\n  url = {1}\n  id = {2}",
 							new Object[] { site.getClass().getName(), site.getUrl(), site.getId() });
 					final boolean valid = site instanceof BlackDuckHubUpdateSite
-							&& HUB_UPDATE_CENTER_URL.equals(site.getUrl())
-							&& HUB_UPDATE_CENTER_ID.equals(site.getId());
+							&& HUB_UPDATE_CENTER_URL.equals(site.getUrl()) && HUB_UPDATE_CENTER_ID.equals(site.getId());
 					if (found || !valid) {
 						// remove old and duplicate entries
 						forRemoval.add(site);
@@ -261,8 +254,7 @@ public class HubPluginImpl extends Plugin {
 						LOGGER.info("Adding Default Update Center to list of update centers as it was missing");
 						sites.add(new UpdateSite("default",
 								System.getProperty(UpdateCenter.class.getName() + ".updateCenterUrl",
-										"http://updates.jenkins-ci.org/")
-								+ "update-center.json"));
+										"http://updates.jenkins-ci.org/") + "update-center.json"));
 					}
 					if (!found) {
 						LOGGER.info("Adding BlackDuck Update Center to list of update centers");
@@ -283,8 +275,8 @@ public class HubPluginImpl extends Plugin {
 			for (final Dependency pluginArtifactId : PLUGIN_DEPENDENCIES) {
 				if (pluginArtifactId.mandatory) {
 					LOGGER.log(Level.INFO, "Checking {0}.", pluginArtifactId.name);
-					final PluginWrapper plugin = Jenkins.getInstance().getPluginManager().getPlugin(pluginArtifactId.name);
-					// scheduleInstall(pluginArtifactId);
+					final PluginWrapper plugin = Jenkins.getInstance().getPluginManager()
+							.getPlugin(pluginArtifactId.name);
 					if (plugin == null) {
 						scheduleInstall(pluginArtifactId);
 						LOGGER.log(Level.INFO, "Dependency {0} will be installed.", pluginArtifactId.name);
@@ -297,7 +289,8 @@ public class HubPluginImpl extends Plugin {
 								LOGGER.log(Level.WARNING, "Could not enable " + pluginArtifactId.name, e);
 							}
 						} else {
-							LOGGER.log(Level.INFO, "Dependency {0} already installed and enabled.", pluginArtifactId.name);
+							LOGGER.log(Level.INFO, "Dependency {0} already installed and enabled.",
+									pluginArtifactId.name);
 						}
 					}
 				}
@@ -372,8 +365,8 @@ public class HubPluginImpl extends Plugin {
 				while (loop) {
 					LOGGER.fine("Background thread for core plugin installation awake");
 					try {
-						final UpdateSite blackDuckHubSite =
-								Jenkins.getInstance().getUpdateCenter().getSite(JENKINS_UPDATE_CENTER_ID);
+						final UpdateSite blackDuckHubSite = Jenkins.getInstance().getUpdateCenter()
+								.getSite(JENKINS_UPDATE_CENTER_ID);
 						if (blackDuckHubSite.getDataTimestamp() > -1) {
 							loop = progressPluginInstalls(blackDuckHubSite);
 						} else {
@@ -401,7 +394,8 @@ public class HubPluginImpl extends Plugin {
 							// ignore
 						}
 						Jenkins.getInstance().safeRestart();
-						// if the user manually cancelled the quiet down, reflect that in the status message
+						// if the user manually cancelled the quiet down,
+						// reflect that in the status message
 						Timer.get().scheduleAtFixedRate(new SafeTimerTask() {
 							@Override
 							protected void doRun() throws Exception {
@@ -435,21 +429,20 @@ public class HubPluginImpl extends Plugin {
 			synchronized (pendingPluginInstalls) {
 				while (!pendingPluginInstalls.isEmpty()) {
 					final Dependency pluginArtifactId = pendingPluginInstalls.get(0);
-					final UpdateSite.Plugin p = Jenkins.getInstance()
-							.getUpdateCenter()
-							.getSite(JENKINS_UPDATE_CENTER_ID)
-							.getPlugin(pluginArtifactId.name);
+					final UpdateSite.Plugin p = Jenkins.getInstance().getUpdateCenter()
+							.getSite(JENKINS_UPDATE_CENTER_ID).getPlugin(pluginArtifactId.name);
 					if (p == null) {
 						if (System.currentTimeMillis() > nextWarning) {
 							LOGGER.log(Level.WARNING,
 									"Cannot find core plugin {0}, the BlackDuck Hub plugin cannot be "
 											+ "installed without this core plugin. Will try again later.",
-											pluginArtifactId.name);
+									pluginArtifactId.name);
 							nextWarning = System.currentTimeMillis() + TimeUnit2.HOURS.toMillis(1);
 						}
 						break;
 					} else if (p.getInstalled() != null && p.getInstalled().isEnabled()) {
-						final PluginWrapper plugin = Jenkins.getInstance().getPluginManager().getPlugin(pluginArtifactId.name);
+						final PluginWrapper plugin = Jenkins.getInstance().getPluginManager()
+								.getPlugin(pluginArtifactId.name);
 						if (plugin != null && plugin.getVersionNumber().compareTo(pluginArtifactId.version) < 0) {
 							LOGGER.info("Upgrading BlackDuck plugin: " + pluginArtifactId.name);
 							status = Messages._HubPluginImpl_upgradingPlugin(p.getDisplayName(), p.version);
@@ -462,9 +455,8 @@ public class HubPluginImpl extends Plugin {
 								status = Messages._HubPluginImpl_upgradedPlugin(p.getDisplayName(), p.version);
 							} catch (final Throwable e) {
 								if (System.currentTimeMillis() > nextWarning) {
-									LOGGER.log(Level.WARNING,
-											"Cannot upgrade BlackDuck plugin: " + pluginArtifactId.name + " to "
-													+ p.version, e);
+									LOGGER.log(Level.WARNING, "Cannot upgrade BlackDuck plugin: "
+											+ pluginArtifactId.name + " to " + p.version, e);
 									nextWarning = System.currentTimeMillis() + TimeUnit2.MINUTES.toMillis(1);
 								}
 								break;
@@ -489,9 +481,8 @@ public class HubPluginImpl extends Plugin {
 							status = Messages._HubPluginImpl_installedPlugin(p.getDisplayName());
 						} catch (final Throwable e) {
 							if (System.currentTimeMillis() > nextWarning) {
-								LOGGER.log(Level.WARNING,
-										"Cannot install BlackDuck plugin: " + pluginArtifactId.name + " version "
-												+ p.version, e);
+								LOGGER.log(Level.WARNING, "Cannot install BlackDuck plugin: " + pluginArtifactId.name
+										+ " version " + p.version, e);
 								nextWarning = System.currentTimeMillis() + TimeUnit2.MINUTES.toMillis(1);
 							}
 							break;

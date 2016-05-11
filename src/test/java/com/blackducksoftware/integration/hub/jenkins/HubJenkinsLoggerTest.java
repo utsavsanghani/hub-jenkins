@@ -10,17 +10,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
-import com.blackducksoftware.integration.hub.jenkins.category.UnitTest;
 import com.blackducksoftware.integration.hub.jenkins.utils.StoredPrintStream;
 import com.blackducksoftware.integration.hub.jenkins.utils.TestBuildListener;
 import com.blackducksoftware.integration.hub.logging.LogLevel;
 
 import hudson.EnvVars;
 
-@Category(UnitTest.class)
 public class HubJenkinsLoggerTest {
 	private List<String> expectedMessages;
 	private StoredPrintStream storedStream;

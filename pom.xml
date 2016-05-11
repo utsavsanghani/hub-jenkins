@@ -13,7 +13,7 @@
 
 	<groupId>com.blackducksoftware.integration</groupId>
 	<artifactId>hub-jenkins</artifactId>
-	<version>1.5.1-SNAPSHOT</version>
+	<version>1.5.1</version>
 	<packaging>hpi</packaging>
 	<name>Black Duck Hub Plug-In for Jenkins</name>
 	<description>Runs the Black Duck Hub scan in Jenkins build</description>
