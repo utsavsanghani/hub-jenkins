@@ -4,7 +4,7 @@ notifications:
     recipients:
       - akamen@blackducksoftware.com
       - jrichard@blackducksoftware.com
-      
+
 install: true
 script:
-  - mvn install -DskipTests=true
+  - mvn clean install
