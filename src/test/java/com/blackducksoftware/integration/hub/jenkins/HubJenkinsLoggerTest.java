@@ -1,4 +1,4 @@
-package com.blackducksoftware.integration.hub.jenkins.tests;
+package com.blackducksoftware.integration.hub.jenkins;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -12,19 +12,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
-import com.blackducksoftware.integration.hub.jenkins.tests.utils.StoredPrintStream;
-import com.blackducksoftware.integration.hub.jenkins.tests.utils.TestBuildListener;
+import com.blackducksoftware.integration.hub.jenkins.utils.StoredPrintStream;
+import com.blackducksoftware.integration.hub.jenkins.utils.TestBuildListener;
 import com.blackducksoftware.integration.hub.logging.LogLevel;
 
 import hudson.EnvVars;
 
 public class HubJenkinsLoggerTest {
-
 	private List<String> expectedMessages;
-
 	private StoredPrintStream storedStream;
-
 	private HubJenkinsLogger logger;
 
 	@Rule
@@ -48,7 +44,6 @@ public class HubJenkinsLoggerTest {
 		for (final String expectedMessage : expectedMessages) {
 			assertTrue("Did not find the expected message : " + expectedMessage,
 					outputString.contains(expectedMessage));
-
 		}
 	}
 
@@ -214,6 +209,5 @@ public class HubJenkinsLoggerTest {
 		logger.trace("TRACE Test 1");
 		logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
 	}
-
 
 }

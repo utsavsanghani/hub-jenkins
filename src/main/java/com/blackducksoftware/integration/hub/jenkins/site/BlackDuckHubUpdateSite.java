@@ -67,7 +67,8 @@ import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
 /**
- * Majority of the code was copied from http://github.com/jenkinsci/cloudbees-plugin-gateway
+ * Majority of the code was copied from
+ * http://github.com/jenkinsci/cloudbees-plugin-gateway
  *
  */
 public class BlackDuckHubUpdateSite extends UpdateSite {
@@ -103,8 +104,9 @@ public class BlackDuckHubUpdateSite extends UpdateSite {
 	 * @return {@code this}, or a replacement for {@code this}.
 	 * @throws java.io.ObjectStreamException
 	 *             if the object cannot be restored.
-	 * @see <a href="http://download.oracle.com/javase/1.3/docs/guide/serialization/spec/input.doc6.html">The Java
-	 *      Object Serialization Specification</a>
+	 * @see <a href=
+	 *      "http://download.oracle.com/javase/1.3/docs/guide/serialization/spec/input.doc6.html">
+	 *      The Java Object Serialization Specification</a>
 	 */
 	private Object readResolve() throws ObjectStreamException {
 		setDataTimestamp(-1);
@@ -121,12 +123,14 @@ public class BlackDuckHubUpdateSite extends UpdateSite {
 	}
 
 	/**
-	 * Sets the data timestamp (and tries to propagate the change to {@link UpdateSite#dataTimestamp}
+	 * Sets the data timestamp (and tries to propagate the change to
+	 * {@link UpdateSite#dataTimestamp}
 	 *
 	 */
 	private void setDataTimestamp(final long dataTimestamp) {
 		try {
-			// try reflection to be safe for the parent class changing the location
+			// try reflection to be safe for the parent class changing the
+			// location
 			final Field field = UpdateSite.class.getDeclaredField("dataTimestamp");
 			final boolean accessible = field.isAccessible();
 			try {
@@ -152,7 +156,8 @@ public class BlackDuckHubUpdateSite extends UpdateSite {
 
 	private void setLastAttempt(final long lastAttempt) {
 		try {
-			// try reflection to be safe for the parent class changing the location
+			// try reflection to be safe for the parent class changing the
+			// location
 			final Field field = UpdateSite.class.getDeclaredField("lastAttempt");
 			final boolean accessible = field.isAccessible();
 			try {
@@ -169,12 +174,13 @@ public class BlackDuckHubUpdateSite extends UpdateSite {
 	}
 
 	/**
-	 * This is where we store the update center data.
-	 * Mirrors {@link hudson.model.UpdateSite#getDataFile()}
+	 * This is where we store the update center data. Mirrors
+	 * {@link hudson.model.UpdateSite#getDataFile()}
 	 */
 	private TextFile getDataFile() {
 		try {
-			// try reflection to be safe for the parent class changing the location
+			// try reflection to be safe for the parent class changing the
+			// location
 			final Method method = UpdateSite.class.getDeclaredMethod("getDataFile");
 			final boolean accessible = method.isAccessible();
 			try {
@@ -194,15 +200,15 @@ public class BlackDuckHubUpdateSite extends UpdateSite {
 	@Override
 	@Restricted(NoExternalUse.class)
 	public @Nonnull FormValidation updateDirectlyNow(final boolean signatureCheck) throws IOException {
-		return updateData(
-				DownloadService.loadJSON(new URL(getUrl() + "?id=" + URLEncoder.encode(getId(), "UTF-8") + "&version="
-						+ URLEncoder.encode(Jenkins.VERSION, "UTF-8"))), signatureCheck);
+		return updateData(DownloadService.loadJSON(new URL(getUrl() + "?id=" + URLEncoder.encode(getId(), "UTF-8")
+				+ "&version=" + URLEncoder.encode(Jenkins.VERSION, "UTF-8"))), signatureCheck);
 	}
 
 	/**
-	 * This is the endpoint that receives the update center data file from the browser.
-	 * Mirrors {@link UpdateSite#doPostBack(org.kohsuke.stapler.StaplerRequest)} as there is no other way to override
-	 * the verification of the signature.
+	 * This is the endpoint that receives the update center data file from the
+	 * browser. Mirrors
+	 * {@link UpdateSite#doPostBack(org.kohsuke.stapler.StaplerRequest)} as
+	 * there is no other way to override the verification of the signature.
 	 */
 	@Override
 	public FormValidation doPostBack(final StaplerRequest req) throws IOException, GeneralSecurityException {
@@ -267,30 +273,35 @@ public class BlackDuckHubUpdateSite extends UpdateSite {
 			{// load and verify certificates
 				final CertificateFactory cf = CertificateFactory.getInstance("X509");
 				for (final Object cert : signature.getJSONArray("certificates")) {
-					final X509Certificate c = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(
-							Base64.decode(cert.toString().toCharArray())));
+					final X509Certificate c = (X509Certificate) cf.generateCertificate(
+							new ByteArrayInputStream(Base64.decode(cert.toString().toCharArray())));
 					try {
 						c.checkValidity();
-					} catch (final CertificateExpiredException e) { // even if the certificate isn't valid yet,
+					} catch (final CertificateExpiredException e) { // even if
+																	// the
+																	// certificate
+																	// isn't
+																	// valid
+																	// yet,
 						// we'll proceed it anyway
-						warning = FormValidation.warning(e,
-								String.format("Certificate %s has expired in update center '%s'", cert.toString(),
-										getId()));
+						warning = FormValidation.warning(e, String
+								.format("Certificate %s has expired in update center '%s'", cert.toString(), getId()));
 					} catch (final CertificateNotYetValidException e) {
-						warning = FormValidation.warning(e,
-								String.format("Certificate %s is not yet valid in update center '%s'", cert.toString(),
-										getId()));
+						warning = FormValidation.warning(e, String.format(
+								"Certificate %s is not yet valid in update center '%s'", cert.toString(), getId()));
 					}
 					certs.add(c);
 				}
 
-				// all default root CAs in JVM are trusted, plus certs bundled in Jenkins
-				final Set<TrustAnchor> anchors = new HashSet<TrustAnchor>(); // CertificateUtil.getDefaultRootCAs();
+				// all default root CAs in JVM are trusted, plus certs bundled
+				// in Jenkins
+				final Set<TrustAnchor> anchors = new HashSet<TrustAnchor>();
 				final ServletContext context = Jenkins.getInstance().servletContext;
 				anchors.add(new TrustAnchor(loadLicenseCaCertificate(), null));
 				for (final String cert : (Set<String>) context.getResourcePaths("/WEB-INF/update-center-rootCAs")) {
 					if (cert.endsWith(".txt")) {
-						continue; // skip text files that are meant to be documentation
+						continue; // skip text files that are meant to be
+									// documentation
 					}
 					final InputStream stream = context.getResourceAsStream(cert);
 					if (stream != null) {
@@ -313,35 +324,46 @@ public class BlackDuckHubUpdateSite extends UpdateSite {
 			sig.initVerify(certs.get(0));
 			final SignatureOutputStream sos = new SignatureOutputStream(sig);
 
-			// until JENKINS-11110 fix, UC used to serve invalid digest (and therefore unverifiable signature)
-			// that only covers the earlier portion of the file. This was caused by the lack of close() call
-			// in the canonical writing, which apparently leave some bytes somewhere that's not flushed to
+			// until JENKINS-11110 fix, UC used to serve invalid digest (and
+			// therefore unverifiable signature)
+			// that only covers the earlier portion of the file. This was caused
+			// by the lack of close() call
+			// in the canonical writing, which apparently leave some bytes
+			// somewhere that's not flushed to
 			// the digest output stream. This affects Jenkins [1.424,1,431].
-			// Jenkins 1.432 shipped with the "fix" (1eb0c64abb3794edce29cbb1de50c93fa03a8229) that made it
-			// compute the correct digest, but it breaks all the existing UC json metadata out there. We then
-			// quickly discovered ourselves in the catch-22 situation. If we generate UC with the correct signature,
-			// it'll cut off [1.424,1.431] from the UC. But if we don't, we'll cut off [1.432,*).
+			// Jenkins 1.432 shipped with the "fix"
+			// (1eb0c64abb3794edce29cbb1de50c93fa03a8229) that made it
+			// compute the correct digest, but it breaks all the existing UC
+			// json metadata out there. We then
+			// quickly discovered ourselves in the catch-22 situation. If we
+			// generate UC with the correct signature,
+			// it'll cut off [1.424,1.431] from the UC. But if we don't, we'll
+			// cut off [1.432,*).
 			//
-			// In 1.433, we revisited 1eb0c64abb3794edce29cbb1de50c93fa03a8229 so that the original "digest"/"signature"
-			// pair continues to be generated in a buggy form, while "correct_digest"/"correct_signature" are generated
+			// In 1.433, we revisited 1eb0c64abb3794edce29cbb1de50c93fa03a8229
+			// so that the original "digest"/"signature"
+			// pair continues to be generated in a buggy form, while
+			// "correct_digest"/"correct_signature" are generated
 			// correctly.
 			//
-			// Jenkins should ignore "digest"/"signature" pair. Accepting it creates a vulnerability that allows
+			// Jenkins should ignore "digest"/"signature" pair. Accepting it
+			// creates a vulnerability that allows
 			// the attacker to inject a fragment at the end of the json.
 			o.writeCanonical(new OutputStreamWriter(new TeeOutputStream(dos, sos), "UTF-8")).close();
 
-			// did the digest match? this is not a part of the signature validation, but if we have a bug in the c14n
-			// (which is more likely than someone tampering with update center), we can tell
+			// did the digest match? this is not a part of the signature
+			// validation, but if we have a bug in the c14n
+			// (which is more likely than someone tampering with update center),
+			// we can tell
 			final String computedDigest = new String(Base64.encode(sha1.digest()));
 			final String providedDigest = signature.optString("correct_digest");
 			if (providedDigest == null) {
 				return FormValidation.error("No correct_digest parameter in update center '" + getId()
-				+ "'. This metadata appears to be old.");
+						+ "'. This metadata appears to be old.");
 			}
 			if (!computedDigest.equalsIgnoreCase(providedDigest)) {
-				return FormValidation
-						.error("Digest mismatch: " + computedDigest + " vs " + providedDigest + " in update center '"
-								+ getId() + "'");
+				return FormValidation.error("Digest mismatch: " + computedDigest + " vs " + providedDigest
+						+ " in update center '" + getId() + "'");
 			}
 
 			final String providedSignature = signature.getString("correct_signature");
@@ -380,9 +402,10 @@ public class BlackDuckHubUpdateSite extends UpdateSite {
 	}
 
 	/*
-	 * JENKINS-13454 introduces accidental serialization of the UpdateSite's cached getData(), so
-	 * as a work-around for Jenkins versions not including the fix in JENKINS-15889, for serialization,
-	 * ensure the serialized data does not include the cache.
+	 * JENKINS-13454 introduces accidental serialization of the UpdateSite's
+	 * cached getData(), so as a work-around for Jenkins versions not including
+	 * the fix in JENKINS-15889, for serialization, ensure the serialized data
+	 * does not include the cache.
 	 */
 	private Object writeReplace() throws ObjectStreamException {
 		return new BlackDuckHubUpdateSite(getId(), getUrl());

@@ -85,7 +85,6 @@ import net.sf.json.JSONObject;
 // so have this ordinal as a higher value than the failure condition Post-Build Action
 @Extension(ordinal = 2)
 public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>implements Serializable {
-
 	private static final String FORM_SERVER_URL = "hubServerUrl";
 
 	private static final String FORM_TIMEOUT = "hubTimeout";
@@ -163,7 +162,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	// http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor/config.xml
 	@WebMethod(name = "config.xml")
 	public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException,
-	TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
+			TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
 		final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 		boolean changed = false;
 		try {

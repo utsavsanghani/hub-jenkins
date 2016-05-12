@@ -52,10 +52,11 @@ import hudson.tasks.Builder;
 public class GradleBuildWrapper extends BDBuildWrapper {
 
 	@DataBoundConstructor
-	public GradleBuildWrapper(final String userScopesToInclude, final boolean gradleSameAsPostBuildScan, final String gradleHubProjectName, final String gradleHubVersionPhase,
-			final String gradleHubVersionDist, final String gradleHubProjectVersion) {
-		super(userScopesToInclude, gradleSameAsPostBuildScan, gradleHubProjectName,
-				gradleHubVersionPhase, gradleHubVersionDist, gradleHubProjectVersion);
+	public GradleBuildWrapper(final String userScopesToInclude, final boolean gradleSameAsPostBuildScan,
+			final String gradleHubProjectName, final String gradleHubVersionPhase, final String gradleHubVersionDist,
+			final String gradleHubProjectVersion) {
+		super(userScopesToInclude, gradleSameAsPostBuildScan, gradleHubProjectName, gradleHubVersionPhase,
+				gradleHubVersionDist, gradleHubProjectVersion);
 	}
 
 	// Need these getters for the UI
@@ -119,9 +120,8 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 	}
 
 	@Override
-	public Environment setUp(final AbstractBuild build, final Launcher launcher,
-			final BuildListener listener) throws IOException,
-	InterruptedException {
+	public Environment setUp(final AbstractBuild build, final Launcher launcher, final BuildListener listener)
+			throws IOException, InterruptedException {
 		// no failure to report yet
 		final HubJenkinsLogger buildLogger = new HubJenkinsLogger(listener);
 
@@ -130,7 +130,8 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 
 		Gradle gradleBuilder = null;
 		if (build.getProject() instanceof FreeStyleProject) {
-			// Project should always be a FreeStyleProject, thats why we have the isApplicable() method
+			// Project should always be a FreeStyleProject, thats why we have
+			// the isApplicable() method
 			final List<Builder> builders = ((FreeStyleProject) build.getProject()).getBuilders();
 
 			if (builders == null || builders.isEmpty()) {
@@ -187,9 +188,8 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 				if (workspace == null) {
 					buildLogger.error("Workspace: null");
 				} else {
-					initScript =
-							workspace.createTextTempFile("init-blackduck", "gradle", writer.generateInitScript(),
-									false);
+					initScript = workspace.createTextTempFile("init-blackduck", "gradle", writer.generateInitScript(),
+							false);
 					if (initScript != null) {
 						initScriptPath = initScript.getRemote();
 						initScriptPath = initScriptPath.replace('\\', '/');
@@ -197,7 +197,8 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 						String newSwitches = originalSwitches.get();
 						String newTasks = originalTasks.get();
 
-						if (!originalSwitches.get().contains("--init-script ") && !originalSwitches.get().contains("init-blackduck")) {
+						if (!originalSwitches.get().contains("--init-script ")
+								&& !originalSwitches.get().contains("init-blackduck")) {
 							newSwitches = newSwitches + " --init-script " + initScriptPath;
 						}
 						if (!originalSwitches.get().contains(" -D" + BDGradleUtil.BUILD_ID_PROPERTY)) {
@@ -207,17 +208,9 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 							String configurations = getUserScopesToInclude();
 							configurations = configurations.replaceAll(" ", "");
 
-							newSwitches = newSwitches + " -D" + BDGradleUtil.INCLUDED_CONFIGURATIONS_PROPERTY + "=" + configurations;
+							newSwitches = newSwitches + " -D" + BDGradleUtil.INCLUDED_CONFIGURATIONS_PROPERTY + "="
+									+ configurations;
 						}
-						// // Following used to generate the dependency tree
-						// // written to a file
-						// if (!originalSwitches.get().contains(" -D" +
-						// BDGradleUtil.DEPENDENCY_REPORT_OUTPUT)) {
-						// FilePath dependencyTreeFile = new FilePath(workspace, "dependencyTree.txt");
-						// newSwitches = newSwitches + " -D" +
-						// BDGradleUtil.DEPENDENCY_REPORT_OUTPUT + "='" +
-						// dependencyTreeFile.getRemote() + "'";
-						// }
 
 						if (!originalTasks.get().contains("bdCustomTask")) {
 							newTasks = newTasks + " bdCustomTask";
@@ -237,8 +230,7 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 
 		}
 
-		final ClassLoader originalClassLoader = Thread.currentThread()
-				.getContextClassLoader();
+		final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 		boolean changed = false;
 		try {
 			if (GradleBuildWrapper.class.getClassLoader() != originalClassLoader) {
@@ -257,7 +249,8 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 					Gradle gradleBuilder = null;
 					try {
 						if (build.getProject() instanceof FreeStyleProject) {
-							// Project should always be a FreeStyleProject, thats why we have the isApplicable() method
+							// Project should always be a FreeStyleProject,
+							// thats why we have the isApplicable() method
 							final List<Builder> builders = ((FreeStyleProject) build.getProject()).getBuilders();
 
 							for (final Builder builder : builders) {
@@ -302,9 +295,12 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 
 							String workingDirectory = "";
 							try {
-								workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(workspaceFile));
+								workingDirectory = build.getBuiltOn().getChannel()
+										.call(new GetCanonicalPath(workspaceFile));
 							} catch (final IOException e) {
-								buildLogger.error("Problem getting the working directory on this node. Error : " + e.getMessage(), e);
+								buildLogger.error(
+										"Problem getting the working directory on this node. Error : " + e.getMessage(),
+										e);
 							}
 
 							if (!StringUtils.startsWithIgnoreCase(rootBuildScriptDir, workingDirectory)) {
@@ -324,7 +320,8 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 								if (channel == null) {
 									buildLogger.error("Channel build on: null");
 								} else {
-									// buildInfoFile = new FilePath(channel, workspacePath);
+									// buildInfoFile = new FilePath(channel,
+									// workspacePath);
 									buildInfo = new FilePath(channel, rootBuildScriptDir);
 									buildInfo = new FilePath(buildInfo, "build");
 									buildInfo = new FilePath(buildInfo, "BlackDuck");
@@ -336,10 +333,12 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 							if (buildInfo != null) {
 
 								if (buildInfo.exists()) {
-									return universalTearDown(build, buildLogger, buildInfo, getDescriptor(), BuilderType.GRADLE);
+									return universalTearDown(build, buildLogger, buildInfo, getDescriptor(),
+											BuilderType.GRADLE);
 								} else {
-									buildLogger.error("The " + BuildInfo.OUTPUT_FILE_NAME + " file does not exist at : " + buildInfo.getRemote()
-									+ ", on machine : " + (buildOn == null ? "null" : buildOn.getDisplayName()));
+									buildLogger.error("The " + BuildInfo.OUTPUT_FILE_NAME + " file does not exist at : "
+											+ buildInfo.getRemote() + ", on machine : "
+											+ (buildOn == null ? "null" : buildOn.getDisplayName()));
 									build.setResult(Result.UNSTABLE);
 									return true;
 								}
@@ -378,14 +377,13 @@ public class GradleBuildWrapper extends BDBuildWrapper {
 			};
 		} finally {
 			if (changed) {
-				Thread.currentThread().setContextClassLoader(
-						originalClassLoader);
+				Thread.currentThread().setContextClassLoader(originalClassLoader);
 			}
 		}
 	}
 
-	private void setField(final Gradle builder, final String fieldName, final String value) throws IllegalArgumentException, IllegalAccessException, SecurityException,
-	NoSuchFieldException {
+	private void setField(final Gradle builder, final String fieldName, final String value)
+			throws IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException {
 		final Field targetsField = builder.getClass().getDeclaredField(fieldName);
 		targetsField.setAccessible(true);
 		targetsField.set(builder, value);

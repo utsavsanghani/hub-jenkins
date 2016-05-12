@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package com.blackducksoftware.integration.hub.jenkins.tests.utils;
+package com.blackducksoftware.integration.hub.jenkins.utils;
 
 import java.io.IOException;
 import java.io.PrintStream;
