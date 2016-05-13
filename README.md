@@ -16,4 +16,4 @@ You can download the latest artifact from releases: https://github.com/blackduck
 All documentation can be found on the GitHub wiki:  https://github.com/blackducksoftware/jenkins-hub/wiki
 
 ## License ##
-GNU General Public License 2 only
+Apache 2.0
