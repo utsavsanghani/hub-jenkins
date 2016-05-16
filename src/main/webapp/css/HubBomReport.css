@@ -53,11 +53,6 @@
 	color: #46759E;
 }
 
-.clickable:hover {
-	cursor: pointer;
-	text-decoration: underline;
-}
-
 .h1 {
 	font-size: 26px;
 	font-weight: bold;
@@ -91,11 +86,14 @@
 
 .riskSummaryLabel, .riskSummaryCount {
 	vertical-align: top;
-	min-width: 72px;
-	width: 72px;
 	display: inline-block;
 	background-color: #fff;
 	padding-left: 10px;
+}
+
+.riskSummaryLabel{
+	min-width: 72px;
+	width: 15%;
 }
 
 .filterSelected {
@@ -110,8 +108,8 @@
 }
 
 .riskSummaryCount {
-	width: 35px;
 	min-width: 35px;
+	width: 20%;
 	text-align: center;
 }
 
@@ -123,7 +121,7 @@
 
 .horizontal .progress-track {
 	display: inline-block;
-	width: 65%;
+	width: 55%;
 	height: 20px;
 }
 
@@ -230,7 +228,7 @@
 	white-space: nowrap;
 }
 
-.clickable, .componentColumn, .riskColumn, .licenseColumn  {
+.componentColumn, .riskColumn, .licenseColumn  {
 	border-collapse: collapse !important;
 	border-spacing: 0px !important;
 	min-width: 50px;
@@ -239,6 +237,11 @@
 	max-width: 300px;
 	height: 25px;
 	text-decoration: none;
+}
+
+.clickable:hover {
+	cursor: pointer;
+	text-decoration: underline;
 }
 
 .componentColumn {
