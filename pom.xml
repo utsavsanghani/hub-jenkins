@@ -8,7 +8,7 @@
   </parent>
   <groupId>com.blackducksoftware.integration</groupId>
   <artifactId>hub-jenkins</artifactId>
-  <version>1.5.2-SNAPSHOT</version>
+  <version>1.5.2-COOKIE-LOGGING</version>
   <packaging>hpi</packaging>
   <name>Black Duck Hub Plug-In for Jenkins</name>
   <description>Runs the Black Duck Hub scan in Jenkins build</description>
@@ -81,7 +81,7 @@
     <dependency>
       <groupId>com.blackducksoftware.integration</groupId>
       <artifactId>hub-common</artifactId>
-      <version>1.3.3</version>
+      <version>1.3.3-COOKIE_LOGGING</version>
       <exclusions>
         <exclusion>
           <groupId>com.thoughtworks.xstream</groupId>
