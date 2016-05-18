@@ -166,7 +166,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	// http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor/config.xml
 	@WebMethod(name = "config.xml")
 	public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException,
-			TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
+	TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
 		final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 		boolean changed = false;
 		try {
@@ -440,8 +440,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 			@QueryParameter("hubCredentialsId") final String hubCredentialsId,
 			@QueryParameter("hubTimeout") final String hubTimeout) {
 		final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
-		final boolean changed = false;
+		boolean changed = false;
 		try {
+			if (PostBuildScanDescriptor.class.getClassLoader() != originalClassLoader) {
+				changed = true;
+				Thread.currentThread().setContextClassLoader(PostBuildScanDescriptor.class.getClassLoader());
+			}
 			if (StringUtils.isBlank(serverUrl)) {
 				return FormValidation.error(Messages.HubBuildScan_getPleaseSetServerUrl());
 			}
