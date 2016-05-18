@@ -5,3 +5,5 @@ target/
 .DS_Store
 test.log
 pom.xml.bak
+/bin/
+/work/
