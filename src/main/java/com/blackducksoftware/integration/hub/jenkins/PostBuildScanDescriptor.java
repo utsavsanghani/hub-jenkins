@@ -45,6 +45,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.WebMethod;
+import org.restlet.resource.ClientResource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -456,6 +457,9 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 			if (urlCheck.kind != Kind.OK) {
 				return urlCheck;
 			}
+			// TODO remove this log, used for debugging a specific issue
+			System.out.println("Restlet ClientResource source path : "
+					+ ClientResource.class.getProtectionDomain().getCodeSource().getLocation().getPath());
 
 			String credentialUserName = null;
 			String credentialPassword = null;

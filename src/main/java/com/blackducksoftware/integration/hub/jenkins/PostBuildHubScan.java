@@ -34,6 +34,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.restlet.resource.ClientResource;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
@@ -223,6 +224,10 @@ public class PostBuildHubScan extends Recorder {
 		if (BuildHelper.isSuccess(build)) {
 			try {
 				logger.alwaysLog("Starting BlackDuck Scans...");
+
+				// TODO remove this log, used for debugging a specific issue
+				logger.alwaysLog("Restlet ClientResource source path : "
+						+ ClientResource.class.getProtectionDomain().getCodeSource().getLocation().getPath());
 
 				final String localHostName = getLocalHostName(logger, build);
 
@@ -554,7 +559,7 @@ public class PostBuildHubScan extends Recorder {
 	private void runScan(final HubIntRestService service, final AbstractBuild<?, ?> build,
 			final JenkinsScanExecutor scan, final HubJenkinsLogger logger, final String scanExec, final String javaExec,
 			final String oneJarPath, final HubScanJobConfig jobConfig) throws IOException, HubConfigurationException,
-					InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
+	InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
 		validateScanTargets(logger, jobConfig.getScanTargetPaths(), jobConfig.getWorkingDirectory(),
 				build.getBuiltOn().getChannel());
 		scan.setLogger(logger);
