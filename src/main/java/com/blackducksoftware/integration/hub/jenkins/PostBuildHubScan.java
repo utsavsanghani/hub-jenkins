@@ -34,7 +34,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.restlet.resource.ClientResource;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
@@ -224,10 +223,6 @@ public class PostBuildHubScan extends Recorder {
 		if (BuildHelper.isSuccess(build)) {
 			try {
 				logger.alwaysLog("Starting BlackDuck Scans...");
-
-				// TODO remove this log, used for debugging a specific issue
-				logger.alwaysLog("Restlet ClientResource source path : "
-						+ ClientResource.class.getProtectionDomain().getCodeSource().getLocation().getPath());
 
 				final String localHostName = getLocalHostName(logger, build);
 
