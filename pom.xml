@@ -1,19 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?><project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
     <version>1.580.3</version>
-    <relativePath></relativePath>
+    <relativePath/>
   </parent>
-
   <groupId>com.blackducksoftware.integration</groupId>
   <artifactId>hub-jenkins</artifactId>
-  <version>1.5.2</version>
+  <version>1.5.3-SNAPSHOT</version>
   <packaging>hpi</packaging>
-
   <name>Black Duck Hub Plug-In for Jenkins</name>
   <description>Runs the Black Duck Hub scan in Jenkins build</description>
   <url>https://github.com/blackducksoftware/jenkins-hub</url>
@@ -28,7 +24,6 @@
       <url>http://www.apache.org/licenses/LICENSE-2.0</url>
     </license>
   </licenses>
-
   <developers>
     <developer>
       <id>kkandler</id>
@@ -50,7 +45,6 @@
       <timezone>-5</timezone>
     </developer>
   </developers>
-
   <distributionManagement>
     <repository>
       <id>bds-int-public</id>
@@ -61,13 +55,11 @@
       <url>https://updates.suite.blackducksoftware.com/bdhubjenkins</url>
     </snapshotRepository>
   </distributionManagement>
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>UTF-8</project.resources.sourceEncoding>
   </properties>
-
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
@@ -85,7 +77,6 @@
       <url>http://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
-
   <dependencies>
     <dependency>
       <groupId>com.blackducksoftware.integration</groupId>
@@ -177,7 +168,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
   <build>
     <pluginManagement>
       <plugins>
