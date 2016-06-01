@@ -142,7 +142,6 @@ public class JenkinsScanExecutor extends ScanExecutor {
 			final ProcStarter ps = launcher.launch();
 			int exitCode = 0;
 			if (ps != null) {
-				final int hubPasswordIndex = cmd.indexOf("--password") + 1;
 				// ////////////////////// Code to mask the password in the logs
 				final ArrayList<Integer> indexToMask = new ArrayList<Integer>();
 				// The User's password will be at the next index
@@ -163,7 +162,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 				// ///////////////////////
 
 				final EnvVars variables = build.getEnvironment(logger.getJenkinsListener());
-				variables.put("BD_HUB_PASSWORD", cmd.get(hubPasswordIndex));
+				variables.put("BD_HUB_PASSWORD", getHubPassword());
 				ps.envs(variables);
 
 				final ScannerSplitStream splitStream = new ScannerSplitStream(logger, standardOutFile.write());
