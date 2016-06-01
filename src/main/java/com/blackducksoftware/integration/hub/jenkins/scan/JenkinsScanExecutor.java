@@ -144,8 +144,10 @@ public class JenkinsScanExecutor extends ScanExecutor {
 			if (ps != null) {
 				// ////////////////////// Code to mask the password in the logs
 				final ArrayList<Integer> indexToMask = new ArrayList<Integer>();
-				// The User's password will be at the next index
-				indexToMask.add(cmd.indexOf("--password") + 1);
+				if (cmd.indexOf("--password") != -1) {
+					// The User's password will be at the next index
+					indexToMask.add(cmd.indexOf("--password") + 1);
+				}
 
 				for (int i = 0; i < cmd.size(); i++) {
 					if (cmd.get(i).contains("-Dhttp") && cmd.get(i).contains("proxyPassword")) {
