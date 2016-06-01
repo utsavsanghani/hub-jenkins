@@ -34,6 +34,7 @@ import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
@@ -159,7 +160,10 @@ public class JenkinsScanExecutor extends ScanExecutor {
 				}
 				ps.masks(masks);
 				// ///////////////////////
-				ps.envs(build.getEnvironment(logger.getJenkinsListener()));
+
+				final EnvVars variables = build.getEnvironment(logger.getJenkinsListener());
+				variables.put("BD_HUB_PASSWORD", getHubPassword());
+				ps.envs(variables);
 
 				final ScannerSplitStream splitStream = new ScannerSplitStream(logger, standardOutFile.write());
 
