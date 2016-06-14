@@ -52,13 +52,19 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
+import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
+import com.blackducksoftware.integration.hub.builder.ValidationResultEnum;
+import com.blackducksoftware.integration.hub.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
-import com.blackducksoftware.integration.hub.global.HubProxyInfo;
+import com.blackducksoftware.integration.hub.global.GlobalFieldKey;
+import com.blackducksoftware.integration.hub.global.HubServerConfig;
+import com.blackducksoftware.integration.hub.global.HubServerConfigFieldEnum;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
-import com.blackducksoftware.integration.hub.jenkins.validation.HubJenkinsScanJobConfigValidator;
-import com.blackducksoftware.integration.hub.jenkins.validation.HubJenkinsServerConfigValidator;
+import com.blackducksoftware.integration.hub.job.HubScanJobConfig;
+import com.blackducksoftware.integration.hub.job.HubScanJobFieldEnum;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -88,7 +94,7 @@ import net.sf.json.JSONObject;
 //point. The ordinal implies an order to the UI element. The Post-Build Actions add new actions in descending order
 // so have this ordinal as a higher value than the failure condition Post-Build Action
 @Extension(ordinal = 2)
-public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>implements Serializable {
+public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> implements Serializable {
 	private static final String FORM_SERVER_URL = "hubServerUrl";
 
 	private static final String FORM_TIMEOUT = "hubTimeout";
@@ -166,7 +172,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	// http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor/config.xml
 	@WebMethod(name = "config.xml")
 	public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException,
-	TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
+			TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
 		final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 		boolean changed = false;
 		try {
@@ -296,29 +302,41 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 
 	public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") final String scanMemory)
 			throws IOException, ServletException {
-		if (StringUtils.isBlank(scanMemory)) {
-			return FormValidation.error(Messages.HubBuildScan_getNeedMemory());
+		final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> results = new ValidationResults<HubScanJobFieldEnum, HubScanJobConfig>();
+		final HubScanJobConfigBuilder builder = new HubScanJobConfigBuilder(false);
+		builder.setScanMemory(scanMemory);
+		builder.validateScanMemory(results);
+
+		if (!results.isSuccess()) {
+			if (results.hasWarnings()) {
+				return FormValidation
+						.warning(results.getResultString(HubScanJobFieldEnum.SCANMEMORY, ValidationResultEnum.WARN));
+			} else if (results.hasErrors()) {
+				return FormValidation
+						.error(results.getResultString(HubScanJobFieldEnum.SCANMEMORY, ValidationResultEnum.ERROR));
+			}
 		}
-		try {
-			final HubJenkinsScanJobConfigValidator validator = new HubJenkinsScanJobConfigValidator();
-			return validator.validateScanMemory(scanMemory);
-		} catch (final IllegalArgumentException e) {
-			return FormValidation.error(e, e.getMessage());
-		}
+		return FormValidation.ok();
 	}
 
 	public FormValidation doCheckBomUpdateMaxiumWaitTime(
 			@QueryParameter("bomUpdateMaxiumWaitTime") final String bomUpdateMaxiumWaitTime)
-					throws IOException, ServletException {
-		if (StringUtils.isBlank(bomUpdateMaxiumWaitTime)) {
-			return FormValidation.error(Messages.HubBuildScan_getBomUpdateWaitTimeEmpty());
+			throws IOException, ServletException {
+		final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> results = new ValidationResults<HubScanJobFieldEnum, HubScanJobConfig>();
+		final HubScanJobConfigBuilder builder = new HubScanJobConfigBuilder(false);
+		builder.setMaxWaitTimeForBomUpdate(bomUpdateMaxiumWaitTime);
+		builder.validateMaxWaitTimeForBomUpdate(results);
+
+		if (!results.isSuccess()) {
+			if (results.hasWarnings()) {
+				return FormValidation.warning(results.getResultString(HubScanJobFieldEnum.MAX_WAIT_TIME_FOR_BOM_UPDATE,
+						ValidationResultEnum.WARN));
+			} else if (results.hasErrors()) {
+				return FormValidation.error(results.getResultString(HubScanJobFieldEnum.MAX_WAIT_TIME_FOR_BOM_UPDATE,
+						ValidationResultEnum.ERROR));
+			}
 		}
-		try {
-			final HubJenkinsScanJobConfigValidator validator = new HubJenkinsScanJobConfigValidator();
-			return validator.validateMaxWaitTimeForBomUpdate(bomUpdateMaxiumWaitTime);
-		} catch (final IllegalArgumentException e) {
-			return FormValidation.error(e, e.getMessage());
-		}
+		return FormValidation.ok();
 	}
 
 	/**
@@ -378,8 +396,21 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 		if (StringUtils.isBlank(hubTimeout)) {
 			return FormValidation.error(Messages.HubBuildScan_getPleaseSetTimeout());
 		}
-		final HubJenkinsServerConfigValidator validator = new HubJenkinsServerConfigValidator();
-		return validator.validateTimeout(hubTimeout);
+		final HubServerConfigBuilder builder = new HubServerConfigBuilder(false);
+		builder.setTimeout(hubTimeout);
+		final ValidationResults<GlobalFieldKey, HubServerConfig> results = new ValidationResults<GlobalFieldKey, HubServerConfig>();
+		builder.validateTimeout(results);
+
+		if (!results.isSuccess()) {
+			if (results.hasWarnings()) {
+				return FormValidation.warning(
+						results.getResultString(HubServerConfigFieldEnum.HUBTIMEOUT, ValidationResultEnum.WARN));
+			} else if (results.hasErrors()) {
+				return FormValidation.error(
+						results.getResultString(HubServerConfigFieldEnum.HUBTIMEOUT, ValidationResultEnum.ERROR));
+			}
+		}
+		return FormValidation.ok();
 	}
 
 	/**
@@ -393,16 +424,29 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 		if (jenkins != null) {
 			proxyConfig = jenkins.proxy;
 		}
-		final HubJenkinsServerConfigValidator validator = new HubJenkinsServerConfigValidator();
-		HubProxyInfo proxyInfo = null;
+
+		final HubServerConfigBuilder builder = new HubServerConfigBuilder(false);
+		builder.setHubUrl(hubServerUrl);
 		if (proxyConfig != null) {
-			try {
-				proxyInfo = new HubProxyInfo(proxyConfig.name, proxyConfig.port, proxyConfig.getUserName(),
-						proxyConfig.getPassword(), proxyConfig.noProxyHost);
-			} catch (final Exception e) {
+			builder.setProxyHost(proxyConfig.name);
+			builder.setProxyPort(proxyConfig.port);
+			builder.setProxyUsername(proxyConfig.getUserName());
+			builder.setProxyPassword(proxyConfig.getPassword());
+			builder.setIgnoredProxyHosts(proxyConfig.noProxyHost);
+		}
+		final ValidationResults<GlobalFieldKey, HubServerConfig> results = new ValidationResults<GlobalFieldKey, HubServerConfig>();
+		builder.validateHubUrl(results);
+
+		if (!results.isSuccess()) {
+			if (results.hasWarnings()) {
+				return FormValidation
+						.warning(results.getResultString(HubServerConfigFieldEnum.HUBURL, ValidationResultEnum.WARN));
+			} else if (results.hasErrors()) {
+				return FormValidation
+						.error(results.getResultString(HubServerConfigFieldEnum.HUBURL, ValidationResultEnum.ERROR));
 			}
 		}
-		return validator.validateServerUrl(hubServerUrl, proxyInfo);
+		return FormValidation.ok();
 	}
 
 	public AutoCompletionCandidates doAutoCompleteHubProjectName(@QueryParameter("value") final String hubProjectName)
