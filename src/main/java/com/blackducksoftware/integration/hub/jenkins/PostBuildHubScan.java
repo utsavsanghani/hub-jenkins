@@ -37,6 +37,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
+import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
+import com.blackducksoftware.integration.hub.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
@@ -63,7 +65,7 @@ import com.blackducksoftware.integration.hub.jenkins.remote.GetOneJarFile;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.JenkinsScanExecutor;
 import com.blackducksoftware.integration.hub.job.HubScanJobConfig;
-import com.blackducksoftware.integration.hub.job.HubScanJobConfigBuilder;
+import com.blackducksoftware.integration.hub.job.HubScanJobFieldEnum;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
@@ -239,7 +241,7 @@ public class PostBuildHubScan extends Recorder {
 						projectVersion = BuildHelper.handleVariableReplacement(variables, getHubProjectVersion());
 
 					}
-					final HubScanJobConfigBuilder hubScanJobConfigBuilder = new HubScanJobConfigBuilder();
+					final HubScanJobConfigBuilder hubScanJobConfigBuilder = new HubScanJobConfigBuilder(true);
 					hubScanJobConfigBuilder.setProjectName(projectName);
 					hubScanJobConfigBuilder.setVersion(projectVersion);
 					hubScanJobConfigBuilder.setPhase(getHubVersionPhase());
@@ -259,7 +261,9 @@ public class PostBuildHubScan extends Recorder {
 					hubScanJobConfigBuilder.addAllScanTargetPaths(scanTargetPaths);
 					hubScanJobConfigBuilder.disableScanTargetPathExistenceCheck();
 
-					final HubScanJobConfig jobConfig = hubScanJobConfigBuilder.build(logger);
+					final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> builderResults = hubScanJobConfigBuilder
+							.build();
+					final HubScanJobConfig jobConfig = builderResults.getConstructedObject();
 
 					printConfiguration(build, listener, logger, jobConfig);
 
@@ -267,7 +271,8 @@ public class PostBuildHubScan extends Recorder {
 					final String toolsDirectory = dummyInstaller
 							.getToolDir(new DummyToolInstallation(), build.getBuiltOn()).getRemote();
 
-					final String scanExec = getScanCLI(logger, build.getBuiltOn(), toolsDirectory, localHostName);
+					final String scanExec = getScanCLI(logger, build.getBuiltOn(), toolsDirectory, localHostName,
+							variables);
 
 					final String jrePath = getJavaExec(logger, build, toolsDirectory);
 
@@ -485,7 +490,7 @@ public class PostBuildHubScan extends Recorder {
 	 */
 	protected ReleaseItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
 			final String projectVersion, final ProjectItem project)
-					throws IOException, URISyntaxException, BDJenkinsHubPluginException {
+			throws IOException, URISyntaxException, BDJenkinsHubPluginException {
 		ReleaseItem version = null;
 		try {
 			version = service.getVersion(project, projectVersion);
@@ -554,7 +559,7 @@ public class PostBuildHubScan extends Recorder {
 	private void runScan(final HubIntRestService service, final AbstractBuild<?, ?> build,
 			final JenkinsScanExecutor scan, final HubJenkinsLogger logger, final String scanExec, final String javaExec,
 			final String oneJarPath, final HubScanJobConfig jobConfig) throws IOException, HubConfigurationException,
-	InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
+			InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
 		validateScanTargets(logger, jobConfig.getScanTargetPaths(), jobConfig.getWorkingDirectory(),
 				build.getBuiltOn().getChannel());
 		scan.setLogger(logger);
@@ -651,13 +656,15 @@ public class PostBuildHubScan extends Recorder {
 	}
 
 	public String getScanCLI(final HubJenkinsLogger logger, final Node node, final String toolsDirectory,
-			final String localHostName) throws IOException, InterruptedException, Exception {
+			final String localHostName, final EnvVars variables) throws IOException, InterruptedException, Exception {
+
 		if (getHubServerInfo() == null) {
 			logger.error("Could not find the Hub server information.");
 			return null;
 		}
 		final CLIRemoteInstall remoteCLIInstall = new CLIRemoteInstall(logger, toolsDirectory, localHostName,
-				getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword());
+				getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword(),
+				variables);
 
 		addProxySettingsToCLIInstaller(logger, remoteCLIInstall);
 
@@ -666,7 +673,7 @@ public class PostBuildHubScan extends Recorder {
 		final GetCLIExists cliExists = new GetCLIExists(logger, toolsDirectory);
 		FilePath scanExec = null;
 		if (node.getChannel().call(cliExists)) {
-			final GetCLI getCLi = new GetCLI(toolsDirectory);
+			final GetCLI getCLi = new GetCLI(logger, toolsDirectory);
 			scanExec = new FilePath(node.getChannel(), node.getChannel().call(getCLi));
 			logger.debug("Using this BlackDuck scan CLI at : " + scanExec.getRemote());
 		} else {
@@ -789,7 +796,7 @@ public class PostBuildHubScan extends Recorder {
 	 */
 	public boolean validateScanTargets(final IntLogger logger, final List<String> scanTargets,
 			final String workingDirectory, final VirtualChannel channel)
-					throws IOException, HubConfigurationException, InterruptedException {
+			throws IOException, HubConfigurationException, InterruptedException {
 		for (final String currTarget : scanTargets) {
 
 			if (currTarget.length() < workingDirectory.length() || !currTarget.startsWith(workingDirectory)) {

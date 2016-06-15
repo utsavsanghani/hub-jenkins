@@ -21,37 +21,38 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.remote;
 
-import hudson.remoting.Callable;
-
 import java.io.File;
 
 import org.jenkinsci.remoting.Role;
 import org.jenkinsci.remoting.RoleChecker;
 
-import com.blackducksoftware.integration.hub.cli.CLIInstaller;
+import com.blackducksoftware.integration.hub.cli.CLILocation;
+
+import hudson.remoting.Callable;
 
 public class GetOneJarFile implements Callable<String, Exception> {
-    private static final long serialVersionUID = 3459269768733083577L;
+	private static final long serialVersionUID = 3459269768733083577L;
 
-    private final String directoryToInstallTo;
+	private final String directoryToInstallTo;
 
-    public GetOneJarFile(String directoryToInstallTo) {
-        this.directoryToInstallTo = directoryToInstallTo;
-    }
+	public GetOneJarFile(final String directoryToInstallTo) {
+		this.directoryToInstallTo = directoryToInstallTo;
+	}
 
-    @Override
-    public String call() throws Exception {
-        CLIInstaller installer = new CLIInstaller(new File(directoryToInstallTo));
-        File file = installer.getOneJarFile();
-        if (file != null) {
-            return file.getCanonicalPath();
-        }
-        return null;
-    }
+	@Override
+	public String call() throws Exception {
+		final File hubToolDir = new File(directoryToInstallTo);
+		final CLILocation cliLocation = new CLILocation(hubToolDir);
+		final File file = cliLocation.getOneJarFile();
+		if (file != null) {
+			return file.getCanonicalPath();
+		}
+		return null;
+	}
 
-    @Override
-    public void checkRoles(RoleChecker checker) throws SecurityException {
-        checker.check(this, new Role(GetOneJarFile.class));
-    }
+	@Override
+	public void checkRoles(final RoleChecker checker) throws SecurityException {
+		checker.check(this, new Role(GetOneJarFile.class));
+	}
 
 }
