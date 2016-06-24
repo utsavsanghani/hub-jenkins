@@ -21,9 +21,6 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.bom;
 
-import hudson.FilePath;
-import hudson.remoting.VirtualChannel;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -43,6 +40,9 @@ import com.blackducksoftware.integration.hub.scan.status.ScanStatusToPoll;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import hudson.FilePath;
+import hudson.remoting.VirtualChannel;
+
 public class RemoteHubEventPolling extends HubEventPolling {
 
 	private final VirtualChannel channel;
@@ -57,17 +57,18 @@ public class RemoteHubEventPolling extends HubEventPolling {
 	}
 
 	/**
-	 * Checks the status's in the scan files and polls their URL's, every 10 seconds,
-	 * until they have all have status COMPLETE. We keep trying until we hit the maximum wait time.
-	 * If we find a scan history object that has status cancelled or an error type then we throw an exception.
+	 * Checks the status's in the scan files and polls their URL's, every 10
+	 * seconds, until they have all have status COMPLETE. We keep trying until
+	 * we hit the maximum wait time. If we find a scan history object that has
+	 * status cancelled or an error type then we throw an exception.
 	 */
 	@Override
-	public void assertBomUpToDate(final HubReportGenerationInfo hubReportGenerationInfo, final IntLogger logger) throws InterruptedException,
-	BDRestException, HubIntegrationException, URISyntaxException, IOException {
+	public void assertBomUpToDate(final HubReportGenerationInfo hubReportGenerationInfo, final IntLogger logger)
+			throws InterruptedException, BDRestException, HubIntegrationException, URISyntaxException, IOException {
 		if (StringUtils.isBlank(hubReportGenerationInfo.getScanStatusDirectory())) {
 			throw new HubIntegrationException("The scan status directory must be a non empty value.");
 		}
-		final FilePath statusDirectory = new FilePath(getChannel(),hubReportGenerationInfo.getScanStatusDirectory());
+		final FilePath statusDirectory = new FilePath(getChannel(), hubReportGenerationInfo.getScanStatusDirectory());
 		if (!statusDirectory.exists()) {
 			throw new HubIntegrationException("The scan status directory does not exist.");
 		}
@@ -83,7 +84,8 @@ public class RemoteHubEventPolling extends HubEventPolling {
 			expectedNumScans = hubReportGenerationInfo.getScanTargets().size();
 		}
 		if (statusFiles.size() != expectedNumScans) {
-			throw new HubIntegrationException("There were " + expectedNumScans + " scans configured and we found " + statusFiles.size() + " status files.");
+			throw new HubIntegrationException("There were " + expectedNumScans + " scans configured and we found "
+					+ statusFiles.size() + " status files.");
 		}
 		logger.info("Checking the directory : " + statusDirectory.getRemote() + " for the scan status's.");
 		final CountDownLatch lock = new CountDownLatch(expectedNumScans);
@@ -92,7 +94,7 @@ public class RemoteHubEventPolling extends HubEventPolling {
 			final String fileContent = currentStatusFile.readToString();
 			final Gson gson = new GsonBuilder().create();
 			final ScanStatusToPoll status = gson.fromJson(fileContent, ScanStatusToPoll.class);
-			if (status.get_meta() == null || status.getStatus() == null) {
+			if (status.getMeta() == null || status.getStatus() == null) {
 				throw new HubIntegrationException("The scan status file : " + currentStatusFile.getRemote()
 						+ " does not contain valid scan status json.");
 			}
@@ -101,15 +103,17 @@ public class RemoteHubEventPolling extends HubEventPolling {
 		}
 
 		logger.debug("Cleaning up the scan status files at : " + statusDirectory.getRemote());
-		// We delete the files in a second loop to ensure we have all the scan status's in memory before we start
-		// deleting the files. This way, if there is an exception thrown, the User can go look at the files to see what
+		// We delete the files in a second loop to ensure we have all the scan
+		// status's in memory before we start
+		// deleting the files. This way, if there is an exception thrown, the
+		// User can go look at the files to see what
 		// went wrong.
 		for (final FilePath currentStatusFile : statusFiles) {
 			currentStatusFile.delete();
 		}
 		statusDirectory.delete();
 
-		pollScanStatusChecker(lock,hubReportGenerationInfo,scanStatusList);
+		pollScanStatusChecker(lock, hubReportGenerationInfo, scanStatusList);
 	}
 
 }

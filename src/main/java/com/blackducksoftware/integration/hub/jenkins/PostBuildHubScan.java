@@ -490,7 +490,7 @@ public class PostBuildHubScan extends Recorder {
 	 */
 	protected ReleaseItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
 			final String projectVersion, final ProjectItem project)
-			throws IOException, URISyntaxException, BDJenkinsHubPluginException {
+					throws IOException, URISyntaxException, BDJenkinsHubPluginException {
 		ReleaseItem version = null;
 		try {
 			version = service.getVersion(project, projectVersion);
@@ -559,7 +559,7 @@ public class PostBuildHubScan extends Recorder {
 	private void runScan(final HubIntRestService service, final AbstractBuild<?, ?> build,
 			final JenkinsScanExecutor scan, final HubJenkinsLogger logger, final String scanExec, final String javaExec,
 			final String oneJarPath, final HubScanJobConfig jobConfig) throws IOException, HubConfigurationException,
-			InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
+					InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
 		validateScanTargets(logger, jobConfig.getScanTargetPaths(), jobConfig.getWorkingDirectory(),
 				build.getBuiltOn().getChannel());
 		scan.setLogger(logger);
@@ -796,7 +796,7 @@ public class PostBuildHubScan extends Recorder {
 	 */
 	public boolean validateScanTargets(final IntLogger logger, final List<String> scanTargets,
 			final String workingDirectory, final VirtualChannel channel)
-			throws IOException, HubConfigurationException, InterruptedException {
+					throws IOException, HubConfigurationException, InterruptedException {
 		for (final String currTarget : scanTargets) {
 
 			if (currTarget.length() < workingDirectory.length() || !currTarget.startsWith(workingDirectory)) {
