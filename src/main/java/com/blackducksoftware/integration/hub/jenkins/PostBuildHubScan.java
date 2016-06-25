@@ -42,6 +42,7 @@ import com.blackducksoftware.integration.hub.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
+import com.blackducksoftware.integration.hub.exception.UnexpectedHubResponseException;
 import com.blackducksoftware.integration.hub.exception.VersionDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
@@ -86,36 +87,25 @@ import hudson.tasks.Recorder;
 import jenkins.model.Jenkins;
 
 public class PostBuildHubScan extends Recorder {
-
 	private final ScanJobs[] scans;
-
-	protected final boolean sameAsBuildWrapper;
-
+	private final boolean sameAsBuildWrapper;
 	private final String hubProjectName;
-
 	private final String hubVersionPhase;
-
 	private final String hubVersionDist;
-
 	private String hubProjectVersion;
+	private final String scanMemory;
+	private final boolean shouldGenerateHubReport;
+	private String bomUpdateMaxiumWaitTime;
+	private transient Result result;
+	private Boolean verbose;
 
 	// Old variable, renaming to hubProjectVersion
 	// need to keep this around for now for migration purposes
 	private String hubProjectRelease;
 
-	private final String scanMemory;
-
-	protected final boolean shouldGenerateHubReport;
-
 	// Hub Jenkins 1.4.1, renaming this variable to bomUpdateMaxiumWaitTime
 	// need to keep this around for now for migration purposes
-	protected String reportMaxiumWaitTime;
-
-	protected String bomUpdateMaxiumWaitTime;
-
-	private transient Result result;
-
-	private Boolean verbose;
+	private String reportMaxiumWaitTime;
 
 	@DataBoundConstructor
 	public PostBuildHubScan(final ScanJobs[] scans, final boolean sameAsBuildWrapper, final String hubProjectName,
@@ -487,10 +477,12 @@ public class PostBuildHubScan extends Recorder {
 
 	/**
 	 * Ensures the Version exists. Returns the version URL
+	 * 
+	 * @throws UnexpectedHubResponseException
 	 */
 	protected ReleaseItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
-			final String projectVersion, final ProjectItem project)
-					throws IOException, URISyntaxException, BDJenkinsHubPluginException {
+			final String projectVersion, final ProjectItem project) throws IOException, URISyntaxException,
+					BDJenkinsHubPluginException, UnexpectedHubResponseException {
 		ReleaseItem version = null;
 		try {
 			version = service.getVersion(project, projectVersion);

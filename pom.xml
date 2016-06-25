@@ -29,28 +29,6 @@
     </license>
   </licenses>
 
-  <developers>
-    <developer>
-      <id>kkandler</id>
-      <name>Kaj Kandler</name>
-      <organization>Black Duck Software, Inc.</organization>
-      <roles>
-        <role>architect</role>
-        <role>developer</role>
-      </roles>
-      <timezone>-5</timezone>
-    </developer>
-    <developer>
-      <id>jrichard</id>
-      <name>James Richard</name>
-      <organization>Black Duck Software, Inc.</organization>
-      <roles>
-        <role>developer</role>
-      </roles>
-      <timezone>-5</timezone>
-    </developer>
-  </developers>
-
   <distributionManagement>
     <repository>
       <id>bds-int-public</id>
@@ -90,18 +68,13 @@
     <dependency>
       <groupId>com.blackducksoftware.integration</groupId>
       <artifactId>hub-common</artifactId>
-      <version>1.4.1-SNAPSHOT</version>
+      <version>1.4.1</version>
       <exclusions>
         <exclusion>
           <groupId>com.thoughtworks.xstream</groupId>
           <artifactId>xstream</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.blackducksoftware.integration</groupId>
-      <artifactId>build-info-gradle</artifactId>
-      <version>2.0.2</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
