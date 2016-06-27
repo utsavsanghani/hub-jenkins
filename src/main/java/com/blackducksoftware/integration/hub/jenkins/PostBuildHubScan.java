@@ -167,10 +167,6 @@ public class PostBuildHubScan extends Recorder {
 		return hubProjectVersion;
 	}
 
-	public boolean getSameAsBuildWrapper() {
-		return sameAsBuildWrapper;
-	}
-
 	public String getHubProjectName() {
 		return hubProjectName;
 	}
