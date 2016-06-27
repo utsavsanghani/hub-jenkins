@@ -32,6 +32,7 @@ import hudson.model.Cause;
 import hudson.model.Result;
 
 public class TestBuildListener implements BuildListener {
+	private static final long serialVersionUID = 6298337589492113754L;
 
 	private PrintStream stream = null;
 
@@ -54,12 +55,10 @@ public class TestBuildListener implements BuildListener {
 
 	@Override
 	public void annotate(final ConsoleNote ann) throws IOException {
-
 	}
 
 	@Override
 	public void hyperlink(final String url, final String text) throws IOException {
-
 	}
 
 	@Override
@@ -84,11 +83,10 @@ public class TestBuildListener implements BuildListener {
 
 	@Override
 	public void started(final List<Cause> causes) {
-
 	}
 
 	@Override
 	public void finished(final Result result) {
-
 	}
+
 }

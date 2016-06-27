@@ -94,11 +94,10 @@ import net.sf.json.JSONObject;
 //point. The ordinal implies an order to the UI element. The Post-Build Actions add new actions in descending order
 // so have this ordinal as a higher value than the failure condition Post-Build Action
 @Extension(ordinal = 2)
-public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> implements Serializable {
+public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>implements Serializable {
+	private static final long serialVersionUID = -3532946484740537334L;
 	private static final String FORM_SERVER_URL = "hubServerUrl";
-
 	private static final String FORM_TIMEOUT = "hubTimeout";
-
 	private static final String FORM_CREDENTIALSID = "hubCredentialsId";
 
 	private HubServerInfo hubServerInfo;
@@ -321,7 +320,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 
 	public FormValidation doCheckBomUpdateMaxiumWaitTime(
 			@QueryParameter("bomUpdateMaxiumWaitTime") final String bomUpdateMaxiumWaitTime)
-			throws IOException, ServletException {
+					throws IOException, ServletException {
 		final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> results = new ValidationResults<HubScanJobFieldEnum, HubScanJobConfig>();
 		final HubScanJobConfigBuilder builder = new HubScanJobConfigBuilder(false);
 		builder.setMaxWaitTimeForBomUpdate(bomUpdateMaxiumWaitTime);
