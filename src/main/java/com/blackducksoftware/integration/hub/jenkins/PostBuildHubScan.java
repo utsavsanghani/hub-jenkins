@@ -89,7 +89,6 @@ import jenkins.model.Jenkins;
 
 public class PostBuildHubScan extends Recorder {
 	private final ScanJobs[] scans;
-	private final boolean sameAsBuildWrapper;
 	private final String hubProjectName;
 	private final String hubVersionPhase;
 	private final String hubVersionDist;
@@ -113,7 +112,11 @@ public class PostBuildHubScan extends Recorder {
 			final String hubProjectVersion, final String hubVersionPhase, final String hubVersionDist,
 			final String scanMemory, final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime) {
 		this.scans = scans;
-		this.sameAsBuildWrapper = sameAsBuildWrapper;
+		// 2016-06-27 ekerwin: we need to look in to whether we can remove the
+		// boolean sameAsBuildWrapper from the constructor
+		// this might break existing configurations and we removed the build
+		// wrappers since we don't use recorders any more
+		// this.sameAsBuildWrapper = sameAsBuildWrapper;
 		this.hubProjectName = hubProjectName;
 		this.hubProjectVersion = hubProjectVersion;
 		this.hubVersionPhase = hubVersionPhase;
@@ -162,10 +165,6 @@ public class PostBuildHubScan extends Recorder {
 			hubProjectVersion = hubProjectRelease;
 		}
 		return hubProjectVersion;
-	}
-
-	public boolean getSameAsBuildWrapper() {
-		return sameAsBuildWrapper;
 	}
 
 	public String getHubProjectName() {
