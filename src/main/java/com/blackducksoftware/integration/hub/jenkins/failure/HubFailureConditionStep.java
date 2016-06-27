@@ -29,6 +29,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
+import com.blackducksoftware.integration.hub.capabilities.HubCapabilitiesEnum;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.MissingPolicyStatusException;
@@ -79,8 +80,8 @@ public class HubFailureConditionStep extends Recorder {
 	}
 
 	@Override
-	public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher,
-			final BuildListener listener) throws InterruptedException, IOException {
+	public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener)
+			throws InterruptedException, IOException {
 		final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
 
 		final EnvVars variables = build.getEnvironment(listener);
@@ -137,8 +138,7 @@ public class HubFailureConditionStep extends Recorder {
 			}
 			waitForBomToBeUpdated(build, logger, action, restService, hubSupport);
 
-
-			if (!hubSupport.isPolicyApiSupport()) {
+			if (!hubSupport.hasCapability(HubCapabilitiesEnum.POLICY_API)) {
 				logger.error("This version of the Hub does not have support for Policies.");
 				build.setResult(Result.UNSTABLE);
 				return true;
@@ -150,7 +150,8 @@ public class HubFailureConditionStep extends Recorder {
 						build.setResult(Result.UNSTABLE);
 						return true;
 					}
-					// We use this conditional in case there are other failure conditions in the future
+					// We use this conditional in case there are other failure
+					// conditions in the future
 					final PolicyStatus policyStatus = restService.getPolicyStatus(action.getPolicyStatusUrl());
 					if (policyStatus == null) {
 						logger.error("Could not find any information about the Policy status of the bom.");
@@ -163,7 +164,8 @@ public class HubFailureConditionStep extends Recorder {
 					if (policyStatus.getCountInViolation() == null) {
 						logger.error("Could not find the number of bom entries In Violation of a Policy.");
 					} else {
-						logger.info("Found " + policyStatus.getCountInViolation().getValue() + " bom entries to be In Violation of a defined Policy.");
+						logger.info("Found " + policyStatus.getCountInViolation().getValue()
+								+ " bom entries to be In Violation of a defined Policy.");
 					}
 					if (policyStatus.getCountInViolationOverridden() == null) {
 						logger.error("Could not find the number of bom entries In Violation Overridden of a Policy.");
@@ -174,7 +176,8 @@ public class HubFailureConditionStep extends Recorder {
 					if (policyStatus.getCountNotInViolation() == null) {
 						logger.error("Could not find the number of bom entries Not In Violation of a Policy.");
 					} else {
-						logger.info("Found " + policyStatus.getCountNotInViolation().getValue() + " bom entries to be Not In Violation of a defined Policy.");
+						logger.info("Found " + policyStatus.getCountNotInViolation().getValue()
+								+ " bom entries to be Not In Violation of a defined Policy.");
 					}
 				} catch (final MissingPolicyStatusException e) {
 					logger.warn(e.getMessage());
@@ -196,17 +199,18 @@ public class HubFailureConditionStep extends Recorder {
 		return true;
 	}
 
-	public HubIntRestService getHubIntRestService(final HubJenkinsLogger logger, final HubServerInfo serverInfo) throws IOException,
-	BDRestException, URISyntaxException, BDJenkinsHubPluginException, HubIntegrationException {
-		return BuildHelper.getRestService(logger, serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(),
-				serverInfo.getTimeout());
+	public HubIntRestService getHubIntRestService(final HubJenkinsLogger logger, final HubServerInfo serverInfo)
+			throws IOException, BDRestException, URISyntaxException, BDJenkinsHubPluginException,
+			HubIntegrationException {
+		return BuildHelper.getRestService(logger, serverInfo.getServerUrl(), serverInfo.getUsername(),
+				serverInfo.getPassword(), serverInfo.getTimeout());
 	}
 
 	public void waitForBomToBeUpdated(final AbstractBuild<?, ?> build, final IntLogger logger,
 			final BomUpToDateAction action, final HubIntRestService service, final HubSupportHelper supportHelper)
 					throws BDJenkinsHubPluginException, InterruptedException, BDRestException, HubIntegrationException,
 					URISyntaxException, IOException {
-		if(action.isHasBomBeenUdpated()){
+		if (action.isHasBomBeenUdpated()) {
 			return;
 		}
 
@@ -222,14 +226,14 @@ public class HubFailureConditionStep extends Recorder {
 
 		reportGenInfo.setScanStatusDirectory(action.getScanStatusDirectory());
 
-		final RemoteHubEventPolling hubEventPolling = new RemoteHubEventPolling(service, build.getBuiltOn().getChannel());
+		final RemoteHubEventPolling hubEventPolling = new RemoteHubEventPolling(service,
+				build.getBuiltOn().getChannel());
 
 		if (supportHelper.isCliStatusDirOptionSupport()) {
 			hubEventPolling.assertBomUpToDate(reportGenInfo, logger);
 		} else {
 			hubEventPolling.assertBomUpToDate(reportGenInfo);
 		}
-
 
 	}
 

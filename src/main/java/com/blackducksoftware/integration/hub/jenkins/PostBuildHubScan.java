@@ -39,6 +39,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
 import com.blackducksoftware.integration.hub.builder.ValidationResults;
+import com.blackducksoftware.integration.hub.capabilities.HubCapabilitiesEnum;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
@@ -317,7 +318,7 @@ public class PostBuildHubScan extends Recorder {
 						bomUpdatedAction.setScanStatusDirectory(scan.getScanStatusDirectoryPath());
 						bomUpdatedAction.setScanTargets(jobConfig.getScanTargetPaths());
 					}
-					if (version != null) {
+					if (version != null && hubSupport.hasCapability(HubCapabilitiesEnum.POLICY_API)) {
 						bomUpdatedAction.setPolicyStatusUrl(version.getLink(ReleaseItem.POLICY_STATUS_LINK));
 					}
 
@@ -477,7 +478,7 @@ public class PostBuildHubScan extends Recorder {
 
 	/**
 	 * Ensures the Version exists. Returns the version URL
-	 * 
+	 *
 	 * @throws UnexpectedHubResponseException
 	 */
 	protected ReleaseItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
