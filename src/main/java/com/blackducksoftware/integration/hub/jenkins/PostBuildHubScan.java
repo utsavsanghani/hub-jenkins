@@ -29,6 +29,8 @@ import java.net.Proxy;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -72,6 +74,7 @@ import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
+import com.blackducksoftware.integration.phone.home.api.PhoneHomeInfo;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -98,6 +101,7 @@ public class PostBuildHubScan extends Recorder {
 	private String bomUpdateMaxiumWaitTime;
 	private transient Result result;
 	private Boolean verbose;
+        private Calendar lastPhoneHome;
 
 	// Old variable, renaming to hubProjectVersion
 	// need to keep this around for now for migration purposes
@@ -210,7 +214,17 @@ public class PostBuildHubScan extends Recorder {
 
 		final EnvVars variables = build.getEnvironment(listener);
 		logger.setLogLevel(variables);
-
+                
+                //@nrowles
+//                String blackDuckName = "Hub";
+//                String thirdPartyName = "Jenkins";
+//                String blackDuckVersion = getHubProjectVersion();
+//                String thirdPartyVersion = Jenkins.getVersion().toString();
+//                PhoneHomeInfo info = new PhoneHomeInfo(blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion);
+//                info.phoneHome();
+                PhoneHomeInfo dummyInfo = new PhoneHomeInfo("blackDuckName", "blackDuckVersion", "thirdPartyName", "thirdPartyVersion");
+                dummyInfo.phoneHome();
+                
 		setResult(build.getResult());
 		if (BuildHelper.isSuccess(build)) {
 			try {
