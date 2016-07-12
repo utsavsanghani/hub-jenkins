@@ -223,6 +223,7 @@ public class PostBuildHubScan extends Recorder {
 //                PhoneHomeInfo info = new PhoneHomeInfo(blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion);
 //                info.phoneHome();
                 PhoneHomeInfo dummyInfo = new PhoneHomeInfo("blackDuckName", "blackDuckVersion", "thirdPartyName", "thirdPartyVersion");
+                
                 dummyInfo.phoneHome();
                 
 		setResult(build.getResult());
