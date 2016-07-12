@@ -215,16 +215,19 @@ public class PostBuildHubScan extends Recorder {
 		final EnvVars variables = build.getEnvironment(listener);
 		logger.setLogLevel(variables);
                 
-                //@nrowles
-//                String blackDuckName = "Hub";
-//                String thirdPartyName = "Jenkins";
-//                String blackDuckVersion = getHubProjectVersion();
-//                String thirdPartyVersion = Jenkins.getVersion().toString();
-//                PhoneHomeInfo info = new PhoneHomeInfo(blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion);
-//                info.phoneHome();
-                PhoneHomeInfo dummyInfo = new PhoneHomeInfo("blackDuckName", "blackDuckVersion", "thirdPartyName", "thirdPartyVersion");
                 
-                dummyInfo.phoneHome();
+
+//@nrowles
+                bdPhoneHome();
+////                String blackDuckName = "Hub";
+////                String thirdPartyName = "Jenkins";
+////                String blackDuckVersion = getHubProjectVersion();
+////                String thirdPartyVersion = Jenkins.getVersion().toString();
+////                PhoneHomeInfo info = new PhoneHomeInfo(blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion);
+////                info.phoneHome();
+//                PhoneHomeInfo dummyInfo = new PhoneHomeInfo("blackDuckName", "blackDuckVersion", "thirdPartyName", "thirdPartyVersion");
+//                
+//                dummyInfo.phoneHome();
                 
 		setResult(build.getResult());
 		if (BuildHelper.isSuccess(build)) {
@@ -820,5 +823,18 @@ public class PostBuildHubScan extends Recorder {
 		}
 		return true;
 	}
+        
+        //@nrowles
+        public void bdPhoneHome(){
+            String blackDuckName = "Hub";
+            String thirdPartyName = "Jenkins";
+            String blackDuckVersion = getHubProjectVersion();
+            String thirdPartyVersion = Jenkins.getVersion().toString();
+            PhoneHomeInfo info = new PhoneHomeInfo(blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion);
+            info.phoneHome();
+//            PhoneHomeInfo dummyInfo = new PhoneHomeInfo("blackDuckName", "blackDuckVersion", "thirdPartyName", "thirdPartyVersion");
+//                
+//            dummyInfo.phoneHome();
+        }
 
 }
