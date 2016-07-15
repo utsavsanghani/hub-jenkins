@@ -218,7 +218,7 @@ public class PostBuildHubScan extends Recorder {
                 
 
 //@nrowles
-                bdPhoneHome();
+//                bdPhoneHome();
 ////                String blackDuckName = "Hub";
 ////                String thirdPartyName = "Jenkins";
 ////                String blackDuckVersion = getHubProjectVersion();
@@ -299,7 +299,11 @@ public class PostBuildHubScan extends Recorder {
 					}
 					final HubSupportHelper hubSupport = new HubSupportHelper();
 					hubSupport.checkHubSupport(service, logger);
-
+                                        
+                                        //@nrowles
+                                        String hubVersion = hubSupport.getHubVersion(service);
+                                        bdPhoneHome(hubVersion);
+                                        
 					final JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(),
 							jobConfig.getScanTargetPaths(), build.getNumber(), hubSupport, build, launcher, logger);
 
@@ -825,10 +829,9 @@ public class PostBuildHubScan extends Recorder {
 	}
         
         //@nrowles
-        public void bdPhoneHome(){
+        public void bdPhoneHome(String blackDuckVersion){
             String blackDuckName = "Hub";
             String thirdPartyName = "Jenkins";
-            String blackDuckVersion = getHubProjectVersion();
             String thirdPartyVersion = Jenkins.getVersion().toString();
             PhoneHomeInfo info = new PhoneHomeInfo(blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion);
             info.phoneHome();
