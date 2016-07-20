@@ -22,6 +22,7 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -834,7 +836,39 @@ public class PostBuildHubScan extends Recorder {
             String blackDuckName = "Hub";
             String thirdPartyName = "Jenkins";
             String thirdPartyVersion = Jenkins.getVersion().toString();
-            PhoneHomeInfo info = new PhoneHomeInfo(blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion, regId);
+            
+            Properties properties = new Properties();
+            //String propFileName = "project.properties";
+            InputStream is = getClass().getClassLoader().getResourceAsStream("project.properties");
+            System.out.println(is.toString());
+//            int[] buffer = new int[100000];
+            try{
+                System.out.println(is.available());
+//                int cur = is.read();
+//                while(cur >= 0){
+//                    buffer[buffer.length] = cur;
+//                    cur = is.read();
+//                }
+//                System.out.println(buffer.toString());
+//                System.out.println(buffer.length);
+                is.close();
+            } catch (IOException e){
+                e.printStackTrace();
+                System.out.println("couldn't read input stream");
+            }
+            
+            try{
+                properties.load(getClass().getClassLoader().getResourceAsStream("project.properties"));
+            } catch (IOException e){
+                //TODO Exception handling
+                e.printStackTrace();
+                System.out.println("unable to load properties file");
+            }    
+            System.out.println(properties.isEmpty());
+            String pluginVersion = properties.getProperty("version");
+            System.out.println(pluginVersion);
+            
+            PhoneHomeInfo info = new PhoneHomeInfo(blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion, regId, pluginVersion);
             info.phoneHome();
 //            PhoneHomeInfo dummyInfo = new PhoneHomeInfo("blackDuckName", "blackDuckVersion", "thirdPartyName", "thirdPartyVersion");
 //                
