@@ -32,6 +32,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.Set;
 import java.util.List;
 import java.util.Properties;
 
@@ -59,6 +60,7 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPlug
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubScanToolMissingException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.jenkins.remote.CLIRemoteInstall;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCLI;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCLIExists;
@@ -837,37 +839,28 @@ public class PostBuildHubScan extends Recorder {
             String thirdPartyName = "Jenkins";
             String thirdPartyVersion = Jenkins.getVersion().toString();
             
-            Properties properties = new Properties();
-            //String propFileName = "project.properties";
-            InputStream is = getClass().getClassLoader().getResourceAsStream("project.properties");
-            System.out.println(is.toString());
-//            int[] buffer = new int[100000];
-            try{
-                System.out.println(is.available());
-//                int cur = is.read();
-//                while(cur >= 0){
-//                    buffer[buffer.length] = cur;
-//                    cur = is.read();
-//                }
-//                System.out.println(buffer.toString());
-//                System.out.println(buffer.length);
-                is.close();
-            } catch (IOException e){
-                e.printStackTrace();
-                System.out.println("couldn't read input stream");
-            }
+//            final Properties properties = new Properties();
+//            
+//            try{
+//                properties.load(getClass().getClassLoader().getResourceAsStream("project.properties"));
+//            } catch (IOException e){
+//                //TODO Exception handling
+//                e.printStackTrace();
+//                System.out.println("unable to load properties file");
+//            }
+//            
+//            Set<String> keys = properties.stringPropertyNames();
+//            for(String key : keys){
+//                System.out.println(key);
+//            }
+//            
+//            System.out.println(properties.isEmpty());
+//            String pluginVersion = properties.getProperty("project.version");
+//            System.out.println(pluginVersion);
             
-            try{
-                properties.load(getClass().getClassLoader().getResourceAsStream("project.properties"));
-            } catch (IOException e){
-                //TODO Exception handling
-                e.printStackTrace();
-                System.out.println("unable to load properties file");
-            }    
-            System.out.println(properties.isEmpty());
-            String pluginVersion = properties.getProperty("version");
-            System.out.println(pluginVersion);
-            
+            PluginHelper ph = new PluginHelper();
+            String pluginVersion = ph.getPluginVersion();
+
             PhoneHomeInfo info = new PhoneHomeInfo(blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion, regId, pluginVersion);
             info.phoneHome();
 //            PhoneHomeInfo dummyInfo = new PhoneHomeInfo("blackDuckName", "blackDuckVersion", "thirdPartyName", "thirdPartyVersion");
