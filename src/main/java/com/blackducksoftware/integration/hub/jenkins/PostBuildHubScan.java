@@ -305,9 +305,13 @@ public class PostBuildHubScan extends Recorder {
 					hubSupport.checkHubSupport(service, logger);
                                         
                                         //@nrowles
-                                        String hubVersion = hubSupport.getHubVersion(service);
-                                        String regId = service.getRegistrationId();
-                                        bdPhoneHome(hubVersion, regId);
+                                        final String hubVersion = hubSupport.getHubVersion(service);
+                                        final String regId = service.getRegistrationId();
+                                        try{
+                                            bdPhoneHome(hubVersion, regId);
+                                        } catch(Exception e){
+                                            logger.error("Unable to phone-home", e);
+                                        }
                                         
 					final JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(),
 							jobConfig.getScanTargetPaths(), build.getNumber(), hubSupport, build, launcher, logger);
