@@ -141,5 +141,4 @@ public class HubServerInfo {
 		builder.append("]");
 		return builder.toString();
 	}
-
 }

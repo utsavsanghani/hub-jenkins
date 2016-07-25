@@ -445,6 +445,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 						.error(results.getResultString(HubServerConfigFieldEnum.HUBURL, ValidationResultEnum.ERROR));
 			}
 		}
+
 		return FormValidation.ok();
 	}
 
@@ -565,7 +566,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 				Thread.currentThread().setContextClassLoader(originalClassLoader);
 			}
 		}
-
 	}
 
 	/**

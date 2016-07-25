@@ -2,6 +2,9 @@
 	<!-- This jelly script is used for per-project configuration. See global.jelly 
 		for a general discussion about jelly script. -->
 		
+	<f:block>
+		<div>Requires the policy management module in the Hub.</div>
+	</f:block>
 	<f:entry field="failBuildForPolicyViolations">
 		<f:checkbox default="true" />
 		<label>${%FailTheBuildPolicyViolations}</label>

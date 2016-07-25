@@ -293,7 +293,7 @@ public class HubFailureConditionStepUnitTest {
 
 		descriptor = Mockito.spy(descriptor);
 
-		Mockito.doReturn(hubSupport).when(descriptor).getCheckedHubSupportHelper();
+		Mockito.doReturn(hubSupport).when(failureStep).getCheckedHubSupportHelper();
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
 		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
 
@@ -348,7 +348,7 @@ public class HubFailureConditionStepUnitTest {
 
 		descriptor = Mockito.spy(descriptor);
 
-		Mockito.doReturn(hubSupport).when(descriptor).getCheckedHubSupportHelper();
+		Mockito.doReturn(hubSupport).when(failureStep).getCheckedHubSupportHelper();
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
 		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
 				Mockito.any(HubServerInfo.class));
@@ -403,7 +403,7 @@ public class HubFailureConditionStepUnitTest {
 
 		descriptor = Mockito.spy(descriptor);
 
-		Mockito.doReturn(hubSupport).when(descriptor).getCheckedHubSupportHelper();
+		Mockito.doReturn(hubSupport).when(failureStep).getCheckedHubSupportHelper();
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
 		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
 
@@ -464,7 +464,7 @@ public class HubFailureConditionStepUnitTest {
 
 		descriptor = Mockito.spy(descriptor);
 
-		Mockito.doReturn(hubSupport).when(descriptor).getCheckedHubSupportHelper();
+		Mockito.doReturn(hubSupport).when(failureStep).getCheckedHubSupportHelper();
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
 		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
 
@@ -527,7 +527,7 @@ public class HubFailureConditionStepUnitTest {
 
 		descriptor = Mockito.spy(descriptor);
 
-		Mockito.doReturn(hubSupport).when(descriptor).getCheckedHubSupportHelper();
+		Mockito.doReturn(hubSupport).when(failureStep).getCheckedHubSupportHelper();
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
 		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
 

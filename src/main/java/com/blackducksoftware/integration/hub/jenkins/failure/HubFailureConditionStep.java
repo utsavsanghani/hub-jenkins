@@ -129,7 +129,7 @@ public class HubFailureConditionStep extends Recorder {
 		try {
 			final HubIntRestService restService = getHubIntRestService(logger, serverInfo);
 
-			final HubSupportHelper hubSupport = getDescriptor().getCheckedHubSupportHelper();
+			final HubSupportHelper hubSupport = getCheckedHubSupportHelper();
 
 			final BomUpToDateAction action = build.getAction(BomUpToDateAction.class);
 			if (action == null) {
@@ -197,6 +197,19 @@ public class HubFailureConditionStep extends Recorder {
 			build.setResult(Result.UNSTABLE);
 		}
 		return true;
+	}
+
+	public HubSupportHelper getCheckedHubSupportHelper() {
+		final HubSupportHelper hubSupport = new HubSupportHelper();
+		final HubServerInfo serverInfo = HubServerInfoSingleton.getInstance().getServerInfo();
+		try {
+			final HubIntRestService service = BuildHelper.getRestService(null, serverInfo.getServerUrl(),
+					serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
+			hubSupport.checkHubSupport(service, null);
+		} catch (final Exception e) {
+			return null;
+		}
+		return hubSupport;
 	}
 
 	public HubIntRestService getHubIntRestService(final HubJenkinsLogger logger, final HubServerInfo serverInfo)
