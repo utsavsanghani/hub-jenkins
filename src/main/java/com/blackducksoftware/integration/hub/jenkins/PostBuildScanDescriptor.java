@@ -401,12 +401,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 		builder.validateTimeout(results);
 
 		if (!results.isSuccess()) {
-			if (results.hasWarnings()) {
-				return FormValidation.warning(
-						results.getResultString(HubServerConfigFieldEnum.HUBTIMEOUT, ValidationResultEnum.WARN));
-			} else if (results.hasErrors()) {
+			if (results.hasErrors()) {
 				return FormValidation.error(
 						results.getResultString(HubServerConfigFieldEnum.HUBTIMEOUT, ValidationResultEnum.ERROR));
+			} else if (results.hasWarnings()) {
+				return FormValidation.warning(
+						results.getResultString(HubServerConfigFieldEnum.HUBTIMEOUT, ValidationResultEnum.WARN));
 			}
 		}
 		return FormValidation.ok();

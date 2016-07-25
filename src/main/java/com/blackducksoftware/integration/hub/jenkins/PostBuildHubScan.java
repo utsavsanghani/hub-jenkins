@@ -30,6 +30,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -38,6 +40,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
+import com.blackducksoftware.integration.hub.builder.ValidationResult;
+import com.blackducksoftware.integration.hub.builder.ValidationResultEnum;
 import com.blackducksoftware.integration.hub.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.capabilities.HubCapabilitiesEnum;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
@@ -254,9 +258,27 @@ public class PostBuildHubScan extends Recorder {
 					final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> builderResults = hubScanJobConfigBuilder
 							.build();
 					final HubScanJobConfig jobConfig = builderResults.getConstructedObject();
-
 					printConfiguration(build, listener, logger, jobConfig);
 
+					if (!builderResults.isSuccess()) {
+						final Map<HubScanJobFieldEnum, List<ValidationResult>> results = builderResults.getResultMap();
+						for (final Entry<HubScanJobFieldEnum, List<ValidationResult>> errorEntry : results.entrySet()) {
+							final StringBuilder errorBuilder = new StringBuilder();
+							for (final ValidationResult result : errorEntry.getValue()) {
+								if (result.getResultType() != ValidationResultEnum.OK) {
+									if (errorBuilder.length() > 0) {
+										errorBuilder.append("\n");
+									}
+									if (StringUtils.isNotBlank(result.getMessage())) {
+										errorBuilder.append(result.getMessage());
+									}
+								}
+							}
+							if (errorBuilder.length() > 0) {
+								logger.error(errorEntry.getKey().name() + " :: " + errorBuilder.toString());
+							}
+						}
+					}
 					final DummyToolInstaller dummyInstaller = new DummyToolInstaller();
 					final String toolsDirectory = dummyInstaller
 							.getToolDir(new DummyToolInstallation(), build.getBuiltOn()).getRemote();
@@ -290,7 +312,8 @@ public class PostBuildHubScan extends Recorder {
 					final DateTime afterScanTime = new DateTime();
 
 					final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
-					if (getResult().equals(Result.SUCCESS) && getShouldGenerateHubReport()) {
+					if (getResult().equals(Result.SUCCESS) && getShouldGenerateHubReport()
+							&& version != null) {
 
 						final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
 						reportGenInfo.setService(service);
@@ -482,7 +505,7 @@ public class PostBuildHubScan extends Recorder {
 	 */
 	protected ReleaseItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
 			final String projectVersion, final ProjectItem project) throws IOException, URISyntaxException,
-					BDJenkinsHubPluginException, UnexpectedHubResponseException {
+	BDJenkinsHubPluginException, UnexpectedHubResponseException {
 		ReleaseItem version = null;
 		try {
 			version = service.getVersion(project, projectVersion);
@@ -551,7 +574,7 @@ public class PostBuildHubScan extends Recorder {
 	private void runScan(final HubIntRestService service, final AbstractBuild<?, ?> build,
 			final JenkinsScanExecutor scan, final HubJenkinsLogger logger, final String scanExec, final String javaExec,
 			final String oneJarPath, final HubScanJobConfig jobConfig) throws IOException, HubConfigurationException,
-					InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
+	InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
 		validateScanTargets(logger, jobConfig.getScanTargetPaths(), jobConfig.getWorkingDirectory(),
 				build.getBuiltOn().getChannel());
 		scan.setLogger(logger);
