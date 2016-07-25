@@ -229,7 +229,7 @@ public class HubFailureConditionStep extends Recorder {
 		final RemoteHubEventPolling hubEventPolling = new RemoteHubEventPolling(service,
 				build.getBuiltOn().getChannel());
 
-		if (supportHelper.isCliStatusDirOptionSupport()) {
+		if (supportHelper.hasCapability(HubCapabilitiesEnum.CLI_STATUS_DIRECTORY_OPTION)) {
 			hubEventPolling.assertBomUpToDate(reportGenInfo, logger);
 		} else {
 			hubEventPolling.assertBomUpToDate(reportGenInfo);

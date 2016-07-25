@@ -11,11 +11,11 @@
 	</st:once>
 
 <f:entry field="hubProjectName" title="${%ProjectNameTitle}">
-	<f:textbox value="${it.getHubProjectName()}" default="${descriptor.getDefaultProjectName()}"/>
+	<f:textbox value="${it.getHubProjectName()}" default="${descriptor.getDefaultProjectName()}" onchange="clearCreateProjectMessage('projectCreateMessageField')" />
 </f:entry>
 
 <f:entry field="hubProjectVersion" title="${%ProjectVersionTitle}">
-	<f:textbox value="${it.getHubProjectVersion()}" default="${descriptor.getDefaultProjectVersion()}"/>
+	<f:textbox value="${it.getHubProjectVersion()}" default="${descriptor.getDefaultProjectVersion()}" onchange="clearCreateProjectMessage('projectCreateMessageField')" />
 </f:entry>
 
 <f:entry field="hubVersionPhase" title="${%VersionPhaseTitle}">
@@ -32,7 +32,7 @@
     <div style="display:none;">
       <img src="${imagesURL}/spinner.gif" /> ${%CreateProjectProgress}
     </div>
-    <div> </div>
+    <div id="projectCreateMessageField" > </div>
 </f:entry>
 
 <f:advanced>
