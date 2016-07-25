@@ -35,6 +35,7 @@ import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
+import com.blackducksoftware.integration.hub.rest.RestConnection;
 
 import hudson.ProxyConfiguration;
 import hudson.Util;
@@ -56,16 +57,32 @@ public class BuildHelper {
 	HubIntegrationException, URISyntaxException,
 	MalformedURLException, BDRestException {
 
-		return getRestService(null, serverUrl, username, password, hubTimeout);
+		final HubIntRestService service = new HubIntRestService(
+				getRestConnection(null, serverUrl, username, password, hubTimeout));
+
+		return service;
 	}
 
-	public static HubIntRestService getRestService(final IntLogger logger, final String serverUrl, final String username, final String password, final int hubTimeout)
-			throws BDJenkinsHubPluginException,
-			HubIntegrationException, URISyntaxException,
-			MalformedURLException, BDRestException {
-		final HubIntRestService service = new HubIntRestService(serverUrl);
-		service.setLogger(logger);
-		service.setTimeout(hubTimeout);
+	public static HubIntRestService getRestService(final IntLogger logger, final String serverUrl,
+			final String username, final String password, final int hubTimeout) throws BDJenkinsHubPluginException,
+			HubIntegrationException, URISyntaxException, MalformedURLException, BDRestException {
+
+		final HubIntRestService service = new HubIntRestService(
+				getRestConnection(logger, serverUrl, username, password, hubTimeout));
+
+		return service;
+	}
+
+	public static RestConnection getRestConnection(final IntLogger logger, final String serverUrl,
+			final String username, final String password, final int hubTimeout)
+					throws BDJenkinsHubPluginException,
+					HubIntegrationException, URISyntaxException,
+					MalformedURLException, BDRestException {
+
+		final RestConnection restConnection = new RestConnection(serverUrl);
+		restConnection.setLogger(logger);
+		restConnection.setTimeout(hubTimeout);
+
 		final Jenkins jenkins = Jenkins.getInstance();
 		if (jenkins != null) {
 			final ProxyConfiguration proxyConfig = jenkins.proxy;
@@ -80,10 +97,12 @@ public class BuildHelper {
 					final InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
 					if (StringUtils.isNotBlank(proxyAddress.getHostName()) && proxyAddress.getPort() != 0) {
 						if (StringUtils.isNotBlank(jenkins.proxy.getUserName()) && StringUtils.isNotBlank(jenkins.proxy.getPassword())) {
-							service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, jenkins.proxy.getUserName(),
+							restConnection.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null,
+									jenkins.proxy.getUserName(),
 									jenkins.proxy.getPassword());
 						} else {
-							service.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null, null, null);
+							restConnection.setProxyProperties(proxyAddress.getHostName(), proxyAddress.getPort(), null,
+									null, null);
 						}
 						if (logger != null) {
 							logger.debug("Using proxy: '" + proxyAddress.getHostName() + "' at Port: '" + proxyAddress.getPort() + "'");
@@ -93,11 +112,10 @@ public class BuildHelper {
 			}
 		}
 		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
-			service.setCookies(username,
+			restConnection.setCookies(username,
 					password);
 		}
-
-		return service;
+		return restConnection;
 	}
 
 	public static String handleVariableReplacement(final Map<String, String> variables, final String value)
