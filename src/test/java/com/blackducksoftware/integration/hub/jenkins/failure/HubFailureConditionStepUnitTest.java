@@ -227,7 +227,7 @@ public class HubFailureConditionStepUnitTest {
 		build.setResult(Result.SUCCESS);
 		final List<Publisher> publishers = new ArrayList<Publisher>();
 		final PostBuildHubScan hubScanStep = new PostBuildHubScan(null, false, null, null, null, null, null,
-				false, null);
+				false, null, false);
 		publishers.add(hubScanStep);
 		project.setPublishersList(publishers);
 
@@ -253,7 +253,7 @@ public class HubFailureConditionStepUnitTest {
 		build.setResult(Result.SUCCESS);
 		final List<Publisher> publishers = new ArrayList<Publisher>();
 		final PostBuildHubScan hubScanStep = new PostBuildHubScan(null, false, null, null, null, null, null,
-				false, null);
+				false, null, false);
 		publishers.add(hubScanStep);
 		project.setPublishersList(publishers);
 		build.setScanFinishedAction(new HubScanFinishedAction());
@@ -302,7 +302,7 @@ public class HubFailureConditionStepUnitTest {
 		build.setResult(Result.SUCCESS);
 		final List<Publisher> publishers = new ArrayList<Publisher>();
 		final PostBuildHubScan hubScanStep = new PostBuildHubScan(null, false, null, "VerisonName", null, null, null,
-				false, null);
+				false, null, false);
 		publishers.add(hubScanStep);
 		project.setPublishersList(publishers);
 		build.setScanFinishedAction(new HubScanFinishedAction());
@@ -358,7 +358,7 @@ public class HubFailureConditionStepUnitTest {
 		build.setResult(Result.SUCCESS);
 		final List<Publisher> publishers = new ArrayList<Publisher>();
 		final PostBuildHubScan hubScanStep = new PostBuildHubScan(null, false, null, "VerisonName", null, null, null,
-				false, null);
+				false, null, false);
 		publishers.add(hubScanStep);
 		project.setPublishersList(publishers);
 		build.setScanFinishedAction(new HubScanFinishedAction());
@@ -412,7 +412,7 @@ public class HubFailureConditionStepUnitTest {
 		build.setResult(Result.SUCCESS);
 		final List<Publisher> publishers = new ArrayList<Publisher>();
 		final PostBuildHubScan hubScanStep = new PostBuildHubScan(null, false, null, "VerisonName", null, null, null,
-				false, null);
+				false, null, false);
 		publishers.add(hubScanStep);
 		project.setPublishersList(publishers);
 		build.setScanFinishedAction(new HubScanFinishedAction());
@@ -473,7 +473,7 @@ public class HubFailureConditionStepUnitTest {
 		build.setResult(Result.SUCCESS);
 		final List<Publisher> publishers = new ArrayList<Publisher>();
 		final PostBuildHubScan hubScanStep = new PostBuildHubScan(null, false, null, "VerisonName", null, null, null,
-				false, null);
+				false, null, false);
 		publishers.add(hubScanStep);
 		project.setPublishersList(publishers);
 		build.setScanFinishedAction(new HubScanFinishedAction());
@@ -536,7 +536,7 @@ public class HubFailureConditionStepUnitTest {
 		build.setResult(Result.SUCCESS);
 		final List<Publisher> publishers = new ArrayList<Publisher>();
 		final PostBuildHubScan hubScanStep = new PostBuildHubScan(null, false, null, "VerisonName", null, null, null,
-				false, null);
+				false, null, false);
 		publishers.add(hubScanStep);
 		project.setPublishersList(publishers);
 		build.setScanFinishedAction(new HubScanFinishedAction());

@@ -100,6 +100,7 @@ public class PostBuildHubScan extends Recorder {
 	private final String scanMemory;
 	private final boolean shouldGenerateHubReport;
 	private String bomUpdateMaxiumWaitTime;
+	private final boolean dryRun;
 	private transient Result result;
 	private Boolean verbose;
 
@@ -114,7 +115,8 @@ public class PostBuildHubScan extends Recorder {
 	@DataBoundConstructor
 	public PostBuildHubScan(final ScanJobs[] scans, final boolean sameAsBuildWrapper, final String hubProjectName,
 			final String hubProjectVersion, final String hubVersionPhase, final String hubVersionDist,
-			final String scanMemory, final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime) {
+			final String scanMemory, final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime,
+			final boolean dryRun) {
 		this.scans = scans;
 		// 2016-06-27 ekerwin: we need to look in to whether we can remove the
 		// boolean sameAsBuildWrapper from the constructor
@@ -128,6 +130,7 @@ public class PostBuildHubScan extends Recorder {
 		this.scanMemory = scanMemory;
 		this.shouldGenerateHubReport = shouldGenerateHubReport;
 		this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
+		this.dryRun = dryRun;
 	}
 
 	public void setverbose(final boolean verbose) {
@@ -139,6 +142,10 @@ public class PostBuildHubScan extends Recorder {
 			verbose = true;
 		}
 		return verbose;
+	}
+
+	public boolean isDryRun() {
+		return dryRun;
 	}
 
 	public boolean getShouldGenerateHubReport() {
@@ -295,7 +302,7 @@ public class PostBuildHubScan extends Recorder {
 							getHubServerInfo().getPassword(), getHubServerInfo().getTimeout());
 					ProjectItem project = null;
 					ReleaseItem version = null;
-					if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
+					if (!isDryRun() && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
 						project = ensureProjectExists(service, logger, projectName);
 						version = ensureVersionExists(service, logger, projectVersion, project);
 						logger.debug("Found Project : " + projectName);
@@ -312,7 +319,7 @@ public class PostBuildHubScan extends Recorder {
 					final DateTime afterScanTime = new DateTime();
 
 					final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
-					if (getResult().equals(Result.SUCCESS) && getShouldGenerateHubReport()
+					if (getResult().equals(Result.SUCCESS) && !isDryRun() && getShouldGenerateHubReport()
 							&& version != null) {
 
 						final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
@@ -553,6 +560,7 @@ public class PostBuildHubScan extends Recorder {
 		logger.alwaysLog("-> Using Build Workspace Path : " + build.getWorkspace().getRemote());
 		logger.alwaysLog(
 				"-> Using Hub Project Name : " + jobConfig.getProjectName() + ", Version : " + jobConfig.getVersion());
+		logger.alwaysLog("-> Dry Run : " + isDryRun());
 
 		logger.alwaysLog("-> Scanning the following targets  : ");
 		for (final String target : jobConfig.getScanTargetPaths()) {
@@ -584,6 +592,7 @@ public class PostBuildHubScan extends Recorder {
 		scan.setWorkingDirectory(jobConfig.getWorkingDirectory());
 
 		scan.setVerboseRun(isVerbose());
+		scan.setDryRun(isDryRun());
 		if (StringUtils.isNotBlank(jobConfig.getProjectName()) && StringUtils.isNotBlank(jobConfig.getVersion())) {
 
 			scan.setProject(jobConfig.getProjectName());
@@ -787,7 +796,7 @@ public class PostBuildHubScan extends Recorder {
 	 * are at least one scan Target/Job defined in the Build
 	 *
 	 */
-	public boolean validateGlobalConfiguration() throws HubScanToolMissingException, HubConfigurationException {
+	public boolean validateGlobalConfiguration() throws HubConfigurationException {
 
 		if (getHubServerInfo() == null) {
 			throw new HubConfigurationException("Could not find the Hub global configuration.");
