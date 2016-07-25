@@ -29,6 +29,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
+import com.blackducksoftware.integration.hub.capabilities.HubCapabilitiesEnum;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
@@ -65,7 +66,7 @@ public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publi
 	@Override
 	public boolean isApplicable(final Class<? extends AbstractProject> jobType) {
 		final HubSupportHelper hubSupport = getCheckedHubSupportHelper();
-		if (hubSupport != null && hubSupport.isPolicyApiSupport()) {
+		if (hubSupport != null && hubSupport.hasCapability(HubCapabilitiesEnum.POLICY_API)) {
 			return true;
 		}
 
@@ -82,7 +83,7 @@ public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publi
 		if (failBuildForPolicyViolations) {
 			final HubSupportHelper hubSupport = getCheckedHubSupportHelper();
 
-			if (hubSupport != null && !hubSupport.isPolicyApiSupport()) {
+			if (hubSupport != null && !hubSupport.hasCapability(HubCapabilitiesEnum.POLICY_API)) {
 				return FormValidation.error(Messages.HubFailureCondition_getPoliciesNotSupported());
 			}
 		}
