@@ -136,6 +136,11 @@ public class HubFailureConditionStep extends Recorder {
 				throw new BDJenkinsHubPluginException(
 						"Could not find the BomUpToDateAction in the Hub Failure Conditions. Make sure the Hub scan was run before the Failure Conditions.");
 			}
+			if (action.isDryRun()) {
+				logger.warn("Will not run the Failure conditions because this was a dry run scan.");
+				return true;
+			}
+
 			waitForBomToBeUpdated(build, logger, action, restService, hubSupport);
 
 			if (!hubSupport.hasCapability(HubCapabilitiesEnum.POLICY_API)) {

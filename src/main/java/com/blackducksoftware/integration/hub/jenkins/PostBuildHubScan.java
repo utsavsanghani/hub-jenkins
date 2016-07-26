@@ -243,6 +243,7 @@ public class PostBuildHubScan extends Recorder {
 
 					}
 					final HubScanJobConfigBuilder hubScanJobConfigBuilder = new HubScanJobConfigBuilder(true);
+					hubScanJobConfigBuilder.setDryRun(isDryRun());
 					hubScanJobConfigBuilder.setProjectName(projectName);
 					hubScanJobConfigBuilder.setVersion(projectVersion);
 					hubScanJobConfigBuilder.setPhase(getHubVersionPhase());
@@ -319,6 +320,7 @@ public class PostBuildHubScan extends Recorder {
 					final DateTime afterScanTime = new DateTime();
 
 					final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
+					bomUpdatedAction.setDryRun(isDryRun());
 					if (getResult().equals(Result.SUCCESS) && !isDryRun() && getShouldGenerateHubReport()
 							&& version != null) {
 

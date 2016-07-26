@@ -560,4 +560,56 @@ public class HubFailureConditionStepUnitTest {
 				output.contains("Found " + policyStatus.getCountNotInViolation().getValue() + " bom entries to be Not In Violation of a defined Policy."));
 		assertEquals(Result.FAILURE, build.getResult());
 	}
+
+	@Test
+	public void testPerformDryRun() throws Exception {
+		final Boolean failBuildForPolicyViolations = true;
+		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
+		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
+		failureStep = Mockito.spy(failureStep);
+
+		final HubIntRestService service = getMockedService("3.0.0", null);
+		final ProjectItem projectItem = new ProjectItem(null, null, null);
+		Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
+		final ReleaseItem releaseItem = new ReleaseItem(null, null, null, null, null);
+		Mockito.doReturn(releaseItem).when(service).getVersion(Mockito.any(ProjectItem.class), Mockito.anyString());
+
+		final HubServerInfo serverInfo = new HubServerInfo("Fake Server", "Fake Creds", 499);
+		HubServerInfoSingleton.getInstance().setServerInfo(serverInfo);
+
+		final HubSupportHelper hubSupport = new HubSupportHelper();
+		hubSupport.checkHubSupport(service, null);
+
+		descriptor = Mockito.spy(descriptor);
+
+		Mockito.doReturn(hubSupport).when(failureStep).getCheckedHubSupportHelper();
+		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
+		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+				Mockito.any(HubServerInfo.class));
+
+		final TestProject project = new TestProject(j.getInstance(), "Test Project");
+		final TestBuild build = new TestBuild(project);
+		build.setResult(Result.SUCCESS);
+		final List<Publisher> publishers = new ArrayList<Publisher>();
+		final PostBuildHubScan hubScanStep = new PostBuildHubScan(null, false, null, "VerisonName", null, null, null,
+				false, null, false);
+		publishers.add(hubScanStep);
+		project.setPublishersList(publishers);
+		build.setScanFinishedAction(new HubScanFinishedAction());
+		final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
+		bomUpdatedAction.setDryRun(true);
+		bomUpdatedAction.setPolicyStatusUrl("URL");
+		bomUpdatedAction.setHasBomBeenUdpated(true);
+		build.setBomUpdatedAction(bomUpdatedAction);
+
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		final PrintStream stream = new PrintStream(baos);
+		final TestBuildListener listener = new TestBuildListener(stream);
+
+		failureStep.perform(build, null, listener);
+
+		final String output = baos.toString();
+		assertTrue(output, output.contains("Will not run the Failure conditions because this was a dry run scan."));
+		assertEquals(Result.SUCCESS, build.getResult());
+	}
 }
