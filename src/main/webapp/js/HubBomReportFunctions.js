@@ -25,11 +25,12 @@ var filteredOperationalClassName = " rowFilteredOperational";
 
 var tableId = "hubBomReport";
 
-var highSecurityColumnNum = 3;
-var mediumSecurityColumnNum = 4;
-var lowSecurityColumnNum = 5;
-var licenseRiskColumnNum = 6;
-var operationRiskColumnNum = 7;
+var policyViolationColumnNum = 0;
+var highSecurityColumnNum = 4;
+var mediumSecurityColumnNum = 5;
+var lowSecurityColumnNum = 6;
+var licenseRiskColumnNum = 7;
+var operationRiskColumnNum = 8;
 
 function adjustWidth(object) {
 	var percentageSpan = object.getElementsByTagName("SPAN")[0];
@@ -80,8 +81,30 @@ function adjustTableRow(row, odd) {
 			}
 		}
 	}
-
 	row.className = className;
+	
+	var violationStatus = row.cells[policyViolationColumnNum].children[0];
+//	if (className.indexOf("oddRow") != -1) {
+//		violationStatus = "true";
+//		row.cells[policyViolationColumnNum].children[0] = "true";
+//	}
+	
+	var violationClasses = row.cells[policyViolationColumnNum].className;
+	
+	if(violationStatus){
+		if (violationStatus && violationStatus == "true") {
+			if (violationClasses.indexOf(" fa fa-ban") == -1) {
+				violationClasses = violationClasses + " fa fa-ban";
+			}
+		}
+    } else {
+		if (violationClasses.indexOf(" fa fa-ban") != -1) {
+			violationClasses = violationClasses.replace(" fa fa-ban", "");
+		}
+	}
+	row.cells[policyViolationColumnNum].children[0] = null;
+	
+	row.cells[policyViolationColumnNum].className = violationClasses;
 }
 
 function adjustSecurityRisks(row) {
