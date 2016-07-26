@@ -460,8 +460,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	 *
 	 */
 	public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName,
-			@QueryParameter("hubProjectVersion") final String hubProjectVersion) throws IOException, ServletException {
-		return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubProjectName, hubProjectVersion);
+			@QueryParameter("hubProjectVersion") final String hubProjectVersion,
+			@QueryParameter("dryRun") final boolean dryRun) throws IOException, ServletException {
+		return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubProjectName, hubProjectVersion,
+				dryRun);
 	}
 
 	/**
@@ -470,8 +472,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	 *
 	 */
 	public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion,
-			@QueryParameter("hubProjectName") final String hubProjectName) throws IOException, ServletException {
-		return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubProjectVersion, hubProjectName);
+			@QueryParameter("hubProjectName") final String hubProjectName,
+			@QueryParameter("dryRun") final boolean dryRun) throws IOException, ServletException {
+		return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubProjectVersion, hubProjectName,
+				dryRun);
 	}
 
 	/**
