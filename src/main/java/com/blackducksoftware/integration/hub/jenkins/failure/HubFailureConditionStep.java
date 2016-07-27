@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import com.blackducksoftware.integration.hub.CIEnvironmentVariables;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.capabilities.HubCapabilitiesEnum;
@@ -84,7 +85,9 @@ public class HubFailureConditionStep extends Recorder {
 			throws InterruptedException, IOException {
 		final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
 
-		final EnvVars variables = build.getEnvironment(listener);
+		final EnvVars envVars = build.getEnvironment(listener);
+		final CIEnvironmentVariables variables = new CIEnvironmentVariables();
+		variables.putAll(envVars);
 		logger.setLogLevel(variables);
 
 		if (build.getResult() != Result.SUCCESS) {

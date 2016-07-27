@@ -37,8 +37,6 @@ import com.blackducksoftware.integration.hub.jenkins.utils.StoredPrintStream;
 import com.blackducksoftware.integration.hub.jenkins.utils.TestBuildListener;
 import com.blackducksoftware.integration.hub.logging.LogLevel;
 
-import hudson.EnvVars;
-
 public class HubJenkinsLoggerTest {
 	private List<String> expectedMessages;
 	private StoredPrintStream storedStream;
@@ -68,48 +66,6 @@ public class HubJenkinsLoggerTest {
 		}
 	}
 
-	@Test
-	public void testSetLogLevelWithVariables() {
-		final EnvVars variables = new EnvVars();
-		logger.setLogLevel(variables);
-		assertEquals(LogLevel.INFO, logger.getLogLevel());
-
-		variables.put("HUB_LOG_LEVEL", "FAKE");
-		logger.setLogLevel(variables);
-		assertEquals(LogLevel.INFO, logger.getLogLevel());
-
-		variables.put("HUB_LOG_LEVEL", "error");
-		logger.setLogLevel(variables);
-		assertEquals(LogLevel.ERROR, logger.getLogLevel());
-
-		variables.put("HUB_LOG_LEVEL", "erRor");
-		logger.setLogLevel(variables);
-		assertEquals(LogLevel.ERROR, logger.getLogLevel());
-
-		variables.put("HUB_LOG_LEVEL", "OFF");
-		logger.setLogLevel(variables);
-		assertEquals(LogLevel.OFF, logger.getLogLevel());
-
-		variables.put("HUB_LOG_LEVEL", "ERROR");
-		logger.setLogLevel(variables);
-		assertEquals(LogLevel.ERROR, logger.getLogLevel());
-
-		variables.put("HUB_LOG_LEVEL", "WARN");
-		logger.setLogLevel(variables);
-		assertEquals(LogLevel.WARN, logger.getLogLevel());
-
-		variables.put("HUB_LOG_LEVEL", "INFO");
-		logger.setLogLevel(variables);
-		assertEquals(LogLevel.INFO, logger.getLogLevel());
-
-		variables.put("HUB_LOG_LEVEL", "DEBUG");
-		logger.setLogLevel(variables);
-		assertEquals(LogLevel.DEBUG, logger.getLogLevel());
-
-		variables.put("HUB_LOG_LEVEL", "TRACE");
-		logger.setLogLevel(variables);
-		assertEquals(LogLevel.TRACE, logger.getLogLevel());
-	}
 
 	@Test
 	public void testOff() {

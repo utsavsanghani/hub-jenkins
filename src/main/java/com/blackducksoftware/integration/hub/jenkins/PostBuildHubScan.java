@@ -37,6 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import com.blackducksoftware.integration.hub.CIEnvironmentVariables;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
@@ -219,7 +220,9 @@ public class PostBuildHubScan extends Recorder {
 			throws InterruptedException, IOException {
 		final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
 
-		final EnvVars variables = build.getEnvironment(listener);
+		final EnvVars envVars = build.getEnvironment(listener);
+		final CIEnvironmentVariables variables = new CIEnvironmentVariables();
+		variables.putAll(envVars);
 		logger.setLogLevel(variables);
 
 		setResult(build.getResult());
@@ -232,14 +235,14 @@ public class PostBuildHubScan extends Recorder {
 				if (validateGlobalConfiguration()) {
 					final String workingDirectory = getWorkingDirectory(logger, build);
 
-					final List<String> scanTargetPaths = getScanTargets(logger, build, variables, workingDirectory);
+					final List<String> scanTargetPaths = getScanTargets(logger, build, envVars, workingDirectory);
 
 					String projectName = null;
 					String projectVersion = null;
 
 					if (StringUtils.isNotBlank(getHubProjectName()) && StringUtils.isNotBlank(getHubProjectVersion())) {
-						projectName = BuildHelper.handleVariableReplacement(variables, getHubProjectName());
-						projectVersion = BuildHelper.handleVariableReplacement(variables, getHubProjectVersion());
+						projectName = BuildHelper.handleVariableReplacement(envVars, getHubProjectName());
+						projectVersion = BuildHelper.handleVariableReplacement(envVars, getHubProjectVersion());
 
 					}
 					final HubScanJobConfigBuilder hubScanJobConfigBuilder = new HubScanJobConfigBuilder(true);
@@ -292,7 +295,7 @@ public class PostBuildHubScan extends Recorder {
 							.getToolDir(new DummyToolInstallation(), build.getBuiltOn()).getRemote();
 
 					final String scanExec = getScanCLI(logger, build.getBuiltOn(), toolsDirectory, localHostName,
-							variables);
+							envVars);
 
 					final String jrePath = getJavaExec(logger, build, toolsDirectory);
 
