@@ -83,26 +83,21 @@ function adjustTableRow(row, odd) {
 	}
 	row.className = className;
 	
-	var violationStatus = row.cells[policyViolationColumnNum].children[0];
-//	if (className.indexOf("oddRow") != -1) {
-//		violationStatus = "true";
-//		row.cells[policyViolationColumnNum].children[0] = "true";
-//	}
+	var violationStatus = row.cells[policyViolationColumnNum].children[1];
+	if(violationStatus){
+		violationStatus = violationStatus.innerHTML;
+	} else{
+		violationStatus = "NOT_IN_VIOLATION";
+	}
 	
 	var violationClasses = row.cells[policyViolationColumnNum].className;
 	
-	if(violationStatus){
-		if (violationStatus && violationStatus == "true") {
-			if (violationClasses.indexOf(" fa fa-ban") == -1) {
-				violationClasses = violationClasses + " fa fa-ban";
-			}
-		}
+	if(violationStatus == "IN_VIOLATION"){
+			//Do nothing
     } else {
-		if (violationClasses.indexOf(" fa fa-ban") != -1) {
-			violationClasses = violationClasses.replace(" fa fa-ban", "");
-		}
+    	row.cells[policyViolationColumnNum].removeChild(row.cells[policyViolationColumnNum].firstChild);
 	}
-	row.cells[policyViolationColumnNum].children[0] = null;
+	row.cells[policyViolationColumnNum].removeChild(row.cells[policyViolationColumnNum].lastChild);
 	
 	row.cells[policyViolationColumnNum].className = violationClasses;
 }
