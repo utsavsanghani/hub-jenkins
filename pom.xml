@@ -16,7 +16,7 @@
 
   <name>Black Duck Hub Plug-In for Jenkins</name>
   <description>Runs the Black Duck Hub scan in Jenkins build</description>
-  <url>https://github.com/blackducksoftware/jenkins-hub</url>
+  <url>https://github.com/blackducksoftware/hub-jenkins</url>
   <inceptionYear>2014</inceptionYear>
   <organization>
     <name>Black Duck Software, Inc.</name>
@@ -28,6 +28,12 @@
       <url>http://www.apache.org/licenses/LICENSE-2.0</url>
     </license>
   </licenses>
+  
+  <scm>
+    <connection>scm:git:git://github.com/blackducksoftware/hub-jenkins.git/</connection>
+    <developerConnection>scm:git:git@github.com:blackducksoftware/hub-jenkins.git</developerConnection>
+    <url>https://www.github.com/blackducksoftware/hub-jenkins</url>
+  </scm>
 
   <distributionManagement>
     <repository>
