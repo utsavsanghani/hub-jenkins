@@ -32,6 +32,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.cli.CLIInstaller;
 import com.blackducksoftware.integration.hub.cli.CLILocation;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
+import com.blackducksoftware.integration.hub.rest.RestConnection;
 
 import hudson.EnvVars;
 import hudson.remoting.Callable;
@@ -96,15 +97,17 @@ public class CLIRemoteInstall implements Callable<Void, Exception> {
 		ciEnvironmentVariables.putAll(variables);
 		final CLIInstaller installer = new CLIInstaller(cliLocation, ciEnvironmentVariables);
 
-		final HubIntRestService service = new HubIntRestService(hubUrl);
-		service.setLogger(logger);
+		final RestConnection restConnection = new RestConnection(hubUrl);
+		
+		restConnection.setLogger(logger);
 		if (StringUtils.isNotBlank(proxyHost) && proxyPort != 0) {
-			service.setProxyProperties(proxyHost, proxyPort, null, proxyUserName, proxyPassword);
+			restConnection.setProxyProperties(proxyHost, proxyPort, null, proxyUserName, proxyPassword);
 		}
-		service.setCookies(hubUser, hubPassword);
+		restConnection.setCookies(hubUser, hubPassword);
+		
+		final HubIntRestService service = new HubIntRestService(restConnection);
 
 		installer.performInstallation(logger, service, localHost);
-
 		return null;
 	}
 

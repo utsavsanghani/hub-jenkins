@@ -16,7 +16,7 @@
 
   <name>Black Duck Hub Plug-In for Jenkins</name>
   <description>Runs the Black Duck Hub scan in Jenkins build</description>
-  <url>https://github.com/blackducksoftware/jenkins-hub</url>
+  <url>https://github.com/blackducksoftware/hub-jenkins</url>
   <inceptionYear>2014</inceptionYear>
   <organization>
     <name>Black Duck Software, Inc.</name>
@@ -28,6 +28,12 @@
       <url>http://www.apache.org/licenses/LICENSE-2.0</url>
     </license>
   </licenses>
+  
+  <scm>
+    <connection>scm:git:git://github.com/blackducksoftware/hub-jenkins.git/</connection>
+    <developerConnection>scm:git:git@github.com:blackducksoftware/hub-jenkins.git</developerConnection>
+    <url>https://www.github.com/blackducksoftware/hub-jenkins</url>
+  </scm>
 
   <distributionManagement>
     <repository>
@@ -68,7 +74,7 @@
     <dependency>
       <groupId>com.blackducksoftware.integration</groupId>
       <artifactId>hub-common</artifactId>
-      <version>1.4.3-SNAPSHOT</version>
+      <version>1.4.5-SNAPSHOT</version>
       <exclusions>
         <exclusion>
           <groupId>com.thoughtworks.xstream</groupId>
@@ -120,11 +126,6 @@
       <version>1.10</version>
     </dependency>
     <dependency>
-      <groupId>com.blackducksoftware.integration</groupId>
-      <artifactId>phone-home-api</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-    <dependency>
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>remoting</artifactId>
       <version>2.47</version>
@@ -153,6 +154,11 @@
       <artifactId>servlet-api-2.5</artifactId>
       <version>6.1.11</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.blackducksoftware.integration</groupId>
+      <artifactId>phone-home-api</artifactId>
+      <version>1.0.0</version>
     </dependency>
   </dependencies>
 

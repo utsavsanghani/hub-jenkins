@@ -51,7 +51,8 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
 	public JenkinsScanExecutor(final HubServerInfo serverInfo, final List<String> scanTargets, final Integer buildNumber, final HubSupportHelper supportHelper,
 			final AbstractBuild<?, ?> build, final Launcher launcher, final HubJenkinsLogger logger) {
-		super(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), scanTargets, buildNumber, supportHelper);
+		super(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), scanTargets, buildNumber,
+				supportHelper);
 		this.build = build;
 		this.launcher = launcher;
 		this.logger = logger;

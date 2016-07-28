@@ -45,6 +45,8 @@ public class BomUpToDateAction implements Action {
 
 	private String policyStatusUrl;
 
+	private boolean dryRun;
+
 	public boolean isHasBomBeenUdpated() {
 		return hasBomBeenUdpated;
 	}
@@ -107,6 +109,14 @@ public class BomUpToDateAction implements Action {
 
 	public void setPolicyStatusUrl(final String policyStatusUrl) {
 		this.policyStatusUrl = policyStatusUrl;
+	}
+
+	public boolean isDryRun() {
+		return dryRun;
+	}
+
+	public void setDryRun(final boolean dryRun) {
+		this.dryRun = dryRun;
 	}
 
 	@Override

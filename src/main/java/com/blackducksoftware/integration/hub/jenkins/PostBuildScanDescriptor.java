@@ -51,7 +51,6 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
 import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
 import com.blackducksoftware.integration.hub.builder.ValidationResultEnum;
@@ -65,6 +64,7 @@ import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
 import com.blackducksoftware.integration.hub.jenkins.helper.PluginHelper;
 import com.blackducksoftware.integration.hub.job.HubScanJobConfig;
 import com.blackducksoftware.integration.hub.job.HubScanJobFieldEnum;
+import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -128,7 +128,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	}
 
 	public String getDefaultProjectVersion() {
-		return "<unnamed>";
+		return "unnamed";
 	}
 
 	public String getHubServerUrl() {
@@ -171,7 +171,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	// http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor/config.xml
 	@WebMethod(name = "config.xml")
 	public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException,
-			TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
+	TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
 		final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 		boolean changed = false;
 		try {
@@ -401,12 +401,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 		builder.validateTimeout(results);
 
 		if (!results.isSuccess()) {
-			if (results.hasWarnings()) {
-				return FormValidation.warning(
-						results.getResultString(HubServerConfigFieldEnum.HUBTIMEOUT, ValidationResultEnum.WARN));
-			} else if (results.hasErrors()) {
+			if (results.hasErrors()) {
 				return FormValidation.error(
 						results.getResultString(HubServerConfigFieldEnum.HUBTIMEOUT, ValidationResultEnum.ERROR));
+			} else if (results.hasWarnings()) {
+				return FormValidation.warning(
+						results.getResultString(HubServerConfigFieldEnum.HUBTIMEOUT, ValidationResultEnum.WARN));
 			}
 		}
 		return FormValidation.ok();
@@ -445,6 +445,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 						.error(results.getResultString(HubServerConfigFieldEnum.HUBURL, ValidationResultEnum.ERROR));
 			}
 		}
+
 		return FormValidation.ok();
 	}
 
@@ -459,8 +460,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	 *
 	 */
 	public FormValidation doCheckHubProjectName(@QueryParameter("hubProjectName") final String hubProjectName,
-			@QueryParameter("hubProjectVersion") final String hubProjectVersion) throws IOException, ServletException {
-		return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubProjectName, hubProjectVersion);
+			@QueryParameter("hubProjectVersion") final String hubProjectVersion,
+			@QueryParameter("dryRun") final boolean dryRun) throws IOException, ServletException {
+		return BDCommonDescriptorUtil.doCheckHubProjectName(getHubServerInfo(), hubProjectName, hubProjectVersion,
+				dryRun);
 	}
 
 	/**
@@ -469,8 +472,10 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	 *
 	 */
 	public FormValidation doCheckHubProjectVersion(@QueryParameter("hubProjectVersion") final String hubProjectVersion,
-			@QueryParameter("hubProjectName") final String hubProjectName) throws IOException, ServletException {
-		return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubProjectVersion, hubProjectName);
+			@QueryParameter("hubProjectName") final String hubProjectName,
+			@QueryParameter("dryRun") final boolean dryRun) throws IOException, ServletException {
+		return BDCommonDescriptorUtil.doCheckHubProjectVersion(getHubServerInfo(), hubProjectVersion, hubProjectName,
+				dryRun);
 	}
 
 	/**
@@ -520,12 +525,12 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 			credentialUserName = credential.getUsername();
 			credentialPassword = credential.getPassword().getPlainText();
 
-			final HubIntRestService service = BuildHelper.getRestService(serverUrl, null, null,
+			final RestConnection restConnection = BuildHelper.getRestConnection(null, serverUrl, null, null,
 					Integer.valueOf(hubTimeout));
 
-			final int responseCode = service.setCookies(credentialUserName, credentialPassword);
+			final int responseCode = restConnection.setCookies(credentialUserName, credentialPassword);
 
-			if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+			if (restConnection.isSuccess(responseCode)) {
 				return FormValidation.ok(Messages.HubBuildScan_getCredentialsValidFor_0_(serverUrl));
 			} else if (responseCode == 401) {
 				// If User is Not Authorized, 401 error, an exception should be
@@ -565,7 +570,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 				Thread.currentThread().setContextClassLoader(originalClassLoader);
 			}
 		}
-
 	}
 
 	/**

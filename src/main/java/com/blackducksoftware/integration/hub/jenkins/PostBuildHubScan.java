@@ -31,14 +31,19 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import com.blackducksoftware.integration.hub.CIEnvironmentVariables;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
+import com.blackducksoftware.integration.hub.builder.ValidationResult;
+import com.blackducksoftware.integration.hub.builder.ValidationResultEnum;
 import com.blackducksoftware.integration.hub.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.capabilities.HubCapabilitiesEnum;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
@@ -101,6 +106,7 @@ public class PostBuildHubScan extends Recorder {
 	private final String scanMemory;
 	private final boolean shouldGenerateHubReport;
 	private String bomUpdateMaxiumWaitTime;
+	private final boolean dryRun;
 	private transient Result result;
 	private Boolean verbose;
 
@@ -115,7 +121,8 @@ public class PostBuildHubScan extends Recorder {
 	@DataBoundConstructor
 	public PostBuildHubScan(final ScanJobs[] scans, final boolean sameAsBuildWrapper, final String hubProjectName,
 			final String hubProjectVersion, final String hubVersionPhase, final String hubVersionDist,
-			final String scanMemory, final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime) {
+			final String scanMemory, final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime,
+			final boolean dryRun) {
 		this.scans = scans;
 		// 2016-06-27 ekerwin: we need to look in to whether we can remove the
 		// boolean sameAsBuildWrapper from the constructor
@@ -129,6 +136,7 @@ public class PostBuildHubScan extends Recorder {
 		this.scanMemory = scanMemory;
 		this.shouldGenerateHubReport = shouldGenerateHubReport;
 		this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
+		this.dryRun = dryRun;
 	}
 
 	public void setverbose(final boolean verbose) {
@@ -140,6 +148,10 @@ public class PostBuildHubScan extends Recorder {
 			verbose = true;
 		}
 		return verbose;
+	}
+
+	public boolean isDryRun() {
+		return dryRun;
 	}
 
 	public boolean getShouldGenerateHubReport() {
@@ -213,7 +225,9 @@ public class PostBuildHubScan extends Recorder {
 			throws InterruptedException, IOException {
 		final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
 
-		final EnvVars variables = build.getEnvironment(listener);
+		final EnvVars envVars = build.getEnvironment(listener);
+		final CIEnvironmentVariables variables = new CIEnvironmentVariables();
+		variables.putAll(envVars);
 		logger.setLogLevel(variables);
                 
 		setResult(build.getResult());
@@ -226,17 +240,18 @@ public class PostBuildHubScan extends Recorder {
 				if (validateGlobalConfiguration()) {
 					final String workingDirectory = getWorkingDirectory(logger, build);
 
-					final List<String> scanTargetPaths = getScanTargets(logger, build, variables, workingDirectory);
+					final List<String> scanTargetPaths = getScanTargets(logger, build, envVars, workingDirectory);
 
 					String projectName = null;
 					String projectVersion = null;
 
 					if (StringUtils.isNotBlank(getHubProjectName()) && StringUtils.isNotBlank(getHubProjectVersion())) {
-						projectName = BuildHelper.handleVariableReplacement(variables, getHubProjectName());
-						projectVersion = BuildHelper.handleVariableReplacement(variables, getHubProjectVersion());
+						projectName = BuildHelper.handleVariableReplacement(envVars, getHubProjectName());
+						projectVersion = BuildHelper.handleVariableReplacement(envVars, getHubProjectVersion());
 
 					}
 					final HubScanJobConfigBuilder hubScanJobConfigBuilder = new HubScanJobConfigBuilder(true);
+					hubScanJobConfigBuilder.setDryRun(isDryRun());
 					hubScanJobConfigBuilder.setProjectName(projectName);
 					hubScanJobConfigBuilder.setVersion(projectVersion);
 					hubScanJobConfigBuilder.setPhase(getHubVersionPhase());
@@ -259,15 +274,33 @@ public class PostBuildHubScan extends Recorder {
 					final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> builderResults = hubScanJobConfigBuilder
 							.build();
 					final HubScanJobConfig jobConfig = builderResults.getConstructedObject();
-
 					printConfiguration(build, listener, logger, jobConfig);
 
+					if (!builderResults.isSuccess()) {
+						final Map<HubScanJobFieldEnum, List<ValidationResult>> results = builderResults.getResultMap();
+						for (final Entry<HubScanJobFieldEnum, List<ValidationResult>> errorEntry : results.entrySet()) {
+							final StringBuilder errorBuilder = new StringBuilder();
+							for (final ValidationResult result : errorEntry.getValue()) {
+								if (result.getResultType() != ValidationResultEnum.OK) {
+									if (errorBuilder.length() > 0) {
+										errorBuilder.append("\n");
+									}
+									if (StringUtils.isNotBlank(result.getMessage())) {
+										errorBuilder.append(result.getMessage());
+									}
+								}
+							}
+							if (errorBuilder.length() > 0) {
+								logger.error(errorEntry.getKey().name() + " :: " + errorBuilder.toString());
+							}
+						}
+					}
 					final DummyToolInstaller dummyInstaller = new DummyToolInstaller();
 					final String toolsDirectory = dummyInstaller
 							.getToolDir(new DummyToolInstallation(), build.getBuiltOn()).getRemote();
 
 					final String scanExec = getScanCLI(logger, build.getBuiltOn(), toolsDirectory, localHostName,
-							variables);
+							envVars);
 
 					final String jrePath = getJavaExec(logger, build, toolsDirectory);
 
@@ -278,7 +311,7 @@ public class PostBuildHubScan extends Recorder {
 							getHubServerInfo().getPassword(), getHubServerInfo().getTimeout());
 					ProjectItem project = null;
 					ReleaseItem version = null;
-					if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
+					if (!isDryRun() && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
 						project = ensureProjectExists(service, logger, projectName);
 						version = ensureVersionExists(service, logger, projectVersion, project);
 						logger.debug("Found Project : " + projectName);
@@ -304,7 +337,9 @@ public class PostBuildHubScan extends Recorder {
 					final DateTime afterScanTime = new DateTime();
 
 					final BomUpToDateAction bomUpdatedAction = new BomUpToDateAction();
-					if (getResult().equals(Result.SUCCESS) && getShouldGenerateHubReport()) {
+					bomUpdatedAction.setDryRun(isDryRun());
+					if (getResult().equals(Result.SUCCESS) && !isDryRun() && getShouldGenerateHubReport()
+							&& version != null) {
 
 						final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
 						reportGenInfo.setService(service);
@@ -496,7 +531,7 @@ public class PostBuildHubScan extends Recorder {
 	 */
 	protected ReleaseItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
 			final String projectVersion, final ProjectItem project) throws IOException, URISyntaxException,
-					BDJenkinsHubPluginException, UnexpectedHubResponseException {
+	BDJenkinsHubPluginException, UnexpectedHubResponseException {
 		ReleaseItem version = null;
 		try {
 			version = service.getVersion(project, projectVersion);
@@ -544,6 +579,7 @@ public class PostBuildHubScan extends Recorder {
 		logger.alwaysLog("-> Using Build Workspace Path : " + build.getWorkspace().getRemote());
 		logger.alwaysLog(
 				"-> Using Hub Project Name : " + jobConfig.getProjectName() + ", Version : " + jobConfig.getVersion());
+		logger.alwaysLog("-> Dry Run : " + isDryRun());
 
 		logger.alwaysLog("-> Scanning the following targets  : ");
 		for (final String target : jobConfig.getScanTargetPaths()) {
@@ -565,7 +601,7 @@ public class PostBuildHubScan extends Recorder {
 	private void runScan(final HubIntRestService service, final AbstractBuild<?, ?> build,
 			final JenkinsScanExecutor scan, final HubJenkinsLogger logger, final String scanExec, final String javaExec,
 			final String oneJarPath, final HubScanJobConfig jobConfig) throws IOException, HubConfigurationException,
-					InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
+	InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
 		validateScanTargets(logger, jobConfig.getScanTargetPaths(), jobConfig.getWorkingDirectory(),
 				build.getBuiltOn().getChannel());
 		scan.setLogger(logger);
@@ -575,6 +611,7 @@ public class PostBuildHubScan extends Recorder {
 		scan.setWorkingDirectory(jobConfig.getWorkingDirectory());
 
 		scan.setVerboseRun(isVerbose());
+		scan.setDryRun(isDryRun());
 		if (StringUtils.isNotBlank(jobConfig.getProjectName()) && StringUtils.isNotBlank(jobConfig.getVersion())) {
 
 			scan.setProject(jobConfig.getProjectName());
@@ -778,7 +815,7 @@ public class PostBuildHubScan extends Recorder {
 	 * are at least one scan Target/Job defined in the Build
 	 *
 	 */
-	public boolean validateGlobalConfiguration() throws HubScanToolMissingException, HubConfigurationException {
+	public boolean validateGlobalConfiguration() throws HubConfigurationException {
 
 		if (getHubServerInfo() == null) {
 			throw new HubConfigurationException("Could not find the Hub global configuration.");

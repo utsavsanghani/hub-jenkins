@@ -9,7 +9,15 @@
 	color: #000;
 }
 
-.infoIcon{
+.hidden {
+	display: none;
+}
+
+.violation {
+	color: #9c251f;
+}
+
+.infoIcon {
 	color: #CCCCCC;
 	padding-left: 10px;
 }

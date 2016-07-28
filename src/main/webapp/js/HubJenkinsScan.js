@@ -34,3 +34,11 @@ function customCreateProject(method, withVars, button) {
 		checker(hubProjectVersion);
 	}, 1000);
 }
+
+
+function clearCreateProjectMessage(elementId){
+	var messageField = getElementById(elementId);
+	while (messageField.firstChild) {
+		messageField.removeChild(messageField.firstChild);
+	}
+}
