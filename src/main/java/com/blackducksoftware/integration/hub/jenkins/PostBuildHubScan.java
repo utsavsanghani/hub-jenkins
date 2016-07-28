@@ -22,7 +22,6 @@
 package com.blackducksoftware.integration.hub.jenkins;
 
 import java.io.File;
-import java.io.InputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -31,10 +30,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.Set;
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -78,7 +74,7 @@ import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
-import com.blackducksoftware.integration.phone.home.api.PhoneHomeInfo;
+import com.blackducksoftware.integration.phone.home.PhoneHomeClient;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -93,6 +89,8 @@ import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Recorder;
 import jenkins.model.Jenkins;
+import org.json.JSONException;
+import org.restlet.resource.ResourceException;
 
 public class PostBuildHubScan extends Recorder {
 	private final ScanJobs[] scans;
@@ -105,7 +103,6 @@ public class PostBuildHubScan extends Recorder {
 	private String bomUpdateMaxiumWaitTime;
 	private transient Result result;
 	private Boolean verbose;
-        private Calendar lastPhoneHome;
 
 	// Old variable, renaming to hubProjectVersion
 	// need to keep this around for now for migration purposes
@@ -219,20 +216,6 @@ public class PostBuildHubScan extends Recorder {
 		final EnvVars variables = build.getEnvironment(listener);
 		logger.setLogLevel(variables);
                 
-                
-
-//@nrowles
-//                bdPhoneHome();
-////                String blackDuckName = "Hub";
-////                String thirdPartyName = "Jenkins";
-////                String blackDuckVersion = getHubProjectVersion();
-////                String thirdPartyVersion = Jenkins.getVersion().toString();
-////                PhoneHomeInfo info = new PhoneHomeInfo(blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion);
-////                info.phoneHome();
-//                PhoneHomeInfo dummyInfo = new PhoneHomeInfo("blackDuckName", "blackDuckVersion", "thirdPartyName", "thirdPartyVersion");
-//                
-//                dummyInfo.phoneHome();
-                
 		setResult(build.getResult());
 		if (BuildHelper.isSuccess(build)) {
 			try {
@@ -304,7 +287,7 @@ public class PostBuildHubScan extends Recorder {
 					final HubSupportHelper hubSupport = new HubSupportHelper();
 					hubSupport.checkHubSupport(service, logger);
                                         
-                                        //@nrowles
+                                        //Phone-Home
                                         final String hubVersion = hubSupport.getHubVersion(service);
                                         final String regId = service.getRegistrationId();
                                         try{
@@ -837,39 +820,21 @@ public class PostBuildHubScan extends Recorder {
 		return true;
 	}
         
-        //@nrowles
-        public void bdPhoneHome(String blackDuckVersion, String regId){
+        /**
+         * @param blackDuckVersion  Version of the blackduck product, in this instance, the hub
+         * @param regId             Registration ID of the hub instance that this plugin uses
+         * 
+         * This method "phones-home" to the internal BlackDuck Integrations server.
+         * Every time a build is kicked off, 
+         */
+        public void bdPhoneHome(String blackDuckVersion, String regId) throws IOException, ResourceException, JSONException{
             String blackDuckName = "Hub";
             String thirdPartyName = "Jenkins";
             String thirdPartyVersion = Jenkins.getVersion().toString();
-            
-//            final Properties properties = new Properties();
-//            
-//            try{
-//                properties.load(getClass().getClassLoader().getResourceAsStream("project.properties"));
-//            } catch (IOException e){
-//                //TODO Exception handling
-//                e.printStackTrace();
-//                System.out.println("unable to load properties file");
-//            }
-//            
-//            Set<String> keys = properties.stringPropertyNames();
-//            for(String key : keys){
-//                System.out.println(key);
-//            }
-//            
-//            System.out.println(properties.isEmpty());
-//            String pluginVersion = properties.getProperty("project.version");
-//            System.out.println(pluginVersion);
-            
             PluginHelper ph = new PluginHelper();
             String pluginVersion = ph.getPluginVersion();
-
-            PhoneHomeInfo info = new PhoneHomeInfo(blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion, regId, pluginVersion);
-            info.phoneHome();
-//            PhoneHomeInfo dummyInfo = new PhoneHomeInfo("blackDuckName", "blackDuckVersion", "thirdPartyName", "thirdPartyVersion");
-//                
-//            dummyInfo.phoneHome();
+            
+            PhoneHomeClient phClient = new PhoneHomeClient();
+            phClient.callHomeIntegrations(regId, blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion, pluginVersion);
         }
-
 }
