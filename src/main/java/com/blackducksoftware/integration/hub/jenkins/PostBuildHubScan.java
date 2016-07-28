@@ -321,9 +321,9 @@ public class PostBuildHubScan extends Recorder {
 					hubSupport.checkHubSupport(service, logger);
                                         
                                         //Phone-Home
-                                        final String hubVersion = hubSupport.getHubVersion(service);
-                                        final String regId = service.getRegistrationId();
                                         try{
+                                            final String hubVersion = hubSupport.getHubVersion(service);
+                                            final String regId = service.getRegistrationId();
                                             bdPhoneHome(hubVersion, regId);
                                         } catch(Exception e){
                                             logger.error("Unable to phone-home", e);
