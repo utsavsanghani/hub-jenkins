@@ -80,6 +80,8 @@ import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 import com.blackducksoftware.integration.phone.home.PhoneHomeClient;
+import com.blackducksoftware.integration.phone.home.exception.PhoneHomeException;
+import com.blackducksoftware.integration.phone.home.exception.PropertiesLoaderException;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -864,7 +866,7 @@ public class PostBuildHubScan extends Recorder {
          * This method "phones-home" to the internal BlackDuck Integrations server.
          * Every time a build is kicked off, 
          */
-        public void bdPhoneHome(String blackDuckVersion, String regId) throws IOException, ResourceException, JSONException{
+        public void bdPhoneHome(String blackDuckVersion, String regId) throws IOException, PhoneHomeException, PropertiesLoaderException, ResourceException, JSONException{
             String blackDuckName = "Hub";
             String thirdPartyName = "Jenkins";
             String thirdPartyVersion = Jenkins.getVersion().toString();
