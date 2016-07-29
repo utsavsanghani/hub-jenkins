@@ -38,22 +38,25 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
-import hudson.model.AbstractBuild;
+import hudson.model.Node;
 
 public class JenkinsScanExecutor extends ScanExecutor {
 	public static final Integer THREAD_SLEEP = 100;
 
-	private final AbstractBuild<?, ?> build;
+	private final Node builtOn;
+
+	private final EnvVars envVars;
 
 	private final Launcher launcher;
 
 	private final HubJenkinsLogger logger;
 
 	public JenkinsScanExecutor(final HubServerInfo serverInfo, final List<String> scanTargets, final Integer buildNumber, final HubSupportHelper supportHelper,
-			final AbstractBuild<?, ?> build, final Launcher launcher, final HubJenkinsLogger logger) {
+			final Node builtOn, final EnvVars envVars, final Launcher launcher, final HubJenkinsLogger logger) {
 		super(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), scanTargets, buildNumber,
 				supportHelper);
-		this.build = build;
+		this.builtOn = builtOn;
+		this.envVars = envVars;
 		this.launcher = launcher;
 		this.logger = logger;
 	}
@@ -71,7 +74,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 				return false;
 			}
 			else {
-				final FilePath scanExecRemote = new FilePath(build.getBuiltOn().getChannel(), scanExec);
+				final FilePath scanExecRemote = new FilePath(builtOn.getChannel(), scanExec);
 				if (!scanExecRemote.exists()) {
 					getLogger().error("The Hub scan CLI provided does not exist.");
 					return false;
@@ -86,7 +89,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 				return false;
 			}
 			else {
-				final FilePath javaExecRemote = new FilePath(build.getBuiltOn().getChannel(), javaExec);
+				final FilePath javaExecRemote = new FilePath(builtOn.getChannel(), javaExec);
 				if (!javaExecRemote.exists()) {
 					getLogger().error("The Java executable provided does not exist.");
 					return false;
@@ -108,7 +111,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
 	@Override
 	protected String getLogDirectoryPath() throws IOException {
-		FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), getWorkingDirectory());
+		FilePath logDirectory = new FilePath(builtOn.getChannel(), getWorkingDirectory());
 		logDirectory = new FilePath(logDirectory, "HubScanLogs");
 		logDirectory = new FilePath(logDirectory, String.valueOf(getBuildNumber()));
 		// This log directory should never exist as a new one is created for each Build
@@ -128,7 +131,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 	 */
 	@Override
 	public String getScanStatusDirectoryPath() throws IOException {
-		final FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), getLogDirectoryPath());
+		final FilePath logDirectory = new FilePath(builtOn.getChannel(), getLogDirectoryPath());
 		final FilePath scanStatusDirectory = new FilePath(logDirectory, "status");
 		return scanStatusDirectory.getRemote();
 	}
@@ -136,7 +139,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 	@Override
 	protected Result executeScan(final List<String> cmd, final String logDirectoryPath) throws HubIntegrationException, InterruptedException {
 		try {
-			final FilePath logBaseDirectory = new FilePath(build.getBuiltOn().getChannel(), getLogDirectoryPath());
+			final FilePath logBaseDirectory = new FilePath(builtOn.getChannel(), getLogDirectoryPath());
 			logBaseDirectory.mkdirs();
 			final FilePath standardOutFile = new FilePath(logBaseDirectory, "CLI_Output.txt");
 			standardOutFile.touch(0);
@@ -164,9 +167,8 @@ public class JenkinsScanExecutor extends ScanExecutor {
 				ps.masks(masks);
 				// ///////////////////////
 
-				final EnvVars variables = build.getEnvironment(logger.getJenkinsListener());
-				variables.put("BD_HUB_PASSWORD", getHubPassword());
-				ps.envs(variables);
+				envVars.put("BD_HUB_PASSWORD", getHubPassword());
+				ps.envs(envVars);
 
 				final ScannerSplitStream splitStream = new ScannerSplitStream(logger, standardOutFile.write());
 
@@ -175,7 +177,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 				splitStream.close();
 
 				if (logDirectoryPath != null) {
-					final FilePath logDirectory = new FilePath(build.getBuiltOn().getChannel(), logDirectoryPath);
+					final FilePath logDirectory = new FilePath(builtOn.getChannel(), logDirectoryPath);
 					if (logDirectory.exists()) {
 
 						getLogger().info(

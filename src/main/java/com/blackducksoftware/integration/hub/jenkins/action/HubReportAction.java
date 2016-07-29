@@ -21,9 +21,6 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.action;
 
-import hudson.model.Action;
-import hudson.model.AbstractBuild;
-
 import java.util.List;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -35,122 +32,129 @@ import com.blackducksoftware.integration.hub.report.api.DetailedReleaseSummary;
 import com.blackducksoftware.integration.hub.report.api.HubRiskReportData;
 import com.blackducksoftware.integration.hub.report.api.VersionReport;
 
+import hudson.model.Action;
+import hudson.model.Run;
+
 public class HubReportAction implements Action {
 
-    private final AbstractBuild<?, ?> build;
+	private Run<?, ?> build;
 
-    private HubRiskReportData reportData;
+	private HubRiskReportData reportData;
 
-    public HubReportAction(AbstractBuild<?, ?> build) {
-        this.build = build;
-    }
+	public HubReportAction() {
 
-    public AbstractBuild<?, ?> getBuild() {
-        return build;
-    }
+	}
 
-    public VersionReport getReport() {
-        return reportData.getReport();
-    }
+	public void setBuild(final Run<?, ?> build) {
+		this.build = build;
+	}
 
-    public DetailedReleaseSummary getReleaseSummary() {
-        if (reportData == null || reportData.getReport() == null) {
-            return null;
-        }
-        return reportData.getReport().getDetailedReleaseSummary();
-    }
+	public Run<?, ?> getBuild() {
+		return build;
+	}
 
-    public List<AggregateBomViewEntry> getBomEntries() {
-        if (reportData == null || reportData.getReport() == null) {
-            return null;
-        }
-        return reportData.getReport().getAggregateBomViewEntries();
-    }
+	public VersionReport getReport() {
+		return reportData.getReport();
+	}
 
-    public int getVulnerabilityRiskHighCount() {
-        return reportData.getVulnerabilityRiskHighCount();
-    }
+	public DetailedReleaseSummary getReleaseSummary() {
+		if (reportData == null || reportData.getReport() == null) {
+			return null;
+		}
+		return reportData.getReport().getDetailedReleaseSummary();
+	}
 
-    public int getVulnerabilityRiskMediumCount() {
-        return reportData.getVulnerabilityRiskMediumCount();
-    }
+	public List<AggregateBomViewEntry> getBomEntries() {
+		if (reportData == null || reportData.getReport() == null) {
+			return null;
+		}
+		return reportData.getReport().getAggregateBomViewEntries();
+	}
 
-    public int getVulnerabilityRiskLowCount() {
-        return reportData.getVulnerabilityRiskLowCount();
-    }
+	public int getVulnerabilityRiskHighCount() {
+		return reportData.getVulnerabilityRiskHighCount();
+	}
 
-    public int getVulnerabilityRiskNoneCount() {
-        return reportData.getVulnerabilityRiskNoneCount();
-    }
+	public int getVulnerabilityRiskMediumCount() {
+		return reportData.getVulnerabilityRiskMediumCount();
+	}
 
-    public int getLicenseRiskHighCount() {
-        return reportData.getLicenseRiskHighCount();
-    }
+	public int getVulnerabilityRiskLowCount() {
+		return reportData.getVulnerabilityRiskLowCount();
+	}
 
-    public int getLicenseRiskMediumCount() {
-        return reportData.getLicenseRiskMediumCount();
-    }
+	public int getVulnerabilityRiskNoneCount() {
+		return reportData.getVulnerabilityRiskNoneCount();
+	}
 
-    public int getLicenseRiskLowCount() {
-        return reportData.getLicenseRiskLowCount();
-    }
+	public int getLicenseRiskHighCount() {
+		return reportData.getLicenseRiskHighCount();
+	}
 
-    public int getLicenseRiskNoneCount() {
-        return reportData.getLicenseRiskNoneCount();
-    }
+	public int getLicenseRiskMediumCount() {
+		return reportData.getLicenseRiskMediumCount();
+	}
 
-    public int getOperationalRiskHighCount() {
-        return reportData.getOperationalRiskHighCount();
-    }
+	public int getLicenseRiskLowCount() {
+		return reportData.getLicenseRiskLowCount();
+	}
 
-    public int getOperationalRiskMediumCount() {
-        return reportData.getOperationalRiskMediumCount();
-    }
+	public int getLicenseRiskNoneCount() {
+		return reportData.getLicenseRiskNoneCount();
+	}
 
-    public int getOperationalRiskLowCount() {
-        return reportData.getOperationalRiskLowCount();
-    }
+	public int getOperationalRiskHighCount() {
+		return reportData.getOperationalRiskHighCount();
+	}
 
-    public int getOperationalRiskNoneCount() {
-        return reportData.getOperationalRiskNoneCount();
-    }
+	public int getOperationalRiskMediumCount() {
+		return reportData.getOperationalRiskMediumCount();
+	}
 
-    public double getPercentage(double count) {
-        if (getBomEntries() == null) {
-            return 0.0;
-        }
-        double totalCount = getBomEntries().size();
-        double percentage = 0;
-        if (totalCount > 0 && count > 0) {
-            percentage = (count / totalCount) * 100;
-        }
-        return percentage;
-    }
+	public int getOperationalRiskLowCount() {
+		return reportData.getOperationalRiskLowCount();
+	}
 
-    public String htmlEscape(String valueToEscape) {
-        if (StringUtils.isBlank(valueToEscape)) {
-            return null;
-        }
-        return StringEscapeUtils.escapeHtml4(valueToEscape);
-    }
+	public int getOperationalRiskNoneCount() {
+		return reportData.getOperationalRiskNoneCount();
+	}
 
-    public void setReportData(HubRiskReportData reportData) {
-        this.reportData = reportData;
-    }
+	public double getPercentage(final double count) {
+		if (getBomEntries() == null) {
+			return 0.0;
+		}
+		final double totalCount = getBomEntries().size();
+		double percentage = 0;
+		if (totalCount > 0 && count > 0) {
+			percentage = (count / totalCount) * 100;
+		}
+		return percentage;
+	}
 
-    @Override
-    public String getIconFileName() {
-        return "/plugin/hub-jenkins/images/blackduck.png";
-    }
+	public String htmlEscape(final String valueToEscape) {
+		if (StringUtils.isBlank(valueToEscape)) {
+			return null;
+		}
+		return StringEscapeUtils.escapeHtml4(valueToEscape);
+	}
 
-    @Override
-    public String getDisplayName() {
-        return Messages.HubReportAction_getDisplayName();
-    }
+	public void setReportData(final HubRiskReportData reportData) {
+		this.reportData = reportData;
+	}
 
-    @Override
-    public String getUrlName() {
-        return "hub_risk_report";
-    }
+	@Override
+	public String getIconFileName() {
+		return "/plugin/hub-jenkins/images/blackduck.png";
+	}
+
+	@Override
+	public String getDisplayName() {
+		return Messages.HubReportAction_getDisplayName();
+	}
+
+	@Override
+	public String getUrlName() {
+		return "hub_risk_report";
+	}
 
 }
