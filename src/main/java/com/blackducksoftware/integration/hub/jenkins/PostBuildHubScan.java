@@ -157,14 +157,14 @@ public class PostBuildHubScan extends Recorder {
 	@Override
 	public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener)
 			throws InterruptedException, IOException {
-		final HubCommonScanStep scanStep = new HubCommonScanStep(getScans(), getHubProjectName(),
-				getHubProjectVersion(), getHubVersionPhase(), getHubVersionDist(), getScanMemory(),
-				getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isVerbose());
-		final EnvVars envVars = build.getEnvironment(listener);
-
 		final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
 
 		try {
+			final HubCommonScanStep scanStep = new HubCommonScanStep(getScans(), getHubProjectName(),
+					getHubProjectVersion(), getHubVersionPhase(), getHubVersionDist(), getScanMemory(),
+					getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isVerbose());
+			final EnvVars envVars = build.getEnvironment(listener);
+
 			final JDK jdk = determineJava(logger, build, envVars);
 			final FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), jdk.getHome());
 			scanStep.runScan(build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), build.getResult(), logger,

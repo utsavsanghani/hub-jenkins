@@ -171,13 +171,14 @@ public class HubCommonScanStep {
 			final Launcher launcher, final TaskListener listener, final String buildDisplayName,
 			final int buildNumber, final FilePath javaHome) throws InterruptedException, IOException {
 
+		setResult(result);
+
 		final CIEnvironmentVariables variables = new CIEnvironmentVariables();
 		variables.putAll(envVars);
 		logger.setLogLevel(variables);
 		if (result == null) {
 			result = Result.SUCCESS;
 		}
-		setResult(result);
 		if (result == Result.SUCCESS) {
 			try {
 				logger.alwaysLog("Starting BlackDuck Scans...");

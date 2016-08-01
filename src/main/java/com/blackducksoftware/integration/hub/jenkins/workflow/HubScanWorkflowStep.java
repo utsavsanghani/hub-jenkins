@@ -21,6 +21,7 @@ import com.blackducksoftware.integration.hub.jenkins.BDCommonDescriptorUtil;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
+import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
@@ -48,6 +49,7 @@ import hudson.model.AutoCompletionCandidates;
 import hudson.model.Computer;
 import hudson.model.JDK;
 import hudson.model.Node;
+import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.security.ACL;
@@ -143,7 +145,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
 		@Override
 		public String getDisplayName() {
-			return "Black Duck Hub scan";
+			return Messages.HubBuildScan_getDisplayName();
 		}
 
 		/**
@@ -300,6 +302,8 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 		@Inject
 		private transient HubScanWorkflowStep hubScanStep;
 		@StepContextParameter
+		private transient Computer computer;
+		@StepContextParameter
 		transient Launcher launcher;
 		@StepContextParameter
 		transient TaskListener listener;
@@ -308,23 +312,19 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 		@StepContextParameter
 		private transient FilePath workspace;
 		@StepContextParameter
-		private transient Computer computer;
-		@StepContextParameter
 		private transient Run run;
 
 		@Override
-		protected Void run() throws Exception {
-			final Node node = computer.getNode();
-
-			final HubCommonScanStep scanStep = new HubCommonScanStep(hubScanStep.getScans(),
-					hubScanStep.getHubProjectName(), hubScanStep.getHubProjectVersion(),
-					hubScanStep.getHubVersionPhase(), hubScanStep.getHubVersionDist(), hubScanStep.getScanMemory(),
-					hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaxiumWaitTime(),
-					hubScanStep.isDryRun(), hubScanStep.isVerbose());
-
+		protected Void run() {
 			final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
-
 			try {
+				final Node node = computer.getNode();
+				final HubCommonScanStep scanStep = new HubCommonScanStep(hubScanStep.getScans(),
+						hubScanStep.getHubProjectName(), hubScanStep.getHubProjectVersion(),
+						hubScanStep.getHubVersionPhase(), hubScanStep.getHubVersionDist(), hubScanStep.getScanMemory(),
+						hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaxiumWaitTime(),
+						hubScanStep.isDryRun(), hubScanStep.isVerbose());
+
 				final JDK jdk = determineJava(logger, node, envVars);
 				final FilePath javaHome = new FilePath(node.getChannel(), jdk.getHome());
 				scanStep.runScan(node, envVars, workspace, run.getResult(), logger, launcher, listener,
@@ -344,8 +344,9 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 				}
 				run.addAction(new HubScanFinishedAction());
 				run.setResult(scanStep.getResult());
-			} catch (final HubConfigurationException e) {
+			} catch (final Exception e) {
 				logger.error(e);
+				run.setResult(Result.UNSTABLE);
 			}
 			return null;
 		}

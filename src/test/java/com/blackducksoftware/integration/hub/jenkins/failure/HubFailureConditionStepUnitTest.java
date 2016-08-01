@@ -175,7 +175,7 @@ public class HubFailureConditionStepUnitTest {
 		failureStep.perform(build, null, listener);
 
 		String output = baos.toString();
-		assertTrue(output, output.contains("Could not find the Hub Scan step for this Build."));
+		assertTrue(output, output.contains("The Hub scan must be configured to run before the Failure Conditions."));
 		assertEquals(Result.UNSTABLE, build.getResult());
 
 		build.setResult(Result.SUCCESS);
@@ -189,7 +189,7 @@ public class HubFailureConditionStepUnitTest {
 		failureStep.perform(build, null, listener);
 
 		output = baos.toString();
-		assertTrue(output, output.contains("Could not find the Hub Scan step for this Build."));
+		assertTrue(output, output.contains("The Hub scan must be configured to run before the Failure Conditions."));
 		assertEquals(Result.UNSTABLE, build.getResult());
 	}
 
@@ -213,7 +213,7 @@ public class HubFailureConditionStepUnitTest {
 		failureStep.perform(build, null, listener);
 
 		final String output = baos.toString();
-		assertTrue(output, output.contains("Could not find the Hub Scan step for this Build."));
+		assertTrue(output, output.contains("The Hub scan must be configured to run before the Failure Conditions."));
 		assertEquals(Result.UNSTABLE, build.getResult());
 	}
 
@@ -238,7 +238,7 @@ public class HubFailureConditionStepUnitTest {
 		failureStep.perform(build, null, listener);
 
 		final String output = baos.toString();
-		assertTrue(output, output.contains("The scan must be configured to run before the Failure Conditions."));
+		assertTrue(output, output.contains("The Hub scan must be configured to run before the Failure Conditions."));
 		assertEquals(Result.UNSTABLE, build.getResult());
 
 	}
@@ -276,6 +276,9 @@ public class HubFailureConditionStepUnitTest {
 	@Test
 	public void testPerformPoliciesNotSupported() throws Exception {
 		final Boolean failBuildForPolicyViolations = true;
+		HubCommonFailureStep commonFailureStep = new HubCommonFailureStep(failBuildForPolicyViolations);
+		commonFailureStep = Mockito.spy(commonFailureStep);
+
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
 		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
@@ -293,9 +296,11 @@ public class HubFailureConditionStepUnitTest {
 
 		descriptor = Mockito.spy(descriptor);
 
-		Mockito.doReturn(hubSupport).when(failureStep).getCheckedHubSupportHelper();
+		Mockito.doReturn(hubSupport).when(commonFailureStep).getCheckedHubSupportHelper();
+		Mockito.doReturn(service).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+				Mockito.any(HubServerInfo.class));
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
-		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
+		Mockito.doReturn(commonFailureStep).when(failureStep).createCommonFailureStep(Mockito.anyBoolean());
 
 		final TestProject project = new TestProject(j.getInstance(), "Test Project");
 		final TestBuild build = new TestBuild(project);
@@ -324,6 +329,9 @@ public class HubFailureConditionStepUnitTest {
 	@Test
 	public void testPerformValidUnknownCountsNoPolicyLink() throws Exception {
 		final Boolean failBuildForPolicyViolations = true;
+		HubCommonFailureStep commonFailureStep = new HubCommonFailureStep(failBuildForPolicyViolations);
+		commonFailureStep = Mockito.spy(commonFailureStep);
+
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
 		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
@@ -348,10 +356,11 @@ public class HubFailureConditionStepUnitTest {
 
 		descriptor = Mockito.spy(descriptor);
 
-		Mockito.doReturn(hubSupport).when(failureStep).getCheckedHubSupportHelper();
-		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
-		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+		Mockito.doReturn(hubSupport).when(commonFailureStep).getCheckedHubSupportHelper();
+		Mockito.doReturn(service).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
 				Mockito.any(HubServerInfo.class));
+		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
+		Mockito.doReturn(commonFailureStep).when(failureStep).createCommonFailureStep(Mockito.anyBoolean());
 
 		final TestProject project = new TestProject(j.getInstance(), "Test Project");
 		final TestBuild build = new TestBuild(project);
@@ -381,6 +390,9 @@ public class HubFailureConditionStepUnitTest {
 	@Test
 	public void testPerformValidUnknownCounts() throws Exception {
 		final Boolean failBuildForPolicyViolations = true;
+		HubCommonFailureStep commonFailureStep = new HubCommonFailureStep(failBuildForPolicyViolations);
+		commonFailureStep = Mockito.spy(commonFailureStep);
+
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
 		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
@@ -403,9 +415,11 @@ public class HubFailureConditionStepUnitTest {
 
 		descriptor = Mockito.spy(descriptor);
 
-		Mockito.doReturn(hubSupport).when(failureStep).getCheckedHubSupportHelper();
+		Mockito.doReturn(hubSupport).when(commonFailureStep).getCheckedHubSupportHelper();
+		Mockito.doReturn(service).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+				Mockito.any(HubServerInfo.class));
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
-		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
+		Mockito.doReturn(commonFailureStep).when(failureStep).createCommonFailureStep(Mockito.anyBoolean());
 
 		final TestProject project = new TestProject(j.getInstance(), "Test Project");
 		final TestBuild build = new TestBuild(project);
@@ -439,6 +453,9 @@ public class HubFailureConditionStepUnitTest {
 	@Test
 	public void testPerformValidNoViolation() throws Exception {
 		final Boolean failBuildForPolicyViolations = true;
+		HubCommonFailureStep commonFailureStep = new HubCommonFailureStep(failBuildForPolicyViolations);
+		commonFailureStep = Mockito.spy(commonFailureStep);
+
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
 		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
@@ -464,9 +481,11 @@ public class HubFailureConditionStepUnitTest {
 
 		descriptor = Mockito.spy(descriptor);
 
-		Mockito.doReturn(hubSupport).when(failureStep).getCheckedHubSupportHelper();
+		Mockito.doReturn(hubSupport).when(commonFailureStep).getCheckedHubSupportHelper();
+		Mockito.doReturn(service).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+				Mockito.any(HubServerInfo.class));
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
-		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
+		Mockito.doReturn(commonFailureStep).when(failureStep).createCommonFailureStep(Mockito.anyBoolean());
 
 		final TestProject project = new TestProject(j.getInstance(), "Test Project");
 		final TestBuild build = new TestBuild(project);
@@ -501,6 +520,9 @@ public class HubFailureConditionStepUnitTest {
 	@Test
 	public void testPerformValidWithViolations() throws Exception {
 		final Boolean failBuildForPolicyViolations = true;
+		HubCommonFailureStep commonFailureStep = new HubCommonFailureStep(failBuildForPolicyViolations);
+		commonFailureStep = Mockito.spy(commonFailureStep);
+
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
 		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
@@ -527,9 +549,11 @@ public class HubFailureConditionStepUnitTest {
 
 		descriptor = Mockito.spy(descriptor);
 
-		Mockito.doReturn(hubSupport).when(failureStep).getCheckedHubSupportHelper();
+		Mockito.doReturn(hubSupport).when(commonFailureStep).getCheckedHubSupportHelper();
+		Mockito.doReturn(service).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+				Mockito.any(HubServerInfo.class));
 		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
-		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class), Mockito.any(HubServerInfo.class));
+		Mockito.doReturn(commonFailureStep).when(failureStep).createCommonFailureStep(Mockito.anyBoolean());
 
 		final TestProject project = new TestProject(j.getInstance(), "Test Project");
 		final TestBuild build = new TestBuild(project);
@@ -564,6 +588,9 @@ public class HubFailureConditionStepUnitTest {
 	@Test
 	public void testPerformDryRun() throws Exception {
 		final Boolean failBuildForPolicyViolations = true;
+		HubCommonFailureStep commonFailureStep = new HubCommonFailureStep(failBuildForPolicyViolations);
+		commonFailureStep = Mockito.spy(commonFailureStep);
+
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
 		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
@@ -582,10 +609,11 @@ public class HubFailureConditionStepUnitTest {
 
 		descriptor = Mockito.spy(descriptor);
 
-		Mockito.doReturn(hubSupport).when(failureStep).getCheckedHubSupportHelper();
-		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
-		Mockito.doReturn(service).when(failureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
+		Mockito.doReturn(hubSupport).when(commonFailureStep).getCheckedHubSupportHelper();
+		Mockito.doReturn(service).when(commonFailureStep).getHubIntRestService(Mockito.any(HubJenkinsLogger.class),
 				Mockito.any(HubServerInfo.class));
+		Mockito.doReturn(descriptor).when(failureStep).getDescriptor();
+		Mockito.doReturn(commonFailureStep).when(failureStep).createCommonFailureStep(Mockito.anyBoolean());
 
 		final TestProject project = new TestProject(j.getInstance(), "Test Project");
 		final TestBuild build = new TestBuild(project);

@@ -52,7 +52,7 @@ public class HubReportActionTest {
 		final HubRiskReportData reportData = new HubRiskReportData();
 		final VersionReport report = new VersionReport(null, aggregateBomViewEntries);
 		reportData.setReport(report);
-		final HubReportAction action = new HubReportAction(null);
+		final HubReportAction action = new HubReportAction();
 		action.setReportData(reportData);
 		assertNotNull(action.getBomEntries());
 		assertEquals(1, action.getVulnerabilityRiskHighCount());
@@ -83,7 +83,7 @@ public class HubReportActionTest {
 		final HubRiskReportData reportData = new HubRiskReportData();
 		final VersionReport report = new VersionReport(null, aggregateBomViewEntries);
 		reportData.setReport(report);
-		final HubReportAction action = new HubReportAction(null);
+		final HubReportAction action = new HubReportAction();
 		action.setReportData(reportData);
 		assertNotNull(action.getBomEntries());
 		assertEquals(1, action.getVulnerabilityRiskHighCount());
@@ -104,7 +104,7 @@ public class HubReportActionTest {
 		final HubRiskReportData reportData = new HubRiskReportData();
 		final VersionReport report = new VersionReport(null, aggregateBomViewEntries);
 		reportData.setReport(report);
-		final HubReportAction action = new HubReportAction(null);
+		final HubReportAction action = new HubReportAction();
 		action.setReportData(reportData);
 		assertNotNull(action.getBomEntries());
 		assertEquals(0, action.getVulnerabilityRiskHighCount());
@@ -125,7 +125,7 @@ public class HubReportActionTest {
 		final HubRiskReportData reportData = new HubRiskReportData();
 		final VersionReport report = new VersionReport(null, aggregateBomViewEntries);
 		reportData.setReport(report);
-		final HubReportAction action = new HubReportAction(null);
+		final HubReportAction action = new HubReportAction();
 		action.setReportData(reportData);
 		assertNotNull(action.getBomEntries());
 		assertEquals(0, action.getVulnerabilityRiskHighCount());
@@ -156,7 +156,7 @@ public class HubReportActionTest {
 		final HubRiskReportData reportData = new HubRiskReportData();
 		final VersionReport report = new VersionReport(null, aggregateBomViewEntries);
 		reportData.setReport(report);
-		final HubReportAction action = new HubReportAction(null);
+		final HubReportAction action = new HubReportAction();
 		action.setReportData(reportData);
 		assertNotNull(action.getBomEntries());
 		assertEquals(0, action.getVulnerabilityRiskHighCount());
@@ -187,7 +187,7 @@ public class HubReportActionTest {
 		final HubRiskReportData reportData = new HubRiskReportData();
 		final VersionReport report = new VersionReport(null, aggregateBomViewEntries);
 		reportData.setReport(report);
-		final HubReportAction action = new HubReportAction(null);
+		final HubReportAction action = new HubReportAction();
 		action.setReportData(reportData);
 		assertNotNull(action.getBomEntries());
 		assertEquals(0, action.getVulnerabilityRiskHighCount());
@@ -218,7 +218,7 @@ public class HubReportActionTest {
 		final HubRiskReportData reportData = new HubRiskReportData();
 		final VersionReport report = new VersionReport(null, aggregateBomViewEntries);
 		reportData.setReport(report);
-		final HubReportAction action = new HubReportAction(null);
+		final HubReportAction action = new HubReportAction();
 		action.setReportData(reportData);
 		assertNotNull(action.getBomEntries());
 
@@ -241,7 +241,7 @@ public class HubReportActionTest {
 		final HubRiskReportData reportData = new HubRiskReportData();
 		final VersionReport report = new VersionReport(null, aggregateBomViewEntries);
 		reportData.setReport(report);
-		final HubReportAction action = new HubReportAction(null);
+		final HubReportAction action = new HubReportAction();
 		action.setReportData(reportData);
 		assertNotNull(action.getBomEntries());
 
@@ -255,19 +255,19 @@ public class HubReportActionTest {
 
 	@Test
 	public void testGetIconFileName() {
-		final HubReportAction action = new HubReportAction(null);
+		final HubReportAction action = new HubReportAction();
 		assertEquals("/plugin/hub-jenkins/images/blackduck.png", action.getIconFileName());
 	}
 
 	@Test
 	public void testGetDisplayName() {
-		final HubReportAction action = new HubReportAction(null);
+		final HubReportAction action = new HubReportAction();
 		assertEquals(Messages.HubReportAction_getDisplayName(), action.getDisplayName());
 	}
 
 	@Test
 	public void testGetUrlName() {
-		final HubReportAction action = new HubReportAction(null);
+		final HubReportAction action = new HubReportAction();
 		assertEquals("hub_risk_report", action.getUrlName());
 	}
 }
