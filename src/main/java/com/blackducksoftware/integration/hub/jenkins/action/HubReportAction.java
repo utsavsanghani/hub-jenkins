@@ -37,15 +37,11 @@ import hudson.model.Run;
 
 public class HubReportAction implements Action {
 
-	private Run<?, ?> build;
+	private final Run<?, ?> build;
 
 	private HubRiskReportData reportData;
 
-	public HubReportAction() {
-
-	}
-
-	public void setBuild(final Run<?, ?> build) {
+	public HubReportAction(final Run<?, ?> build) {
 		this.build = build;
 	}
 

@@ -26,13 +26,12 @@ import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import hudson.EnvVars;
 import hudson.model.Node;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 
 public class HubCommonFailureStep {
 
 	private final Boolean failBuildForPolicyViolations;
-
-	private Result result;
 
 	public HubCommonFailureStep(final Boolean failBuildForPolicyViolations) {
 		this.failBuildForPolicyViolations = failBuildForPolicyViolations;
@@ -42,19 +41,10 @@ public class HubCommonFailureStep {
 		return failBuildForPolicyViolations;
 	}
 
-	public Result getResult() {
-		return result;
-	}
-
-	public void setResult(final Result result) {
-		this.result = result;
-	}
-
-	public boolean checkFailureConditions(final Node builtOn, final EnvVars envVars, final Result result,
+	public boolean checkFailureConditions(final Run run, final Node builtOn, final EnvVars envVars,
 			final HubJenkinsLogger logger,
 			final TaskListener listener, final BomUpToDateAction bomUpToDateAction)
 					throws InterruptedException, IOException {
-		setResult(result);
 
 		final CIEnvironmentVariables variables = new CIEnvironmentVariables();
 		variables.putAll(envVars);
@@ -62,7 +52,7 @@ public class HubCommonFailureStep {
 
 		if (!getFailBuildForPolicyViolations()) {
 			logger.error("The Hub failure condition step has not been configured to do anything.");
-			setResult(Result.UNSTABLE);
+			run.setResult(Result.UNSTABLE);
 			return true;
 		}
 
@@ -76,14 +66,14 @@ public class HubCommonFailureStep {
 
 			if (!hubSupport.hasCapability(HubCapabilitiesEnum.POLICY_API)) {
 				logger.error("This version of the Hub does not have support for Policies.");
-				setResult(Result.UNSTABLE);
+				run.setResult(Result.UNSTABLE);
 				return true;
 			} else if (getFailBuildForPolicyViolations()) {
 				try {
 					if (bomUpToDateAction.getPolicyStatusUrl() == null) {
 						logger.error(
 								"Can not check policy violations if you have not specified a Project and Version.");
-						setResult(Result.UNSTABLE);
+						run.setResult(Result.UNSTABLE);
 						return true;
 					}
 					// We use this conditional in case there are other failure
@@ -92,10 +82,10 @@ public class HubCommonFailureStep {
 							.getPolicyStatus(bomUpToDateAction.getPolicyStatusUrl());
 					if (policyStatus == null) {
 						logger.error("Could not find any information about the Policy status of the bom.");
-						setResult(Result.UNSTABLE);
+						run.setResult(Result.UNSTABLE);
 					}
 					if (policyStatus.getOverallStatusEnum() == PolicyStatusEnum.IN_VIOLATION) {
-						setResult(Result.FAILURE);
+						run.setResult(Result.FAILURE);
 					}
 
 					final HubVariableContributor variableContributor = new HubVariableContributor();
@@ -113,7 +103,7 @@ public class HubCommonFailureStep {
 						logger.info("Found " + policyStatus.getCountInViolationOverridden().getValue()
 								+ " bom entries to be In Violation of a defined Policy, but they have been overridden.");
 						variableContributor
-								.setViolationsOverriden(policyStatus.getCountInViolationOverridden().getValue());
+						.setViolationsOverriden(policyStatus.getCountInViolationOverridden().getValue());
 					}
 					if (policyStatus.getCountNotInViolation() == null) {
 						logger.error("Could not find the number of bom entries Not In Violation of a Policy.");
@@ -121,8 +111,9 @@ public class HubCommonFailureStep {
 						logger.info("Found " + policyStatus.getCountNotInViolation().getValue()
 								+ " bom entries to be Not In Violation of a defined Policy.");
 						variableContributor
-								.setBomEntriesNotInViolation(policyStatus.getCountNotInViolation().getValue());
+						.setBomEntriesNotInViolation(policyStatus.getCountNotInViolation().getValue());
 					}
+					run.addAction(variableContributor);
 
 				} catch (final MissingPolicyStatusException e) {
 					logger.warn(e.getMessage());
@@ -130,16 +121,16 @@ public class HubCommonFailureStep {
 			}
 		} catch (final BDJenkinsHubPluginException e) {
 			logger.error(e.getMessage(), e);
-			setResult(Result.UNSTABLE);
+			run.setResult(Result.UNSTABLE);
 		} catch (final HubIntegrationException e) {
 			logger.error(e.getMessage(), e);
-			setResult(Result.UNSTABLE);
+			run.setResult(Result.UNSTABLE);
 		} catch (final URISyntaxException e) {
 			logger.error(e.getMessage(), e);
-			setResult(Result.UNSTABLE);
+			run.setResult(Result.UNSTABLE);
 		} catch (final BDRestException e) {
 			logger.error(e.getMessage(), e);
-			setResult(Result.UNSTABLE);
+			run.setResult(Result.UNSTABLE);
 		}
 		return true;
 	}

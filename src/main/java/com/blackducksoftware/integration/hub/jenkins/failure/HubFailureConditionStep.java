@@ -90,9 +90,9 @@ public class HubFailureConditionStep extends Recorder {
 			}
 
 			final HubCommonFailureStep commonFailureStep = createCommonFailureStep(getFailBuildForPolicyViolations());
-			commonFailureStep.checkFailureConditions(build.getBuiltOn(), envVars, build.getResult(), logger, listener,
+			commonFailureStep.checkFailureConditions(build, build.getBuiltOn(), envVars, logger,
+					listener,
 					bomUpToDateAction);
-			build.setResult(commonFailureStep.getResult());
 		} catch (final Exception e) {
 			logger.error(e);
 			build.setResult(Result.UNSTABLE);

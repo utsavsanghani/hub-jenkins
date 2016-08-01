@@ -24,9 +24,6 @@ import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
-import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
-import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
-import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.HubCommonScanStep;
@@ -332,23 +329,10 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
 				final JDK jdk = determineJava(logger, node, envVars);
 				final FilePath javaHome = new FilePath(node.getChannel(), jdk.getHome());
-				scanStep.runScan(node, envVars, workspace, run.getResult(), logger, launcher, listener,
+				scanStep.runScan(run, node, envVars, workspace, logger, launcher, listener,
 						run.getFullDisplayName(),
 						run.getNumber(), javaHome);
 
-				final BomUpToDateAction bomUpdatedAction = scanStep.getBomUpToDateAction();
-				logger.info("Bom updated Action : " + bomUpdatedAction);
-				if (bomUpdatedAction != null) {
-					run.addAction(bomUpdatedAction);
-				}
-				final HubReportAction reportAction = scanStep.getReportAction();
-				logger.info("Report Action : " + reportAction);
-				if (reportAction != null) {
-					reportAction.setBuild(run);
-					run.addAction(reportAction);
-				}
-				run.addAction(new HubScanFinishedAction());
-				run.setResult(scanStep.getResult());
 			} catch (final Exception e) {
 				logger.error(e);
 				run.setResult(Result.UNSTABLE);

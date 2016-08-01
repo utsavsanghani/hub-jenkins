@@ -37,6 +37,7 @@ import com.blackducksoftware.integration.hub.jenkins.Messages;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
 import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
+import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.bom.RemoteBomGenerator;
 import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstallation;
 import com.blackducksoftware.integration.hub.jenkins.cli.DummyToolInstaller;
@@ -70,6 +71,7 @@ import hudson.Launcher;
 import hudson.ProxyConfiguration;
 import hudson.model.Node;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
@@ -87,9 +89,6 @@ public class HubCommonScanStep {
 	private final boolean dryRun;
 	private final Boolean verbose;
 	private final BomUpToDateAction bomUpToDateAction = new BomUpToDateAction();
-	private HubReportAction reportAction;
-
-	private Result result;
 
 	public HubCommonScanStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
 			final String hubVersionPhase, final String hubVersionDist, final String scanMemory,
@@ -147,22 +146,6 @@ public class HubCommonScanStep {
 		return verbose;
 	}
 
-	public Result getResult() {
-		return result;
-	}
-
-	public void setResult(final Result result) {
-		this.result = result;
-	}
-
-	public void setReportAction(final HubReportAction reportAction) {
-		this.reportAction = reportAction;
-	}
-
-	public HubReportAction getReportAction() {
-		return reportAction;
-	}
-
 	public BomUpToDateAction getBomUpToDateAction() {
 		return bomUpToDateAction;
 	}
@@ -171,20 +154,18 @@ public class HubCommonScanStep {
 		return HubServerInfoSingleton.getInstance().getServerInfo();
 	}
 
-	public void runScan(final Node builtOn, final EnvVars envVars, final FilePath workspace, Result result,
+	public void runScan(final Run run, final Node builtOn, final EnvVars envVars, final FilePath workspace,
 			final HubJenkinsLogger logger,
 			final Launcher launcher, final TaskListener listener, final String buildDisplayName,
 			final int buildNumber, final FilePath javaHome) throws InterruptedException, IOException {
 
-		setResult(result);
-
 		final CIEnvironmentVariables variables = new CIEnvironmentVariables();
 		variables.putAll(envVars);
 		logger.setLogLevel(variables);
-		if (result == null) {
-			result = Result.SUCCESS;
+		if (run.getResult() == null) {
+			run.setResult(Result.SUCCESS);
 		}
-		if (result == Result.SUCCESS) {
+		if (run.getResult() == Result.SUCCESS) {
 			try {
 				logger.alwaysLog("Starting BlackDuck Scans...");
 
@@ -288,11 +269,11 @@ public class HubCommonScanStep {
 							logger);
 
 					final DateTime beforeScanTime = new DateTime();
-					runScan(service, builtOn, scan, logger, scanExec, jrePath, oneJarPath, jobConfig);
+					run.setResult(runScan(service, builtOn, scan, logger, scanExec, jrePath, oneJarPath, jobConfig));
 					final DateTime afterScanTime = new DateTime();
 
 					bomUpToDateAction.setDryRun(isDryRun());
-					if (getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport()
+					if (run.getResult().equals(Result.SUCCESS) && !isDryRun() && isShouldGenerateHubReport()
 							&& version != null) {
 
 						final HubReportGenerationInfo reportGenInfo = new HubReportGenerationInfo();
@@ -309,7 +290,7 @@ public class HubCommonScanStep {
 
 						reportGenInfo.setScanStatusDirectory(scan.getScanStatusDirectoryPath());
 
-						generateHubReport(builtOn, logger, reportGenInfo, getHubServerInfo(), hubSupport,
+						generateHubReport(run, builtOn, logger, reportGenInfo, getHubServerInfo(), hubSupport,
 								bomUpToDateAction);
 					} else {
 						bomUpToDateAction.setHasBomBeenUdpated(false);
@@ -323,13 +304,15 @@ public class HubCommonScanStep {
 					if (version != null && hubSupport.hasCapability(HubCapabilitiesEnum.POLICY_API)) {
 						bomUpToDateAction.setPolicyStatusUrl(version.getLink(ReleaseItem.POLICY_STATUS_LINK));
 					}
+					run.addAction(bomUpToDateAction);
+					run.addAction(new HubScanFinishedAction());
 				}
 			} catch (final BDJenkinsHubPluginException e) {
 				logger.error(e.getMessage(), e);
-				setResult(Result.UNSTABLE);
+				run.setResult(Result.UNSTABLE);
 			} catch (final HubIntegrationException e) {
 				logger.error(e.getMessage(), e);
-				setResult(Result.UNSTABLE);
+				run.setResult(Result.UNSTABLE);
 			} catch (final Exception e) {
 				String message;
 				if (e.getMessage() != null && e.getMessage().contains("Project could not be found")) {
@@ -350,7 +333,7 @@ public class HubCommonScanStep {
 					}
 				}
 				logger.error(message, e);
-				setResult(Result.UNSTABLE);
+				run.setResult(Result.UNSTABLE);
 			}
 		} else {
 			logger.alwaysLog("Build was not successful. Will not run Black Duck Scans.");
@@ -408,14 +391,15 @@ public class HubCommonScanStep {
 		return scanTargetPaths;
 	}
 
-	private void generateHubReport(final Node builtOn, final HubJenkinsLogger logger,
+	private void generateHubReport(final Run run, final Node builtOn, final HubJenkinsLogger logger,
 			final HubReportGenerationInfo reportGenInfo, final HubServerInfo serverInfo,
 			final HubSupportHelper hubSupport, final BomUpToDateAction action) throws Exception {
-		setReportAction(new HubReportAction());
+		final HubReportAction reportAction = new HubReportAction(run);
 		final RemoteBomGenerator remoteBomGenerator = new RemoteBomGenerator(reportGenInfo, hubSupport,
 				builtOn.getChannel());
 
-		getReportAction().setReportData(remoteBomGenerator.generateHubReport(logger));
+		reportAction.setReportData(remoteBomGenerator.generateHubReport(logger));
+		run.addAction(reportAction);
 		action.setHasBomBeenUdpated(true);
 	}
 
@@ -525,7 +509,7 @@ public class HubCommonScanStep {
 	 * the process and prints out all stderr and stdout to the Console Output.
 	 *
 	 */
-	private void runScan(final HubIntRestService service, final Node builtOn,
+	private Result runScan(final HubIntRestService service, final Node builtOn,
 			final JenkinsScanExecutor scan, final HubJenkinsLogger logger, final String scanExec, final String javaExec,
 			final String oneJarPath, final HubScanJobConfig jobConfig) throws IOException, HubConfigurationException,
 	InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
@@ -547,9 +531,9 @@ public class HubCommonScanStep {
 		final com.blackducksoftware.integration.hub.ScanExecutor.Result result = scan.setupAndRunScan(scanExec,
 				oneJarPath, javaExec);
 		if (result == com.blackducksoftware.integration.hub.ScanExecutor.Result.SUCCESS) {
-			setResult(Result.SUCCESS);
+			return Result.SUCCESS;
 		} else {
-			setResult(Result.UNSTABLE);
+			return Result.UNSTABLE;
 		}
 	}
 

@@ -113,9 +113,8 @@ public class HubFailureConditionWorkflowStep extends AbstractStepImpl {
 					logger.warn("Will not run the Failure conditions because this was a dry run scan.");
 					return null;
 				}
-				commonFailureStep.checkFailureConditions(node, envVars, run.getResult(), logger, listener,
+				commonFailureStep.checkFailureConditions(run, node, envVars, logger, listener,
 						bomUpToDateAction);
-				run.setResult(commonFailureStep.getResult());
 			} catch (final Exception e) {
 				logger.error(e);
 				run.setResult(Result.UNSTABLE);

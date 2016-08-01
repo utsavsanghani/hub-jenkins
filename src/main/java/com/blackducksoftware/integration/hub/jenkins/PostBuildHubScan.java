@@ -27,9 +27,6 @@ import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
-import com.blackducksoftware.integration.hub.jenkins.action.HubReportAction;
-import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedAction;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
@@ -167,100 +164,87 @@ public class PostBuildHubScan extends Recorder {
 
 			final JDK jdk = determineJava(logger, build, envVars);
 			final FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), jdk.getHome());
-			scanStep.runScan(build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), build.getResult(), logger,
+			scanStep.runScan(build, build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), logger,
 					launcher, listener,
 					build.getFullDisplayName(), build.getNumber(), javaHome);
-			final BomUpToDateAction bomUpdatedAction = scanStep.getBomUpToDateAction();
-			logger.info("Bom updated Action : " + bomUpdatedAction);
-			if (bomUpdatedAction != null) {
-				build.addAction(bomUpdatedAction);
-					}
-					final HubReportAction reportAction = scanStep.getReportAction();
-					logger.info("Report Action : " + reportAction);
-					if (reportAction != null) {
-						reportAction.setBuild(build);
-						build.addAction(reportAction);
-					}
-					build.addAction(new HubScanFinishedAction());
-					build.setResult(scanStep.getResult());
-				} catch (final HubConfigurationException e) {
-					logger.error(e);
-				}
-				return true;
+		} catch (final Exception e) {
+			logger.error(e);
+		}
+		return true;
+	}
+
+	public FilePath getWorkingDirectory(final IntLogger logger, final AbstractBuild<?, ?> build)
+			throws InterruptedException {
+		String workingDirectory = "";
+		try {
+			if (build.getWorkspace() == null) {
+				// might be using custom workspace
+				workingDirectory = build.getProject().getCustomWorkspace();
+			} else {
+				workingDirectory = build.getWorkspace().getRemote();
 			}
 
-			public FilePath getWorkingDirectory(final IntLogger logger, final AbstractBuild<?, ?> build)
-					throws InterruptedException {
-				String workingDirectory = "";
-				try {
-					if (build.getWorkspace() == null) {
-						// might be using custom workspace
-						workingDirectory = build.getProject().getCustomWorkspace();
-					} else {
-						workingDirectory = build.getWorkspace().getRemote();
-					}
+			workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(new File(workingDirectory)));
+		} catch (final IOException e) {
+			logger.error("Problem getting the working directory on this node. Error : " + e.getMessage(), e);
+		}
+		logger.info("Node workspace " + workingDirectory);
+		return new FilePath(build.getBuiltOn().getChannel(), workingDirectory);
+	}
 
-					workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(new File(workingDirectory)));
-				} catch (final IOException e) {
-					logger.error("Problem getting the working directory on this node. Error : " + e.getMessage(), e);
-				}
-				logger.info("Node workspace " + workingDirectory);
-				return new FilePath(build.getBuiltOn().getChannel(), workingDirectory);
+	/**
+	 * Sets the Java Home that is to be used for running the Shell script
+	 *
+	 */
+	private JDK determineJava(final HubJenkinsLogger logger, final AbstractBuild<?, ?> build, final EnvVars envVars)
+			throws IOException, InterruptedException, HubConfigurationException {
+		JDK javaHomeTemp = null;
+
+		if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
+			logger.info("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
+			// Empty node name indicates master
+			final String byteCodeVersion = System.getProperty("java.class.version");
+			final Double majorVersion = Double.valueOf(byteCodeVersion);
+			if (majorVersion >= 51.0) {
+				// Java 7 bytecode
+				final String javaHome = System.getProperty("java.home");
+				javaHomeTemp = new JDK("Java running master agent", javaHome);
+			} else {
+				javaHomeTemp = build.getProject().getJDK();
 			}
+		} else {
+			logger.info("Getting Jdk on node  : " + build.getBuiltOn().getNodeName());
 
-			/**
-			 * Sets the Java Home that is to be used for running the Shell script
-			 *
-			 */
-			private JDK determineJava(final HubJenkinsLogger logger, final AbstractBuild<?, ?> build, final EnvVars envVars)
-					throws IOException, InterruptedException, HubConfigurationException {
-				JDK javaHomeTemp = null;
-
-				if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
-					logger.info("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
-					// Empty node name indicates master
-					final String byteCodeVersion = System.getProperty("java.class.version");
-					final Double majorVersion = Double.valueOf(byteCodeVersion);
-					if (majorVersion >= 51.0) {
-						// Java 7 bytecode
-						final String javaHome = System.getProperty("java.home");
-						javaHomeTemp = new JDK("Java running master agent", javaHome);
-					} else {
-						javaHomeTemp = build.getProject().getJDK();
-					}
-				} else {
-					logger.info("Getting Jdk on node  : " + build.getBuiltOn().getNodeName());
-
-					final String byteCodeVersion = build.getBuiltOn().getChannel()
-							.call(new GetSystemProperty("java.class.version"));
-					final Double majorVersion = Double.valueOf(byteCodeVersion);
-					if (majorVersion >= 51.0) {
-						// Java 7 bytecode
-						final String javaHome = build.getBuiltOn().getChannel().call(new GetSystemProperty("java.home"));
-						javaHomeTemp = new JDK("Java running slave agent", javaHome);
-					} else {
-						javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), logger.getJenkinsListener());
-					}
-				}
-				if (javaHomeTemp != null && javaHomeTemp.getHome() != null) {
-					logger.info("JDK home : " + javaHomeTemp.getHome());
-				}
-
-				if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
-					logger.info("Could not find the specified Java installation, checking the JAVA_HOME variable.");
-					if (envVars.get("JAVA_HOME") == null || envVars.get("JAVA_HOME") == "") {
-						throw new HubConfigurationException("Need to define a JAVA_HOME or select an installed JDK.");
-					}
-					// In case the user did not select a java installation, set to the
-					// environment variable JAVA_HOME
-					javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
-				}
-				final FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), javaHomeTemp.getHome());
-				if (!javaHome.exists()) {
-					throw new HubConfigurationException(
-							"Could not find the specified Java installation at: " + javaHome.getRemote());
-				}
-
-				return javaHomeTemp;
+			final String byteCodeVersion = build.getBuiltOn().getChannel()
+					.call(new GetSystemProperty("java.class.version"));
+			final Double majorVersion = Double.valueOf(byteCodeVersion);
+			if (majorVersion >= 51.0) {
+				// Java 7 bytecode
+				final String javaHome = build.getBuiltOn().getChannel().call(new GetSystemProperty("java.home"));
+				javaHomeTemp = new JDK("Java running slave agent", javaHome);
+			} else {
+				javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), logger.getJenkinsListener());
 			}
 		}
+		if (javaHomeTemp != null && javaHomeTemp.getHome() != null) {
+			logger.info("JDK home : " + javaHomeTemp.getHome());
+		}
+
+		if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
+			logger.info("Could not find the specified Java installation, checking the JAVA_HOME variable.");
+			if (envVars.get("JAVA_HOME") == null || envVars.get("JAVA_HOME") == "") {
+				throw new HubConfigurationException("Need to define a JAVA_HOME or select an installed JDK.");
+			}
+			// In case the user did not select a java installation, set to the
+			// environment variable JAVA_HOME
+			javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
+		}
+		final FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), javaHomeTemp.getHome());
+		if (!javaHome.exists()) {
+			throw new HubConfigurationException(
+					"Could not find the specified Java installation at: " + javaHome.getRemote());
+		}
+
+		return javaHomeTemp;
+	}
+}
