@@ -14,6 +14,8 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
+import org.json.JSONException;
+import org.restlet.resource.ResourceException;
 
 import com.blackducksoftware.integration.hub.CIEnvironmentVariables;
 import com.blackducksoftware.integration.hub.HubIntRestService;
@@ -58,6 +60,9 @@ import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
+import com.blackducksoftware.integration.phone.home.PhoneHomeClient;
+import com.blackducksoftware.integration.phone.home.exception.PhoneHomeException;
+import com.blackducksoftware.integration.phone.home.exception.PropertiesLoaderException;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -268,6 +273,15 @@ public class HubCommonScanStep {
 					}
 					final HubSupportHelper hubSupport = new HubSupportHelper();
 					hubSupport.checkHubSupport(service, logger);
+
+					// Phone-Home
+					try {
+						final String hubVersion = hubSupport.getHubVersion(service);
+						final String regId = service.getRegistrationId();
+						bdPhoneHome(hubVersion, regId);
+					} catch (final Exception e) {
+						logger.error("Unable to phone-home", e);
+					}
 
 					final JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(),
 							jobConfig.getScanTargetPaths(), buildNumber, hubSupport, builtOn, envVars, launcher,
@@ -710,5 +724,26 @@ public class HubCommonScanStep {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * @param blackDuckVersion
+	 *            Version of the blackduck product, in this instance, the hub
+	 * @param regId
+	 *            Registration ID of the hub instance that this plugin uses
+	 *
+	 *            This method "phones-home" to the internal BlackDuck
+	 *            Integrations server. Every time a build is kicked off,
+	 */
+	public void bdPhoneHome(final String blackDuckVersion, final String regId)
+			throws IOException, PhoneHomeException, PropertiesLoaderException, ResourceException, JSONException {
+		final String blackDuckName = "Hub";
+		final String thirdPartyName = "Jenkins";
+		final String thirdPartyVersion = Jenkins.getVersion().toString();
+		final String pluginVersion = PluginHelper.getPluginVersion();
+
+		final PhoneHomeClient phClient = new PhoneHomeClient();
+		phClient.callHomeIntegrations(regId, blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion,
+				pluginVersion);
 	}
 }

@@ -61,6 +61,10 @@
       <id>bds-int-public</id>
       <url>https://updates.suite.blackducksoftware.com/integrations/</url>
     </repository>
+    <repository>
+      <id>maven-snapshot</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
@@ -159,6 +163,11 @@
       <artifactId>servlet-api-2.5</artifactId>
       <version>6.1.11</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.blackducksoftware.integration</groupId>
+      <artifactId>phone-home-api</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
