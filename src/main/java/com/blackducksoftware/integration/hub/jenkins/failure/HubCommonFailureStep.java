@@ -14,6 +14,7 @@ import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.action.BomUpToDateAction;
+import com.blackducksoftware.integration.hub.jenkins.action.HubVariableContributor;
 import com.blackducksoftware.integration.hub.jenkins.bom.RemoteHubEventPolling;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
@@ -97,24 +98,32 @@ public class HubCommonFailureStep {
 						setResult(Result.FAILURE);
 					}
 
+					final HubVariableContributor variableContributor = new HubVariableContributor();
+
 					if (policyStatus.getCountInViolation() == null) {
 						logger.error("Could not find the number of bom entries In Violation of a Policy.");
 					} else {
 						logger.info("Found " + policyStatus.getCountInViolation().getValue()
 								+ " bom entries to be In Violation of a defined Policy.");
+						variableContributor.setBomEntriesInViolation(policyStatus.getCountInViolation().getValue());
 					}
 					if (policyStatus.getCountInViolationOverridden() == null) {
 						logger.error("Could not find the number of bom entries In Violation Overridden of a Policy.");
 					} else {
 						logger.info("Found " + policyStatus.getCountInViolationOverridden().getValue()
 								+ " bom entries to be In Violation of a defined Policy, but they have been overridden.");
+						variableContributor
+								.setViolationsOverriden(policyStatus.getCountInViolationOverridden().getValue());
 					}
 					if (policyStatus.getCountNotInViolation() == null) {
 						logger.error("Could not find the number of bom entries Not In Violation of a Policy.");
 					} else {
 						logger.info("Found " + policyStatus.getCountNotInViolation().getValue()
 								+ " bom entries to be Not In Violation of a defined Policy.");
+						variableContributor
+								.setBomEntriesNotInViolation(policyStatus.getCountNotInViolation().getValue());
 					}
+
 				} catch (final MissingPolicyStatusException e) {
 					logger.warn(e.getMessage());
 				}
