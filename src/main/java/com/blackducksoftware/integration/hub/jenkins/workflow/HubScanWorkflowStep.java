@@ -131,6 +131,11 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 		return dryRun;
 	}
 
+	@Override
+	public HubScanWorkflowStepDescriptor getDescriptor() {
+		return (HubScanWorkflowStepDescriptor) super.getDescriptor();
+	}
+
 	@Extension(optional = true)
 	public static final class HubScanWorkflowStepDescriptor extends AbstractStepDescriptorImpl {
 

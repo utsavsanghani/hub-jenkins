@@ -40,6 +40,11 @@ public class HubFailureConditionWorkflowStep extends AbstractStepImpl {
 		return failBuildForPolicyViolations;
 	}
 
+	@Override
+	public HubFailureConditionWorkflowStepDescriptor getDescriptor() {
+		return (HubFailureConditionWorkflowStepDescriptor) super.getDescriptor();
+	}
+
 	@Extension(optional = true)
 	public static final class HubFailureConditionWorkflowStepDescriptor extends AbstractStepDescriptorImpl {
 
