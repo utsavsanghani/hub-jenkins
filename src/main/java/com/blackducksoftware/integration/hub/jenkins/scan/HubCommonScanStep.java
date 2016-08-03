@@ -261,7 +261,7 @@ public class HubCommonScanStep {
 						final String regId = service.getRegistrationId();
 						bdPhoneHome(hubVersion, regId);
 					} catch (final Exception e) {
-						logger.trace("Unable to phone-home", e);
+						logger.debug("Unable to phone-home", e);
 					}
 
 					final JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(),
