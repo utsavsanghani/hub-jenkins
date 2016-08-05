@@ -157,7 +157,7 @@ public class HubCommonScanStep {
 	public void runScan(final Run run, final Node builtOn, final EnvVars envVars, final FilePath workspace,
 			final HubJenkinsLogger logger,
 			final Launcher launcher, final TaskListener listener, final String buildDisplayName,
-			final int buildNumber, final FilePath javaHome) throws InterruptedException, IOException {
+			final String buildIdentifier, final FilePath javaHome) throws InterruptedException, IOException {
 
 		final CIEnvironmentVariables variables = new CIEnvironmentVariables();
 		variables.putAll(envVars);
@@ -208,7 +208,7 @@ public class HubCommonScanStep {
 					final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> builderResults = hubScanJobConfigBuilder
 							.build();
 					final HubScanJobConfig jobConfig = builderResults.getConstructedObject();
-					printConfiguration(builtOn, listener, logger, jobConfig, buildDisplayName, buildNumber,
+					printConfiguration(builtOn, listener, logger, jobConfig, buildDisplayName, buildIdentifier,
 							workingDirectory);
 
 					if (!builderResults.isSuccess()) {
@@ -265,7 +265,7 @@ public class HubCommonScanStep {
 					}
 
 					final JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(),
-							jobConfig.getScanTargetPaths(), buildNumber, hubSupport, builtOn, envVars, launcher,
+							jobConfig.getScanTargetPaths(), buildIdentifier, hubSupport, builtOn, envVars, launcher,
 							logger);
 
 					final DateTime beforeScanTime = new DateTime();
@@ -473,7 +473,7 @@ public class HubCommonScanStep {
 
 	public void printConfiguration(final Node builtOn, final TaskListener listener,
 			final HubJenkinsLogger logger, final HubScanJobConfig jobConfig, final String buildDisplayName,
-			final int buildNumber, final String workspace) throws IOException, InterruptedException {
+			final String buildIdentifier, final String workspace) throws IOException, InterruptedException {
 		logger.alwaysLog("Initializing - Hub Jenkins Plugin - " + PluginHelper.getPluginVersion());
 
 		if (StringUtils.isEmpty(builtOn.getNodeName())) {
@@ -486,7 +486,7 @@ public class HubCommonScanStep {
 		logger.alwaysLog("-> Using Url : " + getHubServerInfo().getServerUrl());
 		logger.alwaysLog("-> Using Username : " + getHubServerInfo().getUsername());
 		logger.alwaysLog("-> Using Build Full Name : " + buildDisplayName);
-		logger.alwaysLog("-> Using Build Number : " + buildNumber);
+		logger.alwaysLog("-> Using Build Identifier : " + buildIdentifier);
 		logger.alwaysLog("-> Using Build Workspace Path : " + workspace);
 		logger.alwaysLog(
 				"-> Using Hub Project Name : " + jobConfig.getProjectName() + ", Version : " + jobConfig.getVersion());

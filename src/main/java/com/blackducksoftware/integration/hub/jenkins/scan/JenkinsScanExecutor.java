@@ -51,9 +51,11 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
 	private final HubJenkinsLogger logger;
 
-	public JenkinsScanExecutor(final HubServerInfo serverInfo, final List<String> scanTargets, final Integer buildNumber, final HubSupportHelper supportHelper,
+	public JenkinsScanExecutor(final HubServerInfo serverInfo, final List<String> scanTargets,
+			final String buildIdentifier, final HubSupportHelper supportHelper,
 			final Node builtOn, final EnvVars envVars, final Launcher launcher, final HubJenkinsLogger logger) {
-		super(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), scanTargets, buildNumber,
+		super(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), scanTargets,
+				buildIdentifier,
 				supportHelper);
 		this.builtOn = builtOn;
 		this.envVars = envVars;
@@ -113,7 +115,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 	protected String getLogDirectoryPath() throws IOException {
 		FilePath logDirectory = new FilePath(builtOn.getChannel(), getWorkingDirectory());
 		logDirectory = new FilePath(logDirectory, "HubScanLogs");
-		logDirectory = new FilePath(logDirectory, String.valueOf(getBuildNumber()));
+		logDirectory = new FilePath(logDirectory, String.valueOf(getBuildIdentifier()));
 		// This log directory should never exist as a new one is created for each Build
 		try {
 			logDirectory.mkdirs();

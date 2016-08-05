@@ -166,7 +166,7 @@ public class PostBuildHubScan extends Recorder {
 			final FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), jdk.getHome());
 			scanStep.runScan(build, build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), logger,
 					launcher, listener,
-					build.getFullDisplayName(), build.getNumber(), javaHome);
+					build.getFullDisplayName(), String.valueOf(build.getNumber()), javaHome);
 		} catch (final Exception e) {
 			logger.error(e);
 		}

@@ -331,7 +331,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 				final FilePath javaHome = new FilePath(node.getChannel(), jdk.getHome());
 				scanStep.runScan(run, node, envVars, workspace, logger, launcher, listener,
 						run.getFullDisplayName(),
-						run.getNumber(), javaHome);
+						String.valueOf(run.getNumber()), javaHome);
 
 			} catch (final Exception e) {
 				logger.error(e);
