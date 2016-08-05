@@ -30,7 +30,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
-import com.blackducksoftware.integration.hub.jenkins.scan.HubCommonScanStep;
+import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonScanStep;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
 
 import hudson.EnvVars;
@@ -157,7 +157,7 @@ public class PostBuildHubScan extends Recorder {
 		final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
 
 		try {
-			final HubCommonScanStep scanStep = new HubCommonScanStep(getScans(), getHubProjectName(),
+			final BDCommonScanStep scanStep = new BDCommonScanStep(getScans(), getHubProjectName(),
 					getHubProjectVersion(), getHubVersionPhase(), getHubVersionDist(), getScanMemory(),
 					getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isVerbose());
 			final EnvVars envVars = build.getEnvironment(listener);

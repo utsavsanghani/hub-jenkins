@@ -76,7 +76,7 @@ import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
 
-public class HubCommonScanStep {
+public class BDCommonScanStep {
 
 	private final ScanJobs[] scans;
 	private final String hubProjectName;
@@ -90,7 +90,7 @@ public class HubCommonScanStep {
 	private final Boolean verbose;
 	private final BomUpToDateAction bomUpToDateAction = new BomUpToDateAction();
 
-	public HubCommonScanStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
+	public BDCommonScanStep(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
 			final String hubVersionPhase, final String hubVersionDist, final String scanMemory,
 			final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun,
 			final Boolean verbose) {

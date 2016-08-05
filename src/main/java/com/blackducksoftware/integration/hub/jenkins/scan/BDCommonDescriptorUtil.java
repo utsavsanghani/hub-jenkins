@@ -19,7 +19,7 @@
  * specific language governing permissions and limitations
  * under the License.
  *******************************************************************************/
-package com.blackducksoftware.integration.hub.jenkins;
+package com.blackducksoftware.integration.hub.jenkins.scan;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -30,10 +30,18 @@ import javax.servlet.ServletException;
 import org.apache.commons.lang.StringUtils;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
+import com.blackducksoftware.integration.hub.builder.ValidationResultEnum;
+import com.blackducksoftware.integration.hub.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.exception.VersionDoesNotExistException;
+import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
+import com.blackducksoftware.integration.hub.jenkins.Messages;
+import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
+import com.blackducksoftware.integration.hub.job.HubScanJobConfig;
+import com.blackducksoftware.integration.hub.job.HubScanJobFieldEnum;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.version.api.DistributionEnum;
 import com.blackducksoftware.integration.hub.version.api.PhaseEnum;
@@ -432,6 +440,79 @@ public class BDCommonDescriptorUtil {
 				Thread.currentThread().setContextClassLoader(originalClassLoader);
 			}
 		}
+	}
 
+	public static FormValidation doCheckScanMemory(final String scanMemory) throws IOException, ServletException {
+		final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> results = new ValidationResults<HubScanJobFieldEnum, HubScanJobConfig>();
+		final HubScanJobConfigBuilder builder = new HubScanJobConfigBuilder(false);
+		builder.setScanMemory(scanMemory);
+		builder.validateScanMemory(results);
+
+		if (!results.isSuccess()) {
+			if (results.hasWarnings()) {
+				return FormValidation
+						.warning(results.getResultString(HubScanJobFieldEnum.SCANMEMORY, ValidationResultEnum.WARN));
+			} else if (results.hasErrors()) {
+				return FormValidation
+						.error(results.getResultString(HubScanJobFieldEnum.SCANMEMORY, ValidationResultEnum.ERROR));
+			}
+		}
+		return FormValidation.ok();
+	}
+
+	public static FormValidation doCheckBomUpdateMaxiumWaitTime(final String bomUpdateMaxiumWaitTime)
+			throws IOException, ServletException {
+		final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> results = new ValidationResults<HubScanJobFieldEnum, HubScanJobConfig>();
+		final HubScanJobConfigBuilder builder = new HubScanJobConfigBuilder(false);
+		builder.setMaxWaitTimeForBomUpdate(bomUpdateMaxiumWaitTime);
+		builder.validateMaxWaitTimeForBomUpdate(results);
+
+		if (!results.isSuccess()) {
+			if (results.hasWarnings()) {
+				return FormValidation.warning(results.getResultString(HubScanJobFieldEnum.MAX_WAIT_TIME_FOR_BOM_UPDATE,
+						ValidationResultEnum.WARN));
+			} else if (results.hasErrors()) {
+				return FormValidation.error(results.getResultString(HubScanJobFieldEnum.MAX_WAIT_TIME_FOR_BOM_UPDATE,
+						ValidationResultEnum.ERROR));
+			}
+		}
+		return FormValidation.ok();
+	}
+
+	/**
+	 * Fills the Credential drop down list in the global config
+	 *
+	 * @return
+	 */
+	public static ListBoxModel doFillHubCredentialsIdItems() {
+
+		ListBoxModel boxModel = null;
+		final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+		boolean changed = false;
+		try {
+			if (PostBuildScanDescriptor.class.getClassLoader() != originalClassLoader) {
+				changed = true;
+				Thread.currentThread().setContextClassLoader(PostBuildScanDescriptor.class.getClassLoader());
+			}
+
+			// Code copied from
+			// https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
+			final CredentialsMatcher credentialsMatcher = CredentialsMatchers
+					.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
+			final AbstractProject<?, ?> project = null; // Dont want to
+			// limit
+			// the search to a
+			// particular project
+			// for the drop
+			// down menu
+			boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher,
+					CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM,
+							Collections.<DomainRequirement> emptyList()));
+		} finally {
+			if (changed) {
+				Thread.currentThread().setContextClassLoader(originalClassLoader);
+			}
+		}
+		return boxModel;
 	}
 }

@@ -1,7 +1,6 @@
 package com.blackducksoftware.integration.hub.jenkins.workflow;
 
 import java.io.IOException;
-import java.util.Collections;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
@@ -14,34 +13,20 @@ import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
-import com.blackducksoftware.integration.hub.builder.ValidationResultEnum;
-import com.blackducksoftware.integration.hub.builder.ValidationResults;
-import com.blackducksoftware.integration.hub.jenkins.BDCommonDescriptorUtil;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
-import com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor;
 import com.blackducksoftware.integration.hub.jenkins.ScanJobs;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfigurationException;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
-import com.blackducksoftware.integration.hub.jenkins.scan.HubCommonScanStep;
-import com.blackducksoftware.integration.hub.job.HubScanJobConfig;
-import com.blackducksoftware.integration.hub.job.HubScanJobFieldEnum;
-import com.cloudbees.plugins.credentials.CredentialsMatcher;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonDescriptorUtil;
+import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonScanStep;
 
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Computer;
 import hudson.model.JDK;
@@ -49,7 +34,6 @@ import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
@@ -159,41 +143,13 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 
 		public FormValidation doCheckScanMemory(@QueryParameter("scanMemory") final String scanMemory)
 				throws IOException, ServletException {
-			final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> results = new ValidationResults<HubScanJobFieldEnum, HubScanJobConfig>();
-			final HubScanJobConfigBuilder builder = new HubScanJobConfigBuilder(false);
-			builder.setScanMemory(scanMemory);
-			builder.validateScanMemory(results);
-
-			if (!results.isSuccess()) {
-				if (results.hasWarnings()) {
-					return FormValidation.warning(
-							results.getResultString(HubScanJobFieldEnum.SCANMEMORY, ValidationResultEnum.WARN));
-				} else if (results.hasErrors()) {
-					return FormValidation
-							.error(results.getResultString(HubScanJobFieldEnum.SCANMEMORY, ValidationResultEnum.ERROR));
-				}
-			}
-			return FormValidation.ok();
+			return BDCommonDescriptorUtil.doCheckScanMemory(scanMemory);
 		}
 
 		public FormValidation doCheckBomUpdateMaxiumWaitTime(
 				@QueryParameter("bomUpdateMaxiumWaitTime") final String bomUpdateMaxiumWaitTime)
 						throws IOException, ServletException {
-			final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> results = new ValidationResults<HubScanJobFieldEnum, HubScanJobConfig>();
-			final HubScanJobConfigBuilder builder = new HubScanJobConfigBuilder(false);
-			builder.setMaxWaitTimeForBomUpdate(bomUpdateMaxiumWaitTime);
-			builder.validateMaxWaitTimeForBomUpdate(results);
-
-			if (!results.isSuccess()) {
-				if (results.hasWarnings()) {
-					return FormValidation.warning(results.getResultString(
-							HubScanJobFieldEnum.MAX_WAIT_TIME_FOR_BOM_UPDATE, ValidationResultEnum.WARN));
-				} else if (results.hasErrors()) {
-					return FormValidation.error(results.getResultString(
-							HubScanJobFieldEnum.MAX_WAIT_TIME_FOR_BOM_UPDATE, ValidationResultEnum.ERROR));
-				}
-			}
-			return FormValidation.ok();
+			return BDCommonDescriptorUtil.doCheckBomUpdateMaxiumWaitTime(bomUpdateMaxiumWaitTime);
 		}
 
 		/**
@@ -202,35 +158,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 		 * @return
 		 */
 		public ListBoxModel doFillHubCredentialsIdItems() {
-
-			ListBoxModel boxModel = null;
-			final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
-			boolean changed = false;
-			try {
-				if (PostBuildScanDescriptor.class.getClassLoader() != originalClassLoader) {
-					changed = true;
-					Thread.currentThread().setContextClassLoader(PostBuildScanDescriptor.class.getClassLoader());
-				}
-
-				// Code copied from
-				// https://github.com/jenkinsci/git-plugin/blob/f6d42c4e7edb102d3330af5ca66a7f5809d1a48e/src/main/java/hudson/plugins/git/UserRemoteConfig.java
-				final CredentialsMatcher credentialsMatcher = CredentialsMatchers
-						.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
-				final AbstractProject<?, ?> project = null; // Dont want to
-				// limit
-				// the search to a
-				// particular project
-				// for the drop
-				// down menu
-				boxModel = new StandardListBoxModel().withEmptySelection().withMatching(credentialsMatcher,
-						CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM,
-								Collections.<DomainRequirement> emptyList()));
-			} finally {
-				if (changed) {
-					Thread.currentThread().setContextClassLoader(originalClassLoader);
-				}
-			}
-			return boxModel;
+			return BDCommonDescriptorUtil.doFillCredentialsIdItems();
 		}
 
 		/**
@@ -321,7 +249,7 @@ public class HubScanWorkflowStep extends AbstractStepImpl {
 			final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
 			try {
 				final Node node = computer.getNode();
-				final HubCommonScanStep scanStep = new HubCommonScanStep(hubScanStep.getScans(),
+				final BDCommonScanStep scanStep = new BDCommonScanStep(hubScanStep.getScans(),
 						hubScanStep.getHubProjectName(), hubScanStep.getHubProjectVersion(),
 						hubScanStep.getHubVersionPhase(), hubScanStep.getHubVersionDist(), hubScanStep.getScanMemory(),
 						hubScanStep.getShouldGenerateHubReport(), hubScanStep.getBomUpdateMaxiumWaitTime(),
