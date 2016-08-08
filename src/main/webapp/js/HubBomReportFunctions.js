@@ -83,7 +83,7 @@ function adjustTableRow(row, odd) {
 	}
 	row.className = className;
 	
-	if(row.cells[policyViolationColumnNum].children.length > 0){
+	if(row.cells[policyViolationColumnNum].children.length > 1){
 		var violationStatus = row.cells[policyViolationColumnNum].children[1];
 		if(violationStatus){
 			violationStatus = violationStatus.innerHTML;
