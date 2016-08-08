@@ -26,11 +26,11 @@ import java.util.List;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.blackducksoftware.integration.hub.api.report.AggregateBomViewEntry;
+import com.blackducksoftware.integration.hub.api.report.DetailedReleaseSummary;
+import com.blackducksoftware.integration.hub.api.report.HubRiskReportData;
+import com.blackducksoftware.integration.hub.api.report.VersionReport;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
-import com.blackducksoftware.integration.hub.report.api.AggregateBomViewEntry;
-import com.blackducksoftware.integration.hub.report.api.DetailedReleaseSummary;
-import com.blackducksoftware.integration.hub.report.api.HubRiskReportData;
-import com.blackducksoftware.integration.hub.report.api.VersionReport;
 
 import hudson.model.Action;
 import hudson.model.Run;

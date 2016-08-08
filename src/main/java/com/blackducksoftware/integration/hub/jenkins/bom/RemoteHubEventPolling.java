@@ -30,12 +30,12 @@ import java.util.concurrent.CountDownLatch;
 import org.apache.commons.lang3.StringUtils;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.api.report.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.polling.HubEventPolling;
 import com.blackducksoftware.integration.hub.polling.ScanStatusChecker;
-import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.scan.status.ScanStatusToPoll;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -96,7 +96,7 @@ public class RemoteHubEventPolling extends HubEventPolling {
 			final ScanStatusToPoll status = gson.fromJson(fileContent, ScanStatusToPoll.class);
 			if (status.getMeta() == null || status.getStatus() == null) {
 				throw new HubIntegrationException("The scan status file : " + currentStatusFile.getRemote()
-						+ " does not contain valid scan status json.");
+				+ " does not contain valid scan status json.");
 			}
 			final ScanStatusChecker checker = new ScanStatusChecker(getService(), status, lock);
 			scanStatusList.add(checker);

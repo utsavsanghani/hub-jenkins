@@ -21,13 +21,13 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.hub.jenkins.bom;
 
-import hudson.remoting.VirtualChannel;
-
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
+import com.blackducksoftware.integration.hub.api.report.HubReportGenerationInfo;
+import com.blackducksoftware.integration.hub.api.report.RiskReportGenerator;
 import com.blackducksoftware.integration.hub.polling.HubEventPolling;
-import com.blackducksoftware.integration.hub.report.api.HubReportGenerationInfo;
-import com.blackducksoftware.integration.hub.report.api.RiskReportGenerator;
+
+import hudson.remoting.VirtualChannel;
 
 public class RemoteBomGenerator extends RiskReportGenerator {
 

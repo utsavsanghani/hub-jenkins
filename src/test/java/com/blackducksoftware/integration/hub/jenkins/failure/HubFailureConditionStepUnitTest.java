@@ -38,6 +38,11 @@ import org.mockito.Mockito;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
+import com.blackducksoftware.integration.hub.api.policy.ComponentVersionStatusCount;
+import com.blackducksoftware.integration.hub.api.policy.PolicyStatus;
+import com.blackducksoftware.integration.hub.api.policy.PolicyStatusEnum;
+import com.blackducksoftware.integration.hub.api.project.ProjectItem;
+import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
@@ -47,11 +52,6 @@ import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedActio
 import com.blackducksoftware.integration.hub.jenkins.mock.TestBuild;
 import com.blackducksoftware.integration.hub.jenkins.mock.TestProject;
 import com.blackducksoftware.integration.hub.jenkins.utils.TestBuildListener;
-import com.blackducksoftware.integration.hub.policy.api.ComponentVersionStatusCount;
-import com.blackducksoftware.integration.hub.policy.api.PolicyStatus;
-import com.blackducksoftware.integration.hub.policy.api.PolicyStatusEnum;
-import com.blackducksoftware.integration.hub.project.api.ProjectItem;
-import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 
 import hudson.model.Result;
 import hudson.tasks.ArtifactArchiver;

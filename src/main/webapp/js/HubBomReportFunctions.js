@@ -83,23 +83,25 @@ function adjustTableRow(row, odd) {
 	}
 	row.className = className;
 	
-	var violationStatus = row.cells[policyViolationColumnNum].children[1];
-	if(violationStatus){
-		violationStatus = violationStatus.innerHTML;
-	} else{
-		violationStatus = "NOT_IN_VIOLATION";
+	if(row.cells[policyViolationColumnNum].children.length > 0){
+		var violationStatus = row.cells[policyViolationColumnNum].children[1];
+		if(violationStatus){
+			violationStatus = violationStatus.innerHTML;
+		} else{
+			violationStatus = "NOT_IN_VIOLATION";
+		}
+		
+		var violationClasses = row.cells[policyViolationColumnNum].className;
+		
+		if(violationStatus == "IN_VIOLATION"){
+				//Do nothing
+	    } else {
+	    	row.cells[policyViolationColumnNum].removeChild(row.cells[policyViolationColumnNum].firstChild);
+		}
+		row.cells[policyViolationColumnNum].removeChild(row.cells[policyViolationColumnNum].lastChild);
+		
+		row.cells[policyViolationColumnNum].className = violationClasses;
 	}
-	
-	var violationClasses = row.cells[policyViolationColumnNum].className;
-	
-	if(violationStatus == "IN_VIOLATION"){
-			//Do nothing
-    } else {
-    	row.cells[policyViolationColumnNum].removeChild(row.cells[policyViolationColumnNum].firstChild);
-	}
-	row.cells[policyViolationColumnNum].removeChild(row.cells[policyViolationColumnNum].lastChild);
-	
-	row.cells[policyViolationColumnNum].className = violationClasses;
 }
 
 function adjustSecurityRisks(row) {

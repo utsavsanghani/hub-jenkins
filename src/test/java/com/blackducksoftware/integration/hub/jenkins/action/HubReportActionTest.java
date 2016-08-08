@@ -30,13 +30,13 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.blackducksoftware.integration.hub.api.report.AggregateBomViewEntry;
+import com.blackducksoftware.integration.hub.api.report.HubRiskReportData;
+import com.blackducksoftware.integration.hub.api.report.VersionReport;
+import com.blackducksoftware.integration.hub.api.report.risk.RiskCategories;
+import com.blackducksoftware.integration.hub.api.report.risk.RiskCounts;
+import com.blackducksoftware.integration.hub.api.report.risk.RiskProfile;
 import com.blackducksoftware.integration.hub.jenkins.Messages;
-import com.blackducksoftware.integration.hub.report.api.AggregateBomViewEntry;
-import com.blackducksoftware.integration.hub.report.api.HubRiskReportData;
-import com.blackducksoftware.integration.hub.report.api.VersionReport;
-import com.blackducksoftware.integration.hub.report.risk.api.RiskCategories;
-import com.blackducksoftware.integration.hub.report.risk.api.RiskCounts;
-import com.blackducksoftware.integration.hub.report.risk.api.RiskProfile;
 
 public class HubReportActionTest {
 
