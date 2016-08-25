@@ -22,6 +22,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.api.project.ProjectItem;
 import com.blackducksoftware.integration.hub.api.report.HubReportGenerationInfo;
+import com.blackducksoftware.integration.hub.api.report.ReportCategoriesEnum;
 import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
 import com.blackducksoftware.integration.hub.builder.ValidationResult;
@@ -397,8 +398,10 @@ public class BDCommonScanStep {
 		final HubReportAction reportAction = new HubReportAction(run);
 		final RemoteBomGenerator remoteBomGenerator = new RemoteBomGenerator(reportGenInfo, hubSupport,
 				builtOn.getChannel());
-
-		reportAction.setReportData(remoteBomGenerator.generateHubReport(logger));
+		final ReportCategoriesEnum[] categories = new ReportCategoriesEnum[2];
+		categories[0] = ReportCategoriesEnum.VERSION;
+		categories[1] = ReportCategoriesEnum.COMPONENTS;
+		reportAction.setReportData(remoteBomGenerator.generateHubReport(logger, categories));
 		run.addAction(reportAction);
 		action.setHasBomBeenUdpated(true);
 	}
