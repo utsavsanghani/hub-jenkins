@@ -6,13 +6,12 @@ import java.net.URISyntaxException;
 import com.blackducksoftware.integration.hub.CIEnvironmentVariables;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
-import com.blackducksoftware.integration.hub.api.policy.PolicyStatus;
 import com.blackducksoftware.integration.hub.api.policy.PolicyStatusEnum;
+import com.blackducksoftware.integration.hub.api.policy.PolicyStatusItem;
 import com.blackducksoftware.integration.hub.api.report.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.capabilities.HubCapabilitiesEnum;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
-import com.blackducksoftware.integration.hub.exception.MissingPolicyStatusException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfoSingleton;
@@ -69,7 +68,6 @@ public class HubCommonFailureStep {
 				run.setResult(Result.UNSTABLE);
 				return true;
 			} else if (getFailBuildForPolicyViolations()) {
-				try {
 					if (bomUpToDateAction.getPolicyStatusUrl() == null) {
 						logger.error(
 								"Can not check policy violations if you have not specified a Project and Version.");
@@ -78,13 +76,13 @@ public class HubCommonFailureStep {
 					}
 					// We use this conditional in case there are other failure
 					// conditions in the future
-					final PolicyStatus policyStatus = restService
+					final PolicyStatusItem policyStatus = restService
 							.getPolicyStatus(bomUpToDateAction.getPolicyStatusUrl());
 					if (policyStatus == null) {
 						logger.error("Could not find any information about the Policy status of the bom.");
 						run.setResult(Result.UNSTABLE);
 					}
-					if (policyStatus.getOverallStatusEnum() == PolicyStatusEnum.IN_VIOLATION) {
+					if (policyStatus.getOverallStatus() == PolicyStatusEnum.IN_VIOLATION) {
 						run.setResult(Result.FAILURE);
 					}
 
@@ -114,10 +112,6 @@ public class HubCommonFailureStep {
 						.setBomEntriesNotInViolation(policyStatus.getCountNotInViolation().getValue());
 					}
 					run.addAction(variableContributor);
-
-				} catch (final MissingPolicyStatusException e) {
-					logger.warn(e.getMessage());
-				}
 			}
 		} catch (final BDJenkinsHubPluginException e) {
 			logger.error(e.getMessage(), e);

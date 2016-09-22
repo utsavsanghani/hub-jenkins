@@ -39,8 +39,8 @@ import org.mockito.Mockito;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.api.policy.ComponentVersionStatusCount;
-import com.blackducksoftware.integration.hub.api.policy.PolicyStatus;
 import com.blackducksoftware.integration.hub.api.policy.PolicyStatusEnum;
+import com.blackducksoftware.integration.hub.api.policy.PolicyStatusItem;
 import com.blackducksoftware.integration.hub.api.project.ProjectItem;
 import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
@@ -63,7 +63,8 @@ public class HubFailureConditionStepUnitTest {
 	@Rule
 	public static JenkinsRule j = new JenkinsRule();
 
-	private HubIntRestService getMockedService(final String returnVersion, final PolicyStatus status) throws Exception {
+	private HubIntRestService getMockedService(final String returnVersion, final PolicyStatusItem status)
+			throws Exception {
 		final HubIntRestService service = Mockito.mock(HubIntRestService.class);
 		Mockito.doReturn(returnVersion).when(service).getHubVersion();
 		Mockito.doReturn(status).when(service).getPolicyStatus(Mockito.anyString());
@@ -336,11 +337,12 @@ public class HubFailureConditionStepUnitTest {
 		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
 		final ComponentVersionStatusCount countsUnknown = new ComponentVersionStatusCount(
-				PolicyStatusEnum.UNKNOWN.name(), 0);
+				PolicyStatusEnum.UNKNOWN, 0);
 		final List<ComponentVersionStatusCount> counts = new ArrayList<ComponentVersionStatusCount>();
 		counts.add(countsUnknown);
 
-		final PolicyStatus policyStatus = new PolicyStatus(PolicyStatusEnum.NOT_IN_VIOLATION.name(), null, counts,
+		final PolicyStatusItem policyStatus = new PolicyStatusItem(PolicyStatusEnum.NOT_IN_VIOLATION, null,
+				counts,
 				null);
 		final HubIntRestService service = getMockedService("3.0.0", policyStatus);
 		final ProjectItem projectItem = new ProjectItem(null, null, null);
@@ -396,11 +398,12 @@ public class HubFailureConditionStepUnitTest {
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
 		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
-		final ComponentVersionStatusCount countsUnknown = new ComponentVersionStatusCount(PolicyStatusEnum.UNKNOWN.name(), 0);
+		final ComponentVersionStatusCount countsUnknown = new ComponentVersionStatusCount(PolicyStatusEnum.UNKNOWN, 0);
 		final List<ComponentVersionStatusCount> counts = new ArrayList<ComponentVersionStatusCount>();
 		counts.add(countsUnknown);
 
-		final PolicyStatus policyStatus = new PolicyStatus(PolicyStatusEnum.NOT_IN_VIOLATION.name(), null, counts, null);
+		final PolicyStatusItem policyStatus = new PolicyStatusItem(PolicyStatusEnum.NOT_IN_VIOLATION, null,
+				counts, null);
 		final HubIntRestService service = getMockedService("3.0.0", policyStatus);
 		final ProjectItem projectItem = new ProjectItem(null, null, null);
 		Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
@@ -459,15 +462,19 @@ public class HubFailureConditionStepUnitTest {
 		HubFailureConditionStep failureStep = new HubFailureConditionStep(failBuildForPolicyViolations);
 		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
-		final ComponentVersionStatusCount countsInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION.name(), 0);
-		final ComponentVersionStatusCount countsNotInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION_OVERRIDDEN.name(), 12);
-		final ComponentVersionStatusCount countsInViolationOverridden = new ComponentVersionStatusCount(PolicyStatusEnum.NOT_IN_VIOLATION.name(), 45);
+		final ComponentVersionStatusCount countsInViolation = new ComponentVersionStatusCount(
+				PolicyStatusEnum.IN_VIOLATION, 0);
+		final ComponentVersionStatusCount countsNotInViolation = new ComponentVersionStatusCount(
+				PolicyStatusEnum.IN_VIOLATION_OVERRIDDEN, 12);
+		final ComponentVersionStatusCount countsInViolationOverridden = new ComponentVersionStatusCount(
+				PolicyStatusEnum.NOT_IN_VIOLATION, 45);
 		final List<ComponentVersionStatusCount> counts = new ArrayList<ComponentVersionStatusCount>();
 		counts.add(countsInViolationOverridden);
 		counts.add(countsInViolation);
 		counts.add(countsNotInViolation);
 
-		final PolicyStatus policyStatus = new PolicyStatus(PolicyStatusEnum.NOT_IN_VIOLATION.name(), null, counts, null);
+		final PolicyStatusItem policyStatus = new PolicyStatusItem(PolicyStatusEnum.NOT_IN_VIOLATION, null,
+				counts, null);
 		final HubIntRestService service = getMockedService("3.0.0", policyStatus);
 		final ProjectItem projectItem = new ProjectItem(null, null, null);
 		Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
@@ -527,14 +534,18 @@ public class HubFailureConditionStepUnitTest {
 		HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
 		failureStep = Mockito.spy(failureStep);
 
-		final ComponentVersionStatusCount countsInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION.name(), 3);
-		final ComponentVersionStatusCount countsNotInViolation = new ComponentVersionStatusCount(PolicyStatusEnum.IN_VIOLATION_OVERRIDDEN.name(), 12);
-		final ComponentVersionStatusCount countsInViolationOverridden = new ComponentVersionStatusCount(PolicyStatusEnum.NOT_IN_VIOLATION.name(), 45);
+		final ComponentVersionStatusCount countsInViolation = new ComponentVersionStatusCount(
+				PolicyStatusEnum.IN_VIOLATION, 3);
+		final ComponentVersionStatusCount countsNotInViolation = new ComponentVersionStatusCount(
+				PolicyStatusEnum.IN_VIOLATION_OVERRIDDEN, 12);
+		final ComponentVersionStatusCount countsInViolationOverridden = new ComponentVersionStatusCount(
+				PolicyStatusEnum.NOT_IN_VIOLATION, 45);
 		final List<ComponentVersionStatusCount> counts = new ArrayList<ComponentVersionStatusCount>();
 		counts.add(countsInViolationOverridden);
 		counts.add(countsInViolation);
 		counts.add(countsNotInViolation);
-		final PolicyStatus policyStatus = new PolicyStatus(PolicyStatusEnum.IN_VIOLATION.name(), null, counts, null);
+		final PolicyStatusItem policyStatus = new PolicyStatusItem(PolicyStatusEnum.IN_VIOLATION, null, counts,
+				null);
 		final HubIntRestService service = getMockedService("3.0.0", policyStatus);
 		final ProjectItem projectItem = new ProjectItem(null, null, null);
 		Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());

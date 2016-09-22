@@ -25,18 +25,18 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.api.ScanSummaryRestService;
 import com.blackducksoftware.integration.hub.api.report.HubReportGenerationInfo;
+import com.blackducksoftware.integration.hub.api.scan.ScanSummaryItem;
+import com.blackducksoftware.integration.hub.dataservices.scan.ScanStatusChecker;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.polling.HubEventPolling;
-import com.blackducksoftware.integration.hub.polling.ScanStatusChecker;
-import com.blackducksoftware.integration.hub.scan.status.ScanStatusToPoll;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -88,18 +88,16 @@ public class RemoteHubEventPolling extends HubEventPolling {
 					+ statusFiles.size() + " status files.");
 		}
 		logger.info("Checking the directory : " + statusDirectory.getRemote() + " for the scan status's.");
-		final CountDownLatch lock = new CountDownLatch(expectedNumScans);
-		final List<ScanStatusChecker> scanStatusList = new ArrayList<ScanStatusChecker>();
+		final List<ScanSummaryItem> scanSummaryItems = new ArrayList<ScanSummaryItem>();
 		for (final FilePath currentStatusFile : statusFiles) {
 			final String fileContent = currentStatusFile.readToString();
 			final Gson gson = new GsonBuilder().create();
-			final ScanStatusToPoll status = gson.fromJson(fileContent, ScanStatusToPoll.class);
-			if (status.getMeta() == null || status.getStatus() == null) {
+			final ScanSummaryItem scanSummaryItem = gson.fromJson(fileContent, ScanSummaryItem.class);
+			if (scanSummaryItem.getMeta() == null || scanSummaryItem.getStatus() == null) {
 				throw new HubIntegrationException("The scan status file : " + currentStatusFile.getRemote()
 				+ " does not contain valid scan status json.");
 			}
-			final ScanStatusChecker checker = new ScanStatusChecker(getService(), status, lock);
-			scanStatusList.add(checker);
+			scanSummaryItems.add(scanSummaryItem);
 		}
 
 		logger.debug("Cleaning up the scan status files at : " + statusDirectory.getRemote());
@@ -113,7 +111,11 @@ public class RemoteHubEventPolling extends HubEventPolling {
 		}
 		statusDirectory.delete();
 
-		pollScanStatusChecker(lock, hubReportGenerationInfo, scanStatusList);
+		final long timeoutInSeconds = hubReportGenerationInfo.getMaximumWaitTime();
+		final ScanSummaryRestService scanSummaryRestService = getService().getScanSummaryRestService();
+		final ScanStatusChecker statusChecker = new ScanStatusChecker(logger, scanSummaryRestService, scanSummaryItems,
+				timeoutInSeconds);
+		statusChecker.waitForCompleteScans();
 	}
 
 }
