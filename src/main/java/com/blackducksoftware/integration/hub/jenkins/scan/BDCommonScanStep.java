@@ -207,7 +207,7 @@ public class BDCommonScanStep {
 					hubScanJobConfigBuilder.disableScanTargetPathExistenceCheck();
 
 					final ValidationResults<HubScanJobFieldEnum, HubScanJobConfig> builderResults = hubScanJobConfigBuilder
-							.build();
+							.buildResults();
 					final HubScanJobConfig jobConfig = builderResults.getConstructedObject();
 					printConfiguration(builtOn, listener, logger, jobConfig, buildDisplayName, buildIdentifier,
 							workingDirectory);
