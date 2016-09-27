@@ -256,7 +256,7 @@ public class HubReportActionTest {
 	@Test
 	public void testGetIconFileName() {
 		final HubReportAction action = new HubReportAction(null);
-		assertEquals("/plugin/hub-jenkins/images/blackduck.png", action.getIconFileName());
+		assertEquals("/plugin/hub-jenkins/images/Ducky-200.png", action.getIconFileName());
 	}
 
 	@Test
