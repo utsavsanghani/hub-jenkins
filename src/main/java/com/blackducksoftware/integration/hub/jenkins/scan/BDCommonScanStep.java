@@ -63,6 +63,8 @@ import com.blackducksoftware.integration.hub.job.HubScanJobConfig;
 import com.blackducksoftware.integration.hub.job.HubScanJobFieldEnum;
 import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.phone.home.PhoneHomeClient;
+import com.blackducksoftware.integration.phone.home.enums.BlackDuckName;
+import com.blackducksoftware.integration.phone.home.enums.ThirdPartyName;
 import com.blackducksoftware.integration.phone.home.exception.PhoneHomeException;
 import com.blackducksoftware.integration.phone.home.exception.PropertiesLoaderException;
 
@@ -259,8 +261,20 @@ public class BDCommonScanStep {
 					// Phone-Home
 					try {
 						final String hubVersion = hubSupport.getHubVersion(service);
-						final String regId = service.getRegistrationId();
-						bdPhoneHome(hubVersion, regId);
+						String regId = null;
+						String hubHostName = null;
+						try{
+							regId = service.getRegistrationId();
+						} catch (final Exception e) {
+
+						}
+						try{
+							final URL url = new URL(getHubServerInfo().getServerUrl());
+							hubHostName = url.getHost();
+						} catch (final Exception e) {
+
+						}
+						bdPhoneHome(hubVersion, regId, hubHostName);
 					} catch (final Exception e) {
 						logger.debug("Unable to phone-home", e);
 					}
@@ -722,15 +736,13 @@ public class BDCommonScanStep {
 	 *            This method "phones-home" to the internal BlackDuck
 	 *            Integrations server. Every time a build is kicked off,
 	 */
-	public void bdPhoneHome(final String blackDuckVersion, final String regId)
+	public void bdPhoneHome(final String blackDuckVersion, final String regId, final String hubHostName)
 			throws IOException, PhoneHomeException, PropertiesLoaderException, ResourceException, JSONException {
-		final String blackDuckName = "Hub";
-		final String thirdPartyName = "Jenkins";
 		final String thirdPartyVersion = Jenkins.getVersion().toString();
 		final String pluginVersion = PluginHelper.getPluginVersion();
 
 		final PhoneHomeClient phClient = new PhoneHomeClient();
-		phClient.callHomeIntegrations(regId, blackDuckName, blackDuckVersion, thirdPartyName, thirdPartyVersion,
+		phClient.callHomeIntegrations(regId,hubHostName, BlackDuckName.HUB, blackDuckVersion, ThirdPartyName.JENKINS, thirdPartyVersion,
 				pluginVersion);
 	}
 }
