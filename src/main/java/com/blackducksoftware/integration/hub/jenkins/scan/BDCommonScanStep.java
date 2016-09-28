@@ -732,6 +732,8 @@ public class BDCommonScanStep {
 	 *            Version of the blackduck product, in this instance, the hub
 	 * @param regId
 	 *            Registration ID of the hub instance that this plugin uses
+	 * @param hubHostName
+	 *            Host name of the hub instance that this plugin uses
 	 *
 	 *            This method "phones-home" to the internal BlackDuck
 	 *            Integrations server. Every time a build is kicked off,
