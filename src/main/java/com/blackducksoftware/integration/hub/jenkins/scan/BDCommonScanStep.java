@@ -320,8 +320,7 @@ public class BDCommonScanStep {
 						String policyStatusLink = null;
 						try {
 							// not all HUb users have the policy module enabled
-							// so
-							// there will be no policy status link
+							// so there will be no policy status link
 							policyStatusLink = version.getLink(ReleaseItem.POLICY_STATUS_LINK);
 						} catch (final Exception e) {
 							logger.debug("Could not get the policy status link.", e);
