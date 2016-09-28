@@ -385,7 +385,8 @@ public class HubFailureConditionStepUnitTest {
 
 		final String output = baos.toString();
 		assertTrue(output,
-				output.contains("Can not check policy violations if you have not specified a Project and Version."));
+				output.contains(
+						"Can not check policy violations, could not find the policy status URL for this Version."));
 		assertEquals(Result.UNSTABLE, build.getResult());
 	}
 
