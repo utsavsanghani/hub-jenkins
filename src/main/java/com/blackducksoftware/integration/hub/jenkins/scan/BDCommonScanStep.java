@@ -317,7 +317,16 @@ public class BDCommonScanStep {
 						bomUpToDateAction.setScanTargets(jobConfig.getScanTargetPaths());
 					}
 					if (version != null && hubSupport.hasCapability(HubCapabilitiesEnum.POLICY_API)) {
-						bomUpToDateAction.setPolicyStatusUrl(version.getLink(ReleaseItem.POLICY_STATUS_LINK));
+						String policyStatusLink = null;
+						try {
+							// not all HUb users have the policy module enabled
+							// so
+							// there will be no policy status link
+							policyStatusLink = version.getLink(ReleaseItem.POLICY_STATUS_LINK);
+						} catch (final Exception e) {
+							logger.debug("Could not get the policy status link.", e);
+						}
+						bomUpToDateAction.setPolicyStatusUrl(policyStatusLink);
 					}
 					run.addAction(bomUpToDateAction);
 					run.addAction(new HubScanFinishedAction());

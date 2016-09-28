@@ -73,7 +73,7 @@ public class HubCommonFailureStep {
 			} else if (getFailBuildForPolicyViolations()) {
 				if (bomUpToDateAction.getPolicyStatusUrl() == null) {
 					logger.error(
-							"Can not check policy violations if you have not specified a Project and Version.");
+							"Can not check policy violations, could not find the policy status URL for this Version.");
 					run.setResult(Result.UNSTABLE);
 					return true;
 				}
