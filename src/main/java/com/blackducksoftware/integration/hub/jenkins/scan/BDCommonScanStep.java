@@ -266,13 +266,13 @@ public class BDCommonScanStep {
 						try{
 							regId = service.getRegistrationId();
 						} catch (final Exception e) {
-
+							logger.debug("Could not get the Hub registration Id.");
 						}
 						try{
 							final URL url = new URL(getHubServerInfo().getServerUrl());
 							hubHostName = url.getHost();
 						} catch (final Exception e) {
-
+							logger.debug("Could not get the Hub Host name.");
 						}
 						bdPhoneHome(hubVersion, regId, hubHostName);
 					} catch (final Exception e) {
