@@ -359,7 +359,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	 */
 	public FormValidation doCheckHubServerUrl(@QueryParameter("hubServerUrl") final String hubServerUrl)
 			throws IOException, ServletException {
-		try {
 			ProxyConfiguration proxyConfig = null;
 			final Jenkins jenkins = Jenkins.getInstance();
 			if (jenkins != null) {
@@ -387,9 +386,6 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 							.error(results.getAllResultString(ValidationResultEnum.ERROR));
 				}
 			}
-		} catch (final Exception e) {
-			return FormValidation.error(e.toString());
-		}
 		return FormValidation.ok();
 	}
 
