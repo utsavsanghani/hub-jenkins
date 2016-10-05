@@ -17,7 +17,9 @@ import org.joda.time.DateTime;
 import org.json.JSONException;
 import org.restlet.resource.ResourceException;
 
-import com.blackducksoftware.integration.hub.CIEnvironmentVariables;
+import com.blackducksoftware.integration.builder.ValidationResult;
+import com.blackducksoftware.integration.builder.ValidationResultEnum;
+import com.blackducksoftware.integration.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.api.project.ProjectItem;
@@ -25,9 +27,6 @@ import com.blackducksoftware.integration.hub.api.report.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.api.report.ReportCategoriesEnum;
 import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
-import com.blackducksoftware.integration.hub.builder.ValidationResult;
-import com.blackducksoftware.integration.hub.builder.ValidationResultEnum;
-import com.blackducksoftware.integration.hub.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.capabilities.HubCapabilitiesEnum;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
@@ -61,12 +60,13 @@ import com.blackducksoftware.integration.hub.jenkins.remote.GetIsOsWindows;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetOneJarFile;
 import com.blackducksoftware.integration.hub.job.HubScanJobConfig;
 import com.blackducksoftware.integration.hub.job.HubScanJobFieldEnum;
-import com.blackducksoftware.integration.hub.logging.IntLogger;
+import com.blackducksoftware.integration.log.IntLogger;
 import com.blackducksoftware.integration.phone.home.PhoneHomeClient;
 import com.blackducksoftware.integration.phone.home.enums.BlackDuckName;
 import com.blackducksoftware.integration.phone.home.enums.ThirdPartyName;
 import com.blackducksoftware.integration.phone.home.exception.PhoneHomeException;
 import com.blackducksoftware.integration.phone.home.exception.PropertiesLoaderException;
+import com.blackducksoftware.integration.util.CIEnvironmentVariables;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -158,9 +158,9 @@ public class BDCommonScanStep {
 	}
 
 	public void runScan(final Run run, final Node builtOn, final EnvVars envVars, final FilePath workspace,
-			final HubJenkinsLogger logger,
-			final Launcher launcher, final TaskListener listener, final String buildDisplayName,
-			final String buildIdentifier, final FilePath javaHome) throws InterruptedException, IOException {
+			final HubJenkinsLogger logger, final Launcher launcher, final TaskListener listener,
+			final String buildDisplayName, final String buildIdentifier, final FilePath javaHome)
+			throws InterruptedException, IOException {
 
 		final CIEnvironmentVariables variables = new CIEnvironmentVariables();
 		variables.putAll(envVars);
@@ -234,11 +234,10 @@ public class BDCommonScanStep {
 						}
 					}
 					final DummyToolInstaller dummyInstaller = new DummyToolInstaller();
-					final String toolsDirectory = dummyInstaller
-							.getToolDir(new DummyToolInstallation(), builtOn).getRemote();
+					final String toolsDirectory = dummyInstaller.getToolDir(new DummyToolInstallation(), builtOn)
+							.getRemote();
 
-					final String scanExec = getScanCLI(logger, builtOn, toolsDirectory, localHostName,
-							envVars);
+					final String scanExec = getScanCLI(logger, builtOn, toolsDirectory, localHostName, envVars);
 
 					final String jrePath = getJavaExec(logger, builtOn, toolsDirectory, envVars, javaHome.getRemote());
 
@@ -263,12 +262,12 @@ public class BDCommonScanStep {
 						final String hubVersion = hubSupport.getHubVersion(service);
 						String regId = null;
 						String hubHostName = null;
-						try{
+						try {
 							regId = service.getRegistrationId();
 						} catch (final Exception e) {
 							logger.debug("Could not get the Hub registration Id.");
 						}
-						try{
+						try {
 							final URL url = new URL(getHubServerInfo().getServerUrl());
 							hubHostName = url.getHost();
 						} catch (final Exception e) {
@@ -364,8 +363,7 @@ public class BDCommonScanStep {
 		logger.alwaysLog("Finished running Black Duck Scans.");
 	}
 
-	public String getLocalHostName(final IntLogger logger, final Node builtOn)
-			throws InterruptedException {
+	public String getLocalHostName(final IntLogger logger, final Node builtOn) throws InterruptedException {
 		String localHostName = "";
 		try {
 			localHostName = builtOn.getChannel().call(new GetHostName());
@@ -466,7 +464,7 @@ public class BDCommonScanStep {
 	 */
 	protected ReleaseItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
 			final String projectVersion, final ProjectItem project)
-					throws IOException, URISyntaxException, BDJenkinsHubPluginException, UnexpectedHubResponseException {
+			throws IOException, URISyntaxException, BDJenkinsHubPluginException, UnexpectedHubResponseException {
 		ReleaseItem version = null;
 		try {
 			version = service.getVersion(project, projectVersion);
@@ -496,9 +494,9 @@ public class BDCommonScanStep {
 		return version;
 	}
 
-	public void printConfiguration(final Node builtOn, final TaskListener listener,
-			final HubJenkinsLogger logger, final HubScanJobConfig jobConfig, final String buildDisplayName,
-			final String buildIdentifier, final String workspace) throws IOException, InterruptedException {
+	public void printConfiguration(final Node builtOn, final TaskListener listener, final HubJenkinsLogger logger,
+			final HubScanJobConfig jobConfig, final String buildDisplayName, final String buildIdentifier,
+			final String workspace) throws IOException, InterruptedException {
 		logger.alwaysLog("Initializing - Hub Jenkins Plugin - " + PluginHelper.getPluginVersion());
 
 		if (StringUtils.isEmpty(builtOn.getNodeName())) {
@@ -534,10 +532,10 @@ public class BDCommonScanStep {
 	 * the process and prints out all stderr and stdout to the Console Output.
 	 *
 	 */
-	private Result runScan(final HubIntRestService service, final Node builtOn,
-			final JenkinsScanExecutor scan, final HubJenkinsLogger logger, final String scanExec, final String javaExec,
-			final String oneJarPath, final HubScanJobConfig jobConfig) throws IOException, HubConfigurationException,
-	InterruptedException, BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
+	private Result runScan(final HubIntRestService service, final Node builtOn, final JenkinsScanExecutor scan,
+			final HubJenkinsLogger logger, final String scanExec, final String javaExec, final String oneJarPath,
+			final HubScanJobConfig jobConfig) throws IOException, HubConfigurationException, InterruptedException,
+			BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
 		validateScanTargets(logger, jobConfig.getScanTargetPaths(), jobConfig.getWorkingDirectory(),
 				builtOn.getChannel());
 		scan.setLogger(logger);
@@ -661,9 +659,8 @@ public class BDCommonScanStep {
 		return scanExec.getRemote();
 	}
 
-	public String getJavaExec(final HubJenkinsLogger logger, final Node builtOn,
-			final String toolsDirectory, final EnvVars envVars, final String javaHome)
-					throws IOException, InterruptedException, Exception {
+	public String getJavaExec(final HubJenkinsLogger logger, final Node builtOn, final String toolsDirectory,
+			final EnvVars envVars, final String javaHome) throws IOException, InterruptedException, Exception {
 		final GetCLIProvidedJRE getProvidedJre = new GetCLIProvidedJRE(toolsDirectory);
 		String jrePath = builtOn.getChannel().call(getProvidedJre);
 
@@ -717,7 +714,7 @@ public class BDCommonScanStep {
 	 */
 	public boolean validateScanTargets(final IntLogger logger, final List<String> scanTargets,
 			final String workingDirectory, final VirtualChannel channel)
-					throws IOException, HubConfigurationException, InterruptedException {
+			throws IOException, HubConfigurationException, InterruptedException {
 		for (final String currTarget : scanTargets) {
 
 			if (currTarget.length() < workingDirectory.length() || !currTarget.startsWith(workingDirectory)) {
@@ -752,7 +749,7 @@ public class BDCommonScanStep {
 		final String pluginVersion = PluginHelper.getPluginVersion();
 
 		final PhoneHomeClient phClient = new PhoneHomeClient();
-		phClient.callHomeIntegrations(regId,hubHostName, BlackDuckName.HUB, blackDuckVersion, ThirdPartyName.JENKINS, thirdPartyVersion,
-				pluginVersion);
+		phClient.callHomeIntegrations(regId, hubHostName, BlackDuckName.HUB, blackDuckVersion, ThirdPartyName.JENKINS,
+				thirdPartyVersion, pluginVersion);
 	}
 }

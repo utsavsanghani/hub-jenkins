@@ -29,14 +29,14 @@ import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.blackducksoftware.integration.builder.ValidationResultEnum;
+import com.blackducksoftware.integration.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.api.project.ProjectItem;
 import com.blackducksoftware.integration.hub.api.version.DistributionEnum;
 import com.blackducksoftware.integration.hub.api.version.PhaseEnum;
 import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
-import com.blackducksoftware.integration.hub.builder.ValidationResultEnum;
-import com.blackducksoftware.integration.hub.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.exception.VersionDoesNotExistException;
@@ -147,10 +147,8 @@ public class BDCommonDescriptorUtil {
 		return items;
 	}
 
-
 	public static AutoCompletionCandidates doAutoCompleteHubProjectName(final HubServerInfo serverInfo,
-			final String hubProjectName)
-					throws IOException, ServletException {
+			final String hubProjectName) throws IOException, ServletException {
 		final AutoCompletionCandidates potentialMatches = new AutoCompletionCandidates();
 		if (StringUtils.isNotBlank(serverInfo.getServerUrl())
 				&& StringUtils.isNotBlank(serverInfo.getCredentialsId())) {
@@ -210,8 +208,7 @@ public class BDCommonDescriptorUtil {
 						serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
 
 				service.getProjectByName(hubProjectName);
-				return FormValidation
-						.ok(Messages.HubBuildScan_getProjectExistsIn_0_(serverInfo.getServerUrl()));
+				return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(serverInfo.getServerUrl()));
 			} catch (final ProjectDoesNotExistException e) {
 				return FormValidation
 						.error(Messages.HubBuildScan_getProjectNonExistingIn_0_(serverInfo.getServerUrl()));
@@ -254,7 +251,7 @@ public class BDCommonDescriptorUtil {
 
 	public static FormValidation doCheckHubProjectVersion(final HubServerInfo serverInfo,
 			final String hubProjectVersion, final String hubProjectName, final boolean dryRun)
-					throws IOException, ServletException {
+			throws IOException, ServletException {
 		if (dryRun) {
 			return FormValidation.ok();
 		}
@@ -343,7 +340,6 @@ public class BDCommonDescriptorUtil {
 		}
 		return FormValidation.ok();
 	}
-
 
 	public static FormValidation doCreateHubProject(final HubServerInfo serverInfo, final String hubProjectName,
 			final String hubProjectVersion, final String hubVersionPhase, final String hubVersionDist) {

@@ -31,7 +31,7 @@ import com.blackducksoftware.integration.hub.jenkins.exceptions.HubConfiguration
 import com.blackducksoftware.integration.hub.jenkins.remote.GetCanonicalPath;
 import com.blackducksoftware.integration.hub.jenkins.remote.GetSystemProperty;
 import com.blackducksoftware.integration.hub.jenkins.scan.BDCommonScanStep;
-import com.blackducksoftware.integration.hub.logging.IntLogger;
+import com.blackducksoftware.integration.log.IntLogger;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -63,10 +63,9 @@ public class PostBuildHubScan extends Recorder {
 	private String reportMaxiumWaitTime;
 
 	@DataBoundConstructor
-	public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName,
-			final String hubProjectVersion, final String hubVersionPhase, final String hubVersionDist,
-			final String scanMemory, final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime,
-			final boolean dryRun) {
+	public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
+			final String hubVersionPhase, final String hubVersionDist, final String scanMemory,
+			final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun) {
 		this.scans = scans;
 		this.hubProjectName = hubProjectName;
 		this.hubProjectVersion = hubProjectVersion;
@@ -164,9 +163,8 @@ public class PostBuildHubScan extends Recorder {
 
 			final JDK jdk = determineJava(logger, build, envVars);
 			final FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), jdk.getHome());
-			scanStep.runScan(build, build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), logger,
-					launcher, listener,
-					build.getFullDisplayName(), String.valueOf(build.getNumber()), javaHome);
+			scanStep.runScan(build, build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), logger, launcher,
+					listener, build.getFullDisplayName(), String.valueOf(build.getNumber()), javaHome);
 		} catch (final Exception e) {
 			logger.error(e);
 		}

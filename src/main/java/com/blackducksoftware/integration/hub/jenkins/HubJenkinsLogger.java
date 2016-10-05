@@ -25,17 +25,15 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 
-import com.blackducksoftware.integration.hub.logging.IntLogger;
-import com.blackducksoftware.integration.hub.logging.LogLevel;
+import com.blackducksoftware.integration.log.IntLogger;
+import com.blackducksoftware.integration.log.LogLevel;
 
 import hudson.model.TaskListener;
 
 public class HubJenkinsLogger extends IntLogger implements Serializable {
-
 	private static final long serialVersionUID = -685871863395350470L;
 
 	private final TaskListener jenkinsLogger;
-
 	private LogLevel level = LogLevel.INFO;
 
 	public HubJenkinsLogger(final TaskListener jenkinsLogger) {
