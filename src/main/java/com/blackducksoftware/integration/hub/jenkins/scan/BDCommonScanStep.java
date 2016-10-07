@@ -160,7 +160,7 @@ public class BDCommonScanStep {
 	public void runScan(final Run run, final Node builtOn, final EnvVars envVars, final FilePath workspace,
 			final HubJenkinsLogger logger, final Launcher launcher, final TaskListener listener,
 			final String buildDisplayName, final String buildIdentifier, final FilePath javaHome)
-			throws InterruptedException, IOException {
+					throws InterruptedException, IOException {
 
 		final CIEnvironmentVariables variables = new CIEnvironmentVariables();
 		variables.putAll(envVars);
@@ -279,8 +279,9 @@ public class BDCommonScanStep {
 					}
 
 					final JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(),
-							jobConfig.getScanTargetPaths(), buildIdentifier, hubSupport, builtOn, envVars, launcher,
+							jobConfig.getScanTargetPaths(), buildIdentifier, hubSupport, builtOn, launcher,
 							logger);
+					scan.setVariables(variables);
 
 					final DateTime beforeScanTime = new DateTime();
 					run.setResult(runScan(service, builtOn, scan, logger, scanExec, jrePath, oneJarPath, jobConfig));
@@ -464,7 +465,7 @@ public class BDCommonScanStep {
 	 */
 	protected ReleaseItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
 			final String projectVersion, final ProjectItem project)
-			throws IOException, URISyntaxException, BDJenkinsHubPluginException, UnexpectedHubResponseException {
+					throws IOException, URISyntaxException, BDJenkinsHubPluginException, UnexpectedHubResponseException {
 		ReleaseItem version = null;
 		try {
 			version = service.getVersion(project, projectVersion);
@@ -535,7 +536,7 @@ public class BDCommonScanStep {
 	private Result runScan(final HubIntRestService service, final Node builtOn, final JenkinsScanExecutor scan,
 			final HubJenkinsLogger logger, final String scanExec, final String javaExec, final String oneJarPath,
 			final HubScanJobConfig jobConfig) throws IOException, HubConfigurationException, InterruptedException,
-			BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
+	BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
 		validateScanTargets(logger, jobConfig.getScanTargetPaths(), jobConfig.getWorkingDirectory(),
 				builtOn.getChannel());
 		scan.setLogger(logger);
@@ -714,7 +715,7 @@ public class BDCommonScanStep {
 	 */
 	public boolean validateScanTargets(final IntLogger logger, final List<String> scanTargets,
 			final String workingDirectory, final VirtualChannel channel)
-			throws IOException, HubConfigurationException, InterruptedException {
+					throws IOException, HubConfigurationException, InterruptedException {
 		for (final String currTarget : scanTargets) {
 
 			if (currTarget.length() < workingDirectory.length() || !currTarget.startsWith(workingDirectory)) {

@@ -27,12 +27,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.ScanExecutor;
 import com.blackducksoftware.integration.hub.ScannerSplitStream;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.jenkins.HubServerInfo;
+import com.blackducksoftware.integration.util.CIEnvironmentVariables;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -45,7 +48,7 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
 	private final Node builtOn;
 
-	private final EnvVars envVars;
+	private CIEnvironmentVariables variables;
 
 	private final Launcher launcher;
 
@@ -53,14 +56,21 @@ public class JenkinsScanExecutor extends ScanExecutor {
 
 	public JenkinsScanExecutor(final HubServerInfo serverInfo, final List<String> scanTargets,
 			final String buildIdentifier, final HubSupportHelper supportHelper,
-			final Node builtOn, final EnvVars envVars, final Launcher launcher, final HubJenkinsLogger logger) {
+			final Node builtOn, final Launcher launcher, final HubJenkinsLogger logger) {
 		super(serverInfo.getServerUrl(), serverInfo.getUsername(), serverInfo.getPassword(), scanTargets,
 				buildIdentifier,
 				supportHelper);
 		this.builtOn = builtOn;
-		this.envVars = envVars;
 		this.launcher = launcher;
 		this.logger = logger;
+	}
+
+	public CIEnvironmentVariables getVariables() {
+		return variables;
+	}
+
+	public void setVariables(final CIEnvironmentVariables variables) {
+		this.variables = variables;
 	}
 
 	@Override
@@ -168,8 +178,14 @@ public class JenkinsScanExecutor extends ScanExecutor {
 				}
 				ps.masks(masks);
 				// ///////////////////////
-
+				final EnvVars envVars = new EnvVars();
 				envVars.put("BD_HUB_PASSWORD", getHubPassword());
+				if (getVariables() != null) {
+					final String bdioEnvVar = getVariables().getValue("BD_HUB_DECLARED_COMPONENTS");
+					if (StringUtils.isNotBlank(bdioEnvVar)) {
+						envVars.put("BD_HUB_DECLARED_COMPONENTS", bdioEnvVar);
+					}
+				}
 				ps.envs(envVars);
 
 				final ScannerSplitStream splitStream = new ScannerSplitStream(logger, standardOutFile.write());
