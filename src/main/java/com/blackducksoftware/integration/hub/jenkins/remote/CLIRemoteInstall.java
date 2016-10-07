@@ -27,12 +27,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.remoting.Role;
 import org.jenkinsci.remoting.RoleChecker;
 
-import com.blackducksoftware.integration.hub.CIEnvironmentVariables;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.cli.CLIInstaller;
 import com.blackducksoftware.integration.hub.cli.CLILocation;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
+import com.blackducksoftware.integration.util.CIEnvironmentVariables;
 
 import hudson.EnvVars;
 import hudson.remoting.Callable;
@@ -98,13 +98,13 @@ public class CLIRemoteInstall implements Callable<Void, Exception> {
 		final CLIInstaller installer = new CLIInstaller(cliLocation, ciEnvironmentVariables);
 
 		final RestConnection restConnection = new RestConnection(hubUrl);
-		
+
 		restConnection.setLogger(logger);
 		if (StringUtils.isNotBlank(proxyHost) && proxyPort != 0) {
 			restConnection.setProxyProperties(proxyHost, proxyPort, null, proxyUserName, proxyPassword);
 		}
 		restConnection.setCookies(hubUser, hubPassword);
-		
+
 		final HubIntRestService service = new HubIntRestService(restConnection);
 
 		installer.performInstallation(logger, service, localHost);

@@ -250,7 +250,6 @@ public class HubReportActionTest {
 		assertTrue(50.0 == action.getPercentage(2.0));
 		assertTrue(75.0 == action.getPercentage(3.0));
 		assertTrue(100.0 == action.getPercentage(4.0));
-
 	}
 
 	@Test

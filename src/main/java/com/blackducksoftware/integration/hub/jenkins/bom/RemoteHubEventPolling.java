@@ -37,8 +37,8 @@ import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.MissingUUIDException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.exception.UnexpectedHubResponseException;
-import com.blackducksoftware.integration.hub.logging.IntLogger;
 import com.blackducksoftware.integration.hub.polling.HubEventPolling;
+import com.blackducksoftware.integration.log.IntLogger;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -92,7 +92,7 @@ public class RemoteHubEventPolling extends HubEventPolling {
 			final ScanSummaryItem scanSummaryItem = gson.fromJson(fileContent, ScanSummaryItem.class);
 			if (scanSummaryItem.getMeta() == null || scanSummaryItem.getStatus() == null) {
 				throw new HubIntegrationException("The scan status file : " + currentStatusFile.getRemote()
-				+ " does not contain valid scan status json.");
+						+ " does not contain valid scan status json.");
 			}
 			scanSummaryItems.add(scanSummaryItem);
 		}

@@ -3,7 +3,6 @@ package com.blackducksoftware.integration.hub.jenkins.failure;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import com.blackducksoftware.integration.hub.CIEnvironmentVariables;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.api.policy.PolicyStatusEnum;
@@ -23,7 +22,8 @@ import com.blackducksoftware.integration.hub.jenkins.action.HubVariableContribut
 import com.blackducksoftware.integration.hub.jenkins.bom.RemoteHubEventPolling;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
 import com.blackducksoftware.integration.hub.jenkins.helper.BuildHelper;
-import com.blackducksoftware.integration.hub.logging.IntLogger;
+import com.blackducksoftware.integration.log.IntLogger;
+import com.blackducksoftware.integration.util.CIEnvironmentVariables;
 
 import hudson.EnvVars;
 import hudson.model.Node;
@@ -44,9 +44,8 @@ public class HubCommonFailureStep {
 	}
 
 	public boolean checkFailureConditions(final Run run, final Node builtOn, final EnvVars envVars,
-			final HubJenkinsLogger logger,
-			final TaskListener listener, final BomUpToDateAction bomUpToDateAction)
-					throws InterruptedException, IOException {
+			final HubJenkinsLogger logger, final TaskListener listener, final BomUpToDateAction bomUpToDateAction)
+			throws InterruptedException, IOException {
 
 		final CIEnvironmentVariables variables = new CIEnvironmentVariables();
 		variables.putAll(envVars);
@@ -103,16 +102,14 @@ public class HubCommonFailureStep {
 				} else {
 					logger.info("Found " + policyStatus.getCountInViolationOverridden().getValue()
 							+ " bom entries to be In Violation of a defined Policy, but they have been overridden.");
-					variableContributor
-					.setViolationsOverriden(policyStatus.getCountInViolationOverridden().getValue());
+					variableContributor.setViolationsOverriden(policyStatus.getCountInViolationOverridden().getValue());
 				}
 				if (policyStatus.getCountNotInViolation() == null) {
 					logger.error("Could not find the number of bom entries Not In Violation of a Policy.");
 				} else {
 					logger.info("Found " + policyStatus.getCountNotInViolation().getValue()
 							+ " bom entries to be Not In Violation of a defined Policy.");
-					variableContributor
-					.setBomEntriesNotInViolation(policyStatus.getCountNotInViolation().getValue());
+					variableContributor.setBomEntriesNotInViolation(policyStatus.getCountNotInViolation().getValue());
 				}
 				run.addAction(variableContributor);
 			}
@@ -161,11 +158,10 @@ public class HubCommonFailureStep {
 				serverInfo.getPassword(), serverInfo.getTimeout());
 	}
 
-	public void waitForBomToBeUpdated(final Node builtOn, final IntLogger logger,
-			final BomUpToDateAction action, final HubIntRestService service, final HubSupportHelper supportHelper)
-					throws BDJenkinsHubPluginException, InterruptedException, BDRestException, HubIntegrationException,
-					URISyntaxException, IOException, ProjectDoesNotExistException, MissingUUIDException,
-					UnexpectedHubResponseException {
+	public void waitForBomToBeUpdated(final Node builtOn, final IntLogger logger, final BomUpToDateAction action,
+			final HubIntRestService service, final HubSupportHelper supportHelper) throws BDJenkinsHubPluginException,
+			InterruptedException, BDRestException, HubIntegrationException, URISyntaxException, IOException,
+			ProjectDoesNotExistException, MissingUUIDException, UnexpectedHubResponseException {
 		if (action.isHasBomBeenUdpated()) {
 			return;
 		}
@@ -182,8 +178,7 @@ public class HubCommonFailureStep {
 
 		reportGenInfo.setScanStatusDirectory(action.getScanStatusDirectory());
 
-		final RemoteHubEventPolling hubEventPolling = new RemoteHubEventPolling(service,
-				builtOn.getChannel());
+		final RemoteHubEventPolling hubEventPolling = new RemoteHubEventPolling(service, builtOn.getChannel());
 
 		if (supportHelper.hasCapability(HubCapabilitiesEnum.CLI_STATUS_DIRECTORY_OPTION)) {
 			hubEventPolling.assertBomUpToDate(reportGenInfo, logger);

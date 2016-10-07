@@ -51,9 +51,9 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import com.blackducksoftware.integration.builder.ValidationResultEnum;
+import com.blackducksoftware.integration.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
-import com.blackducksoftware.integration.hub.builder.ValidationResultEnum;
-import com.blackducksoftware.integration.hub.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.global.GlobalFieldKey;
 import com.blackducksoftware.integration.hub.global.HubServerConfig;
@@ -89,7 +89,7 @@ import net.sf.json.JSONObject;
 //point. The ordinal implies an order to the UI element. The Post-Build Actions add new actions in descending order
 // so have this ordinal as a higher value than the failure condition Post-Build Action
 @Extension(ordinal = 2)
-public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>implements Serializable {
+public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> implements Serializable {
 	private static final long serialVersionUID = -3532946484740537334L;
 	private static final String FORM_SERVER_URL = "hubServerUrl";
 	private static final String FORM_TIMEOUT = "hubTimeout";
@@ -166,7 +166,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	// http://localhost:8080/descriptorByName/com.blackducksoftware.integration.hub.jenkins.PostBuildScanDescriptor/config.xml
 	@WebMethod(name = "config.xml")
 	public void doConfigDotXml(final StaplerRequest req, final StaplerResponse rsp) throws IOException,
-	TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
+			TransformerException, hudson.model.Descriptor.FormException, ParserConfigurationException, SAXException {
 		final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 		boolean changed = false;
 		try {
@@ -301,7 +301,7 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 
 	public FormValidation doCheckBomUpdateMaxiumWaitTime(
 			@QueryParameter("bomUpdateMaxiumWaitTime") final String bomUpdateMaxiumWaitTime)
-					throws IOException, ServletException {
+			throws IOException, ServletException {
 		return BDCommonDescriptorUtil.doCheckBomUpdateMaxiumWaitTime(bomUpdateMaxiumWaitTime);
 	}
 
@@ -359,33 +359,31 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher>imple
 	 */
 	public FormValidation doCheckHubServerUrl(@QueryParameter("hubServerUrl") final String hubServerUrl)
 			throws IOException, ServletException {
-			ProxyConfiguration proxyConfig = null;
-			final Jenkins jenkins = Jenkins.getInstance();
-			if (jenkins != null) {
-				proxyConfig = jenkins.proxy;
-			}
+		ProxyConfiguration proxyConfig = null;
+		final Jenkins jenkins = Jenkins.getInstance();
+		if (jenkins != null) {
+			proxyConfig = jenkins.proxy;
+		}
 
-			final HubServerConfigBuilder builder = new HubServerConfigBuilder(false);
-			builder.setHubUrl(hubServerUrl);
-			if (proxyConfig != null) {
-				builder.setProxyHost(proxyConfig.name);
-				builder.setProxyPort(proxyConfig.port);
-				builder.setProxyUsername(proxyConfig.getUserName());
-				builder.setProxyPassword(proxyConfig.getPassword());
-				builder.setIgnoredProxyHosts(proxyConfig.noProxyHost);
-			}
-			final ValidationResults<GlobalFieldKey, HubServerConfig> results = new ValidationResults<GlobalFieldKey, HubServerConfig>();
-			builder.validateHubUrl(results);
+		final HubServerConfigBuilder builder = new HubServerConfigBuilder(false);
+		builder.setHubUrl(hubServerUrl);
+		if (proxyConfig != null) {
+			builder.setProxyHost(proxyConfig.name);
+			builder.setProxyPort(proxyConfig.port);
+			builder.setProxyUsername(proxyConfig.getUserName());
+			builder.setProxyPassword(proxyConfig.getPassword());
+			builder.setIgnoredProxyHosts(proxyConfig.noProxyHost);
+		}
+		final ValidationResults<GlobalFieldKey, HubServerConfig> results = new ValidationResults<GlobalFieldKey, HubServerConfig>();
+		builder.validateHubUrl(results);
 
-			if (!results.isSuccess()) {
-				if (results.hasWarnings()) {
-					return FormValidation
-							.error(results.getAllResultString(ValidationResultEnum.WARN));
-				} else if (results.hasErrors()) {
-					return FormValidation
-							.error(results.getAllResultString(ValidationResultEnum.ERROR));
-				}
+		if (!results.isSuccess()) {
+			if (results.hasWarnings()) {
+				return FormValidation.error(results.getAllResultString(ValidationResultEnum.WARN));
+			} else if (results.hasErrors()) {
+				return FormValidation.error(results.getAllResultString(ValidationResultEnum.ERROR));
 			}
+		}
 		return FormValidation.ok();
 	}
 

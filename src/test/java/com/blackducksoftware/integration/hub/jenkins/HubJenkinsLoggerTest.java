@@ -35,7 +35,7 @@ import org.junit.rules.ExpectedException;
 
 import com.blackducksoftware.integration.hub.jenkins.utils.StoredPrintStream;
 import com.blackducksoftware.integration.hub.jenkins.utils.TestBuildListener;
-import com.blackducksoftware.integration.hub.logging.LogLevel;
+import com.blackducksoftware.integration.log.LogLevel;
 
 public class HubJenkinsLoggerTest {
 	private List<String> expectedMessages;
@@ -65,7 +65,6 @@ public class HubJenkinsLoggerTest {
 					outputString.contains(expectedMessage));
 		}
 	}
-
 
 	@Test
 	public void testOff() {
