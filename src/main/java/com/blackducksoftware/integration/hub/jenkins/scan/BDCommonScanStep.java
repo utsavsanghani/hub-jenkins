@@ -31,6 +31,7 @@ import com.blackducksoftware.integration.hub.capabilities.HubCapabilitiesEnum;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
+import com.blackducksoftware.integration.hub.exception.ProjectNotAccessibleException;
 import com.blackducksoftware.integration.hub.exception.UnexpectedHubResponseException;
 import com.blackducksoftware.integration.hub.exception.VersionDoesNotExistException;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
@@ -250,6 +251,9 @@ public class BDCommonScanStep {
 					ReleaseItem version = null;
 					if (!isDryRun() && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
 						project = ensureProjectExists(service, logger, projectName);
+						if (!project.getMeta().isAccessible()) {
+							throw new ProjectNotAccessibleException(Messages.HubBuildScan_getProjectNotAccessible());
+						}
 						version = ensureVersionExists(service, logger, projectVersion, project);
 						logger.debug("Found Project : " + projectName);
 						logger.debug("Found Version : " + projectVersion);

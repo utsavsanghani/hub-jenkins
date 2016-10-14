@@ -32,6 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import com.blackducksoftware.integration.builder.ValidationResultEnum;
 import com.blackducksoftware.integration.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.api.item.HubItemFilterUtil;
 import com.blackducksoftware.integration.hub.api.project.ProjectItem;
 import com.blackducksoftware.integration.hub.api.version.DistributionEnum;
 import com.blackducksoftware.integration.hub.api.version.PhaseEnum;
@@ -164,8 +165,11 @@ public class BDCommonDescriptorUtil {
 
 				final List<ProjectItem> suggestions = service.getProjectMatches(hubProjectName);
 
-				if (!suggestions.isEmpty()) {
-					for (final ProjectItem projectSuggestion : suggestions) {
+				final HubItemFilterUtil<ProjectItem> filter = new HubItemFilterUtil<ProjectItem>();
+				final List<ProjectItem> accessibleSuggestions = filter.getAccessibleItems(suggestions);
+
+				if (!accessibleSuggestions.isEmpty()) {
+					for (final ProjectItem projectSuggestion : accessibleSuggestions) {
 						potentialMatches.add(projectSuggestion.getName());
 					}
 				}
@@ -207,7 +211,10 @@ public class BDCommonDescriptorUtil {
 				final HubIntRestService service = BuildHelper.getRestService(serverInfo.getServerUrl(),
 						serverInfo.getUsername(), serverInfo.getPassword(), serverInfo.getTimeout());
 
-				service.getProjectByName(hubProjectName);
+				final ProjectItem project = service.getProjectByName(hubProjectName);
+				if (!project.getMeta().isAccessible()) {
+					return FormValidation.error(Messages.HubBuildScan_getProjectNotAccessible());
+				}
 				return FormValidation.ok(Messages.HubBuildScan_getProjectExistsIn_0_(serverInfo.getServerUrl()));
 			} catch (final ProjectDoesNotExistException e) {
 				return FormValidation
@@ -251,7 +258,7 @@ public class BDCommonDescriptorUtil {
 
 	public static FormValidation doCheckHubProjectVersion(final HubServerInfo serverInfo,
 			final String hubProjectVersion, final String hubProjectName, final boolean dryRun)
-			throws IOException, ServletException {
+					throws IOException, ServletException {
 		if (dryRun) {
 			return FormValidation.ok();
 		}

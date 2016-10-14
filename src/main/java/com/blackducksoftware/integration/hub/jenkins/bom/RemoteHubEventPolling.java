@@ -34,7 +34,6 @@ import com.blackducksoftware.integration.hub.api.scan.ScanSummaryItem;
 import com.blackducksoftware.integration.hub.dataservices.scan.ScanStatusDataService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
-import com.blackducksoftware.integration.hub.exception.MissingUUIDException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
 import com.blackducksoftware.integration.hub.exception.UnexpectedHubResponseException;
 import com.blackducksoftware.integration.hub.polling.HubEventPolling;
@@ -61,7 +60,7 @@ public class RemoteHubEventPolling extends HubEventPolling {
 	@Override
 	public void assertBomUpToDate(final HubReportGenerationInfo hubReportGenerationInfo, final IntLogger logger)
 			throws InterruptedException, BDRestException, HubIntegrationException, URISyntaxException, IOException,
-			ProjectDoesNotExistException, MissingUUIDException, UnexpectedHubResponseException {
+			ProjectDoesNotExistException, UnexpectedHubResponseException {
 		if (StringUtils.isBlank(hubReportGenerationInfo.getScanStatusDirectory())) {
 			throw new HubIntegrationException("The scan status directory must be a non empty value.");
 		}
@@ -92,7 +91,7 @@ public class RemoteHubEventPolling extends HubEventPolling {
 			final ScanSummaryItem scanSummaryItem = gson.fromJson(fileContent, ScanSummaryItem.class);
 			if (scanSummaryItem.getMeta() == null || scanSummaryItem.getStatus() == null) {
 				throw new HubIntegrationException("The scan status file : " + currentStatusFile.getRemote()
-						+ " does not contain valid scan status json.");
+				+ " does not contain valid scan status json.");
 			}
 			scanSummaryItems.add(scanSummaryItem);
 		}
