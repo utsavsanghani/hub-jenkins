@@ -23,6 +23,7 @@ import com.blackducksoftware.integration.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.api.project.ProjectItem;
+import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
 import com.blackducksoftware.integration.hub.api.report.HubReportGenerationInfo;
 import com.blackducksoftware.integration.hub.api.report.ReportCategoriesEnum;
 import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
@@ -161,7 +162,7 @@ public class BDCommonScanStep {
 	public void runScan(final Run run, final Node builtOn, final EnvVars envVars, final FilePath workspace,
 			final HubJenkinsLogger logger, final Launcher launcher, final TaskListener listener,
 			final String buildDisplayName, final String buildIdentifier, final FilePath javaHome)
-					throws InterruptedException, IOException {
+			throws InterruptedException, IOException {
 
 		final CIEnvironmentVariables variables = new CIEnvironmentVariables();
 		variables.putAll(envVars);
@@ -248,7 +249,7 @@ public class BDCommonScanStep {
 							getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(),
 							getHubServerInfo().getPassword(), getHubServerInfo().getTimeout());
 					ProjectItem project = null;
-					ReleaseItem version = null;
+					ProjectVersionItem version = null;
 					if (!isDryRun() && StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(projectVersion)) {
 						project = ensureProjectExists(service, logger, projectName);
 						if (!project.getMeta().isAccessible()) {
@@ -283,8 +284,7 @@ public class BDCommonScanStep {
 					}
 
 					final JenkinsScanExecutor scan = new JenkinsScanExecutor(getHubServerInfo(),
-							jobConfig.getScanTargetPaths(), buildIdentifier, hubSupport, builtOn, launcher,
-							logger);
+							jobConfig.getScanTargetPaths(), buildIdentifier, hubSupport, builtOn, launcher, logger);
 					scan.setVariables(variables);
 
 					final DateTime beforeScanTime = new DateTime();
@@ -467,10 +467,10 @@ public class BDCommonScanStep {
 	 *
 	 * @throws UnexpectedHubResponseException
 	 */
-	protected ReleaseItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
+	protected ProjectVersionItem ensureVersionExists(final HubIntRestService service, final IntLogger logger,
 			final String projectVersion, final ProjectItem project)
-					throws IOException, URISyntaxException, BDJenkinsHubPluginException, UnexpectedHubResponseException {
-		ReleaseItem version = null;
+			throws IOException, URISyntaxException, BDJenkinsHubPluginException, UnexpectedHubResponseException {
+		ProjectVersionItem version = null;
 		try {
 			version = service.getVersion(project, projectVersion);
 			if (!version.getPhase().equals(getHubVersionPhase())) {
@@ -540,7 +540,7 @@ public class BDCommonScanStep {
 	private Result runScan(final HubIntRestService service, final Node builtOn, final JenkinsScanExecutor scan,
 			final HubJenkinsLogger logger, final String scanExec, final String javaExec, final String oneJarPath,
 			final HubScanJobConfig jobConfig) throws IOException, HubConfigurationException, InterruptedException,
-	BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
+			BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException {
 		validateScanTargets(logger, jobConfig.getScanTargetPaths(), jobConfig.getWorkingDirectory(),
 				builtOn.getChannel());
 		scan.setLogger(logger);
@@ -719,7 +719,7 @@ public class BDCommonScanStep {
 	 */
 	public boolean validateScanTargets(final IntLogger logger, final List<String> scanTargets,
 			final String workingDirectory, final VirtualChannel channel)
-					throws IOException, HubConfigurationException, InterruptedException {
+			throws IOException, HubConfigurationException, InterruptedException {
 		for (final String currTarget : scanTargets) {
 
 			if (currTarget.length() < workingDirectory.length() || !currTarget.startsWith(workingDirectory)) {

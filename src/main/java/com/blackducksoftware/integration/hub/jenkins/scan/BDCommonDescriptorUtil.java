@@ -34,9 +34,9 @@ import com.blackducksoftware.integration.builder.ValidationResults;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.api.item.HubItemFilterUtil;
 import com.blackducksoftware.integration.hub.api.project.ProjectItem;
+import com.blackducksoftware.integration.hub.api.project.version.ProjectVersionItem;
 import com.blackducksoftware.integration.hub.api.version.DistributionEnum;
 import com.blackducksoftware.integration.hub.api.version.PhaseEnum;
-import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.builder.HubScanJobConfigBuilder;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ProjectDoesNotExistException;
@@ -258,7 +258,7 @@ public class BDCommonDescriptorUtil {
 
 	public static FormValidation doCheckHubProjectVersion(final HubServerInfo serverInfo,
 			final String hubProjectVersion, final String hubProjectName, final boolean dryRun)
-					throws IOException, ServletException {
+			throws IOException, ServletException {
 		if (dryRun) {
 			return FormValidation.ok();
 		}
@@ -295,10 +295,10 @@ public class BDCommonDescriptorUtil {
 					// field
 					return FormValidation.ok();
 				}
-				final List<ReleaseItem> releases = service.getVersionsForProject(project);
+				final List<ProjectVersionItem> releases = service.getProjectVersionsForProject(project);
 
 				final StringBuilder projectVersions = new StringBuilder();
-				for (final ReleaseItem release : releases) {
+				for (final ProjectVersionItem release : releases) {
 					if (release.getVersionName().equals(hubProjectVersion)) {
 						return FormValidation.ok(Messages.HubBuildScan_getVersionExistsIn_0_(project.getName()));
 					} else {

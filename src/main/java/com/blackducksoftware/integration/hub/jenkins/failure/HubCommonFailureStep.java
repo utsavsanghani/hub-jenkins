@@ -3,6 +3,7 @@ package com.blackducksoftware.integration.hub.jenkins.failure;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+import com.blackducksoftware.integration.exception.EncryptionException;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.HubSupportHelper;
 import com.blackducksoftware.integration.hub.api.policy.PolicyStatusEnum;
@@ -45,7 +46,7 @@ public class HubCommonFailureStep {
 
 	public boolean checkFailureConditions(final Run run, final Node builtOn, final EnvVars envVars,
 			final HubJenkinsLogger logger, final TaskListener listener, final BomUpToDateAction bomUpToDateAction)
-			throws InterruptedException, IOException {
+			throws InterruptedException, IOException, IllegalArgumentException, EncryptionException {
 
 		final CIEnvironmentVariables variables = new CIEnvironmentVariables();
 		variables.putAll(envVars);
@@ -153,7 +154,7 @@ public class HubCommonFailureStep {
 
 	public HubIntRestService getHubIntRestService(final HubJenkinsLogger logger, final HubServerInfo serverInfo)
 			throws IOException, BDRestException, URISyntaxException, BDJenkinsHubPluginException,
-			HubIntegrationException {
+			HubIntegrationException, IllegalArgumentException, EncryptionException {
 		return BuildHelper.getRestService(logger, serverInfo.getServerUrl(), serverInfo.getUsername(),
 				serverInfo.getPassword(), serverInfo.getTimeout());
 	}

@@ -30,10 +30,14 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.blackducksoftware.integration.exception.EncryptionException;
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
+import com.blackducksoftware.integration.hub.global.HubServerConfig;
 import com.blackducksoftware.integration.hub.jenkins.exceptions.BDJenkinsHubPluginException;
+import com.blackducksoftware.integration.hub.rest.CredentialsRestConnection;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.integration.log.IntLogger;
 
@@ -55,7 +59,7 @@ public class BuildHelper {
 
 	public static HubIntRestService getRestService(final String serverUrl, final String username, final String password,
 			final int hubTimeout) throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException,
-			MalformedURLException, BDRestException {
+			MalformedURLException, BDRestException, IllegalArgumentException, EncryptionException {
 
 		final HubIntRestService service = new HubIntRestService(
 				getRestConnection(null, serverUrl, username, password, hubTimeout));
@@ -64,8 +68,9 @@ public class BuildHelper {
 	}
 
 	public static HubIntRestService getRestService(final IntLogger logger, final String serverUrl,
-			final String username, final String password, final int hubTimeout) throws BDJenkinsHubPluginException,
-			HubIntegrationException, URISyntaxException, MalformedURLException, BDRestException {
+			final String username, final String password, final int hubTimeout)
+			throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException, MalformedURLException,
+			BDRestException, IllegalArgumentException, EncryptionException {
 
 		final HubIntRestService service = new HubIntRestService(
 				getRestConnection(logger, serverUrl, username, password, hubTimeout));
@@ -74,18 +79,21 @@ public class BuildHelper {
 	}
 
 	public static RestConnection getRestConnection(final IntLogger logger, final String serverUrl,
-			final String username, final String password, final int hubTimeout) throws BDJenkinsHubPluginException,
-			HubIntegrationException, URISyntaxException, MalformedURLException, BDRestException {
-
-		final RestConnection restConnection = new RestConnection(serverUrl);
-		restConnection.setLogger(logger);
-		restConnection.setTimeout(hubTimeout);
+			final String username, final String password, final int hubTimeout)
+			throws BDJenkinsHubPluginException, HubIntegrationException, URISyntaxException, MalformedURLException,
+			BDRestException, IllegalArgumentException, EncryptionException {
+		final HubServerConfigBuilder hubServerConfigBuilder = new HubServerConfigBuilder();
+		hubServerConfigBuilder.setHubUrl(serverUrl);
+		hubServerConfigBuilder.setUsername(username);
+		hubServerConfigBuilder.setPassword(password);
+		hubServerConfigBuilder.setTimeout(hubTimeout);
+		final HubServerConfig hubServerConfig = hubServerConfigBuilder.build();
+		final CredentialsRestConnection restConnection = new CredentialsRestConnection(hubServerConfig);
 
 		final Jenkins jenkins = Jenkins.getInstance();
 		if (jenkins != null) {
 			final ProxyConfiguration proxyConfig = jenkins.proxy;
 			if (proxyConfig != null) {
-
 				final URL actualUrl = new URL(serverUrl);
 
 				final Proxy proxy = ProxyConfiguration.createProxy(actualUrl.getHost(), proxyConfig.name,
@@ -110,9 +118,8 @@ public class BuildHelper {
 				}
 			}
 		}
-		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
-			restConnection.setCookies(username, password);
-		}
+
+		restConnection.setLogger(logger);
 		return restConnection;
 	}
 

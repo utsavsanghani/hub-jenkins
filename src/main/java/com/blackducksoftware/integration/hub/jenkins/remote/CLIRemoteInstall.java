@@ -28,9 +28,12 @@ import org.jenkinsci.remoting.Role;
 import org.jenkinsci.remoting.RoleChecker;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.builder.HubServerConfigBuilder;
 import com.blackducksoftware.integration.hub.cli.CLIInstaller;
 import com.blackducksoftware.integration.hub.cli.CLILocation;
+import com.blackducksoftware.integration.hub.global.HubServerConfig;
 import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
+import com.blackducksoftware.integration.hub.rest.CredentialsRestConnection;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.integration.util.CIEnvironmentVariables;
 
@@ -41,25 +44,15 @@ public class CLIRemoteInstall implements Callable<Void, Exception> {
 	private static final long serialVersionUID = 3459269768733083577L;
 
 	private final HubJenkinsLogger logger;
-
 	private final String directoryToInstallTo;
-
 	private final String localHost;
-
 	private final String hubUrl;
-
 	private final String hubUser;
-
 	private final String hubPassword;
-
 	private String proxyHost;
-
 	private int proxyPort;
-
 	private String proxyUserName;
-
 	private String proxyPassword;
-
 	private final EnvVars variables;
 
 	public CLIRemoteInstall(final HubJenkinsLogger logger, final String directoryToInstallTo, final String localHost,
@@ -97,7 +90,13 @@ public class CLIRemoteInstall implements Callable<Void, Exception> {
 		ciEnvironmentVariables.putAll(variables);
 		final CLIInstaller installer = new CLIInstaller(cliLocation, ciEnvironmentVariables);
 
-		final RestConnection restConnection = new RestConnection(hubUrl);
+		final HubServerConfigBuilder hubServerConfigBuilder = new HubServerConfigBuilder();
+		hubServerConfigBuilder.setHubUrl(hubUrl);
+		hubServerConfigBuilder.setUsername(hubUser);
+		hubServerConfigBuilder.setPassword(hubPassword);
+		final HubServerConfig hubServerConfig = hubServerConfigBuilder.build();
+
+		final RestConnection restConnection = new CredentialsRestConnection(hubServerConfig);
 
 		restConnection.setLogger(logger);
 		if (StringUtils.isNotBlank(proxyHost) && proxyPort != 0) {
