@@ -108,9 +108,12 @@ public class CLIRemoteInstall implements Callable<Void, Exception> {
         hubServerConfigBuilder.setUsername(hubUser);
         hubServerConfigBuilder.setPassword(hubPassword);
         hubServerConfigBuilder.setProxyHost(proxyHost);
-        hubServerConfigBuilder.setProxyPort(proxyPort);
         hubServerConfigBuilder.setProxyUsername(proxyUserName);
         hubServerConfigBuilder.setProxyPassword(proxyPassword);
+        if (proxyPort > 0) {
+            hubServerConfigBuilder.setProxyPort(proxyPort);
+        }
+        hubServerConfigBuilder.setTimeout(hubTimeout);
         final HubServerConfig hubServerConfig = hubServerConfigBuilder.build();
 
         final RestConnection restConnection = new CredentialsRestConnection(hubServerConfig);
