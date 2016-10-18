@@ -37,120 +37,120 @@ import hudson.model.Run;
 
 public class HubReportAction implements Action {
 
-	private final Run<?, ?> build;
+    private final Run<?, ?> build;
 
-	private HubRiskReportData reportData;
+    private HubRiskReportData reportData;
 
-	public HubReportAction(final Run<?, ?> build) {
-		this.build = build;
-	}
+    public HubReportAction(final Run<?, ?> build) {
+        this.build = build;
+    }
 
-	public Run<?, ?> getBuild() {
-		return build;
-	}
+    public Run<?, ?> getBuild() {
+        return build;
+    }
 
-	public VersionReport getReport() {
-		return reportData.getReport();
-	}
+    public VersionReport getReport() {
+        return reportData.getReport();
+    }
 
-	public DetailedReleaseSummary getReleaseSummary() {
-		if (reportData == null || reportData.getReport() == null) {
-			return null;
-		}
-		return reportData.getReport().getDetailedReleaseSummary();
-	}
+    public DetailedReleaseSummary getReleaseSummary() {
+        if (reportData == null || reportData.getReport() == null) {
+            return null;
+        }
+        return reportData.getReport().getDetailedReleaseSummary();
+    }
 
-	public List<AggregateBomViewEntry> getBomEntries() {
-		if (reportData == null || reportData.getReport() == null) {
-			return null;
-		}
-		return reportData.getReport().getAggregateBomViewEntries();
-	}
+    public List<AggregateBomViewEntry> getBomEntries() {
+        if (reportData == null || reportData.getReport() == null) {
+            return null;
+        }
+        return reportData.getReport().getAggregateBomViewEntries();
+    }
 
-	public int getVulnerabilityRiskHighCount() {
-		return reportData.getVulnerabilityRiskHighCount();
-	}
+    public int getVulnerabilityRiskHighCount() {
+        return reportData.getVulnerabilityRiskHighCount();
+    }
 
-	public int getVulnerabilityRiskMediumCount() {
-		return reportData.getVulnerabilityRiskMediumCount();
-	}
+    public int getVulnerabilityRiskMediumCount() {
+        return reportData.getVulnerabilityRiskMediumCount();
+    }
 
-	public int getVulnerabilityRiskLowCount() {
-		return reportData.getVulnerabilityRiskLowCount();
-	}
+    public int getVulnerabilityRiskLowCount() {
+        return reportData.getVulnerabilityRiskLowCount();
+    }
 
-	public int getVulnerabilityRiskNoneCount() {
-		return reportData.getVulnerabilityRiskNoneCount();
-	}
+    public int getVulnerabilityRiskNoneCount() {
+        return reportData.getVulnerabilityRiskNoneCount();
+    }
 
-	public int getLicenseRiskHighCount() {
-		return reportData.getLicenseRiskHighCount();
-	}
+    public int getLicenseRiskHighCount() {
+        return reportData.getLicenseRiskHighCount();
+    }
 
-	public int getLicenseRiskMediumCount() {
-		return reportData.getLicenseRiskMediumCount();
-	}
+    public int getLicenseRiskMediumCount() {
+        return reportData.getLicenseRiskMediumCount();
+    }
 
-	public int getLicenseRiskLowCount() {
-		return reportData.getLicenseRiskLowCount();
-	}
+    public int getLicenseRiskLowCount() {
+        return reportData.getLicenseRiskLowCount();
+    }
 
-	public int getLicenseRiskNoneCount() {
-		return reportData.getLicenseRiskNoneCount();
-	}
+    public int getLicenseRiskNoneCount() {
+        return reportData.getLicenseRiskNoneCount();
+    }
 
-	public int getOperationalRiskHighCount() {
-		return reportData.getOperationalRiskHighCount();
-	}
+    public int getOperationalRiskHighCount() {
+        return reportData.getOperationalRiskHighCount();
+    }
 
-	public int getOperationalRiskMediumCount() {
-		return reportData.getOperationalRiskMediumCount();
-	}
+    public int getOperationalRiskMediumCount() {
+        return reportData.getOperationalRiskMediumCount();
+    }
 
-	public int getOperationalRiskLowCount() {
-		return reportData.getOperationalRiskLowCount();
-	}
+    public int getOperationalRiskLowCount() {
+        return reportData.getOperationalRiskLowCount();
+    }
 
-	public int getOperationalRiskNoneCount() {
-		return reportData.getOperationalRiskNoneCount();
-	}
+    public int getOperationalRiskNoneCount() {
+        return reportData.getOperationalRiskNoneCount();
+    }
 
-	public double getPercentage(final double count) {
-		if (getBomEntries() == null) {
-			return 0.0;
-		}
-		final double totalCount = getBomEntries().size();
-		double percentage = 0;
-		if (totalCount > 0 && count > 0) {
-			percentage = (count / totalCount) * 100;
-		}
-		return percentage;
-	}
+    public double getPercentage(final double count) {
+        if (getBomEntries() == null) {
+            return 0.0;
+        }
+        final double totalCount = getBomEntries().size();
+        double percentage = 0;
+        if (totalCount > 0 && count > 0) {
+            percentage = (count / totalCount) * 100;
+        }
+        return percentage;
+    }
 
-	public String htmlEscape(final String valueToEscape) {
-		if (StringUtils.isBlank(valueToEscape)) {
-			return null;
-		}
-		return StringEscapeUtils.escapeHtml4(valueToEscape);
-	}
+    public String htmlEscape(final String valueToEscape) {
+        if (StringUtils.isBlank(valueToEscape)) {
+            return null;
+        }
+        return StringEscapeUtils.escapeHtml4(valueToEscape);
+    }
 
-	public void setReportData(final HubRiskReportData reportData) {
-		this.reportData = reportData;
-	}
+    public void setReportData(final HubRiskReportData reportData) {
+        this.reportData = reportData;
+    }
 
-	@Override
-	public String getIconFileName() {
-		return "/plugin/hub-jenkins/images/Ducky-200.png";
-	}
+    @Override
+    public String getIconFileName() {
+        return "/plugin/hub-jenkins/images/Ducky-200.png";
+    }
 
-	@Override
-	public String getDisplayName() {
-		return Messages.HubReportAction_getDisplayName();
-	}
+    @Override
+    public String getDisplayName() {
+        return Messages.HubReportAction_getDisplayName();
+    }
 
-	@Override
-	public String getUrlName() {
-		return "hub_risk_report";
-	}
+    @Override
+    public String getUrlName() {
+        return "hub_risk_report";
+    }
 
 }

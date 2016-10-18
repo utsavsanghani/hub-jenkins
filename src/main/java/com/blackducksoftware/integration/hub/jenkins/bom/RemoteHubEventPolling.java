@@ -46,70 +46,70 @@ import hudson.remoting.VirtualChannel;
 
 public class RemoteHubEventPolling extends HubEventPolling {
 
-	private final VirtualChannel channel;
+    private final VirtualChannel channel;
 
-	public RemoteHubEventPolling(final HubIntRestService service, final VirtualChannel channel) {
-		super(service);
-		this.channel = channel;
-	}
+    public RemoteHubEventPolling(final HubIntRestService service, final VirtualChannel channel) {
+        super(service);
+        this.channel = channel;
+    }
 
-	public VirtualChannel getChannel() {
-		return channel;
-	}
+    public VirtualChannel getChannel() {
+        return channel;
+    }
 
-	@Override
-	public void assertBomUpToDate(final HubReportGenerationInfo hubReportGenerationInfo, final IntLogger logger)
-			throws InterruptedException, BDRestException, HubIntegrationException, URISyntaxException, IOException,
-			ProjectDoesNotExistException, UnexpectedHubResponseException {
-		if (StringUtils.isBlank(hubReportGenerationInfo.getScanStatusDirectory())) {
-			throw new HubIntegrationException("The scan status directory must be a non empty value.");
-		}
-		final FilePath statusDirectory = new FilePath(getChannel(), hubReportGenerationInfo.getScanStatusDirectory());
-		if (!statusDirectory.exists()) {
-			throw new HubIntegrationException("The scan status directory does not exist.");
-		}
-		if (!statusDirectory.isDirectory()) {
-			throw new HubIntegrationException("The scan status directory provided is not a directory.");
-		}
-		final List<FilePath> statusFiles = statusDirectory.list();
-		if (statusFiles == null || statusFiles.size() == 0) {
-			throw new HubIntegrationException("Can not find the scan status files in the directory provided.");
-		}
-		int expectedNumScans = 0;
-		if (hubReportGenerationInfo.getScanTargets() != null && !hubReportGenerationInfo.getScanTargets().isEmpty()) {
-			expectedNumScans = hubReportGenerationInfo.getScanTargets().size();
-		}
-		if (statusFiles.size() != expectedNumScans) {
-			throw new HubIntegrationException("There were " + expectedNumScans + " scans configured and we found "
-					+ statusFiles.size() + " status files.");
-		}
-		logger.info("Checking the directory : " + statusDirectory.getRemote() + " for the scan status's.");
-		final List<ScanSummaryItem> scanSummaryItems = new ArrayList<ScanSummaryItem>();
-		for (final FilePath currentStatusFile : statusFiles) {
-			final String fileContent = currentStatusFile.readToString();
-			final Gson gson = new GsonBuilder().create();
-			final ScanSummaryItem scanSummaryItem = gson.fromJson(fileContent, ScanSummaryItem.class);
-			if (scanSummaryItem.getMeta() == null || scanSummaryItem.getStatus() == null) {
-				throw new HubIntegrationException("The scan status file : " + currentStatusFile.getRemote()
-				+ " does not contain valid scan status json.");
-			}
-			scanSummaryItems.add(scanSummaryItem);
-		}
+    @Override
+    public void assertBomUpToDate(final HubReportGenerationInfo hubReportGenerationInfo, final IntLogger logger)
+            throws InterruptedException, BDRestException, HubIntegrationException, URISyntaxException, IOException,
+            ProjectDoesNotExistException, UnexpectedHubResponseException {
+        if (StringUtils.isBlank(hubReportGenerationInfo.getScanStatusDirectory())) {
+            throw new HubIntegrationException("The scan status directory must be a non empty value.");
+        }
+        final FilePath statusDirectory = new FilePath(getChannel(), hubReportGenerationInfo.getScanStatusDirectory());
+        if (!statusDirectory.exists()) {
+            throw new HubIntegrationException("The scan status directory does not exist.");
+        }
+        if (!statusDirectory.isDirectory()) {
+            throw new HubIntegrationException("The scan status directory provided is not a directory.");
+        }
+        final List<FilePath> statusFiles = statusDirectory.list();
+        if (statusFiles == null || statusFiles.size() == 0) {
+            throw new HubIntegrationException("Can not find the scan status files in the directory provided.");
+        }
+        int expectedNumScans = 0;
+        if (hubReportGenerationInfo.getScanTargets() != null && !hubReportGenerationInfo.getScanTargets().isEmpty()) {
+            expectedNumScans = hubReportGenerationInfo.getScanTargets().size();
+        }
+        if (statusFiles.size() != expectedNumScans) {
+            throw new HubIntegrationException("There were " + expectedNumScans + " scans configured and we found "
+                    + statusFiles.size() + " status files.");
+        }
+        logger.info("Checking the directory : " + statusDirectory.getRemote() + " for the scan status's.");
+        final List<ScanSummaryItem> scanSummaryItems = new ArrayList<ScanSummaryItem>();
+        for (final FilePath currentStatusFile : statusFiles) {
+            final String fileContent = currentStatusFile.readToString();
+            final Gson gson = new GsonBuilder().create();
+            final ScanSummaryItem scanSummaryItem = gson.fromJson(fileContent, ScanSummaryItem.class);
+            if (scanSummaryItem.getMeta() == null || scanSummaryItem.getStatus() == null) {
+                throw new HubIntegrationException("The scan status file : " + currentStatusFile.getRemote()
+                        + " does not contain valid scan status json.");
+            }
+            scanSummaryItems.add(scanSummaryItem);
+        }
 
-		logger.debug("Cleaning up the scan status files at : " + statusDirectory.getRemote());
-		// We delete the files in a second loop to ensure we have all the scan
-		// status's in memory before we start
-		// deleting the files. This way, if there is an exception thrown, the
-		// User can go look at the files to see what
-		// went wrong.
-		for (final FilePath currentStatusFile : statusFiles) {
-			currentStatusFile.delete();
-		}
-		statusDirectory.delete();
+        logger.debug("Cleaning up the scan status files at : " + statusDirectory.getRemote());
+        // We delete the files in a second loop to ensure we have all the scan
+        // status's in memory before we start
+        // deleting the files. This way, if there is an exception thrown, the
+        // User can go look at the files to see what
+        // went wrong.
+        for (final FilePath currentStatusFile : statusFiles) {
+            currentStatusFile.delete();
+        }
+        statusDirectory.delete();
 
-		final long timeoutInMilliseconds = hubReportGenerationInfo.getMaximumWaitTime();
-		final ScanStatusDataService scanStatusDataService = getService().getScanStatusDataService();
-		scanStatusDataService.assertBomImportScansFinished(scanSummaryItems, timeoutInMilliseconds);
-	}
+        final long timeoutInMilliseconds = hubReportGenerationInfo.getMaximumWaitTime();
+        final ScanStatusDataService scanStatusDataService = getService().getScanStatusDataService();
+        scanStatusDataService.assertBomImportScansFinished(scanSummaryItems, timeoutInMilliseconds);
+    }
 
 }

@@ -32,61 +32,61 @@ import hudson.model.Cause;
 import hudson.model.Result;
 
 public class TestBuildListener implements BuildListener {
-	private static final long serialVersionUID = 6298337589492113754L;
+    private static final long serialVersionUID = 6298337589492113754L;
 
-	private PrintStream stream = null;
+    private PrintStream stream = null;
 
-	public TestBuildListener(final PrintStream stream) {
-		this.stream = stream;
-	}
+    public TestBuildListener(final PrintStream stream) {
+        this.stream = stream;
+    }
 
-	@Override
-	public PrintWriter error(final String txt) {
-		if (txt != null) {
-			stream.println(txt);
-		}
-		return null;
-	}
+    @Override
+    public PrintWriter error(final String txt) {
+        if (txt != null) {
+            stream.println(txt);
+        }
+        return null;
+    }
 
-	@Override
-	public PrintStream getLogger() {
-		return stream;
-	}
+    @Override
+    public PrintStream getLogger() {
+        return stream;
+    }
 
-	@Override
-	public void annotate(final ConsoleNote ann) throws IOException {
-	}
+    @Override
+    public void annotate(final ConsoleNote ann) throws IOException {
+    }
 
-	@Override
-	public void hyperlink(final String url, final String text) throws IOException {
-	}
+    @Override
+    public void hyperlink(final String url, final String text) throws IOException {
+    }
 
-	@Override
-	public PrintWriter error(final String format, final Object... args) {
-		stream.println(String.format(format, args));
-		return null;
-	}
+    @Override
+    public PrintWriter error(final String format, final Object... args) {
+        stream.println(String.format(format, args));
+        return null;
+    }
 
-	@Override
-	public PrintWriter fatalError(final String msg) {
-		if (msg != null) {
-			stream.println(msg);
-		}
-		return null;
-	}
+    @Override
+    public PrintWriter fatalError(final String msg) {
+        if (msg != null) {
+            stream.println(msg);
+        }
+        return null;
+    }
 
-	@Override
-	public PrintWriter fatalError(final String format, final Object... args) {
-		stream.println(String.format(format, args));
-		return null;
-	}
+    @Override
+    public PrintWriter fatalError(final String format, final Object... args) {
+        stream.println(String.format(format, args));
+        return null;
+    }
 
-	@Override
-	public void started(final List<Cause> causes) {
-	}
+    @Override
+    public void started(final List<Cause> causes) {
+    }
 
-	@Override
-	public void finished(final Result result) {
-	}
+    @Override
+    public void finished(final Result result) {
+    }
 
 }

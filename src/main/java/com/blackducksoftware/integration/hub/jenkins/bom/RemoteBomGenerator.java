@@ -31,22 +31,21 @@ import hudson.remoting.VirtualChannel;
 
 public class RemoteBomGenerator extends RiskReportGenerator {
 
-	private final VirtualChannel channel;
+    private final VirtualChannel channel;
 
-	public RemoteBomGenerator(final HubReportGenerationInfo hubReportGenerationInfo,
-			final HubSupportHelper supportHelper,final VirtualChannel channel) {
-		super(hubReportGenerationInfo, supportHelper);
-		this.channel = channel;
-	}
+    public RemoteBomGenerator(final HubReportGenerationInfo hubReportGenerationInfo,
+            final HubSupportHelper supportHelper, final VirtualChannel channel) {
+        super(hubReportGenerationInfo, supportHelper);
+        this.channel = channel;
+    }
 
-	public VirtualChannel getChannel() {
-		return channel;
-	}
+    public VirtualChannel getChannel() {
+        return channel;
+    }
 
-	@Override
-	public HubEventPolling getHubEventPolling(final HubIntRestService service){
-		return new RemoteHubEventPolling(service, getChannel());
-	}
-
+    @Override
+    public HubEventPolling getHubEventPolling(final HubIntRestService service) {
+        return new RemoteHubEventPolling(service, getChannel());
+    }
 
 }

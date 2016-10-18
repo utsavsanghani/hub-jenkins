@@ -32,57 +32,57 @@ import com.blackducksoftware.integration.hub.jenkins.action.HubScanFinishedActio
 
 public class TestBuild extends AbstractBuild<TestProject, TestBuild> {
 
-	private Result result;
+    private Result result;
 
-	private HubScanFinishedAction scanFinishedAction;
+    private HubScanFinishedAction scanFinishedAction;
 
-	private BomUpToDateAction bomUpdatedAction;
+    private BomUpToDateAction bomUpdatedAction;
 
-	public TestBuild(final TestProject project) throws IOException {
-		super(project);
-	}
+    public TestBuild(final TestProject project) throws IOException {
+        super(project);
+    }
 
-	@Override
-	public Result getResult() {
-		return result;
-	}
+    @Override
+    public Result getResult() {
+        return result;
+    }
 
-	@Override
-	public void setResult(final Result result) {
-		this.result = result;
-	}
+    @Override
+    public void setResult(final Result result) {
+        this.result = result;
+    }
 
-	public HubScanFinishedAction getHubScanFinishedAction() {
-		return scanFinishedAction;
-	}
+    public HubScanFinishedAction getHubScanFinishedAction() {
+        return scanFinishedAction;
+    }
 
-	public void setScanFinishedAction(final HubScanFinishedAction action) {
-		this.scanFinishedAction = action;
-	}
+    public void setScanFinishedAction(final HubScanFinishedAction action) {
+        this.scanFinishedAction = action;
+    }
 
-	public void setBomUpdatedAction(final BomUpToDateAction action) {
-		this.bomUpdatedAction = action;
-	}
+    public void setBomUpdatedAction(final BomUpToDateAction action) {
+        this.bomUpdatedAction = action;
+    }
 
-	@Override
-	public Action getAction(final Class c) {
-		if (c == HubScanFinishedAction.class) {
-			return scanFinishedAction;
-		}
-		if (c == BomUpToDateAction.class) {
-			return bomUpdatedAction;
-		}
-		return null;
-	}
+    @Override
+    public Action getAction(final Class c) {
+        if (c == HubScanFinishedAction.class) {
+            return scanFinishedAction;
+        }
+        if (c == BomUpToDateAction.class) {
+            return bomUpdatedAction;
+        }
+        return null;
+    }
 
-	@Override
-	public TestProject getParent() {
-		return project;
-	}
+    @Override
+    public TestProject getParent() {
+        return project;
+    }
 
-	@Override
-	public void run() {
+    @Override
+    public void run() {
 
-	}
+    }
 
 }

@@ -43,206 +43,215 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Recorder;
 
 public class PostBuildHubScan extends Recorder {
-	private final ScanJobs[] scans;
-	private final String hubProjectName;
-	private final String hubVersionPhase;
-	private final String hubVersionDist;
-	private String hubProjectVersion;
-	private final String scanMemory;
-	private final boolean shouldGenerateHubReport;
-	private String bomUpdateMaxiumWaitTime;
-	private final boolean dryRun;
-	private Boolean verbose;
+    private final ScanJobs[] scans;
 
-	// Old variable, renaming to hubProjectVersion
-	// need to keep this around for now for migration purposes
-	private String hubProjectRelease;
+    private final String hubProjectName;
 
-	// Hub Jenkins 1.4.1, renaming this variable to bomUpdateMaxiumWaitTime
-	// need to keep this around for now for migration purposes
-	private String reportMaxiumWaitTime;
+    private final String hubVersionPhase;
 
-	@DataBoundConstructor
-	public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
-			final String hubVersionPhase, final String hubVersionDist, final String scanMemory,
-			final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun) {
-		this.scans = scans;
-		this.hubProjectName = hubProjectName;
-		this.hubProjectVersion = hubProjectVersion;
-		this.hubVersionPhase = hubVersionPhase;
-		this.hubVersionDist = hubVersionDist;
-		this.scanMemory = scanMemory;
-		this.shouldGenerateHubReport = shouldGenerateHubReport;
-		this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
-		this.dryRun = dryRun;
-	}
+    private final String hubVersionDist;
 
-	public void setverbose(final boolean verbose) {
-		this.verbose = verbose;
-	}
+    private String hubProjectVersion;
 
-	public boolean isVerbose() {
-		if (verbose == null) {
-			verbose = true;
-		}
-		return verbose;
-	}
+    private final String scanMemory;
 
-	public boolean isDryRun() {
-		return dryRun;
-	}
+    private final boolean shouldGenerateHubReport;
 
-	public boolean getShouldGenerateHubReport() {
-		return shouldGenerateHubReport;
-	}
+    private String bomUpdateMaxiumWaitTime;
 
-	public String getScanMemory() {
-		return scanMemory;
-	}
+    private final boolean dryRun;
 
-	public String getBomUpdateMaxiumWaitTime() {
-		if (bomUpdateMaxiumWaitTime == null && reportMaxiumWaitTime != null) {
-			bomUpdateMaxiumWaitTime = reportMaxiumWaitTime;
-		}
-		return bomUpdateMaxiumWaitTime;
-	}
+    private Boolean verbose;
 
-	public String getHubProjectVersion() {
-		if (hubProjectVersion == null && hubProjectRelease != null) {
-			hubProjectVersion = hubProjectRelease;
-		}
-		return hubProjectVersion;
-	}
+    // Old variable, renaming to hubProjectVersion
+    // need to keep this around for now for migration purposes
+    private String hubProjectRelease;
 
-	public String getHubProjectName() {
-		return hubProjectName;
-	}
+    // Hub Jenkins 1.4.1, renaming this variable to bomUpdateMaxiumWaitTime
+    // need to keep this around for now for migration purposes
+    private String reportMaxiumWaitTime;
 
-	public String getHubVersionPhase() {
-		return hubVersionPhase;
-	}
+    @DataBoundConstructor
+    public PostBuildHubScan(final ScanJobs[] scans, final String hubProjectName, final String hubProjectVersion,
+            final String hubVersionPhase, final String hubVersionDist, final String scanMemory,
+            final boolean shouldGenerateHubReport, final String bomUpdateMaxiumWaitTime, final boolean dryRun) {
+        this.scans = scans;
+        this.hubProjectName = hubProjectName;
+        this.hubProjectVersion = hubProjectVersion;
+        this.hubVersionPhase = hubVersionPhase;
+        this.hubVersionDist = hubVersionDist;
+        this.scanMemory = scanMemory;
+        this.shouldGenerateHubReport = shouldGenerateHubReport;
+        this.bomUpdateMaxiumWaitTime = bomUpdateMaxiumWaitTime;
+        this.dryRun = dryRun;
+    }
 
-	public String getHubVersionDist() {
-		return hubVersionDist;
-	}
+    public void setverbose(final boolean verbose) {
+        this.verbose = verbose;
+    }
 
-	public ScanJobs[] getScans() {
-		return scans;
-	}
+    public boolean isVerbose() {
+        if (verbose == null) {
+            verbose = true;
+        }
+        return verbose;
+    }
 
-	// http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
-	@Override
-	public BuildStepMonitor getRequiredMonitorService() {
-		return BuildStepMonitor.NONE;
-	}
+    public boolean isDryRun() {
+        return dryRun;
+    }
 
-	@Override
-	public PostBuildScanDescriptor getDescriptor() {
-		return (PostBuildScanDescriptor) super.getDescriptor();
-	}
+    public boolean getShouldGenerateHubReport() {
+        return shouldGenerateHubReport;
+    }
 
-	public HubServerInfo getHubServerInfo() {
-		return HubServerInfoSingleton.getInstance().getServerInfo();
-	}
+    public String getScanMemory() {
+        return scanMemory;
+    }
 
-	/**
-	 * Overrides the Recorder perform method. This is the method that gets
-	 * called by Jenkins to run as a Post Build Action
-	 *
-	 */
-	@Override
-	public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener)
-			throws InterruptedException, IOException {
-		final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
+    public String getBomUpdateMaxiumWaitTime() {
+        if (bomUpdateMaxiumWaitTime == null && reportMaxiumWaitTime != null) {
+            bomUpdateMaxiumWaitTime = reportMaxiumWaitTime;
+        }
+        return bomUpdateMaxiumWaitTime;
+    }
 
-		try {
-			final BDCommonScanStep scanStep = new BDCommonScanStep(getScans(), getHubProjectName(),
-					getHubProjectVersion(), getHubVersionPhase(), getHubVersionDist(), getScanMemory(),
-					getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isVerbose());
-			final EnvVars envVars = build.getEnvironment(listener);
+    public String getHubProjectVersion() {
+        if (hubProjectVersion == null && hubProjectRelease != null) {
+            hubProjectVersion = hubProjectRelease;
+        }
+        return hubProjectVersion;
+    }
 
-			final JDK jdk = determineJava(logger, build, envVars);
-			final FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), jdk.getHome());
-			scanStep.runScan(build, build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), logger, launcher,
-					listener, build.getFullDisplayName(), String.valueOf(build.getNumber()), javaHome);
-		} catch (final Exception e) {
-			logger.error(e);
-		}
-		return true;
-	}
+    public String getHubProjectName() {
+        return hubProjectName;
+    }
 
-	public FilePath getWorkingDirectory(final IntLogger logger, final AbstractBuild<?, ?> build)
-			throws InterruptedException {
-		String workingDirectory = "";
-		try {
-			if (build.getWorkspace() == null) {
-				// might be using custom workspace
-				workingDirectory = build.getProject().getCustomWorkspace();
-			} else {
-				workingDirectory = build.getWorkspace().getRemote();
-			}
+    public String getHubVersionPhase() {
+        return hubVersionPhase;
+    }
 
-			workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(new File(workingDirectory)));
-		} catch (final IOException e) {
-			logger.error("Problem getting the working directory on this node. Error : " + e.getMessage(), e);
-		}
-		logger.info("Node workspace " + workingDirectory);
-		return new FilePath(build.getBuiltOn().getChannel(), workingDirectory);
-	}
+    public String getHubVersionDist() {
+        return hubVersionDist;
+    }
 
-	/**
-	 * Sets the Java Home that is to be used for running the Shell script
-	 *
-	 */
-	private JDK determineJava(final HubJenkinsLogger logger, final AbstractBuild<?, ?> build, final EnvVars envVars)
-			throws IOException, InterruptedException, HubConfigurationException {
-		JDK javaHomeTemp = null;
+    public ScanJobs[] getScans() {
+        return scans;
+    }
 
-		if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
-			logger.info("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
-			// Empty node name indicates master
-			final String byteCodeVersion = System.getProperty("java.class.version");
-			final Double majorVersion = Double.valueOf(byteCodeVersion);
-			if (majorVersion >= 51.0) {
-				// Java 7 bytecode
-				final String javaHome = System.getProperty("java.home");
-				javaHomeTemp = new JDK("Java running master agent", javaHome);
-			} else {
-				javaHomeTemp = build.getProject().getJDK();
-			}
-		} else {
-			logger.info("Getting Jdk on node  : " + build.getBuiltOn().getNodeName());
+    // http://javadoc.jenkins-ci.org/hudson/tasks/Recorder.html
+    @Override
+    public BuildStepMonitor getRequiredMonitorService() {
+        return BuildStepMonitor.NONE;
+    }
 
-			final String byteCodeVersion = build.getBuiltOn().getChannel()
-					.call(new GetSystemProperty("java.class.version"));
-			final Double majorVersion = Double.valueOf(byteCodeVersion);
-			if (majorVersion >= 51.0) {
-				// Java 7 bytecode
-				final String javaHome = build.getBuiltOn().getChannel().call(new GetSystemProperty("java.home"));
-				javaHomeTemp = new JDK("Java running slave agent", javaHome);
-			} else {
-				javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), logger.getJenkinsListener());
-			}
-		}
-		if (javaHomeTemp != null && javaHomeTemp.getHome() != null) {
-			logger.info("JDK home : " + javaHomeTemp.getHome());
-		}
+    @Override
+    public PostBuildScanDescriptor getDescriptor() {
+        return (PostBuildScanDescriptor) super.getDescriptor();
+    }
 
-		if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
-			logger.info("Could not find the specified Java installation, checking the JAVA_HOME variable.");
-			if (envVars.get("JAVA_HOME") == null || envVars.get("JAVA_HOME") == "") {
-				throw new HubConfigurationException("Need to define a JAVA_HOME or select an installed JDK.");
-			}
-			// In case the user did not select a java installation, set to the
-			// environment variable JAVA_HOME
-			javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
-		}
-		final FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), javaHomeTemp.getHome());
-		if (!javaHome.exists()) {
-			throw new HubConfigurationException(
-					"Could not find the specified Java installation at: " + javaHome.getRemote());
-		}
+    public HubServerInfo getHubServerInfo() {
+        return HubServerInfoSingleton.getInstance().getServerInfo();
+    }
 
-		return javaHomeTemp;
-	}
+    /**
+     * Overrides the Recorder perform method. This is the method that gets
+     * called by Jenkins to run as a Post Build Action
+     *
+     */
+    @Override
+    public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener)
+            throws InterruptedException, IOException {
+        final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
+
+        try {
+            final BDCommonScanStep scanStep = new BDCommonScanStep(getScans(), getHubProjectName(),
+                    getHubProjectVersion(), getHubVersionPhase(), getHubVersionDist(), getScanMemory(),
+                    getShouldGenerateHubReport(), getBomUpdateMaxiumWaitTime(), isDryRun(), isVerbose());
+            final EnvVars envVars = build.getEnvironment(listener);
+
+            final JDK jdk = determineJava(logger, build, envVars);
+            final FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), jdk.getHome());
+            scanStep.runScan(build, build.getBuiltOn(), envVars, getWorkingDirectory(logger, build), logger, launcher,
+                    listener, build.getFullDisplayName(), String.valueOf(build.getNumber()), javaHome);
+        } catch (final Exception e) {
+            logger.error(e);
+        }
+        return true;
+    }
+
+    public FilePath getWorkingDirectory(final IntLogger logger, final AbstractBuild<?, ?> build)
+            throws InterruptedException {
+        String workingDirectory = "";
+        try {
+            if (build.getWorkspace() == null) {
+                // might be using custom workspace
+                workingDirectory = build.getProject().getCustomWorkspace();
+            } else {
+                workingDirectory = build.getWorkspace().getRemote();
+            }
+
+            workingDirectory = build.getBuiltOn().getChannel().call(new GetCanonicalPath(new File(workingDirectory)));
+        } catch (final IOException e) {
+            logger.error("Problem getting the working directory on this node. Error : " + e.getMessage(), e);
+        }
+        logger.info("Node workspace " + workingDirectory);
+        return new FilePath(build.getBuiltOn().getChannel(), workingDirectory);
+    }
+
+    /**
+     * Sets the Java Home that is to be used for running the Shell script
+     *
+     */
+    private JDK determineJava(final HubJenkinsLogger logger, final AbstractBuild<?, ?> build, final EnvVars envVars)
+            throws IOException, InterruptedException, HubConfigurationException {
+        JDK javaHomeTemp = null;
+
+        if (StringUtils.isEmpty(build.getBuiltOn().getNodeName())) {
+            logger.info("Getting Jdk on master  : " + build.getBuiltOn().getNodeName());
+            // Empty node name indicates master
+            final String byteCodeVersion = System.getProperty("java.class.version");
+            final Double majorVersion = Double.valueOf(byteCodeVersion);
+            if (majorVersion >= 51.0) {
+                // Java 7 bytecode
+                final String javaHome = System.getProperty("java.home");
+                javaHomeTemp = new JDK("Java running master agent", javaHome);
+            } else {
+                javaHomeTemp = build.getProject().getJDK();
+            }
+        } else {
+            logger.info("Getting Jdk on node  : " + build.getBuiltOn().getNodeName());
+
+            final String byteCodeVersion = build.getBuiltOn().getChannel()
+                    .call(new GetSystemProperty("java.class.version"));
+            final Double majorVersion = Double.valueOf(byteCodeVersion);
+            if (majorVersion >= 51.0) {
+                // Java 7 bytecode
+                final String javaHome = build.getBuiltOn().getChannel().call(new GetSystemProperty("java.home"));
+                javaHomeTemp = new JDK("Java running slave agent", javaHome);
+            } else {
+                javaHomeTemp = build.getProject().getJDK().forNode(build.getBuiltOn(), logger.getJenkinsListener());
+            }
+        }
+        if (javaHomeTemp != null && javaHomeTemp.getHome() != null) {
+            logger.info("JDK home : " + javaHomeTemp.getHome());
+        }
+
+        if (javaHomeTemp == null || StringUtils.isEmpty(javaHomeTemp.getHome())) {
+            logger.info("Could not find the specified Java installation, checking the JAVA_HOME variable.");
+            if (envVars.get("JAVA_HOME") == null || envVars.get("JAVA_HOME") == "") {
+                throw new HubConfigurationException("Need to define a JAVA_HOME or select an installed JDK.");
+            }
+            // In case the user did not select a java installation, set to the
+            // environment variable JAVA_HOME
+            javaHomeTemp = new JDK("Default Java", envVars.get("JAVA_HOME"));
+        }
+        final FilePath javaHome = new FilePath(build.getBuiltOn().getChannel(), javaHomeTemp.getHome());
+        if (!javaHome.exists()) {
+            throw new HubConfigurationException(
+                    "Could not find the specified Java installation at: " + javaHome.getRemote());
+        }
+
+        return javaHomeTemp;
+    }
 }
