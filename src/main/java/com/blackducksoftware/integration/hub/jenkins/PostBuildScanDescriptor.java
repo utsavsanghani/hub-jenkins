@@ -463,8 +463,8 @@ public class PostBuildScanDescriptor extends BuildStepDescriptor<Publisher> impl
 			credentialUserName = credential.getUsername();
 			credentialPassword = credential.getPassword().getPlainText();
 
-			final RestConnection restConnection = BuildHelper.getRestConnection(null, serverUrl, null, null,
-					Integer.valueOf(hubTimeout));
+			final RestConnection restConnection = BuildHelper.getRestConnection(null, serverUrl, credentialUserName,
+					credentialPassword, Integer.valueOf(hubTimeout));
 
 			final int responseCode = restConnection.setCookies(credentialUserName, credentialPassword);
 
