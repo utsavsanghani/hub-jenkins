@@ -29,22 +29,22 @@ import org.apache.commons.lang3.StringUtils;
 
 public class StoredPrintStream extends PrintStream {
 
-	private final ArrayList<String> outputList = new ArrayList<String>();
+    private final ArrayList<String> outputList = new ArrayList<String>();
 
-	public StoredPrintStream() throws FileNotFoundException {
-		super("test.log");
-	}
+    public StoredPrintStream() throws FileNotFoundException {
+        super("test.log");
+    }
 
-	@Override
-	public void println(final String x) {
-		outputList.add(x);
-	}
+    @Override
+    public void println(final String x) {
+        outputList.add(x);
+    }
 
-	public ArrayList<String> getOutputList() {
-		return outputList;
-	}
+    public ArrayList<String> getOutputList() {
+        return outputList;
+    }
 
-	public String getOutputString() {
-		return StringUtils.join(outputList, ' ');
-	}
+    public String getOutputString() {
+        return StringUtils.join(outputList, ' ');
+    }
 }

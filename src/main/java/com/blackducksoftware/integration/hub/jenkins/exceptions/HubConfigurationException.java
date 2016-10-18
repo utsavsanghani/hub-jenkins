@@ -22,21 +22,21 @@
 package com.blackducksoftware.integration.hub.jenkins.exceptions;
 
 public class HubConfigurationException extends Exception {
-	private static final long serialVersionUID = -2990400467988602946L;
+    private static final long serialVersionUID = -2990400467988602946L;
 
-	public HubConfigurationException() {
-	}
+    public HubConfigurationException() {
+    }
 
-	public HubConfigurationException(final String message) {
-		super(message);
-	}
+    public HubConfigurationException(final String message) {
+        super(message);
+    }
 
-	public HubConfigurationException(final Throwable cause) {
-		super(cause);
-	}
+    public HubConfigurationException(final Throwable cause) {
+        super(cause);
+    }
 
-	public HubConfigurationException(final String message, final Throwable cause) {
-		super(message, cause);
-	}
+    public HubConfigurationException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 
 }

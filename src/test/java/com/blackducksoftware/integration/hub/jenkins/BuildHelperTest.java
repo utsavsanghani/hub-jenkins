@@ -38,40 +38,40 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 
 public class BuildHelperTest {
-	@Mock
-	private AbstractBuild<FreeStyleProject, FreeStyleBuild> build;
+    @Mock
+    private AbstractBuild<FreeStyleProject, FreeStyleBuild> build;
 
-	@Before
-	public void init() {
-		MockitoAnnotations.initMocks(this);
-	}
+    @Before
+    public void init() {
+        MockitoAnnotations.initMocks(this);
+    }
 
-	@Test
-	public void testIsSuccess() {
-		when(build.getResult()).thenReturn(Result.SUCCESS);
+    @Test
+    public void testIsSuccess() {
+        when(build.getResult()).thenReturn(Result.SUCCESS);
 
-		assertTrue(BuildHelper.isSuccess(build));
-	}
+        assertTrue(BuildHelper.isSuccess(build));
+    }
 
-	@Test
-	public void testIsSuccessFailure() {
-		when(build.getResult()).thenReturn(Result.FAILURE);
+    @Test
+    public void testIsSuccessFailure() {
+        when(build.getResult()).thenReturn(Result.FAILURE);
 
-		assertFalse(BuildHelper.isSuccess(build));
-	}
+        assertFalse(BuildHelper.isSuccess(build));
+    }
 
-	@Test
-	public void testIsOngoing() {
-		when(build.getResult()).thenReturn(null);
+    @Test
+    public void testIsOngoing() {
+        when(build.getResult()).thenReturn(null);
 
-		assertTrue(BuildHelper.isOngoing(build));
-	}
+        assertTrue(BuildHelper.isOngoing(build));
+    }
 
-	@Test
-	public void testIsNotOngoing() {
-		when(build.getResult()).thenReturn(Result.SUCCESS);
+    @Test
+    public void testIsNotOngoing() {
+        when(build.getResult()).thenReturn(Result.SUCCESS);
 
-		assertFalse(BuildHelper.isOngoing(build));
-	}
+        assertFalse(BuildHelper.isOngoing(build));
+    }
 
 }

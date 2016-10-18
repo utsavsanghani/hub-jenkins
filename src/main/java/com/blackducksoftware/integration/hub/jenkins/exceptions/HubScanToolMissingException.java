@@ -22,21 +22,21 @@
 package com.blackducksoftware.integration.hub.jenkins.exceptions;
 
 public class HubScanToolMissingException extends Exception {
-	private static final long serialVersionUID = 2421099518231693718L;
+    private static final long serialVersionUID = 2421099518231693718L;
 
-	public HubScanToolMissingException() {
-	}
+    public HubScanToolMissingException() {
+    }
 
-	public HubScanToolMissingException(final String message) {
-		super(message);
-	}
+    public HubScanToolMissingException(final String message) {
+        super(message);
+    }
 
-	public HubScanToolMissingException(final Throwable cause) {
-		super(cause);
-	}
+    public HubScanToolMissingException(final Throwable cause) {
+        super(cause);
+    }
 
-	public HubScanToolMissingException(final String message, final Throwable cause) {
-		super(message, cause);
-	}
+    public HubScanToolMissingException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 
 }

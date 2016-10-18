@@ -22,21 +22,21 @@
 package com.blackducksoftware.integration.hub.jenkins.exceptions;
 
 public class BDJenkinsHubPluginException extends Exception {
-	private static final long serialVersionUID = -1172941819259598247L;
+    private static final long serialVersionUID = -1172941819259598247L;
 
-	public BDJenkinsHubPluginException() {
-	}
+    public BDJenkinsHubPluginException() {
+    }
 
-	public BDJenkinsHubPluginException(final String message) {
-		super(message);
-	}
+    public BDJenkinsHubPluginException(final String message) {
+        super(message);
+    }
 
-	public BDJenkinsHubPluginException(final Throwable cause) {
-		super(cause);
-	}
+    public BDJenkinsHubPluginException(final Throwable cause) {
+        super(cause);
+    }
 
-	public BDJenkinsHubPluginException(final String message, final Throwable cause) {
-		super(message, cause);
-	}
+    public BDJenkinsHubPluginException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 
 }

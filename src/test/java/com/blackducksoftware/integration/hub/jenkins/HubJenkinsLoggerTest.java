@@ -38,152 +38,154 @@ import com.blackducksoftware.integration.hub.jenkins.utils.TestBuildListener;
 import com.blackducksoftware.integration.log.LogLevel;
 
 public class HubJenkinsLoggerTest {
-	private List<String> expectedMessages;
-	private StoredPrintStream storedStream;
-	private HubJenkinsLogger logger;
+    private List<String> expectedMessages;
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+    private StoredPrintStream storedStream;
 
-	@Before
-	public void setUp() throws Exception {
-		expectedMessages = new ArrayList<String>();
-		storedStream = new StoredPrintStream();
+    private HubJenkinsLogger logger;
 
-		logger = new HubJenkinsLogger(new TestBuildListener(storedStream));
-	}
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
-	@After
-	public void tearDown() {
-		final List<String> outputList = storedStream.getOutputList();
-		final String outputString = storedStream.getOutputString();
-		assertEquals("Too many/not enough messages expected: \n" + outputString, expectedMessages.size(),
-				outputList.size());
+    @Before
+    public void setUp() throws Exception {
+        expectedMessages = new ArrayList<String>();
+        storedStream = new StoredPrintStream();
 
-		for (final String expectedMessage : expectedMessages) {
-			assertTrue("Did not find the expected message : " + expectedMessage,
-					outputString.contains(expectedMessage));
-		}
-	}
+        logger = new HubJenkinsLogger(new TestBuildListener(storedStream));
+    }
 
-	@Test
-	public void testOff() {
-		logger.setLogLevel(LogLevel.OFF);
-		logger.error("ERROR Test 1");
-		logger.error("ERROR Test 2", new Exception("ERROR EXCEPTION Test 1"));
-		logger.error(new Exception("ERROR EXCEPTION Test 2"));
-		logger.warn("WARN Test 1");
-		logger.info("INFO Test 1");
-		logger.debug("DEBUG Test 1");
-		logger.debug("DEBUG Test 2", new Exception("DEBUG EXCEPTION Test 1"));
-		logger.trace("TRACE Test 1");
-		logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
-	}
+    @After
+    public void tearDown() {
+        final List<String> outputList = storedStream.getOutputList();
+        final String outputString = storedStream.getOutputString();
+        assertEquals("Too many/not enough messages expected: \n" + outputString, expectedMessages.size(),
+                outputList.size());
 
-	@Test
-	public void testError() {
-		expectedMessages.add("ERROR Test 1");
-		expectedMessages.add("ERROR Test 2");
-		expectedMessages.add("ERROR EXCEPTION Test 1");
-		expectedMessages.add("ERROR EXCEPTION Test 2");
-		logger.setLogLevel(LogLevel.ERROR);
-		logger.error("ERROR Test 1");
-		logger.error("ERROR Test 2", new Exception("ERROR EXCEPTION Test 1"));
-		logger.error(new Exception("ERROR EXCEPTION Test 2"));
-		logger.warn("WARN Test 1");
-		logger.info("INFO Test 1");
-		logger.debug("DEBUG Test 1");
-		logger.debug("DEBUG Test 2", new Exception("DEBUG EXCEPTION Test 1"));
-		logger.trace("TRACE Test 1");
-		logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
-	}
+        for (final String expectedMessage : expectedMessages) {
+            assertTrue("Did not find the expected message : " + expectedMessage,
+                    outputString.contains(expectedMessage));
+        }
+    }
 
-	@Test
-	public void testWarn() {
-		expectedMessages.add("ERROR Test 1");
-		expectedMessages.add("ERROR Test 2");
-		expectedMessages.add("ERROR EXCEPTION Test 1");
-		expectedMessages.add("ERROR EXCEPTION Test 2");
-		expectedMessages.add("WARN Test 1");
-		logger.setLogLevel(LogLevel.WARN);
-		logger.error("ERROR Test 1");
-		logger.error("ERROR Test 2", new Exception("ERROR EXCEPTION Test 1"));
-		logger.error(new Exception("ERROR EXCEPTION Test 2"));
-		logger.warn("WARN Test 1");
-		logger.info("INFO Test 1");
-		logger.debug("DEBUG Test 1");
-		logger.debug("DEBUG Test 2", new Exception("DEBUG EXCEPTION Test 1"));
-		logger.trace("TRACE Test 1");
-		logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
-	}
+    @Test
+    public void testOff() {
+        logger.setLogLevel(LogLevel.OFF);
+        logger.error("ERROR Test 1");
+        logger.error("ERROR Test 2", new Exception("ERROR EXCEPTION Test 1"));
+        logger.error(new Exception("ERROR EXCEPTION Test 2"));
+        logger.warn("WARN Test 1");
+        logger.info("INFO Test 1");
+        logger.debug("DEBUG Test 1");
+        logger.debug("DEBUG Test 2", new Exception("DEBUG EXCEPTION Test 1"));
+        logger.trace("TRACE Test 1");
+        logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
+    }
 
-	@Test
-	public void testInfo() {
-		expectedMessages.add("ERROR Test 1");
-		expectedMessages.add("ERROR Test 2");
-		expectedMessages.add("ERROR EXCEPTION Test 1");
-		expectedMessages.add("ERROR EXCEPTION Test 2");
-		expectedMessages.add("WARN Test 1");
-		expectedMessages.add("INFO Test 1");
-		logger.setLogLevel(LogLevel.INFO);
-		logger.error("ERROR Test 1");
-		logger.error("ERROR Test 2", new Exception("ERROR EXCEPTION Test 1"));
-		logger.error(new Exception("ERROR EXCEPTION Test 2"));
-		logger.warn("WARN Test 1");
-		logger.info("INFO Test 1");
-		logger.debug("DEBUG Test 1");
-		logger.debug("DEBUG Test 2", new Exception("DEBUG EXCEPTION Test 1"));
-		logger.trace("TRACE Test 1");
-		logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
-	}
+    @Test
+    public void testError() {
+        expectedMessages.add("ERROR Test 1");
+        expectedMessages.add("ERROR Test 2");
+        expectedMessages.add("ERROR EXCEPTION Test 1");
+        expectedMessages.add("ERROR EXCEPTION Test 2");
+        logger.setLogLevel(LogLevel.ERROR);
+        logger.error("ERROR Test 1");
+        logger.error("ERROR Test 2", new Exception("ERROR EXCEPTION Test 1"));
+        logger.error(new Exception("ERROR EXCEPTION Test 2"));
+        logger.warn("WARN Test 1");
+        logger.info("INFO Test 1");
+        logger.debug("DEBUG Test 1");
+        logger.debug("DEBUG Test 2", new Exception("DEBUG EXCEPTION Test 1"));
+        logger.trace("TRACE Test 1");
+        logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
+    }
 
-	@Test
-	public void testDebug() {
-		expectedMessages.add("ERROR Test 1");
-		expectedMessages.add("ERROR Test 2");
-		expectedMessages.add("ERROR EXCEPTION Test 1");
-		expectedMessages.add("ERROR EXCEPTION Test 2");
-		expectedMessages.add("WARN Test 1");
-		expectedMessages.add("INFO Test 1");
-		expectedMessages.add("DEBUG Test 1");
-		expectedMessages.add("DEBUG Test 2");
-		expectedMessages.add("DEBUG EXCEPTION Test 1");
-		logger.setLogLevel(LogLevel.DEBUG);
-		logger.error("ERROR Test 1");
-		logger.error("ERROR Test 2", new Exception("ERROR EXCEPTION Test 1"));
-		logger.error(new Exception("ERROR EXCEPTION Test 2"));
-		logger.warn("WARN Test 1");
-		logger.info("INFO Test 1");
-		logger.debug("DEBUG Test 1");
-		logger.debug("DEBUG Test 2", new Exception("DEBUG EXCEPTION Test 1"));
-		logger.trace("TRACE Test 1");
-		logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
-	}
+    @Test
+    public void testWarn() {
+        expectedMessages.add("ERROR Test 1");
+        expectedMessages.add("ERROR Test 2");
+        expectedMessages.add("ERROR EXCEPTION Test 1");
+        expectedMessages.add("ERROR EXCEPTION Test 2");
+        expectedMessages.add("WARN Test 1");
+        logger.setLogLevel(LogLevel.WARN);
+        logger.error("ERROR Test 1");
+        logger.error("ERROR Test 2", new Exception("ERROR EXCEPTION Test 1"));
+        logger.error(new Exception("ERROR EXCEPTION Test 2"));
+        logger.warn("WARN Test 1");
+        logger.info("INFO Test 1");
+        logger.debug("DEBUG Test 1");
+        logger.debug("DEBUG Test 2", new Exception("DEBUG EXCEPTION Test 1"));
+        logger.trace("TRACE Test 1");
+        logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
+    }
 
-	@Test
-	public void testTrace() {
-		expectedMessages.add("ERROR Test 1");
-		expectedMessages.add("ERROR Test 2");
-		expectedMessages.add("ERROR EXCEPTION Test 1");
-		expectedMessages.add("ERROR EXCEPTION Test 2");
-		expectedMessages.add("WARN Test 1");
-		expectedMessages.add("INFO Test 1");
-		expectedMessages.add("DEBUG Test 1");
-		expectedMessages.add("DEBUG Test 2");
-		expectedMessages.add("DEBUG EXCEPTION Test 1");
-		expectedMessages.add("TRACE Test 1");
-		expectedMessages.add("TRACE Test 2");
-		expectedMessages.add("TRACE EXCEPTION Test 1");
-		logger.setLogLevel(LogLevel.TRACE);
-		logger.error("ERROR Test 1");
-		logger.error("ERROR Test 2", new Exception("ERROR EXCEPTION Test 1"));
-		logger.error(new Exception("ERROR EXCEPTION Test 2"));
-		logger.warn("WARN Test 1");
-		logger.info("INFO Test 1");
-		logger.debug("DEBUG Test 1");
-		logger.debug("DEBUG Test 2", new Exception("DEBUG EXCEPTION Test 1"));
-		logger.trace("TRACE Test 1");
-		logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
-	}
+    @Test
+    public void testInfo() {
+        expectedMessages.add("ERROR Test 1");
+        expectedMessages.add("ERROR Test 2");
+        expectedMessages.add("ERROR EXCEPTION Test 1");
+        expectedMessages.add("ERROR EXCEPTION Test 2");
+        expectedMessages.add("WARN Test 1");
+        expectedMessages.add("INFO Test 1");
+        logger.setLogLevel(LogLevel.INFO);
+        logger.error("ERROR Test 1");
+        logger.error("ERROR Test 2", new Exception("ERROR EXCEPTION Test 1"));
+        logger.error(new Exception("ERROR EXCEPTION Test 2"));
+        logger.warn("WARN Test 1");
+        logger.info("INFO Test 1");
+        logger.debug("DEBUG Test 1");
+        logger.debug("DEBUG Test 2", new Exception("DEBUG EXCEPTION Test 1"));
+        logger.trace("TRACE Test 1");
+        logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
+    }
+
+    @Test
+    public void testDebug() {
+        expectedMessages.add("ERROR Test 1");
+        expectedMessages.add("ERROR Test 2");
+        expectedMessages.add("ERROR EXCEPTION Test 1");
+        expectedMessages.add("ERROR EXCEPTION Test 2");
+        expectedMessages.add("WARN Test 1");
+        expectedMessages.add("INFO Test 1");
+        expectedMessages.add("DEBUG Test 1");
+        expectedMessages.add("DEBUG Test 2");
+        expectedMessages.add("DEBUG EXCEPTION Test 1");
+        logger.setLogLevel(LogLevel.DEBUG);
+        logger.error("ERROR Test 1");
+        logger.error("ERROR Test 2", new Exception("ERROR EXCEPTION Test 1"));
+        logger.error(new Exception("ERROR EXCEPTION Test 2"));
+        logger.warn("WARN Test 1");
+        logger.info("INFO Test 1");
+        logger.debug("DEBUG Test 1");
+        logger.debug("DEBUG Test 2", new Exception("DEBUG EXCEPTION Test 1"));
+        logger.trace("TRACE Test 1");
+        logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
+    }
+
+    @Test
+    public void testTrace() {
+        expectedMessages.add("ERROR Test 1");
+        expectedMessages.add("ERROR Test 2");
+        expectedMessages.add("ERROR EXCEPTION Test 1");
+        expectedMessages.add("ERROR EXCEPTION Test 2");
+        expectedMessages.add("WARN Test 1");
+        expectedMessages.add("INFO Test 1");
+        expectedMessages.add("DEBUG Test 1");
+        expectedMessages.add("DEBUG Test 2");
+        expectedMessages.add("DEBUG EXCEPTION Test 1");
+        expectedMessages.add("TRACE Test 1");
+        expectedMessages.add("TRACE Test 2");
+        expectedMessages.add("TRACE EXCEPTION Test 1");
+        logger.setLogLevel(LogLevel.TRACE);
+        logger.error("ERROR Test 1");
+        logger.error("ERROR Test 2", new Exception("ERROR EXCEPTION Test 1"));
+        logger.error(new Exception("ERROR EXCEPTION Test 2"));
+        logger.warn("WARN Test 1");
+        logger.info("INFO Test 1");
+        logger.debug("DEBUG Test 1");
+        logger.debug("DEBUG Test 2", new Exception("DEBUG EXCEPTION Test 1"));
+        logger.trace("TRACE Test 1");
+        logger.trace("TRACE Test 2", new Exception("TRACE EXCEPTION Test 1"));
+    }
 
 }

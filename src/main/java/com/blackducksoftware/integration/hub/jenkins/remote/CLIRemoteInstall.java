@@ -23,7 +23,6 @@ package com.blackducksoftware.integration.hub.jenkins.remote;
 
 import java.io.File;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.remoting.Role;
 import org.jenkinsci.remoting.RoleChecker;
 
@@ -41,78 +40,87 @@ import hudson.EnvVars;
 import hudson.remoting.Callable;
 
 public class CLIRemoteInstall implements Callable<Void, Exception> {
-	private static final long serialVersionUID = 3459269768733083577L;
+    private static final long serialVersionUID = 3459269768733083577L;
 
-	private final HubJenkinsLogger logger;
-	private final String directoryToInstallTo;
-	private final String localHost;
-	private final String hubUrl;
-	private final String hubUser;
-	private final String hubPassword;
-	private String proxyHost;
-	private int proxyPort;
-	private String proxyUserName;
-	private String proxyPassword;
-	private final EnvVars variables;
+    private final HubJenkinsLogger logger;
 
-	public CLIRemoteInstall(final HubJenkinsLogger logger, final String directoryToInstallTo, final String localHost,
-			final String hubUrl, final String hubUser, final String hubPassword, final EnvVars variables) {
-		this.directoryToInstallTo = directoryToInstallTo;
-		this.localHost = localHost;
-		this.hubUrl = hubUrl;
-		this.hubUser = hubUser;
-		this.hubPassword = hubPassword;
-		this.logger = logger;
-		this.variables = variables;
-	}
+    private final String directoryToInstallTo;
 
-	public void setProxyHost(final String proxyHost) {
-		this.proxyHost = proxyHost;
-	}
+    private final String localHost;
 
-	public void setProxyPort(final int proxyPort) {
-		this.proxyPort = proxyPort;
-	}
+    private final String hubUrl;
 
-	public void setProxyUserName(final String proxyUserName) {
-		this.proxyUserName = proxyUserName;
-	}
+    private final String hubUser;
 
-	public void setProxyPassword(final String proxyPassword) {
-		this.proxyPassword = proxyPassword;
-	}
+    private final String hubPassword;
 
-	@Override
-	public Void call() throws Exception {
-		final File hubToolDir = new File(directoryToInstallTo);
-		final CLILocation cliLocation = new CLILocation(hubToolDir);
-		final CIEnvironmentVariables ciEnvironmentVariables = new CIEnvironmentVariables();
-		ciEnvironmentVariables.putAll(variables);
-		final CLIInstaller installer = new CLIInstaller(cliLocation, ciEnvironmentVariables);
+    private String proxyHost;
 
-		final HubServerConfigBuilder hubServerConfigBuilder = new HubServerConfigBuilder();
-		hubServerConfigBuilder.setHubUrl(hubUrl);
-		hubServerConfigBuilder.setUsername(hubUser);
-		hubServerConfigBuilder.setPassword(hubPassword);
-		final HubServerConfig hubServerConfig = hubServerConfigBuilder.build();
+    private int proxyPort;
 
-		final RestConnection restConnection = new CredentialsRestConnection(hubServerConfig);
+    private String proxyUserName;
 
-		restConnection.setLogger(logger);
-		if (StringUtils.isNotBlank(proxyHost) && proxyPort != 0) {
-			restConnection.setProxyProperties(proxyHost, proxyPort, null, proxyUserName, proxyPassword);
-		}
-		restConnection.setCookies(hubUser, hubPassword);
+    private String proxyPassword;
 
-		final HubIntRestService service = new HubIntRestService(restConnection);
+    private final EnvVars variables;
 
-		installer.performInstallation(logger, service, localHost);
-		return null;
-	}
+    public CLIRemoteInstall(final HubJenkinsLogger logger, final String directoryToInstallTo, final String localHost,
+            final String hubUrl, final String hubUser, final String hubPassword, final EnvVars variables) {
+        this.directoryToInstallTo = directoryToInstallTo;
+        this.localHost = localHost;
+        this.hubUrl = hubUrl;
+        this.hubUser = hubUser;
+        this.hubPassword = hubPassword;
+        this.logger = logger;
+        this.variables = variables;
+    }
 
-	@Override
-	public void checkRoles(final RoleChecker checker) throws SecurityException {
-		checker.check(this, new Role(CLIRemoteInstall.class));
-	}
+    public void setProxyHost(final String proxyHost) {
+        this.proxyHost = proxyHost;
+    }
+
+    public void setProxyPort(final int proxyPort) {
+        this.proxyPort = proxyPort;
+    }
+
+    public void setProxyUserName(final String proxyUserName) {
+        this.proxyUserName = proxyUserName;
+    }
+
+    public void setProxyPassword(final String proxyPassword) {
+        this.proxyPassword = proxyPassword;
+    }
+
+    @Override
+    public Void call() throws Exception {
+        final File hubToolDir = new File(directoryToInstallTo);
+        final CLILocation cliLocation = new CLILocation(hubToolDir);
+        final CIEnvironmentVariables ciEnvironmentVariables = new CIEnvironmentVariables();
+        ciEnvironmentVariables.putAll(variables);
+        final CLIInstaller installer = new CLIInstaller(cliLocation, ciEnvironmentVariables);
+
+        final HubServerConfigBuilder hubServerConfigBuilder = new HubServerConfigBuilder();
+        hubServerConfigBuilder.setHubUrl(hubUrl);
+        hubServerConfigBuilder.setUsername(hubUser);
+        hubServerConfigBuilder.setPassword(hubPassword);
+        hubServerConfigBuilder.setProxyHost(proxyHost);
+        hubServerConfigBuilder.setProxyPort(proxyPort);
+        hubServerConfigBuilder.setProxyUsername(proxyUserName);
+        hubServerConfigBuilder.setProxyPassword(proxyPassword);
+        final HubServerConfig hubServerConfig = hubServerConfigBuilder.build();
+
+        final RestConnection restConnection = new CredentialsRestConnection(hubServerConfig);
+        restConnection.setLogger(logger);
+
+        final HubIntRestService service = new HubIntRestService(restConnection);
+
+        installer.performInstallation(logger, service, localHost);
+        return null;
+    }
+
+    @Override
+    public void checkRoles(final RoleChecker checker) throws SecurityException {
+        checker.check(this, new Role(CLIRemoteInstall.class));
+    }
 
 }

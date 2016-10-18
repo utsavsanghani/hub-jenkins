@@ -25,31 +25,31 @@ import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
 
 public class DummyToolInstallation extends ToolInstallation {
-	private static final long serialVersionUID = -5953801725055668150L;
+    private static final long serialVersionUID = -5953801725055668150L;
 
-	public DummyToolInstallation() {
-		super("Dummy Tool Name", null, null);
-	}
+    public DummyToolInstallation() {
+        super("Dummy Tool Name", null, null);
+    }
 
-	@Override
-	public ToolDescriptor<?> getDescriptor() {
+    @Override
+    public ToolDescriptor<?> getDescriptor() {
 
-		return new DummyToolInstallationDescriptor();
-	}
+        return new DummyToolInstallationDescriptor();
+    }
 
-	public static class DummyToolInstallationDescriptor extends ToolDescriptor<DummyToolInstallation> {
+    public static class DummyToolInstallationDescriptor extends ToolDescriptor<DummyToolInstallation> {
 
-		public DummyToolInstallationDescriptor() {
-		}
+        public DummyToolInstallationDescriptor() {
+        }
 
-		@Override
-		public String getDisplayName() {
-			return null;
-		}
+        @Override
+        public String getDisplayName() {
+            return null;
+        }
 
-		@Override
-		public String getId() {
-			return "Dummy_Tool_Installation_Descriptor";
-		}
-	}
+        @Override
+        public String getId() {
+            return "Dummy_Tool_Installation_Descriptor";
+        }
+    }
 }
