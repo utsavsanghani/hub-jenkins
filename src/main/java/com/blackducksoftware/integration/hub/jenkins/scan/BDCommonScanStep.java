@@ -656,7 +656,7 @@ public class BDCommonScanStep {
         }
         final CLIRemoteInstall remoteCLIInstall = new CLIRemoteInstall(logger, toolsDirectory, localHostName,
                 getHubServerInfo().getServerUrl(), getHubServerInfo().getUsername(), getHubServerInfo().getPassword(),
-                variables);
+                getHubServerInfo().getTimeout(), variables);
 
         addProxySettingsToCLIInstaller(logger, remoteCLIInstall);
 

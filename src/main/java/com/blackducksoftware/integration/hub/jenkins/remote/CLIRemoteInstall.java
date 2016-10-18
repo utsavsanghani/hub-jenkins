@@ -62,10 +62,13 @@ public class CLIRemoteInstall implements Callable<Void, Exception> {
 
     private String proxyPassword;
 
+    private final int hubTimeout;
+
     private final EnvVars variables;
 
     public CLIRemoteInstall(final HubJenkinsLogger logger, final String directoryToInstallTo, final String localHost,
-            final String hubUrl, final String hubUser, final String hubPassword, final EnvVars variables) {
+            final String hubUrl, final String hubUser, final String hubPassword, final int hubTimeout,
+            final EnvVars variables) {
         this.directoryToInstallTo = directoryToInstallTo;
         this.localHost = localHost;
         this.hubUrl = hubUrl;
@@ -73,6 +76,7 @@ public class CLIRemoteInstall implements Callable<Void, Exception> {
         this.hubPassword = hubPassword;
         this.logger = logger;
         this.variables = variables;
+        this.hubTimeout = hubTimeout;
     }
 
     public void setProxyHost(final String proxyHost) {
