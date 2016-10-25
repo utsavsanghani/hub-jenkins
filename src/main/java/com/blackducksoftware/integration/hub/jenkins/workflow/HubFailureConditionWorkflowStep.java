@@ -50,99 +50,103 @@ import hudson.util.FormValidation;
 
 public class HubFailureConditionWorkflowStep extends AbstractStepImpl {
 
-	private final boolean failBuildForPolicyViolations;
+    private final boolean failBuildForPolicyViolations;
 
-	@DataBoundConstructor
-	public HubFailureConditionWorkflowStep(final Boolean failBuildForPolicyViolations) {
-		this.failBuildForPolicyViolations = failBuildForPolicyViolations;
-	}
+    @DataBoundConstructor
+    public HubFailureConditionWorkflowStep(final Boolean failBuildForPolicyViolations) {
+        this.failBuildForPolicyViolations = failBuildForPolicyViolations;
+    }
 
-	public Boolean getFailBuildForPolicyViolations() {
-		return failBuildForPolicyViolations;
-	}
+    public Boolean getFailBuildForPolicyViolations() {
+        return failBuildForPolicyViolations;
+    }
 
-	@Override
-	public HubFailureConditionWorkflowStepDescriptor getDescriptor() {
-		return (HubFailureConditionWorkflowStepDescriptor) super.getDescriptor();
-	}
+    @Override
+    public HubFailureConditionWorkflowStepDescriptor getDescriptor() {
+        return (HubFailureConditionWorkflowStepDescriptor) super.getDescriptor();
+    }
 
-	@Extension(optional = true)
-	public static final class HubFailureConditionWorkflowStepDescriptor extends AbstractStepDescriptorImpl {
+    @Extension(optional = true)
+    public static final class HubFailureConditionWorkflowStepDescriptor extends AbstractStepDescriptorImpl {
 
-		public HubFailureConditionWorkflowStepDescriptor() {
-			super(Execution.class);
-		}
+        public HubFailureConditionWorkflowStepDescriptor() {
+            super(Execution.class);
+        }
 
-		@Override
-		public String getFunctionName() {
-			return "hub_scan_failure";
-		}
+        @Override
+        public String getFunctionName() {
+            return "hub_scan_failure";
+        }
 
-		@Override
-		public String getDisplayName() {
-			return Messages.HubFailureCondition_getDisplayName();
-		}
+        @Override
+        public String getDisplayName() {
+            return Messages.HubFailureCondition_getDisplayName();
+        }
 
-		public FormValidation doCheckFailBuildForPolicyViolations(
-				@QueryParameter("failBuildForPolicyViolations") final boolean failBuildForPolicyViolations)
-						throws IOException, ServletException {
-			return FormValidation.ok();
-		}
-	}
+        public FormValidation doCheckFailBuildForPolicyViolations(
+                @QueryParameter("failBuildForPolicyViolations") final boolean failBuildForPolicyViolations)
+                throws IOException, ServletException {
+            return FormValidation.ok();
+        }
+    }
 
-	public static final class Execution extends AbstractSynchronousNonBlockingStepExecution<Void> {
+    public static final class Execution extends AbstractSynchronousNonBlockingStepExecution<Void> {
 
-		private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 1L;
 
-		@Inject
-		private transient HubFailureConditionWorkflowStep failureConditionStep;
-		@StepContextParameter
-		transient TaskListener listener;
-		@StepContextParameter
-		transient EnvVars envVars;
-		@StepContextParameter
-		private transient Run run;
-		@StepContextParameter
-		private transient Computer computer;
+        @Inject
+        private transient HubFailureConditionWorkflowStep failureConditionStep;
 
-		@Override
-		protected Void run() {
-			final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
-			try {
-				final Node node = computer.getNode();
+        @StepContextParameter
+        transient TaskListener listener;
 
-				final HubCommonFailureStep commonFailureStep = new HubCommonFailureStep(
-						failureConditionStep.getFailBuildForPolicyViolations());
+        @StepContextParameter
+        transient EnvVars envVars;
 
-				if (run.getResult() != Result.SUCCESS) {
-					logger.error("The Build did not run sucessfully, will not check the Hub Failure Conditions.");
-					return null;
-				}
-				if (run.getAction(HubScanFinishedAction.class) == null) {
-					logger.error("The Hub scan must be configured to run before the Failure Conditions.");
-					run.setResult(Result.UNSTABLE);
-					return null;
-				}
-				final BomUpToDateAction bomUpToDateAction = run.getAction(BomUpToDateAction.class);
-				if (bomUpToDateAction == null) {
-					logger.error(
-							"Could not find the BomUpToDateAction in the Hub Failure Conditions. Make sure the Hub scan was run before the Failure Conditions.");
-					run.setResult(Result.UNSTABLE);
-					return null;
-				}
-				if (bomUpToDateAction.isDryRun()) {
-					logger.warn("Will not run the Failure conditions because this was a dry run scan.");
-					return null;
-				}
-				commonFailureStep.checkFailureConditions(run, node, envVars, logger, listener,
-						bomUpToDateAction);
-			} catch (final Exception e) {
-				logger.error(e);
-				run.setResult(Result.UNSTABLE);
-			}
-			return null;
-		}
+        @StepContextParameter
+        private transient Run run;
 
-	}
+        @StepContextParameter
+        private transient Computer computer;
+
+        @Override
+        protected Void run() {
+            final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
+            try {
+                final Node node = computer.getNode();
+
+                final HubCommonFailureStep commonFailureStep = new HubCommonFailureStep(
+                        failureConditionStep.getFailBuildForPolicyViolations());
+
+                if (run.getResult() != Result.SUCCESS) {
+                    logger.error("The Build did not run sucessfully, will not check the Hub Failure Conditions.");
+                    return null;
+                }
+                if (run.getAction(HubScanFinishedAction.class) == null) {
+                    logger.error("The Hub scan must be configured to run before the Failure Conditions.");
+                    run.setResult(Result.UNSTABLE);
+                    return null;
+                }
+                final BomUpToDateAction bomUpToDateAction = run.getAction(BomUpToDateAction.class);
+                if (bomUpToDateAction == null) {
+                    logger.error(
+                            "Could not find the BomUpToDateAction in the Hub Failure Conditions. Make sure the Hub scan was run before the Failure Conditions.");
+                    run.setResult(Result.UNSTABLE);
+                    return null;
+                }
+                if (bomUpToDateAction.isDryRun()) {
+                    logger.warn("Will not run the Failure conditions because this was a dry run scan.");
+                    return null;
+                }
+                commonFailureStep.checkFailureConditions(run, node, envVars, logger, listener,
+                        bomUpToDateAction);
+            } catch (final Exception e) {
+                logger.error(e);
+                run.setResult(Result.UNSTABLE);
+            }
+            return null;
+        }
+
+    }
 
 }

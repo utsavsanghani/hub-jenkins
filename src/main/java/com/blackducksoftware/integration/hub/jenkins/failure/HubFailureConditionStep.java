@@ -39,69 +39,69 @@ import hudson.tasks.Recorder;
 
 public class HubFailureConditionStep extends Recorder {
 
-	private final Boolean failBuildForPolicyViolations;
+    private final Boolean failBuildForPolicyViolations;
 
-	@DataBoundConstructor
-	public HubFailureConditionStep(final Boolean failBuildForPolicyViolations) {
-		this.failBuildForPolicyViolations = failBuildForPolicyViolations;
-	}
+    @DataBoundConstructor
+    public HubFailureConditionStep(final Boolean failBuildForPolicyViolations) {
+        this.failBuildForPolicyViolations = failBuildForPolicyViolations;
+    }
 
-	public Boolean getFailBuildForPolicyViolations() {
-		return failBuildForPolicyViolations;
-	}
+    public Boolean getFailBuildForPolicyViolations() {
+        return failBuildForPolicyViolations;
+    }
 
-	@Override
-	public BuildStepMonitor getRequiredMonitorService() {
-		return BuildStepMonitor.NONE;
-	}
+    @Override
+    public BuildStepMonitor getRequiredMonitorService() {
+        return BuildStepMonitor.NONE;
+    }
 
-	@Override
-	public HubFailureConditionStepDescriptor getDescriptor() {
-		return (HubFailureConditionStepDescriptor) super.getDescriptor();
-	}
+    @Override
+    public HubFailureConditionStepDescriptor getDescriptor() {
+        return (HubFailureConditionStepDescriptor) super.getDescriptor();
+    }
 
-	@Override
-	public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener)
-			throws InterruptedException, IOException {
-		final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
-		try {
-			final EnvVars envVars = build.getEnvironment(listener);
+    @Override
+    public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener)
+            throws InterruptedException, IOException {
+        final HubJenkinsLogger logger = new HubJenkinsLogger(listener);
+        try {
+            final EnvVars envVars = build.getEnvironment(listener);
 
-			if (build.getResult() != Result.SUCCESS) {
-				logger.error("The Build did not run sucessfully, will not check the Hub Failure Conditions.");
-				return true;
-			}
-			if (build.getAction(HubScanFinishedAction.class) == null) {
-				logger.error("The Hub scan must be configured to run before the Failure Conditions.");
-				build.setResult(Result.UNSTABLE);
-				return true;
-			}
+            if (build.getResult() != Result.SUCCESS) {
+                logger.error("The Build did not run sucessfully, will not check the Hub Failure Conditions.");
+                return true;
+            }
+            if (build.getAction(HubScanFinishedAction.class) == null) {
+                logger.error("The Hub scan must be configured to run before the Failure Conditions.");
+                build.setResult(Result.UNSTABLE);
+                return true;
+            }
 
-			final BomUpToDateAction bomUpToDateAction = build.getAction(BomUpToDateAction.class);
-			if (bomUpToDateAction == null) {
-				logger.error(
-						"Could not find the BomUpToDateAction in the Hub Failure Conditions. Make sure the Hub scan was run before the Failure Conditions.");
-				build.setResult(Result.UNSTABLE);
-				return true;
-			}
-			if (bomUpToDateAction.isDryRun()) {
-				logger.warn("Will not run the Failure conditions because this was a dry run scan.");
-				return true;
-			}
+            final BomUpToDateAction bomUpToDateAction = build.getAction(BomUpToDateAction.class);
+            if (bomUpToDateAction == null) {
+                logger.error(
+                        "Could not find the BomUpToDateAction in the Hub Failure Conditions. Make sure the Hub scan was run before the Failure Conditions.");
+                build.setResult(Result.UNSTABLE);
+                return true;
+            }
+            if (bomUpToDateAction.isDryRun()) {
+                logger.warn("Will not run the Failure conditions because this was a dry run scan.");
+                return true;
+            }
 
-			final HubCommonFailureStep commonFailureStep = createCommonFailureStep(getFailBuildForPolicyViolations());
-			commonFailureStep.checkFailureConditions(build, build.getBuiltOn(), envVars, logger,
-					listener,
-					bomUpToDateAction);
-		} catch (final Exception e) {
-			logger.error(e);
-			build.setResult(Result.UNSTABLE);
-		}
-		return true;
-	}
+            final HubCommonFailureStep commonFailureStep = createCommonFailureStep(getFailBuildForPolicyViolations());
+            commonFailureStep.checkFailureConditions(build, build.getBuiltOn(), envVars, logger,
+                    listener,
+                    bomUpToDateAction);
+        } catch (final Exception e) {
+            logger.error(e);
+            build.setResult(Result.UNSTABLE);
+        }
+        return true;
+    }
 
-	public HubCommonFailureStep createCommonFailureStep(final Boolean failBuildForPolicyViolations) {
-		return new HubCommonFailureStep(failBuildForPolicyViolations);
-	}
+    public HubCommonFailureStep createCommonFailureStep(final Boolean failBuildForPolicyViolations) {
+        return new HubCommonFailureStep(failBuildForPolicyViolations);
+    }
 
 }

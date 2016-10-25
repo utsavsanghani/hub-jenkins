@@ -38,23 +38,23 @@ import hudson.util.FormValidation;
 @Extension(ordinal = 1)
 public class HubFailureConditionStepDescriptor extends BuildStepDescriptor<Publisher> {
 
-	public HubFailureConditionStepDescriptor() {
-		super(HubFailureConditionStep.class);
-	}
+    public HubFailureConditionStepDescriptor() {
+        super(HubFailureConditionStep.class);
+    }
 
-	@Override
-	public boolean isApplicable(final Class<? extends AbstractProject> jobType) {
-			return true;
-	}
+    @Override
+    public boolean isApplicable(final Class<? extends AbstractProject> jobType) {
+        return true;
+    }
 
-	@Override
-	public String getDisplayName() {
-		return Messages.HubFailureCondition_getDisplayName();
-	}
+    @Override
+    public String getDisplayName() {
+        return Messages.HubFailureCondition_getDisplayName();
+    }
 
-	public FormValidation doCheckFailBuildForPolicyViolations(@QueryParameter("failBuildForPolicyViolations") final boolean failBuildForPolicyViolations)
-			throws IOException, ServletException {
-		return FormValidation.ok();
-	}
+    public FormValidation doCheckFailBuildForPolicyViolations(@QueryParameter("failBuildForPolicyViolations") final boolean failBuildForPolicyViolations)
+            throws IOException, ServletException {
+        return FormValidation.ok();
+    }
 
 }

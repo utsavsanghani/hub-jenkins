@@ -32,30 +32,28 @@ import hudson.util.FormValidation;
 
 public class HubFailureConditionStepDescriptorTest {
 
+    @Test
+    public void testGetDisplayName() {
+        final HubFailureConditionStepDescriptor descriptor = new HubFailureConditionStepDescriptor();
+        assertEquals(Messages.HubFailureCondition_getDisplayName(), descriptor.getDisplayName());
+    }
 
-	@Test
-	public void testGetDisplayName() {
-		final HubFailureConditionStepDescriptor descriptor = new HubFailureConditionStepDescriptor();
-		assertEquals(Messages.HubFailureCondition_getDisplayName(), descriptor.getDisplayName());
-	}
+    @Test
+    public void testDoCheckFailBuildForPolicyViolations() throws Exception {
+        final HubFailureConditionStepDescriptor descriptor = new HubFailureConditionStepDescriptor();
 
+        FormValidation validation = descriptor.doCheckFailBuildForPolicyViolations(false);
+        assertEquals(FormValidation.Kind.OK, validation.kind);
 
-	@Test
-	public void testDoCheckFailBuildForPolicyViolations() throws Exception {
-		final HubFailureConditionStepDescriptor descriptor = new HubFailureConditionStepDescriptor();
+        validation = descriptor.doCheckFailBuildForPolicyViolations(true);
+        assertEquals(FormValidation.Kind.OK, validation.kind);
+    }
 
-		FormValidation validation = descriptor.doCheckFailBuildForPolicyViolations(false);
-		assertEquals(FormValidation.Kind.OK, validation.kind);
+    @Test
+    public void testIsApplicable() throws Exception {
+        final HubFailureConditionStepDescriptor descriptor = new HubFailureConditionStepDescriptor();
 
-		validation = descriptor.doCheckFailBuildForPolicyViolations(true);
-		assertEquals(FormValidation.Kind.OK, validation.kind);
-	}
-
-	@Test
-	public void testIsApplicable() throws Exception {
-		final HubFailureConditionStepDescriptor descriptor = new HubFailureConditionStepDescriptor();
-
-		assertTrue(descriptor.isApplicable(null));
-	}
+        assertTrue(descriptor.isApplicable(null));
+    }
 
 }

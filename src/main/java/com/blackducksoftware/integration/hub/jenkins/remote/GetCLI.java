@@ -32,28 +32,29 @@ import com.blackducksoftware.integration.hub.jenkins.HubJenkinsLogger;
 import hudson.remoting.Callable;
 
 public class GetCLI implements Callable<String, Exception> {
-	private static final long serialVersionUID = 3459269768733083577L;
+    private static final long serialVersionUID = 3459269768733083577L;
 
-	private final HubJenkinsLogger logger;
-	private final String directoryToInstallTo;
+    private final HubJenkinsLogger logger;
 
-	public GetCLI(final HubJenkinsLogger logger, final String directoryToInstallTo) {
-		this.logger = logger;
-		this.directoryToInstallTo = directoryToInstallTo;
-	}
+    private final String directoryToInstallTo;
 
-	@Override
-	public String call() throws Exception {
-		final CLILocation cliLocation = new CLILocation(new File(directoryToInstallTo));
-		final File file = cliLocation.getCLI(logger);
-		if (file != null) {
-			return file.getCanonicalPath();
-		}
-		return null;
-	}
+    public GetCLI(final HubJenkinsLogger logger, final String directoryToInstallTo) {
+        this.logger = logger;
+        this.directoryToInstallTo = directoryToInstallTo;
+    }
 
-	@Override
-	public void checkRoles(final RoleChecker checker) throws SecurityException {
-		checker.check(this, new Role(GetCLI.class));
-	}
+    @Override
+    public String call() throws Exception {
+        final CLILocation cliLocation = new CLILocation(new File(directoryToInstallTo));
+        final File file = cliLocation.getCLI(logger);
+        if (file != null) {
+            return file.getCanonicalPath();
+        }
+        return null;
+    }
+
+    @Override
+    public void checkRoles(final RoleChecker checker) throws SecurityException {
+        checker.check(this, new Role(GetCLI.class));
+    }
 }
