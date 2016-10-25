@@ -1,15 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?><project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
     <version>1.580.3</version>
-    <relativePath/>
+    <relativePath></relativePath>
   </parent>
+
   <groupId>com.blackducksoftware.integration</groupId>
   <artifactId>hub-jenkins</artifactId>
   <version>1.5.5-SNAPSHOT</version>
   <packaging>hpi</packaging>
+
   <name>Black Duck Hub Plug-In for Jenkins</name>
   <description>Runs the Black Duck Hub scan in Jenkins builds</description>
   <url>https://github.com/blackducksoftware/hub-jenkins</url>
@@ -24,6 +28,7 @@
       <url>http://www.apache.org/licenses/LICENSE-2.0</url>
     </license>
   </licenses>
+
   <scm>
     <connection>scm:git:git://github.com/blackducksoftware/hub-jenkins.git/</connection>
     <developerConnection>scm:git:git@github.com:blackducksoftware/hub-jenkins.git</developerConnection>
@@ -35,6 +40,18 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>UTF-8</project.resources.sourceEncoding>
   </properties>
+  
+  <distributionManagement>
+    <repository>
+      <id>bds-int-public</id>
+      <url>https://updates.suite.blackducksoftware.com/bdhubjenkins</url>
+    </repository>
+    <snapshotRepository>
+      <id>bds-int-public</id>
+      <url>https://updates.suite.blackducksoftware.com/bdhubjenkins</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
@@ -56,6 +73,7 @@
       <url>http://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
+
   <dependencies>
     <dependency>
       <groupId>com.blackducksoftware.integration</groupId>
@@ -164,6 +182,7 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
   <build>
     <pluginManagement>
       <plugins>
