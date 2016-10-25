@@ -11,7 +11,7 @@
   <version>1.5.5-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Black Duck Hub Plug-In for Jenkins</name>
-  <description>Runs the Black Duck Hub scan in Jenkins build</description>
+  <description>Runs the Black Duck Hub scan in Jenkins builds</description>
   <url>https://github.com/blackducksoftware/hub-jenkins</url>
   <inceptionYear>2014</inceptionYear>
   <organization>
@@ -29,16 +29,7 @@
     <developerConnection>scm:git:git@github.com:blackducksoftware/hub-jenkins.git</developerConnection>
     <url>https://www.github.com/blackducksoftware/hub-jenkins</url>
   </scm>
-  <distributionManagement>
-    <repository>
-      <id>bds-int-public</id>
-      <url>https://updates.suite.blackducksoftware.com/bdhubjenkins</url>
-    </repository>
-    <snapshotRepository>
-      <id>bds-int-public</id>
-      <url>https://updates.suite.blackducksoftware.com/bdhubjenkins</url>
-    </snapshotRepository>
-  </distributionManagement>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
