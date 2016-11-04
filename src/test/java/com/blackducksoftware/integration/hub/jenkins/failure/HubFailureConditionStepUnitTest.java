@@ -287,7 +287,7 @@ public class HubFailureConditionStepUnitTest {
         HubFailureConditionStepDescriptor descriptor = failureStep.getDescriptor();
         failureStep = Mockito.spy(failureStep);
         final HubIntRestService service = getMockedService("1.0.0", null);
-        final ProjectItem projectItem = new ProjectItem(null, null, null);
+        final ProjectItem projectItem = new ProjectItem(null, null, null, false, 0, null);
         Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
         final ProjectVersionItem releaseItem = new ProjectVersionItem(null, null, null, null, null, null, null, null,
                 null);
@@ -347,7 +347,7 @@ public class HubFailureConditionStepUnitTest {
         final PolicyStatusItem policyStatus = new PolicyStatusItem(PolicyStatusEnum.NOT_IN_VIOLATION, null, counts,
                 null);
         final HubIntRestService service = getMockedService("3.0.0", policyStatus);
-        final ProjectItem projectItem = new ProjectItem(null, null, null);
+        final ProjectItem projectItem = new ProjectItem(null, null, null, false, 0, null);
         Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
         final ProjectVersionItem releaseItem = new ProjectVersionItem(null, null, null, null, null, null, null, null,
                 null);
@@ -408,7 +408,7 @@ public class HubFailureConditionStepUnitTest {
         final PolicyStatusItem policyStatus = new PolicyStatusItem(PolicyStatusEnum.NOT_IN_VIOLATION, null, counts,
                 null);
         final HubIntRestService service = getMockedService("3.0.0", policyStatus);
-        final ProjectItem projectItem = new ProjectItem(null, null, null);
+        final ProjectItem projectItem = new ProjectItem(null, null, null, false, 0, null);
         Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
         final ProjectVersionItem releaseItem = new ProjectVersionItem(null, null, null, null, null, null, null, null,
                 null);
@@ -479,7 +479,7 @@ public class HubFailureConditionStepUnitTest {
         final PolicyStatusItem policyStatus = new PolicyStatusItem(PolicyStatusEnum.NOT_IN_VIOLATION, null, counts,
                 null);
         final HubIntRestService service = getMockedService("3.0.0", policyStatus);
-        final ProjectItem projectItem = new ProjectItem(null, null, null);
+        final ProjectItem projectItem = new ProjectItem(null, null, null, false, 0, null);
         Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
         final ProjectVersionItem releaseItem = new ProjectVersionItem(null, null, null, null, null, null, null, null,
                 null);
@@ -550,7 +550,7 @@ public class HubFailureConditionStepUnitTest {
         counts.add(countsNotInViolation);
         final PolicyStatusItem policyStatus = new PolicyStatusItem(PolicyStatusEnum.IN_VIOLATION, null, counts, null);
         final HubIntRestService service = getMockedService("3.0.0", policyStatus);
-        final ProjectItem projectItem = new ProjectItem(null, null, null);
+        final ProjectItem projectItem = new ProjectItem(null, null, null, false, 0, null);
         Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
         final ProjectVersionItem releaseItem = new ProjectVersionItem(null, null, null, null, null, null, null, null,
                 null);
@@ -611,7 +611,7 @@ public class HubFailureConditionStepUnitTest {
         failureStep = Mockito.spy(failureStep);
 
         final HubIntRestService service = getMockedService("3.0.0", null);
-        final ProjectItem projectItem = new ProjectItem(null, null, null);
+        final ProjectItem projectItem = new ProjectItem(null, null, null, false, 0, null);
         Mockito.doReturn(projectItem).when(service).getProjectByName(Mockito.anyString());
         final ProjectVersionItem releaseItem = new ProjectVersionItem(null, null, null, null, null, null, null, null,
                 null);
