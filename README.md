@@ -2,4 +2,4 @@
 
 We have moved to the official Jenkins site.
 
-https://github.com/jenkinsci
+https://github.com/jenkinsci/blackduck-hub-plugin
